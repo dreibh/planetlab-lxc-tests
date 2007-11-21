@@ -1,0 +1,250 @@
+options {'local_peer': None, 'plc1': '', 'plc2': '', 'factor': 1, 'debug': False, 'size': 'normal'} args ['populate_end']
+4 sites, 4 persons, 5 nodes & 4 slices
+2 keys/person, 3 nodes/slice & 6 persons/slice
+fast_flag False
+funcname populate_end
+dir() ['args', 'funcname', 'options', 'parser', 'size_func', 'steps', 'usage']
++++ timer start
+initializing s[1]=>https://caicol.inria.fr:443/PLCAPI/ user= peer1@planet-lab.org
+initializing s[2]=>https://jamaica.inria.fr:443/PLCAPI/ user= peer2@planet-lab.org
+=== refresh Peer 1 for publishing foreign nodes from 2
++++ 0.23 seconds ellapsed (0.23)
+01:== Refreshing peer
++++ ellapsed: { keys 0.0584080219269 local_nodes 0.0104968547821 nodes 0.0956499576569 peer_db 0.0798010826111 persons 0.0858988761902 site 0.0857949256897 slices 0.0084400177002 transport 0.413682699203 }
++++ 2.39 seconds ellapsed (2.16)
++++ 2.39 seconds ellapsed (0.00)
+01:== added in slice oneone_slice1 foreign  ['n2-001.plc2.org', 'n2-002.plc2.org', 'n2-003.plc2.org']
+01:== added in slice onetwo_slice2 foreign  ['n2-002.plc2.org', 'n2-003.plc2.org', 'n2-004.plc2.org']
+01:== added in slice onethree_slice3 foreign  ['n2-003.plc2.org', 'n2-004.plc2.org', 'n2-005.plc2.org']
+01:== added in slice onefour_slice4 foreign  ['n2-004.plc2.org', 'n2-005.plc2.org', 'n2-001.plc2.org']
++++ 3.17 seconds ellapsed (0.78)
+=== refresh populate: refresh all
++++ 3.17 seconds ellapsed (0.00)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00897598266602 local_nodes 0.00887680053711 nodes 0.02374792099 peer_db 0.0800650119781 persons 0.0151720046997 site 0.0278759002686 slices 0.00831913948059 transport 0.408355951309 }
++++ 4.96 seconds ellapsed (1.79)
+02:== Refreshing peer
++++ ellapsed: { keys 0.0736620426178 local_nodes 0.00899505615234 nodes 0.0971839427948 peer_db 0.0860619544983 persons 0.0938341617584 site 0.0988049507141 slices 0.146500825882 transport 0.467275857925 }
++++ 7.37 seconds ellapsed (2.42)
++++ 7.37 seconds ellapsed (0.00)
+=== refresh empty refresh
++++ 7.37 seconds ellapsed (0.00)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00746011734009 local_nodes 0.00917816162109 nodes 0.0223898887634 peer_db 0.0814049243927 persons 0.0131568908691 site 0.0241479873657 slices 0.00885701179504 transport 0.430548191071 }
++++ 9.13 seconds ellapsed (1.75)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00907683372498 local_nodes 0.00895595550537 nodes 0.0241439342499 peer_db 0.0860838890076 persons 0.0207340717316 site 0.0281040668488 slices 0.0154550075531 transport 0.463763237 }
++++ 10.96 seconds ellapsed (1.83)
+01:============================== DUMPING
+01: SITES
+1 None plc1 FederationTestPlc1 Central []
+2 None oneone FederationTestPlc1 [5, 1]
+3 None onetwo FederationTestPlc1 [2]
+4 None onethree FederationTestPlc1 [3]
+5 None onefour FederationTestPlc1 [4]
+6 1 plc2 FederationTestPlc2 Central []
+7 1 twoone FederationTestPlc2 [10, 6]
+8 1 twotwo FederationTestPlc2 [7]
+9 1 twothree FederationTestPlc2 [8]
+10 1 twofour FederationTestPlc2 [9]
+01: KEYS
+1 None ssh-rsa somekey4plctestbed user1-key1
+2 None ssh-rsa somekey4plctestbed user1-key2
+3 None ssh-rsa somekey4plctestbed user2-key1
+4 None ssh-rsa somekey4plctestbed user2-key2
+5 None ssh-rsa somekey4plctestbed user3-key1
+6 None ssh-rsa somekey4plctestbed user3-key2
+7 None ssh-rsa somekey4plctestbed user4-key1
+8 None ssh-rsa somekey4plctestbed user4-key2
+9 1 ssh-rsa somekey4plctestbed user1-key1
+10 1 ssh-rsa somekey4plctestbed user1-key2
+11 1 ssh-rsa somekey4plctestbed user2-key1
+12 1 ssh-rsa somekey4plctestbed user2-key2
+13 1 ssh-rsa somekey4plctestbed user3-key1
+14 1 ssh-rsa somekey4plctestbed user3-key2
+15 1 ssh-rsa somekey4plctestbed user4-key1
+16 1 ssh-rsa somekey4plctestbed user4-key2
+01: PERSONS
+1 None maint@localhost.localdomain keys: [] sites: []
+2 None root@plc1.inria.fr keys: [] sites: [1]
+3 None peer1@planet-lab.org keys: [] sites: []
+4 None user-1@plc.org keys: [2, 1] sites: []
+5 None user-2@plc.org keys: [4, 3] sites: []
+6 None user-3@plc.org keys: [6, 5] sites: []
+7 None user-4@plc.org keys: [8, 7] sites: []
+8 1 peer2@planet-lab.org keys: [] sites: []
+9 1 user-1@plc.org keys: [10, 9] sites: []
+10 1 user-2@plc.org keys: [12, 11] sites: []
+11 1 user-3@plc.org keys: [14, 13] sites: []
+12 1 user-4@plc.org keys: [15, 16] sites: []
+01: NODES
+1 None n1-001.plc1.org sls= [5, 2] site= 2
+2 None n1-002.plc1.org sls= [3, 2] site= 3
+3 None n1-003.plc1.org sls= [4, 3, 2] site= 4
+4 None n1-004.plc1.org sls= [5, 4, 3] site= 5
+5 None n1-005.plc1.org sls= [5, 4] site= 2
+6 1 n2-001.plc2.org sls= [5, 2] site= 7
+7 1 n2-002.plc2.org sls= [3, 2] site= 8
+8 1 n2-003.plc2.org sls= [4, 3, 2] site= 9
+9 1 n2-004.plc2.org sls= [5, 4, 3] site= 10
+10 1 n2-005.plc2.org sls= [5, 4] site= 7
+01: SLICES
+name: plc1_netflow id: 01 peer: None nodes= [] persons= []
+--- sa_ids= [1, 2, 3, 4, 5] creator:   1
+--- 'expires': 1183553992
+name: oneone_slice1 id: 02 peer: None nodes= [8, 7, 6, 3, 2, 1] persons= [7, 6, 5, 4]
+--- sa_ids= [6, 7, 8, 9] creator:   1
+--- 'expires': 1183556357
+name: onetwo_slice2 id: 03 peer: None nodes= [9, 8, 7, 4, 3, 2] persons= [4, 7, 6, 5]
+--- sa_ids= [] creator:   1
+--- 'expires': 1183556357
+name: onethree_slice3 id: 04 peer: None nodes= [10, 9, 8, 5, 4, 3] persons= [5, 4, 7, 6]
+--- sa_ids= [] creator:   1
+--- 'expires': 1183556357
+name: onefour_slice4 id: 05 peer: None nodes= [10, 9, 6, 5, 4, 1] persons= [6, 5, 4, 7]
+--- sa_ids= [] creator:   1
+--- 'expires': 1183556357
+01: Slice Attribute Types
+sat_id: 01 min_role_id: 20 name: type < Type of slice (e.g. vserver) >
+sat_id: 02 min_role_id: 10 name: system < Is a default system slice (1) or not (0 or unset) >
+sat_id: 03 min_role_id: 10 name: enabled < Slice enabled (1 or unset) or suspended (0) >
+sat_id: 04 min_role_id: 30 name: vref < Reference image >
+sat_id: 05 min_role_id: 10 name: initscript < Slice initialization script >
+sat_id: 06 min_role_id: 10 name: cpu_min < Minimum CPU share (ms/s) >
+sat_id: 07 min_role_id: 10 name: cpu_share < Number of CPU shares >
+sat_id: 08 min_role_id: 10 name: net_min_rate < Minimum bandwidth (kbps) >
+sat_id: 09 min_role_id: 10 name: net_max_rate < Maximum bandwidth (kbps) >
+sat_id: 10 min_role_id: 10 name: net_i2_min_rate < Minimum bandwidth over I2 routes (kbps) >
+sat_id: 11 min_role_id: 10 name: net_i2_max_rate < Maximum bandwidth over I2 routes (kbps) >
+sat_id: 12 min_role_id: 10 name: net_max_kbyte < Maximum daily network Tx KByte limit. >
+sat_id: 13 min_role_id: 10 name: net_thresh_kbyte < KByte limit before warning and throttling. >
+sat_id: 14 min_role_id: 10 name: net_i2_max_kbyte < Maximum daily network Tx KByte limit to I2 hosts. >
+sat_id: 15 min_role_id: 10 name: net_i2_thresh_kbyte < KByte limit to I2 hosts before warning and throttling. >
+sat_id: 16 min_role_id: 10 name: net_share < Number of bandwidth shares >
+sat_id: 17 min_role_id: 10 name: net_i2_share < Number of bandwidth shares over I2 routes >
+sat_id: 18 min_role_id: 10 name: disk_max < Disk quota (1k disk blocks) >
+sat_id: 19 min_role_id: 10 name: proper_op < Proper operation (e.g. bind_socket) >
+sat_id: 20 min_role_id: 20 name: plc_slice_type < Type of slice rspec to be created >
+sat_id: 21 min_role_id: 10 name: plc_agent_version < Version of PLC agent (slice creation service) software to be deployed >
+sat_id: 22 min_role_id: 10 name: plc_ticket_pubkey < Public key used to verify PLC-signed tickets >
+sat_id: 23 min_role_id: 10 name: sat_1 < custom sat on plc1 >
+01: Slice Attributes
+name: system       sa_id: 01 sat_id: 02 sl=01 v= 1 n= None
+name: vref         sa_id: 09 sat_id: 04 sl=02 v= predefined sat/node1 n= 1
+name: vref         sa_id: 08 sat_id: 04 sl=02 v= predefined sat/all nodes n= None
+name: vref         sa_id: 02 sat_id: 04 sl=01 v= planetflow n= None
+name: proper_op    sa_id: 05 sat_id: 19 sl=01 v= bind_socket n= None
+name: proper_op    sa_id: 04 sat_id: 19 sl=01 v= create_socket n= None
+name: proper_op    sa_id: 03 sat_id: 19 sl=01 v= open file=/etc/passwd, flags=r n= None
+name: sat_1        sa_id: 07 sat_id: 23 sl=02 v= custom sat/node1 n= 1
+name: sat_1        sa_id: 06 sat_id: 23 sl=02 v= custom sat/all nodes n= None
++++ 12.19 seconds ellapsed (1.23)
+01: SLIVERS for first 3 nodes
+WARNING - GetSlivers needs fix
+01:============================== END DUMP
+02:============================== DUMPING
+02: SITES
+1 None plc2 FederationTestPlc2 Central []
+2 None twoone FederationTestPlc2 [5, 1]
+3 None twotwo FederationTestPlc2 [2]
+4 None twothree FederationTestPlc2 [3]
+5 None twofour FederationTestPlc2 [4]
+6 1 plc1 FederationTestPlc1 Central []
+7 1 oneone FederationTestPlc1 [10, 6]
+8 1 onetwo FederationTestPlc1 [7]
+9 1 onethree FederationTestPlc1 [8]
+10 1 onefour FederationTestPlc1 [9]
+02: KEYS
+1 None ssh-rsa somekey4plctestbed user1-key1
+2 None ssh-rsa somekey4plctestbed user1-key2
+3 None ssh-rsa somekey4plctestbed user2-key1
+4 None ssh-rsa somekey4plctestbed user2-key2
+5 None ssh-rsa somekey4plctestbed user3-key1
+6 None ssh-rsa somekey4plctestbed user3-key2
+7 None ssh-rsa somekey4plctestbed user4-key1
+8 None ssh-rsa somekey4plctestbed user4-key2
+9 1 ssh-rsa somekey4plctestbed user1-key1
+10 1 ssh-rsa somekey4plctestbed user1-key2
+11 1 ssh-rsa somekey4plctestbed user2-key1
+12 1 ssh-rsa somekey4plctestbed user2-key2
+13 1 ssh-rsa somekey4plctestbed user3-key1
+14 1 ssh-rsa somekey4plctestbed user3-key2
+15 1 ssh-rsa somekey4plctestbed user4-key1
+16 1 ssh-rsa somekey4plctestbed user4-key2
+02: PERSONS
+1 None maint@localhost.localdomain keys: [] sites: []
+2 None root@plc2.inria.fr keys: [] sites: [1]
+3 None peer2@planet-lab.org keys: [] sites: []
+4 None user-1@plc.org keys: [2, 1] sites: []
+5 None user-2@plc.org keys: [4, 3] sites: []
+6 None user-3@plc.org keys: [6, 5] sites: []
+7 None user-4@plc.org keys: [8, 7] sites: []
+8 1 peer1@planet-lab.org keys: [] sites: []
+9 1 user-1@plc.org keys: [10, 9] sites: []
+10 1 user-2@plc.org keys: [12, 11] sites: []
+11 1 user-3@plc.org keys: [14, 13] sites: []
+12 1 user-4@plc.org keys: [15, 16] sites: []
+02: NODES
+1 None n2-001.plc2.org sls= [5, 2] site= 2
+2 None n2-002.plc2.org sls= [3, 2] site= 3
+3 None n2-003.plc2.org sls= [4, 3, 2] site= 4
+4 None n2-004.plc2.org sls= [5, 4, 3] site= 5
+5 None n2-005.plc2.org sls= [5, 4] site= 2
+6 1 n1-001.plc1.org sls= [5, 2] site= 7
+7 1 n1-002.plc1.org sls= [3, 2] site= 8
+8 1 n1-003.plc1.org sls= [4, 3, 2] site= 9
+9 1 n1-004.plc1.org sls= [5, 4, 3] site= 10
+10 1 n1-005.plc1.org sls= [5, 4] site= 7
+02: SLICES
+name: plc2_netflow id: 01 peer: None nodes= [] persons= []
+--- sa_ids= [1, 2, 3, 4, 5] creator:   1
+--- 'expires': 1183554012
+name: oneone_slice1 id: 02 peer: 1 nodes= [3, 2, 1, 8, 7, 6] persons= [12, 11, 10, 9]
+--- sa_ids= [] creator: None
+--- 'expires': 1183556357
+name: onetwo_slice2 id: 03 peer: 1 nodes= [4, 3, 2, 9, 8, 7] persons= [12, 11, 10, 9]
+--- sa_ids= [] creator: None
+--- 'expires': 1183556357
+name: onethree_slice3 id: 04 peer: 1 nodes= [5, 4, 3, 10, 9, 8] persons= [12, 11, 10, 9]
+--- sa_ids= [] creator: None
+--- 'expires': 1183556357
+name: onefour_slice4 id: 05 peer: 1 nodes= [5, 4, 1, 10, 9, 6] persons= [12, 11, 10, 9]
+--- sa_ids= [] creator: None
+--- 'expires': 1183556357
+02: Slice Attribute Types
+sat_id: 01 min_role_id: 20 name: type < Type of slice (e.g. vserver) >
+sat_id: 02 min_role_id: 10 name: system < Is a default system slice (1) or not (0 or unset) >
+sat_id: 03 min_role_id: 10 name: enabled < Slice enabled (1 or unset) or suspended (0) >
+sat_id: 04 min_role_id: 30 name: vref < Reference image >
+sat_id: 05 min_role_id: 10 name: initscript < Slice initialization script >
+sat_id: 06 min_role_id: 10 name: cpu_min < Minimum CPU share (ms/s) >
+sat_id: 07 min_role_id: 10 name: cpu_share < Number of CPU shares >
+sat_id: 08 min_role_id: 10 name: net_min_rate < Minimum bandwidth (kbps) >
+sat_id: 09 min_role_id: 10 name: net_max_rate < Maximum bandwidth (kbps) >
+sat_id: 10 min_role_id: 10 name: net_i2_min_rate < Minimum bandwidth over I2 routes (kbps) >
+sat_id: 11 min_role_id: 10 name: net_i2_max_rate < Maximum bandwidth over I2 routes (kbps) >
+sat_id: 12 min_role_id: 10 name: net_max_kbyte < Maximum daily network Tx KByte limit. >
+sat_id: 13 min_role_id: 10 name: net_thresh_kbyte < KByte limit before warning and throttling. >
+sat_id: 14 min_role_id: 10 name: net_i2_max_kbyte < Maximum daily network Tx KByte limit to I2 hosts. >
+sat_id: 15 min_role_id: 10 name: net_i2_thresh_kbyte < KByte limit to I2 hosts before warning and throttling. >
+sat_id: 16 min_role_id: 10 name: net_share < Number of bandwidth shares >
+sat_id: 17 min_role_id: 10 name: net_i2_share < Number of bandwidth shares over I2 routes >
+sat_id: 18 min_role_id: 10 name: disk_max < Disk quota (1k disk blocks) >
+sat_id: 19 min_role_id: 10 name: proper_op < Proper operation (e.g. bind_socket) >
+sat_id: 20 min_role_id: 20 name: plc_slice_type < Type of slice rspec to be created >
+sat_id: 21 min_role_id: 10 name: plc_agent_version < Version of PLC agent (slice creation service) software to be deployed >
+sat_id: 22 min_role_id: 10 name: plc_ticket_pubkey < Public key used to verify PLC-signed tickets >
+sat_id: 23 min_role_id: 10 name: sat_2 < custom sat on plc2 >
+02: Slice Attributes
+name: system       sa_id: 01 sat_id: 02 sl=01 v= 1 n= None
+name: vref         sa_id: 02 sat_id: 04 sl=01 v= planetflow n= None
+name: proper_op    sa_id: 05 sat_id: 19 sl=01 v= bind_socket n= None
+name: proper_op    sa_id: 04 sat_id: 19 sl=01 v= create_socket n= None
+name: proper_op    sa_id: 03 sat_id: 19 sl=01 v= open file=/etc/passwd, flags=r n= None
++++ 13.43 seconds ellapsed (1.23)
+02: SLIVERS for first 3 nodes
+WARNING - GetSlivers needs fix
+02:============================== END DUMP
++++ 13.43 seconds ellapsed (0.00)
+==================== ('END',)
++++ 13.43 seconds ellapsed (0.00)

@@ -1,0 +1,57 @@
+options {'local_peer': 2, 'plc1': '', 'plc2': '', 'factor': 1, 'debug': False, 'size': 'mini'} args ['populate']
+1 sites, 1 persons, 1 nodes & 1 slices
+1 keys/person, 1 nodes/slice & 1 persons/slice
+fast_flag True
+Running locally on index 2
+funcname populate
+dir() ['args', 'funcname', 'options', 'parser', 'size_func', 'steps', 'usage']
++++ timer start
+==================== ('INIT',)
++++ timer start
+==================== s[1]
+show_config obsoleted
+==================== s[2]
+show_config obsoleted
+====================
+Dummy method GetPersons on remote peer 1 skipped
+Dummy method AddPerson on remote peer 1 skipped
+02:== created peer admin account 3, peer2@planet-lab.org - peer
+Dummy method AdmSetPersonEnabled on remote peer 1 skipped
+02:== enabled+admin on account 3:peer2@planet-lab.org
++++ timer start
+Dummy method GetPeers on remote peer 1 skipped
+Trying to locate keys for peer on plc[1] in gpg_plc2.pub and api_plc2.crt
+Dummy method AddPeer on remote peer 1 skipped
+01:Created peer 0
+Trying to locate keys for peer on plc[2] in gpg_plc1.pub and api_plc1.crt
+02:Created peer 1
++++ 0.36 seconds ellapsed (0.36)
+Dummy method GetSites on remote peer 1 skipped
+Dummy method AddSite on remote peer 1 skipped
+02:== Created site 2 with max_slices=1
++++ 0.46 seconds ellapsed (0.10)
+Dummy method GetPersons on remote peer 1 skipped
+Dummy method AddPerson on remote peer 1 skipped
+02:== created user account 4, user-1@plc.org - password2
+02:== added key ssh-rsa somekey4plctestbed user1-key1 to person user-1@plc.org
++++ 0.55 seconds ellapsed (0.09)
+Dummy method GetNodes on remote peer 1 skipped
+Dummy method AddNode on remote peer 1 skipped
+02:== Added node 1 n2-001.plc2.org
++++ 0.62 seconds ellapsed (0.07)
+Dummy method GetSlices on remote peer 1 skipped
+Dummy method AddSlice on remote peer 1 skipped
++++ 0.62 seconds ellapsed (0.00)
+Dummy method AddSliceToNodes on remote peer 1 skipped
++++ 0.62 seconds ellapsed (0.00)
+Dummy method GetSliceAttributeTypes on remote peer 1 skipped
+Dummy method AddSliceAttributeType on remote peer 1 skipped
+02:== created SliceAttributeType = 23
++++ 0.66 seconds ellapsed (0.03)
+Dummy method GetSliceAttributes on remote peer 1 skipped
+slice_name oneone_slice1 sat_name sat_1
+Dummy method AddSliceAttribute on remote peer 1 skipped
+slice_name oneone_slice1 sat_name vref
++++ 0.66 seconds ellapsed (0.00)
+==================== ('END',)
++++ 0.66 seconds ellapsed (0.00)

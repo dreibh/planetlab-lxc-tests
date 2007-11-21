@@ -1,0 +1,26 @@
+PL_PATH = "/u/jbagdis/planetlab/tests"
+
+# update plots
+*/3 *          * * *   cd $PL_PATH; python -c 'import tests; tests.make_plots()'
+
+# fill/empty slice
+0 */6          * * *   cd $PL_PATH; python -c 'import tests; tests.empty_slice("princeton_jbagdis")'
+0 3-23/6       * * *   cd $PL_PATH; python -c 'import tests; tests.fill_slice("princeton_jbagdis")'
+0 */4          * * *   cd $PL_PATH; python -c 'import tests; tests.empty_slice("princeton_bagdis2")'
+5 */4          * * *   cd $PL_PATH; python -c 'import tests; tests.fill_slice("princeton_bagdis2")'
+0 1-23/4       * * *   cd $PL_PATH; python -c 'import tests; tests.add_key("key1")'
+0 2-23/4       * * *   cd $PL_PATH; python -c 'import tests; tests.update_key("key1", "key2")'
+0 3-23/4       * * *   cd $PL_PATH; python -c 'import tests; tests.delete_key("key2")'
+
+
+
+# count nodes
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_in_slice_by_api("princeton_jbagdis")' >> $PL_PATH/data/nodes_in_slice
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_in_slice_by_api("princeton_bagdis2")' >> $PL_PATH/data/nodes_in_slice2
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_by_api()' >> $PL_PATH/data/nodes
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_can_ssh("princeton_jbagdis", "key0")' >> $PL_PATH/data/nodes_can_ssh
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_good_by_comon()' >> $PL_PATH/data/nodes_good
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_can_ssh("princeton_bagdis2", "key0")' >> $PL_PATH/data/nodes_can_ssh2_key0
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_can_ssh("princeton_bagdis2", "key1")' >> $PL_PATH/data/nodes_can_ssh2_key1
+* *            * * *   cd $PL_PATH; python -c 'import tests; tests.count_nodes_can_ssh("princeton_bagdis2", "key2")' >> $PL_PATH/data/nodes_can_ssh2_key2
+

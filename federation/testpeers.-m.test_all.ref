@@ -1,0 +1,437 @@
+options {'local_peer': None, 'plc1': '', 'plc2': '', 'factor': 1, 'debug': False, 'size': 'mini'} args ['test_all']
+1 sites, 1 persons, 1 nodes & 1 slices
+1 keys/person, 1 nodes/slice & 1 persons/slice
+fast_flag True
+funcname test_all
+dir() ['args', 'funcname', 'options', 'parser', 'size_func', 'steps', 'usage']
+==================== ('INIT',)
++++ timer start
+initializing s[1]=>https://caicol.inria.fr:443/PLCAPI/ user= root@plc1.inria.fr
+initializing s[2]=>https://jamaica.inria.fr:443/PLCAPI/ user= root@plc2.inria.fr
+==================== s[1]
+show_config obsoleted
+==================== s[2]
+show_config obsoleted
+====================
+01:== created peer admin account 3, peer1@planet-lab.org - peer
+02:== created peer admin account 3, peer2@planet-lab.org - peer
+01:== enabled+admin on account 3:peer1@planet-lab.org
+02:== enabled+admin on account 3:peer2@planet-lab.org
++++ timer start
+initializing s[1]=>https://caicol.inria.fr:443/PLCAPI/ user= peer1@planet-lab.org
+initializing s[2]=>https://jamaica.inria.fr:443/PLCAPI/ user= peer2@planet-lab.org
+Trying to locate keys for peer on plc[1] in gpg_plc2.pub and api_plc2.crt
+01:Created peer 1
+Trying to locate keys for peer on plc[2] in gpg_plc1.pub and api_plc1.crt
+02:Created peer 1
++++ 1.11 seconds ellapsed (1.11)
+01:== Created site 2 with max_slices=1
+02:== Created site 2 with max_slices=1
+=== refresh after site creation
++++ 2.24 seconds ellapsed (1.14)
+01:== Refreshing peer
++++ ellapsed: { keys 0.0038001537323 local_nodes 0.00645995140076 nodes 0.0165648460388 peer_db 0.0730428695679 persons 0.0198659896851 site 0.0508999824524 slices 0.0088050365448 transport 0.332457065582 }
++++ 4.06 seconds ellapsed (1.82)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00386905670166 local_nodes 0.00602221488953 nodes 0.0169570446014 peer_db 0.0704660415649 persons 0.025032043457 site 0.0491960048676 slices 0.00849199295044 transport 0.322968959808 }
++++ 5.86 seconds ellapsed (1.80)
++++ 5.86 seconds ellapsed (0.00)
+=== refresh before persons&keys creation
++++ 6.16 seconds ellapsed (0.30)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00431799888611 local_nodes 0.00593590736389 nodes 0.0162229537964 peer_db 0.0734379291534 persons 0.00807285308838 site 0.0193409919739 slices 0.00921893119812 transport 0.321912050247 }
++++ 7.76 seconds ellapsed (1.60)
+02:== Refreshing peer
++++ ellapsed: { keys 0.0039849281311 local_nodes 0.00554800033569 nodes 0.0161969661713 peer_db 0.0727128982544 persons 0.00770306587219 site 0.0193841457367 slices 0.00873184204102 transport 0.306769132614 }
++++ 9.35 seconds ellapsed (1.59)
+01: Checking keys: got 0 local (e=0) & 0 foreign (e=0)
+02: Checking keys: got 0 local (e=0) & 0 foreign (e=0)
+01: Checking persons: got 3 local (e=3) & 1 foreign (e=1)
+02: Checking persons: got 3 local (e=3) & 1 foreign (e=1)
+==================== ('Creating persons&keys',)
+01:== created user account 5, user-1@plc.org - password1
+01:== added key ssh-rsa somekey4plctestbed user1-key1 to person user-1@plc.org
+02:== created user account 5, user-1@plc.org - password2
+02:== added key ssh-rsa somekey4plctestbed user1-key1 to person user-1@plc.org
+01: Checking keys: got 1 local (e=1) & 0 foreign (e=0)
+02: Checking keys: got 1 local (e=1) & 0 foreign (e=0)
+01: Checking persons: got 4 local (e=4) & 1 foreign (e=1)
+02: Checking persons: got 4 local (e=4) & 1 foreign (e=1)
+=== refresh after persons&keys creation
++++ 11.64 seconds ellapsed (2.29)
+01:== Refreshing peer
++++ ellapsed: { keys 0.0234961509705 local_nodes 0.0105268955231 nodes 0.0203311443329 peer_db 0.0715289115906 persons 0.0292110443115 site 0.0190658569336 slices 0.00835180282593 transport 0.316730976105 }
++++ 13.29 seconds ellapsed (1.65)
+02:== Refreshing peer
++++ ellapsed: { keys 0.0290341377258 local_nodes 0.00588989257812 nodes 0.0160729885101 peer_db 0.0720119476318 persons 0.0320210456848 site 0.0194230079651 slices 0.00832509994507 transport 0.315702199936 }
++++ 14.91 seconds ellapsed (1.62)
+01: Checking keys: got 1 local (e=1) & 1 foreign (e=1)
+02: Checking keys: got 1 local (e=1) & 1 foreign (e=1)
+01: Checking persons: got 4 local (e=4) & 2 foreign (e=2)
+02: Checking persons: got 4 local (e=4) & 2 foreign (e=2)
++++ 15.54 seconds ellapsed (0.63)
+==================== ('RESETTING NODES',)
+01:== Cleaning all nodes
+02:== Cleaning all nodes
+=== refresh cleaned nodes
++++ 15.87 seconds ellapsed (0.33)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00443601608276 local_nodes 0.00593090057373 nodes 0.0157189369202 peer_db 0.0721609592438 persons 0.0130760669708 site 0.0235221385956 slices 0.00863313674927 transport 0.32453918457 }
++++ 17.52 seconds ellapsed (1.65)
+02:== Refreshing peer
++++ ellapsed: { keys 0.006511926651 local_nodes 0.00657796859741 nodes 0.0164999961853 peer_db 0.0736320018768 persons 0.0117130279541 site 0.0236840248108 slices 0.00867795944214 transport 0.316795110703 }
++++ 19.16 seconds ellapsed (1.64)
+01: Checking nodes: got 0 local (e=0) & 0 foreign (e=0)
+02: Checking nodes: got 0 local (e=0) & 0 foreign (e=0)
+==================== ('CREATING NODES',)
+01:== Added node 1 n1-001.plc1.org
+02:== Added node 1 n2-001.plc2.org
+01: Checking nodes: got 1 local (e=1) & 0 foreign (e=0)
+02: Checking nodes: got 1 local (e=1) & 0 foreign (e=0)
+=== refresh after node creation
++++ 20.59 seconds ellapsed (1.44)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00726294517517 local_nodes 0.00728988647461 nodes 0.0482001304626 peer_db 0.07448387146 persons 0.0103290081024 site 0.0238211154938 slices 0.00867295265198 transport 0.339636087418 }
++++ 22.26 seconds ellapsed (1.67)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00730514526367 local_nodes 0.00690698623657 nodes 0.0464520454407 peer_db 0.0739932060242 persons 0.00910305976868 site 0.0260801315308 slices 0.00841307640076 transport 0.324549674988 }
++++ 23.90 seconds ellapsed (1.64)
+01: Checking nodes: got 1 local (e=1) & 1 foreign (e=1)
+02: Checking nodes: got 1 local (e=1) & 1 foreign (e=1)
+02:== Deleted node 1, returns 1
+02: Checking nodes: got 0 local (e=0) & 1 foreign (e=1)
+=== refresh after deletion on plc2
++++ 24.80 seconds ellapsed (0.90)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00459384918213 local_nodes 0.00618600845337 nodes 0.0548779964447 peer_db 0.0725939273834 persons 0.0087308883667 site 0.0193519592285 slices 0.00713205337524 transport 0.321602106094 }
++++ 26.44 seconds ellapsed (1.64)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00454807281494 local_nodes 0.00633716583252 nodes 0.0176470279694 peer_db 0.0725169181824 persons 0.00868988037109 site 0.0192210674286 slices 0.00999689102173 transport 0.317940235138 }
++++ 28.09 seconds ellapsed (1.65)
+01: Checking nodes: got 1 local (e=1) & 0 foreign (e=0)
+02: Checking nodes: got 0 local (e=0) & 1 foreign (e=1)
+==================== ('ADD on plc2 for different indexes',)
+02:== Added node 3 n2-001.plc2.org
+01: Checking nodes: got 1 local (e=1) & 0 foreign (e=0)
+02: Checking nodes: got 1 local (e=1) & 1 foreign (e=1)
+=== refresh after re-creation on plc2
++++ 29.14 seconds ellapsed (1.05)
+01:== Refreshing peer
++++ ellapsed: { keys 0.0046820640564 local_nodes 0.00679898262024 nodes 0.0361959934235 peer_db 0.0734241008759 persons 0.0088038444519 site 0.0188229084015 slices 0.0088210105896 transport 0.322027921677 }
++++ 30.81 seconds ellapsed (1.67)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00457215309143 local_nodes 0.00660705566406 nodes 0.0175521373749 peer_db 0.0737800598145 persons 0.00872206687927 site 0.0191171169281 slices 0.00901699066162 transport 0.323905944824 }
++++ 32.46 seconds ellapsed (1.65)
+01: Checking nodes: got 1 local (e=1) & 1 foreign (e=1)
+02: Checking nodes: got 1 local (e=1) & 1 foreign (e=1)
++++ 32.80 seconds ellapsed (0.34)
+==================== ('RESETTING SLICES TEST',)
+01:== Cleaning all nodes
+01:==== Cleaning node 1
+02:== Cleaning all nodes
+02:==== Cleaning node 3
+01:== Added node 4 n1-001.plc1.org
+02:== Added node 4 n2-001.plc2.org
+01:== Cleaning all slices
+02:== Cleaning all slices
+=== refresh After slices init
++++ 34.65 seconds ellapsed (1.86)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00450301170349 local_nodes 0.00647306442261 nodes 0.0622019767761 peer_db 0.0748679637909 persons 0.00879502296448 site 0.0192511081696 slices 0.00795698165894 transport 0.323952913284 }
++++ 36.29 seconds ellapsed (1.64)
+02:== Refreshing peer
++++ ellapsed: { keys 0.0045371055603 local_nodes 0.00651907920837 nodes 0.0640370845795 peer_db 0.0733089447021 persons 0.00870203971863 site 0.0192790031433 slices 0.00765705108643 transport 0.322642087936 }
++++ 37.91 seconds ellapsed (1.62)
+==================== ('CREATING SLICES on plc1',)
+01:== created slice 2 - max nodes=1
+01:== Attached person user-1@plc.org to slice oneone_slice1
+01: Checking slices: got 2 local (e=2) & 0 foreign (e=0)
+02: Checking slices: got 1 local (e=1) & 0 foreign (e=0)
+=== refresh after slice created on plc1
++++ 39.07 seconds ellapsed (1.15)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00460600852966 local_nodes 0.00738000869751 nodes 0.0173969268799 peer_db 0.0756890773773 persons 0.00878095626831 site 0.019326210022 slices 0.00891304016113 transport 0.326341867447 }
++++ 40.73 seconds ellapsed (1.66)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00508999824524 local_nodes 0.00707006454468 nodes 0.0185298919678 peer_db 0.07577085495 persons 0.00907492637634 site 0.0194971561432 slices 0.0462868213654 transport 0.327960014343 }
++++ 42.41 seconds ellapsed (1.68)
+01: Checking slices: got 2 local (e=2) & 0 foreign (e=0)
+02: Checking slices: got 1 local (e=1) & 1 foreign (e=1)
+01: local slice oneone_slice1 (e=0)  on nodes  []
+02: foreign slice oneone_slice1 (e=0)  on nodes  []
+==================== ('ADDING LOCAL NODES IN SLICES',)
+01:== added in slice oneone_slice1 local  ['n1-001.plc1.org']
+01: local slice oneone_slice1 (e=1)  on nodes  [4]
+[LOC:1] :  n1-001.plc1.org  
+02: foreign slice oneone_slice1 (e=0)  on nodes  []
+=== refresh After local nodes were added on plc1
++++ 44.55 seconds ellapsed (2.14)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00452089309692 local_nodes 0.00669598579407 nodes 0.0172870159149 peer_db 0.0735449790955 persons 0.0086498260498 site 0.0192210674286 slices 0.0090548992157 transport 0.327414035797 }
++++ 46.19 seconds ellapsed (1.64)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00501203536987 local_nodes 0.00737619400024 nodes 0.0181210041046 peer_db 0.0753741264343 persons 0.00912189483643 site 0.0198740959167 slices 0.0148589611053 transport 0.326575994492 }
++++ 47.78 seconds ellapsed (1.59)
+01: local slice oneone_slice1 (e=1)  on nodes  [4]
+[LOC:1] :  n1-001.plc1.org  
+02: foreign slice oneone_slice1 (e=1)  on nodes  [5]
+[FOR:1] :  n1-001.plc1.org  
+==================== ('ADDING FOREIGN NODES IN SLICES',)
+01:== added in slice oneone_slice1 foreign  ['n2-001.plc2.org']
+01: local slice oneone_slice1 (e=2)  on nodes  [5, 4]
+[LOC:1] :  n1-001.plc1.org  
+[FOR:1] :  n2-001.plc2.org  
+02: foreign slice oneone_slice1 (e=1)  on nodes  [5]
+[FOR:1] :  n1-001.plc1.org  
+=== refresh After foreign nodes were added in plc1
++++ 49.29 seconds ellapsed (1.51)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00503015518188 local_nodes 0.00770211219788 nodes 0.0177919864655 peer_db 0.0740900039673 persons 0.00913286209106 site 0.0193819999695 slices 0.00882196426392 transport 0.328030109406 }
++++ 50.87 seconds ellapsed (1.59)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00501203536987 local_nodes 0.00771689414978 nodes 0.0179951190948 peer_db 0.0737829208374 persons 0.00910806655884 site 0.0195059776306 slices 0.0138790607452 transport 0.329298019409 }
++++ 52.48 seconds ellapsed (1.61)
+01: local slice oneone_slice1 (e=2)  on nodes  [5, 4]
+[LOC:1] :  n1-001.plc1.org  
+[FOR:1] :  n2-001.plc2.org  
+02: foreign slice oneone_slice1 (e=2)  on nodes  [4, 5]
+[LOC:1] :  n2-001.plc2.org  
+[FOR:1] :  n1-001.plc1.org  
+01: 2 slivers (exp. 2) in GetSlivers for node n1-001.plc1.org
+>>slivername =  plc1_netflow
+{    'attributes': [    {'name': 'system', 'value': '1'},
+                        {'name': 'vref', 'value': 'planetflow'},
+                        {    'name': 'proper_op',
+                             'value': 'open file=/etc/passwd, flags=r'},
+                        {'name': 'proper_op', 'value': 'create_socket'},
+                        {'name': 'proper_op', 'value': 'bind_socket'}],
+     'expires': 1183553992,
+     'instantiation': 'plc-instantiated',
+     'keys': [],
+     'name': 'plc1_netflow',
+     'slice_id': 1}
+>>slivername =  oneone_slice1
+{    'attributes': [],
+     'expires': 1183559059,
+     'instantiation': 'plc-instantiated',
+     'keys': [],
+     'name': 'oneone_slice1',
+     'slice_id': 2}
+02: 2 slivers (exp. 2) in GetSlivers for node n2-001.plc2.org
+>>slivername =  plc2_netflow
+{    'attributes': [    {'name': 'system', 'value': '1'},
+                        {'name': 'vref', 'value': 'planetflow'},
+                        {    'name': 'proper_op',
+                             'value': 'open file=/etc/passwd, flags=r'},
+                        {'name': 'proper_op', 'value': 'create_socket'},
+                        {'name': 'proper_op', 'value': 'bind_socket'}],
+     'expires': 1183554012,
+     'instantiation': 'plc-instantiated',
+     'keys': [],
+     'name': 'plc2_netflow',
+     'slice_id': 1}
+>>slivername =  oneone_slice1
+{    'attributes': [],
+     'expires': 1183559059,
+     'instantiation': 'plc-instantiated',
+     'keys': [],
+     'name': 'oneone_slice1',
+     'slice_id': 2}
+==================== ('DELETING FOREIGN NODES FROM SLICES',)
+01:== deleted in slice oneone_slice1 foreign  ['n2-001.plc2.org']
+01: local slice oneone_slice1 (e=1)  on nodes  [4]
+[LOC:1] :  n1-001.plc1.org  
+02: foreign slice oneone_slice1 (e=2)  on nodes  [4, 5]
+[LOC:1] :  n2-001.plc2.org  
+[FOR:1] :  n1-001.plc1.org  
+01: 2 slivers (exp. 2) in GetSlivers for node n1-001.plc1.org
+>>slivername =  plc1_netflow
+{    'attributes': [    {'name': 'system', 'value': '1'},
+                        {'name': 'vref', 'value': 'planetflow'},
+                        {    'name': 'proper_op',
+                             'value': 'open file=/etc/passwd, flags=r'},
+                        {'name': 'proper_op', 'value': 'create_socket'},
+                        {'name': 'proper_op', 'value': 'bind_socket'}],
+     'expires': 1183553992,
+     'instantiation': 'plc-instantiated',
+     'keys': [],
+     'name': 'plc1_netflow',
+     'slice_id': 1}
+>>slivername =  oneone_slice1
+{    'attributes': [],
+     'expires': 1183559059,
+     'instantiation': 'plc-instantiated',
+     'keys': [],
+     'name': 'oneone_slice1',
+     'slice_id': 2}
+=== refresh After foreign nodes were removed on plc1
++++ 54.96 seconds ellapsed (2.47)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00453805923462 local_nodes 0.00685501098633 nodes 0.0173001289368 peer_db 0.0743207931519 persons 0.00870394706726 site 0.0192351341248 slices 0.00876808166504 transport 0.327321052551 }
++++ 56.53 seconds ellapsed (1.57)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00459313392639 local_nodes 0.00714993476868 nodes 0.0179018974304 peer_db 0.0734980106354 persons 0.00876402854919 site 0.0196471214294 slices 0.0168151855469 transport 0.326390981674 }
++++ 58.19 seconds ellapsed (1.66)
+01: local slice oneone_slice1 (e=1)  on nodes  [4]
+[LOC:1] :  n1-001.plc1.org  
+02: foreign slice oneone_slice1 (e=1)  on nodes  [5]
+[FOR:1] :  n1-001.plc1.org  
+==================== ('DELETING LOCAL NODES FROM SLICES',)
+01:== deleted in slice oneone_slice1 local  ['n1-001.plc1.org']
+01: local slice oneone_slice1 (e=0)  on nodes  []
+02: foreign slice oneone_slice1 (e=1)  on nodes  [5]
+[FOR:1] :  n1-001.plc1.org  
+=== refresh After local nodes were removed on plc1
++++ 59.69 seconds ellapsed (1.50)
+01:== Refreshing peer
++++ ellapsed: { keys 0.0046010017395 local_nodes 0.0074291229248 nodes 0.0173571109772 peer_db 0.0745379924774 persons 0.0088050365448 site 0.0192980766296 slices 0.00872993469238 transport 0.327045202255 }
++++ 61.34 seconds ellapsed (1.64)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00650191307068 local_nodes 0.00670886039734 nodes 0.0182948112488 peer_db 0.0741491317749 persons 0.0112988948822 site 0.023903131485 slices 0.0140850543976 transport 0.329675912857 }
++++ 62.96 seconds ellapsed (1.62)
+01: local slice oneone_slice1 (e=0)  on nodes  []
+02: foreign slice oneone_slice1 (e=0)  on nodes  []
+==================== ('CHECKING SLICES CLEAN UP',)
+01:== Cleaning all slices
+01:==== Cleaned slice 2
+01: Checking slices: got 1 local (e=1) & 0 foreign (e=0)
+02: Checking slices: got 1 local (e=1) & 1 foreign (e=1)
+=== refresh After slices clenaup
++++ 64.58 seconds ellapsed (1.63)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00501298904419 local_nodes 0.00675821304321 nodes 0.0177989006042 peer_db 0.0747208595276 persons 0.00913691520691 site 0.0215060710907 slices 0.00876688957214 transport 0.327316045761 }
++++ 66.18 seconds ellapsed (1.59)
+02:== Refreshing peer
++++ ellapsed: { keys 0.0045599937439 local_nodes 0.00678086280823 nodes 0.0176630020142 peer_db 0.0735070705414 persons 0.00879001617432 site 0.0198049545288 slices 0.0313010215759 transport 0.325602054596 }
++++ 67.85 seconds ellapsed (1.67)
+01: Checking slices: got 1 local (e=1) & 0 foreign (e=0)
+02: Checking slices: got 1 local (e=1) & 0 foreign (e=0)
++++ 68.48 seconds ellapsed (0.63)
+01:== created SliceAttributeType = 23
+02:== created SliceAttributeType = 23
+=== refresh after SliceAttributeType creation
++++ 69.11 seconds ellapsed (0.63)
+01:== Refreshing peer
++++ ellapsed: { keys 0.00452494621277 local_nodes 0.00672507286072 nodes 0.0180468559265 peer_db 0.0739049911499 persons 0.00868201255798 site 0.0191102027893 slices 0.00880193710327 transport 0.325891971588 }
++++ 70.77 seconds ellapsed (1.66)
+02:== Refreshing peer
++++ ellapsed: { keys 0.00455808639526 local_nodes 0.0073459148407 nodes 0.0177400112152 peer_db 0.0747611522675 persons 0.00878596305847 site 0.019455909729 slices 0.010351896286 transport 0.32853770256 }
++++ 72.38 seconds ellapsed (1.60)
++++ 72.38 seconds ellapsed (0.00)
+01:============================== DUMPING
+01: SITES
+1 None plc1 FederationTestPlc1 Central []
+2 None oneone FederationTestPlc1 [4]
+3 1 plc2 FederationTestPlc2 Central []
+4 1 twoone FederationTestPlc2 [5]
+01: KEYS
+1 None ssh-rsa somekey4plctestbed user1-key1
+2 1 ssh-rsa somekey4plctestbed user1-key1
+01: PERSONS
+1 None maint@localhost.localdomain keys: [] sites: []
+2 None root@plc1.inria.fr keys: [] sites: [1]
+3 None peer1@planet-lab.org keys: [] sites: []
+4 1 peer2@planet-lab.org keys: [] sites: []
+5 None user-1@plc.org keys: [1] sites: []
+6 1 user-1@plc.org keys: [2] sites: []
+01: NODES
+5 1 n2-001.plc2.org sls= [] site= 4
+4 None n1-001.plc1.org sls= [] site= 2
+01: SLICES
+name: plc1_netflow id: 01 peer: None nodes= [] persons= []
+--- sa_ids= [1, 2, 3, 4, 5] creator:   1
+--- 'expires': 1183553992
+01: Slice Attribute Types
+sat_id: 01 min_role_id: 20 name: type < Type of slice (e.g. vserver) >
+sat_id: 02 min_role_id: 10 name: system < Is a default system slice (1) or not (0 or unset) >
+sat_id: 03 min_role_id: 10 name: enabled < Slice enabled (1 or unset) or suspended (0) >
+sat_id: 04 min_role_id: 30 name: vref < Reference image >
+sat_id: 05 min_role_id: 10 name: initscript < Slice initialization script >
+sat_id: 06 min_role_id: 10 name: cpu_min < Minimum CPU share (ms/s) >
+sat_id: 07 min_role_id: 10 name: cpu_share < Number of CPU shares >
+sat_id: 08 min_role_id: 10 name: net_min_rate < Minimum bandwidth (kbps) >
+sat_id: 09 min_role_id: 10 name: net_max_rate < Maximum bandwidth (kbps) >
+sat_id: 10 min_role_id: 10 name: net_i2_min_rate < Minimum bandwidth over I2 routes (kbps) >
+sat_id: 11 min_role_id: 10 name: net_i2_max_rate < Maximum bandwidth over I2 routes (kbps) >
+sat_id: 12 min_role_id: 10 name: net_max_kbyte < Maximum daily network Tx KByte limit. >
+sat_id: 13 min_role_id: 10 name: net_thresh_kbyte < KByte limit before warning and throttling. >
+sat_id: 14 min_role_id: 10 name: net_i2_max_kbyte < Maximum daily network Tx KByte limit to I2 hosts. >
+sat_id: 15 min_role_id: 10 name: net_i2_thresh_kbyte < KByte limit to I2 hosts before warning and throttling. >
+sat_id: 16 min_role_id: 10 name: net_share < Number of bandwidth shares >
+sat_id: 17 min_role_id: 10 name: net_i2_share < Number of bandwidth shares over I2 routes >
+sat_id: 18 min_role_id: 10 name: disk_max < Disk quota (1k disk blocks) >
+sat_id: 19 min_role_id: 10 name: proper_op < Proper operation (e.g. bind_socket) >
+sat_id: 20 min_role_id: 20 name: plc_slice_type < Type of slice rspec to be created >
+sat_id: 21 min_role_id: 10 name: plc_agent_version < Version of PLC agent (slice creation service) software to be deployed >
+sat_id: 22 min_role_id: 10 name: plc_ticket_pubkey < Public key used to verify PLC-signed tickets >
+sat_id: 23 min_role_id: 10 name: sat_1 < custom sat on plc1 >
+01: Slice Attributes
+name: system       sa_id: 01 sat_id: 02 sl=01 v= 1 n= None
+name: vref         sa_id: 02 sat_id: 04 sl=01 v= planetflow n= None
+name: proper_op    sa_id: 05 sat_id: 19 sl=01 v= bind_socket n= None
+name: proper_op    sa_id: 04 sat_id: 19 sl=01 v= create_socket n= None
+name: proper_op    sa_id: 03 sat_id: 19 sl=01 v= open file=/etc/passwd, flags=r n= None
++++ 73.50 seconds ellapsed (1.13)
+01: SLIVERS for first 1 nodes
+WARNING - GetSlivers needs fix
+01:============================== END DUMP
+02:============================== DUMPING
+02: SITES
+1 None plc2 FederationTestPlc2 Central []
+2 None twoone FederationTestPlc2 [4]
+3 1 plc1 FederationTestPlc1 Central []
+4 1 oneone FederationTestPlc1 [5]
+02: KEYS
+1 None ssh-rsa somekey4plctestbed user1-key1
+2 1 ssh-rsa somekey4plctestbed user1-key1
+02: PERSONS
+1 None maint@localhost.localdomain keys: [] sites: []
+2 None root@plc2.inria.fr keys: [] sites: [1]
+3 None peer2@planet-lab.org keys: [] sites: []
+4 1 peer1@planet-lab.org keys: [] sites: []
+5 None user-1@plc.org keys: [1] sites: []
+6 1 user-1@plc.org keys: [2] sites: []
+02: NODES
+5 1 n1-001.plc1.org sls= [] site= 4
+4 None n2-001.plc2.org sls= [] site= 2
+02: SLICES
+name: plc2_netflow id: 01 peer: None nodes= [] persons= []
+--- sa_ids= [1, 2, 3, 4, 5] creator:   1
+--- 'expires': 1183554012
+02: Slice Attribute Types
+sat_id: 01 min_role_id: 20 name: type < Type of slice (e.g. vserver) >
+sat_id: 02 min_role_id: 10 name: system < Is a default system slice (1) or not (0 or unset) >
+sat_id: 03 min_role_id: 10 name: enabled < Slice enabled (1 or unset) or suspended (0) >
+sat_id: 04 min_role_id: 30 name: vref < Reference image >
+sat_id: 05 min_role_id: 10 name: initscript < Slice initialization script >
+sat_id: 06 min_role_id: 10 name: cpu_min < Minimum CPU share (ms/s) >
+sat_id: 07 min_role_id: 10 name: cpu_share < Number of CPU shares >
+sat_id: 08 min_role_id: 10 name: net_min_rate < Minimum bandwidth (kbps) >
+sat_id: 09 min_role_id: 10 name: net_max_rate < Maximum bandwidth (kbps) >
+sat_id: 10 min_role_id: 10 name: net_i2_min_rate < Minimum bandwidth over I2 routes (kbps) >
+sat_id: 11 min_role_id: 10 name: net_i2_max_rate < Maximum bandwidth over I2 routes (kbps) >
+sat_id: 12 min_role_id: 10 name: net_max_kbyte < Maximum daily network Tx KByte limit. >
+sat_id: 13 min_role_id: 10 name: net_thresh_kbyte < KByte limit before warning and throttling. >
+sat_id: 14 min_role_id: 10 name: net_i2_max_kbyte < Maximum daily network Tx KByte limit to I2 hosts. >
+sat_id: 15 min_role_id: 10 name: net_i2_thresh_kbyte < KByte limit to I2 hosts before warning and throttling. >
+sat_id: 16 min_role_id: 10 name: net_share < Number of bandwidth shares >
+sat_id: 17 min_role_id: 10 name: net_i2_share < Number of bandwidth shares over I2 routes >
+sat_id: 18 min_role_id: 10 name: disk_max < Disk quota (1k disk blocks) >
+sat_id: 19 min_role_id: 10 name: proper_op < Proper operation (e.g. bind_socket) >
+sat_id: 20 min_role_id: 20 name: plc_slice_type < Type of slice rspec to be created >
+sat_id: 21 min_role_id: 10 name: plc_agent_version < Version of PLC agent (slice creation service) software to be deployed >
+sat_id: 22 min_role_id: 10 name: plc_ticket_pubkey < Public key used to verify PLC-signed tickets >
+sat_id: 23 min_role_id: 10 name: sat_2 < custom sat on plc2 >
+02: Slice Attributes
+name: system       sa_id: 01 sat_id: 02 sl=01 v= 1 n= None
+name: vref         sa_id: 02 sat_id: 04 sl=01 v= planetflow n= None
+name: proper_op    sa_id: 05 sat_id: 19 sl=01 v= bind_socket n= None
+name: proper_op    sa_id: 04 sat_id: 19 sl=01 v= create_socket n= None
+name: proper_op    sa_id: 03 sat_id: 19 sl=01 v= open file=/etc/passwd, flags=r n= None
++++ 74.63 seconds ellapsed (1.13)
+02: SLIVERS for first 1 nodes
+WARNING - GetSlivers needs fix
+02:============================== END DUMP
++++ 74.63 seconds ellapsed (0.00)
+==================== ('END',)
++++ 74.63 seconds ellapsed (0.00)
