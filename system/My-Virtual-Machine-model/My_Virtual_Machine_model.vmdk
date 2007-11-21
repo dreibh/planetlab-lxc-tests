@@ -1,0 +1,22 @@
+# Disk DescriptorFile
+version=1
+CID=a596a14e
+parentCID=ffffffff
+createType="twoGbMaxExtentSparse"
+
+# Extent description
+RW 4192256 SPARSE "My_Virtual_Machine_model-s001.vmdk"
+RW 4192256 SPARSE "My_Virtual_Machine_model-s002.vmdk"
+RW 4192256 SPARSE "My_Virtual_Machine_model-s003.vmdk"
+RW 4192256 SPARSE "My_Virtual_Machine_model-s004.vmdk"
+RW 4192256 SPARSE "My_Virtual_Machine_model-s005.vmdk"
+RW 2107392 SPARSE "My_Virtual_Machine_model-s006.vmdk"
+
+# The Disk Data Base 
+#DDB
+
+ddb.virtualHWVersion = "4"
+ddb.geometry.cylinders = "1435"
+ddb.geometry.heads = "255"
+ddb.geometry.sectors = "63"
+ddb.adapterType = "lsilogic"

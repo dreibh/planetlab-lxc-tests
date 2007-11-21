@@ -1,0 +1,121 @@
+#!/usr/bin/vmplayer
+
+# Filename: My_Virtual_Machine.vmx
+# Generated 2007-05-28;11:47:54 by EasyVMX!
+# http://www.easyvmx.com
+
+# This is a Workstation 5 or 5.5 config file
+# It can be used with Player
+config.version = "8"
+virtualHW.version = "4"
+
+# Selected operating system for your virtual machine
+guestOS = "other"
+
+# displayName is your own name for the virtual machine
+#displayName  
+
+# These fields are free text description fields
+guestinfo.vmware.product.url = "amine.parmentelat.net"
+guestinfo.vmware.product.class = "virtual machine"
+
+# Number of virtual CPUs. Your virtual machine will not
+# work if this number is higher than the number of your physical CPUs
+numvcpus = "1"
+
+# Memory size and other memory settings
+memsize = "320"
+MemAllowAutoScaleDown = "FALSE"
+MemTrimRate = "-1"
+
+# Unique ID for the virtual machine will be created
+uuid.action = "create"
+
+# Remind to install VMware Tools
+# This setting has no effect in VMware Player
+tools.remindInstall = "TRUE"
+
+# Startup hints interfers with automatic startup of a virtual machine
+# This setting has no effect in VMware Player
+hints.hideAll = "TRUE"
+
+# Enable time synchronization between computer
+# and virtual machine
+tools.syncTime = "TRUE"
+
+# USB settings
+# This config activates USB
+usb.present = "TRUE"
+usb.generic.autoconnect = "FALSE"
+
+# First serial port, physical COM1 is available
+serial0.present = "FALSE"
+serial0.fileName = "Auto Detect"
+serial0.autodetect = "TRUE"
+serial0.hardwareFlowControl = "TRUE"
+
+# Optional second serial port, physical COM2 is not available
+serial1.present = "FALSE"
+
+# First parallell port, physical LPT1 is available
+parallel0.present = "FALSE"
+parallel0.fileName = "Auto Detect"
+parallel0.autodetect = "TRUE"
+parallel0.bidirectional = "TRUE"
+
+# Logging
+# This config activates logging, and keeps last log
+logging = "TRUE"
+log.fileName = "My_Virtual_Machine.log"
+log.append = "TRUE"
+log.keepOld = "1"
+
+# These settings decides interaction between your
+# computer and the virtual machine
+isolation.tools.hgfs.disable = "FALSE"
+isolation.tools.dnd.disable = "FALSE"
+isolation.tools.copy.enable = "TRUE"
+isolation.tools.paste.enabled = "TRUE"
+
+# First network interface card
+ethernet0.present = "TRUE"
+#ethernet0.virtualDev = "vmxnet"
+ethernet0.connectionType = "nat"
+ethernet0.addressType = "generated"
+ethernet0.generatedAddressOffset = "0"
+
+# Settings for physical floppy drive
+floppy0.present = "FALSE"
+
+# Settings for physical CDROM drive
+ide1:0.present = "TRUE"
+ide1:0.deviceType = "cdrom-raw"
+ide1:0.startConnected = "FALSE"
+ide1:0.fileName = "/dev/cdrom"
+
+# Settings for the optional virtual CDROM, ISO-image
+ide1:1.present = "TRUE"
+*ide1:1.fileName = "amine.parmentelat.net-3.3.iso"
+ide1:1.deviceType = "cdrom-image"
+ide1:1.mode = "persistent"
+ide1:1.startConnected = "TRUE"
+
+# LsiLogic SCSI card
+scsi0.present = "TRUE"
+scsi0.virtualDev = "lsilogic"
+
+# First SCSI disk image, size 11Gb
+scsi0:0.present = "TRUE"
+scsi0:0.fileName = "My_Virtual_Machine_model.vmdk"
+scsi0:0.mode = "persistent"
+scsi0:0.startConnected = "TRUE"
+scsi0:0.writeThrough = "TRUE"
+
+# END OF EasyVMX! CONFIG
+
+scsi0:0.redo = ""
+ethernet0.generatedAddress = "00:0c:29:24:ff:8f"
+uuid.location = "56 4d 4f 31 ef 1d 6d 78-35 2f 38 b2 a2 24 ff 8f"
+uuid.bios = "56 4d 4f 31 ef 1d 6d 78-35 2f 38 b2 a2 24 ff 8f"
+
+usb.autoConnect.device0 = "path:1/0 autoclean:1"

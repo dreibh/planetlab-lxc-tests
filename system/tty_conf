@@ -1,0 +1,24 @@
+e PLC_NAME
+TestLab
+e PLC_ROOT_PASSWORD
+test++
+e PLC_ROOT_USER
+root@onelab-test.inria.fr
+e PLC_MAIL_ENABLED
+true
+e PLC_MAIL_SUPPORT_ADDRESS
+mohamed-amine.chaoui@sophia.inria.fr
+e PLC_DB_HOST
+onelab-test.inria.fr
+e PLC_API_HOST
+onelab-test.inria.fr
+e PLC_WWW_HOST
+onelab-test.inria.fr
+e PLC_BOOT_HOST
+onelab-test.inria.fr
+e PLC_NET_DNS1
+138.96.0.10
+e PLC_NET_DNS2
+138.96.0.11
+w
+q
