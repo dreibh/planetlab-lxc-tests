@@ -6,7 +6,7 @@ NST_API_SERVER='https://www.planet-lab.org/PLCAPI/'
 
 # Slice SSH Public Key
 # The SSH public key used to access the slice. 
-NST_KEY_PATH='/usr/share/planetlab/tests/nts/keys/nts.pub'
+NST_KEY_PATH='PATH_TO_PUBLIC_KEY_FILE'
 
 # Slice Name
 # Name of the slice to use.
