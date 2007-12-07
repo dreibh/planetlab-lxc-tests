@@ -55,7 +55,6 @@ class Config:
 	self.key = self.NST_KEY_PATH
 	self.slice = self.NST_SLICE
 	self.nodes = self.NST_NODES
-	self.multiquery_path = self.NST_MULTIQUERY_PATH
 	self.verbose = options.verbose 	
 	
 	self.data_path = '/usr/share/planetlab/tests/nst/data/'
@@ -92,7 +91,7 @@ def getTimeTicString(t1, t2, step):
 def count_nodes_by_api(config):
 
 	# count all nodes	
-	all_nodes = [row['node_id'] for row in config.api.GetNodes(config.auth, {}, ['node_id', 'slice_ids'])]
+	all_nodes = config.api.GetNodes(config.auth, {}, ['node_id', 'slice_ids'])
 	all_nodes_output = "%d\t%d" % (round(time.time()), len(all_nodes))
 
 	# count all nodes in slice
@@ -146,7 +145,6 @@ def count_nodes_can_ssh(config):
 	verbose = config.verbose
 	auth = config.auth
 	nodes = config.nodes
-	multiquery_path = config.multiquery_path
 
 	if verbose:
 	    verbose_text = ""
@@ -172,7 +170,8 @@ def count_nodes_can_ssh(config):
 	    node_list = node_dict.keys()
 	    nodes_filename = tempfile.mktemp()
 	    nodes_file = open(nodes_filename, 'w')
-	    nodes_file.write_lines(node_list)
+	    for node in node_list:
+		nodes_file.write("%(node)s\n" % locals())
 	    nodes_file.close()
 	
 	# creaet node dict
@@ -189,7 +188,6 @@ def count_nodes_can_ssh(config):
 	ssh_filename = tempfile.mktemp()
 	ssh_file = open(ssh_filename, 'w')
 	ssh_file.write("""
-	export PATH=$PATH:%(multiquery_path)s
 	export MQ_SLICE="%(slice)s"
         export MQ_NODES="%(nodes_filename)s"
 
@@ -202,9 +200,17 @@ def count_nodes_can_ssh(config):
         grep -v ": 0 bytes"		
 	""" % locals())
 	ssh_file.close()
-	ssh_results = os.popen("python /tmp/test").readlines()
-	ssh_result = eval(ssh_results[0].replace('\\n', '')) 
-
+	ssh_results = os.popen("bash %(ssh_filename)s" % locals()).readlines()
+	from pprint import pprint
+	pprint(ssh_results)
+	if len(ssh_results) > 0: 
+	    ssh_result = eval(ssh_results[0].replace('\\n', '')) 
+	else:
+	    ssh_result = []
+	# remove temp files 
+	#if os.path.exists(nodes_filename): os.unlink(nodes_filename)
+	#if os.path.exists(ssh_filename): os.unlink(ssh_filename)
+	
 	# create a list of hostname out of results that are not empty
 	good_nodes = []
 	for result in ssh_result:
@@ -252,22 +258,26 @@ def empty_slice(config):
 	    print "Removing %s from all nodes" % config.slice
 
 	all_nodes = [row['node_id'] for row in config.api.GetNodes(config.auth, {}, ['node_id'])]
-	config.api.DeleteSliceFromNodes(config.auth, slice, all_nodes)
+	config.api.DeleteSliceFromNodes(config.auth, config.slice, all_nodes)
 
 	
 # add slice to all nodes. 
 # make sure users key is up to date   
 def init_slice(config):
 
-    # make sure slice exists
-    slices = config.api.GetSlices(config.auth, [config.slice], \
+    api  = config.api	
+    auth = config.auth
+    slice = config.slice 	
+    key_path = config.key
+    verbose = config.verbose 
+    slices = api.GetSlices(auth, [slice], \
 				  ['slice_id', 'name', 'person_ids'])
     if not slices:
-        raise "No such slice %s" % config.slice
+        raise "No such slice %s" % slice
     slice = slices[0]
 
     # make sure user is in slice
-    person = config.api.GetPersons(config.auth, config.auth['Username'], \
+    person = api.GetPersons(auth, auth['Username'], \
 				   ['person_id', 'email', 'slice_ids', 'key_ids'])[0]
     if slice['slice_id'] not in person['slice_ids']:
         raise "%s not in %s slice. Must be added first" % \
@@ -278,26 +288,30 @@ def init_slice(config):
     if len(current_key) == 0:
         raise "Key cannot be empty" 
 
-    keys = config.api.GetKeys(auth, person['key_ids'])
+    keys = api.GetKeys(auth, person['key_ids'])
     if not keys:
-        if config.verbose:
+        if verbose:
  	    print "Adding new key " + key_path
-        config.api.AddPersonKey(config.auth, person['person_id'], \
+        api.AddPersonKey(auth, person['person_id'], \
 			        {'key_type': 'ssh', 'key': current_key})
 
     elif not filter(lambda k: k['key'] == current_key, keys):
-        if config.verbose:
+        if verbose:
 	    print "%s was modified or is new. Updating PLC"
         old_key = keys[0]
-        config.api.UpdateKey(config.auth, old_key['key_id'], \
+        api.UpdateKey(auth, old_key['key_id'], \
 			     {'key': current_key})
 
+
+	
     # add slice to all nodes  	 		
-    if config.verbose:
-        print "Adding %s to all nodes" + slice
+    if verbose:
+        print "Generating list of all nodes " 
     all_nodes = [row['node_id'] for row in \
-		 config.api.GetNodes(config.auth, {}, ['node_id'])]
-    config.api.AddSliceToNodes(config.auth, config.slice, all_nodes)
+                 api.GetNodes(auth, {}, ['node_id'])]
+    if verbose:
+        print "Adding %s to all nodes" % slice['name']
+    api.AddSliceToNodes(auth, slice['slice_id'], all_nodes)
 	
 	
 # create the fill/empty plot
@@ -307,6 +321,8 @@ def plot_fill_empty():
 	ticstep = 1800
 	plotlength = 10800
 
+	plots_path = config.plots_path
+	
 	all_nodes_file_name = config.data_path + os.sep + "nodes"	
 	nodes_in_slice_file_name = config.data_path + os.sep + "nodes_in_slice"
 	nodes_can_ssh_file_name = config.data_path + os.sep + "nodes_can_ssh"
@@ -371,7 +387,7 @@ def plot_fill_empty():
 
 
 config = Config(options)
-
+sleep_time = 30
 
 if config.slice == 'root':
 
@@ -380,9 +396,11 @@ if config.slice == 'root':
 else:
     # set up slice and add it to nodes
     init_slice(config)
-    
+   
+    if config.verbose:
+	print "Waiting %(sleep_time)d seconds for nodes to update" % locals()	 
     # wait 15 mins for nodes to get the data
-    sleep(900)	  	
+    sleep(sleep_time)	  	
 
 # gather data
 count_nodes_can_ssh(config)	
@@ -390,9 +408,9 @@ count_nodes_by_api(config)
 count_nodes_good_by_comon(config)
     
 # update plots
-plot_fill_empty()
+#plot_fill_empty()
 #os.system("cp plots/*.png ~/public_html/planetlab/tests")		 		
 
 # clean up
-empty_slice(config)		
+#empty_slice(config)		
 
