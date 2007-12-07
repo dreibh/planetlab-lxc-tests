@@ -2,7 +2,7 @@
 
 # API URL
 # URL to api server.
-NST_API_SERVER='https://www.planet-lab.org/PLCAPI/' 
+NST_API_SERVER='API_URL' 
 
 # Slice SSH Public Key
 # The SSH public key used to access the slice. 
@@ -10,7 +10,7 @@ NST_KEY_PATH='PATH_TO_PUBLIC_KEY_FILE'
 
 # Slice Name
 # Name of the slice to use.
-NST_SLICE='pl_nts'  
+NST_SLICE='SLICE_NAME'  
 
 # Slice User's Account
 # An account that has access to the slice we will use. 
