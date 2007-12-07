@@ -22,7 +22,7 @@ nst: $(CODE) $(CONFIG) $(CRON) data
 	ln -s $(datadir)/$(appdir)/$(CODE) /usr/bin/nst
 
         # reload cron
-	$(CROND) reload
+	$(CROND) restart
 
 
 data:
@@ -34,6 +34,6 @@ clean:
 	rm -rf /etc/cron.d/$(CRON)
 	rm -rf /usr/bin/nst
 
-	$(CROND) reload
+	$(CROND) restart
 
 .PHONY: clean data
