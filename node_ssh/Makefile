@@ -26,7 +26,6 @@ nst: $(CODE) $(CONFIG) $(CRON) data
 
 
 data:
-	install -d -m 755 $(datadir)/$(appdir)/keys/
 	install -d -m 755 $(datadir)/$(appdir)/plots/	
 	install -d -m 755 $(datadir)/$(appdir)/data/
 clean:
