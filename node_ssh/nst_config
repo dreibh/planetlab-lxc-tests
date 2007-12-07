@@ -1,12 +1,22 @@
-# node_test_ssh config file
+# node_ssh config file
 
+# API URL
+# URL to api server.
 NST_API_SERVER='https://www.planet-lab.org/PLCAPI/' 
 
+# Slice SSH Public Key
+# The SSH public key used to access the slice. 
 NST_KEY_PATH='/usr/share/planetlab/tests/nts/keys/nts.pub'
 
+# Slice Name
+# Name of the slice to use.
 NST_SLICE='pl_nts'  
 
+# Slice User's Account
+# An account that has access to the slice we will use. 
 NST_USER='USERNAME'
 
+# Slice User's Password
+# The password of the slice user's account. 
 NST_PASSWORD='PASSWORD'
 
