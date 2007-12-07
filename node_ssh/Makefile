@@ -16,7 +16,7 @@ all: $(APPS)
 nst: $(CODE) $(CONFIG) $(CRON) data
 	install -D -m 755 nst.py $(datadir)/$(appdir)/$(CODE)
 	install -D -m 750 nst_config $(datadir)/$(appdir)/$(CONFIG)
-	install -D -m 755 nst.cron /etc/cron.d/$(CRON)
+	install -D -m 644 nst.cron /etc/cron.d/$(CRON)
 
 	# create symlink to executable	
 	ln -s $(datadir)/$(appdir)/$(CODE) /usr/bin/nst
