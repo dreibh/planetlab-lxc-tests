@@ -1,0 +1,6 @@
+NTS_PATH = "/var/planetlab/test/nts"
+
+*/2 * * * * cd $NTS_PATH; python nts.py;
+
+
+

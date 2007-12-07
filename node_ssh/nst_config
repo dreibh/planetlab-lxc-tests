@@ -1,0 +1,14 @@
+# node_test_ssh config file
+
+NST_API_SERVER='https://www.planet-lab.org/PLCAPI/' 
+
+NST_KEY_PATH='/usr/share/planetlab/tests/nts/keys/nts.pub'
+
+NST_MULTIQUERY_PATH='/usr/share/codeploy'
+
+NST_SLICE='pl_nts'  
+
+NST_USER='USERNAME'
+
+NST_PASSWORD='PASSWORD'
+
