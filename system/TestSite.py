@@ -138,14 +138,12 @@ class TestSite:
         
     def run_vmware(self,liste_nodes,display):
         path=os.path.dirname(sys.argv[0])
-        print path
-        print " kill last vmware before any new  installation  "
+        print "* Killing any running vmware or vmplayer instance"
         self.kill_all_vmwares()
-        print 'i will be displayed here========>', display
-        arg='< /dev/null &>/dev/null &'
+        print "* Displaying vmplayer on DISPLAY=",display
         for l in liste_nodes :
-            #os.system('set -x; vmplayer  VirtualFile-%s/My_Virtual_Machine.vmx  %s '%(l['hostname'],arg))
-            os.system('set -x; DISPLAY=%s vmplayer %s/VirtualFile-%s/My_Virtual_Machine.vmx %s '%(display,path,l['hostname'],arg))
+            print "* Starting vmplayer for node %s -- see vmplayer.log",l['hostname']
+            os.system('set -x; cd %s/VirtualFile-%s ; DISPLAY=%s vmplayer My_Virtual_Machine.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,l['hostname'],display))
 
     def delete_known_hosts(self):
         try:
