@@ -93,7 +93,7 @@ ide1:0.startConnected = "FALSE"
 ide1:0.fileName = "/dev/cdrom"
 
 # Settings for the optional virtual CDROM, ISO-image
-ide1:1.present = "FALSE"
+ide1:1.present = "TRUE"
 ide1:1.fileName = "@BOOTCD@"
 ide1:1.deviceType = "cdrom-image"
 ide1:1.mode = "persistent"
