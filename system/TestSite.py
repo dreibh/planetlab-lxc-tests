@@ -142,7 +142,7 @@ class TestSite:
         self.kill_all_vmwares()
         print "* Displaying vmplayer on DISPLAY=",display
         for l in liste_nodes :
-            print "* Starting vmplayer for node %s -- see vmplayer.log",l['hostname']
+            print "* Starting vmplayer for node %s -- see vmplayer.log"%l['hostname']
             os.system('set -x; cd %s/VirtualFile-%s ; DISPLAY=%s vmplayer My_Virtual_Machine.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,l['hostname'],display))
 
     def delete_known_hosts(self):
