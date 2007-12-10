@@ -62,17 +62,14 @@ class TestPlc:
         os.system('set -x; rm %s'%tmpname)
         
     def cleanup_plc(self):
-        os.system('service plc safestop')
+        os.system('set -x; service plc safestop')
         #####detecting the last myplc version installed and remove it
         os.system('set -x; rpm -e myplc')
-        print "=======================>Remove Myplc DONE!"
         ##### Clean up the /plc directory
         os.system('set -x; rm -rf  /plc/data')
-        print "=======================>Clean up  DONE!"
         
     def install_plc(self,url):
-        print url
-        os.system('set -x; rpm -ivh '+url)
+        os.system('set -x; rpm -Uvh '+url)
         os.system('set -x; service plc mount')
       
     def init_site (self,site_spec):
@@ -89,7 +86,7 @@ class TestPlc:
         test_node = TestNode(self, test_site, node_spec)
         test_node.create_node ("pi")
         test_node.create_node ("tech")
-        test_node.create_boot_cd(node_spec,path)
+        test_node.create_boot_cd(path)
         return test_node
     
     def db_dump(self):

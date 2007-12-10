@@ -1,6 +1,5 @@
 #!/usr/bin/vmplayer
-
-# Filename: My_Virtual_Machine.vmx
+# $Id$
 # Generated 2007-05-28;11:47:54 by EasyVMX!
 # http://www.easyvmx.com
 
@@ -16,7 +15,7 @@ guestOS = "other"
 #displayName  
 
 # These fields are free text description fields
-guestinfo.vmware.product.url = "amine.parmentelat.net"
+guestinfo.vmware.product.url = "test.one-lab.org"
 guestinfo.vmware.product.class = "virtual machine"
 
 # Number of virtual CPUs. Your virtual machine will not
@@ -94,8 +93,8 @@ ide1:0.startConnected = "FALSE"
 ide1:0.fileName = "/dev/cdrom"
 
 # Settings for the optional virtual CDROM, ISO-image
-ide1:1.present = "TRUE"
-*ide1:1.fileName = "amine.parmentelat.net-3.3.iso"
+ide1:1.present = "FALSE"
+ide1:1.fileName = "@BOOTCD@"
 ide1:1.deviceType = "cdrom-image"
 ide1:1.mode = "persistent"
 ide1:1.startConnected = "TRUE"

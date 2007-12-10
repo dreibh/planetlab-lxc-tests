@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # $Id$
 
-import os, sys, time
+import os, sys
 from optparse import OptionParser
+import pprint
+
+import utils
 from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
 import TestConfig
-import threading
 
 class TestMain:
 
@@ -38,7 +40,6 @@ myplc-url defaults to the last value used, as stored in URL"""
             test_plcs=[]
             test_nodes=[]
             pids=[]
-            timset=time.strftime("%H:%M:%S", time.localtime())
             #test the existence of the URL
             if (len (self.args) > 2):
                 parser.print_help()
@@ -54,14 +55,14 @@ myplc-url defaults to the last value used, as stored in URL"""
                     print "Cannot determine myplc url"
                     parser.print_help()
                     sys.exit(1)
-            print '* Using myplc url:',url
+            utils.header('* Using myplc at url : %s'%url)
             #check where to display Virtual machines
             if (self.options.Xterm):
                 display=self.options.Xterm
-                print 'the display is', display
+                utils.header('X11 display : %s'% display)
             #the debug option 
             if (self.options.debug):
-                file=self.path+'/'+self.options.debug+'/My_Virtual_Machine.vmx'
+                file=self.path+'/'+self.options.debug+'/node.vmx'
                 if os.path.exists(file):
                     print 'vmx file is',file
                     arg='< /dev/null &>/dev/null &'
@@ -71,43 +72,45 @@ myplc-url defaults to the last value used, as stored in URL"""
                     print "no way to find the virtual file"
                     sys.exit(1)
             
-            print 'Saving myplc url into URL'
+            utils.header('Saving current myplc url into URL')
             fsave=open('%s/URL'%self.path,"w")
             fsave.write(url)
             fsave.write('\n')
             fsave.close()
 
+            pp = pprint.PrettyPrinter(indent=4,depth=2)
             for plc_spec in TestConfig.plc_specs:
-                print '========>Creating plc at '+timset+':',plc_spec
+                utils.header('Creating plc with spec')
+                pp.pprint(plc_spec)
                 test_plc = TestPlc(plc_spec)
                 test_plc.connect()
                 test_plcs.append(test_plc)
                 test_plc.cleanup_plc()
-                print '========>Installing myplc at: ', timset
-                if (len(sys.argv) > 1):
-                    test_plc.install_plc(url)
-                    test_plc.config_plc(plc_spec)
-                else :
-                    print "========>PLease insert a valid url for the myplc install"
+                utils.header('Installing myplc from url %s'%url)
+                test_plc.install_plc(url)
+                test_plc.config_plc(plc_spec)
                 ##create all the sites under the new plc,and then populate them with
                 ##nodes,persons and slices
                 for site_spec in plc_spec['sites']:
-                    print '========>Creating site at '+timset+ ':',site_spec
+                    utils.header('Creating site')
+                    pp.pprint(site_spec)
                     test_site = test_plc.init_site(site_spec)
                     for node_spec in site_spec['nodes']:
-                        print '========>Creating node at  '+ timset+' :',node_spec
+                        utils.header('Creating node')
+                        pp.pprint(node_spec)
                         test_nodes.append(node_spec)
                         test_node = test_plc.init_node(test_site,node_spec,self.path)
                 test_node.create_slice ("pi")
-                print 'Runing Checkers and Vmwares for Site nodes at :',timset
+                utils.header('Starting vmware nodes')
                 test_site.run_vmware(test_nodes,display)
+                utils.header('Checking nodes')
                 if(test_site.node_check_status(test_nodes,True)):
                     test_plc.db_dump()
-                    test_site.slice_access(test_nodes)
-                    print "all is alright"
+                    test_site.slice_access()
+                    print "System test successful"
                     return 0
                 else :
-                    print "There is something wrong"
+                    print "System test failed"
                     sys.exit(1)
         except Exception, e:
             print str(e)

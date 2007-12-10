@@ -55,7 +55,7 @@ class TestRestore:
                 
             for l in list_host :
                 print display
-                os.system('DISPLAY=%s vmplayer %s/VirtualFile-%s/My_Virtual_Machine.vmx &'%(display,self.path,l))
+                os.system('DISPLAY=%s vmplayer %s/vmplayer-%s/node.vmx &'%(display,self.path,l))
 
         except Exception, e:
             print str(e)

@@ -2,8 +2,10 @@ import os
 import sys
 import datetime
 import time
-from TestConfig import *
 import xmlrpclib
+
+from TestConfig import *
+import utils
 
 class TestSite:
 
@@ -30,7 +32,7 @@ class TestSite:
     def create_user (self, user_spec):
         try:
             i=0
-            print '========>Adding user at '+self.timset+ ': ',user_spec
+            utils.header('Adding user %s'%user_spec['email'])
             self.person_id=self.test_plc.server.AddPerson(self.test_plc.auth_root(),
                                                           user_spec)
             self.test_plc.server.UpdatePerson(self.test_plc.auth_root(),
@@ -125,27 +127,29 @@ class TestSite:
             return ret_value
         except Exception, e:
             print str(e)
-            print "vmware killed if problems occur  "
+            utils.header("will kill vmware in 10 seconds")
             time.sleep(10)
             self.kill_all_vmwares()
             sys.exit(1)
             
     def kill_all_vmwares(self):
+        utils.header('Killing any running vmware or vmplayer instance')
         os.system('pgrep vmware | xargs -r kill')
         os.system('pgrep vmplayer | xargs -r kill ')
         os.system('pgrep vmware | xargs -r kill -9')
         os.system('pgrep vmplayer | xargs -r kill -9')
         
-    def run_vmware(self,liste_nodes,display):
+    def run_vmware(self,node_specs,display):
         path=os.path.dirname(sys.argv[0])
-        print "* Killing any running vmware or vmplayer instance"
         self.kill_all_vmwares()
-        print "* Displaying vmplayer on DISPLAY=",display
-        for l in liste_nodes :
-            print "* Starting vmplayer for node %s -- see vmplayer.log"%l['hostname']
-            os.system('set -x; cd %s/VirtualFile-%s ; DISPLAY=%s vmplayer My_Virtual_Machine.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,l['hostname'],display))
+        utils.header('Displaying vmplayer on DISPLAY=%s'%display)
+        for spec in node_specs :
+            hostname=spec['hostname']
+            utils.header('Starting vmplayer for node %s -- see vmplayer.log'%hostname)
+            os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,hostname,display))
 
     def delete_known_hosts(self):
+        utils.header("messing with known_hosts (cleaning hostnames starting with 'test'")
         try:
             file1=open('/root/.ssh/known_hosts','r')
             file2=open('/root/.ssh/known_hosts_temp','w')
@@ -159,11 +163,11 @@ class TestSite:
                     file2.write(txt)
             
                 
-            os.system('mv -f /root/.ssh/known_hosts_temp  /root/.ssh/known_hosts')
+            os.system('set -x ; mv -f /root/.ssh/known_hosts_temp  /root/.ssh/known_hosts')
         except Exception, e:
             print str(e)
 
-    def slice_access(self,liste_nodes):
+    def slice_access(self):
         try:
             bool=True
             bool1=True
@@ -173,15 +177,16 @@ class TestSite:
             dead_time=start_time + datetime.timedelta(minutes=3)##adding 3minutes
             for slice in slices_specs:
                 for slicenode in slice['slice_nodes']:
-                    timset=time.strftime("%H:%M:%S", time.localtime())
+                    hostname=slicenode['hostname']
+                    slicename=slice['slice_spec']['name']
                     while(bool):
-                        print '=========>Try to Restart the Node Manager on %s at %s:'%(slicenode['hostname'],str(timset))
-                        access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%slicenode['hostname'] )
+                        utils.header('restarting nm on %s'%hostname)
+                        access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname )
                         if (access==0):
-                            print '=========>Node Manager Restarted on %s at %s:'%(slicenode['hostname'] ,str(timset))
+                            utils.header('nm restarted on %s'%hostname)
                             while(bool1):
-                                print '=========>Try to connect to the %s@%s at %s '%(slice['slice_spec']['name'],slicenode['hostname'],str(time.strftime("%H:%M:%S", time.localtime())))
-                                Date=os.system('set -x; ssh -i ~/.ssh/slices.rsa %s@%s echo "The Actual Time here is;" date'%(slice['slice_spec']['name'],slicenode['hostname']))
+                                utils.header('trying to connect to %s@%s'%(slicename,hostname))
+                                Date=os.system('set -x; ssh -i ~/.ssh/slices.rsa %s@%s date'%(slicename,hostname))
                                 if (Date==0):
                                     break
                                 elif ( start_time  <= dead_time ) :
@@ -190,20 +195,20 @@ class TestSite:
                                 else:
                                     bool1=False
                             if(bool1):
-                                print '=========>connected to the '+slice['slice_spec']['name']+'@'+slicenode['hostname'] +'--->'
+                                utils.header('connected to %s@%s -->'%(slicename,hostname))
                             else:
-                                print '=========>access to one slice is denied but last chance'
-                                print '=========>Retry to Restart the Node Manager on %s at %s:'%(slicenode['hostname'],str(timset))
-                                access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%slicenode['hostname'] )
+                                utils.header('%s@%s : last chance - restarting nm on %s'%(slicename,hostname,hostname))
+                                access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
                                 if (access==0):
-                                    print '=========>Retry to connect to the %s@%s at %s '%(slice['slice_spec']['name'],slicenode['hostname'],str(time.strftime("%H:%M:%S", time.localtime())))
-                                    Date=os.system('set -x; ssh -i ~/.ssh/slices.rsa %s@%s echo "The Actual Time here is;" date'%(slice['slice_spec']['name'],slicenode['hostname'] ))
+                                    utils.header('trying to connect (2) to %s@%s'%(slicename,hostname))
+                                    Date=os.system('set -x; ssh -i ~/.ssh/slices.rsa %s@%s date'%(slicename,hostname))
                                     if (Date==0):
-                                        print '=========>connected to the '+slice['slice_spec']['name']+'@'+slicenode['hostname']+'--->'
+                                        utils.header('connected to %s@%s -->'%(slicename,hostname))
                                     else:
-                                        print '=========>the Access is finaly denied'
+                                        utils.header('giving up with to %s@%s -->'%(slicename,hostname))
                                         sys.exit(1)
-                                else :"=========>Last try failed"
+                                else :
+                                    utils.header('Last chance failed on %s@%s -->'%(slicename,hostname))
                             break
                         elif ( start_time  <= dead_time ) :
                             start_time=datetime.datetime.now()+ datetime.timedelta(minutes=1)
