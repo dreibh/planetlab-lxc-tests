@@ -23,16 +23,13 @@ class TestMain:
             usage = """usage: %prog [options] [myplc-url]
 myplc-url defaults to the last value used, as stored in URL"""
             parser=OptionParser(usage=usage,version=self.subversion_id)
-            # verbosity
+
+            parser.add_option("-d","--display", action="store", dest="Xdisplay", default='bellami:0.0',
+                              help="sets DISPLAY for vmplayer")
             parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                               help="Run in verbose mode")
-            # debug mode
-            parser.add_option("-g","--debug", action="store", dest="debug", 
-                              help="Run in debug mode for eventual virtual problems")
-            #exporting Display
-            parser.add_option("-d","--display", action="store", dest="Xterm", default='bellami:0.0',
-                              help="sets DISPLAY for vmplayer")
-        
+            parser.add_option("-r","--run", action="store", dest="run_node", 
+                              help="Only starts vmplayer for the specified node")
             (self.options, self.args) = parser.parse_args()
 
             display=''
@@ -57,19 +54,18 @@ myplc-url defaults to the last value used, as stored in URL"""
                     sys.exit(1)
             utils.header('* Using myplc at url : %s'%url)
             #check where to display Virtual machines
-            if (self.options.Xterm):
-                display=self.options.Xterm
+            if (self.options.Xdisplay):
+                display=self.options.Xdisplay
                 utils.header('X11 display : %s'% display)
-            #the debug option 
-            if (self.options.debug):
-                file=self.path+'/'+self.options.debug+'/node.vmx'
+            #the run option 
+            if (self.options.run_node):
+                file=self.path+'/vmplayer-'+self.options.run_node+'/node.vmx'
                 if os.path.exists(file):
-                    print 'vmx file is',file
-                    arg='< /dev/null &>/dev/null &'
-                    os.system('DISPLAY=%s vmplayer %s %s '%(display,file,arg))
+                    utils.header('starting vmplayer for node %s'%self.options.run_node)
+                    os.system('DISPLAY=%s vmplayer %s '%(display,file))
                     sys.exit(0)
                 else:
-                    print "no way to find the virtual file"
+                    utils.header ('File not found %s - exiting'%file)
                     sys.exit(1)
             
             utils.header('Saving current myplc url into URL')
