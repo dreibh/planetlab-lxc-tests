@@ -146,7 +146,7 @@ class TestSite:
             os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,hostname,display))
 
     def delete_known_hosts(self):
-        utils.header("Messing with known_hosts (cleaning hostnames starting with 'test'")
+        utils.header("Messing with known_hosts (cleaning hostnames starting with 'test[0-9]')")
         sed_command="sed -i -e '/^test[0-9]/d' /root/.ssh/known_hosts"
         os.system("set -x ; " + sed_command)
 
