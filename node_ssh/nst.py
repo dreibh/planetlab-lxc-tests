@@ -106,13 +106,13 @@ def count_nodes_by_api(config):
 
 	# write result to datafiles
 	all_nodes_file_name = config.data_path + os.sep + "nodes" 
-	all_nodes_file = open(all_nodes_file_name, 'w')
-	all_nodes_file.write(all_nodes_output)
+	all_nodes_file = open(all_nodes_file_name, 'a')
+	all_nodes_file.write(all_nodes_output + "\n")
 	all_nodes_file.close()
 	
 	nodes_in_slice_file_name = config.data_path + os.sep + "nodes_in_slice"
-	nodes_in_slice_file = open(nodes_in_slice_file_name, 'w')
-	nodes_in_slice_file.write(nodes_in_slice_output)
+	nodes_in_slice_file = open(nodes_in_slice_file_name, 'a')
+	nodes_in_slice_file.write(nodes_in_slice_output + "\n")
 	nodes_in_slice_file.close()
 	
 	if config.verbose:
@@ -129,7 +129,7 @@ def count_nodes_good_by_comon(config):
 
 	comon_output =  "%d\t%d" % (round(time.time()), len(good_nodes))
 	nodes_good_comon_file_name = config.data_path + os.sep + "nodes_good"
-	nodes_good_comon_file = open(nodes_good_comon_file_name, 'a')
+	nodes_good_comon_file = open(nodes_good_comon_file_name + "\n", 'a')
 	nodes_good_comon_file.write(comon_output)
 	nodes_good_comon_file.close()
 	
@@ -231,8 +231,8 @@ def count_nodes_can_ssh(config):
 	# write good node count 
 	ssh_result_output =  "%d\t%d" % (round(time.time()), ssh_count)
 	nodes_can_ssh_file_name = config.data_path + os.sep + "nodes_can_ssh"
-	nodes_can_ssh_file = open(nodes_can_ssh_file_name, 'w')
-	nodes_can_ssh_file.write(ssh_result_output)
+	nodes_can_ssh_file = open(nodes_can_ssh_file_name, 'a')
+	nodes_can_ssh_file.write(ssh_result_output + "\n")
 	nodes_can_ssh_file.close()
 	
 	if verbose:
@@ -329,13 +329,17 @@ def plot_fill_empty():
 			     nodes_can_ssh_file_name, \
 			     nodes_good_comon_file_name]: 
 		datafile = open(datafilename, 'r')
-		line1 = datafile.readline()
-		datafile.seek(-32,2)
-		line2 = datafile.readlines().pop()
-		thisstarttime = int(line1.split("\t")[0])
+		lines = datafile.readlines()
+		if len(lines) > 0:
+		    line_start = lines[0]
+		    line_end = lines[len(lines) -1]
+		else:
+		    continue
+		
+		thisstarttime = int(line_start.split("\t")[0])
 		if starttime == -1 or thisstarttime < starttime:
 			starttime = thisstarttime
-		thisstoptime = int(line2.split("\t")[0])
+		thisstoptime = int(line_end.split("\t")[0])
 		if stoptime == -1 or thisstoptime > stoptime:
 			stoptime = thisstoptime
 	
@@ -361,19 +365,18 @@ def plot_fill_empty():
 	set yrange[0:950]
 	
 	plot "%(all_nodes_file_name)s" u 1:2 w lines title "Total Nodes", \
-		"%(nodes_in_slice_file_name)s" u 1:2 w lines title "Nodes in Slice", \
-		"%(nodes_good_comon_file_name)s" u 1:2 w lines title \
+	     "%(nodes_in_slice_file_name)s" u 1:2 w lines title "Nodes in Slice", \
+	     "%(nodes_good_comon_file_name)s" u 1:2 w lines title \
 			"Healthy Nodes (according to CoMon)", \
-		"%(nodes_can_ssh_file_name)s" u 1:2 w lines title "Nodes Reachable by SSH"
+	     "%(nodes_can_ssh_file_name)s" u 1:2 w lines title "Nodes Reachable by SSH"
 	
 	""" % locals())
 	
 	tmpfile.close()
 	
-	os.system("%s %s" % (gnuplot_path, tmpfilename))
+	os.system("gnuplot %s" %  tmpfilename)
 	
-	if os.path.exists(tmpfilename):
-		os.unlink(tmpfilename)
+	if os.path.exists(tmpfilename): os.unlink(tmpfilename)
 
 
 
@@ -399,7 +402,7 @@ count_nodes_by_api(config)
 count_nodes_good_by_comon(config)
     
 # update plots
-#plot_fill_empty()
+plot_fill_empty()
 #os.system("cp plots/*.png ~/public_html/planetlab/tests")		 		
 
 # clean up
