@@ -43,7 +43,7 @@ myplc-url defaults to the last value used, as stored in URL"""
             if (len (self.args) > 2):
                 parser.print_help()
                 sys.exit(1)
-            else if (len (self.args) == 1):
+            elif (len (self.args) == 1):
                 url=self.args[0]
             else:
                 try:
