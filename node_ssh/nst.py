@@ -201,24 +201,12 @@ def count_nodes_can_ssh(config):
 	""" % locals())
 	ssh_file.close()
 	ssh_results = os.popen("bash %(ssh_filename)s" % locals()).readlines()
-	from pprint import pprint
-	pprint(ssh_results)
-	if len(ssh_results) > 0: 
-	    ssh_result = eval(ssh_results[0].replace('\\n', '')) 
-	else:
-	    ssh_result = []
-	# remove temp files 
-	#if os.path.exists(nodes_filename): os.unlink(nodes_filename)
-	#if os.path.exists(ssh_filename): os.unlink(ssh_filename)
+	good_nodes= [result.split(':')[0] for result in ssh_results]
 	
-	# create a list of hostname out of results that are not empty
-	good_nodes = []
-	for result in ssh_result:
-	    if result.find("bytes") > -1:
-		result_parts = result.split(":")
-		hostname = result_parts[0]
-	    	good_nodes.append(hostname)
-
+	# remove temp files 
+	if os.path.exists(nodes_filename): os.unlink(nodes_filename)
+	if os.path.exists(ssh_filename): os.unlink(ssh_filename)
+	
 	# count number of node we can ssh into
 	ssh_count = len(good_nodes)
 	
@@ -229,7 +217,8 @@ def count_nodes_can_ssh(config):
 	curr_time = round(time.time())
 	dead_node_count_output = "%d\t%d" % (curr_time, len(dead_nodes))
 	dead_nodes_file_name = config.data_path + os.sep + "dead_nodes"
-	dead_nodes_file = open(dead_nodes_file_name, 'a')
+	dead_nodes_file = open(dead_nodes_file_name, 'w')
+
 	for hostname in dead_nodes:
 	    boot_state = node_dict[hostname]['boot_state']
 	    last_updated = 0
@@ -242,7 +231,7 @@ def count_nodes_can_ssh(config):
 	# write good node count 
 	ssh_result_output =  "%d\t%d" % (round(time.time()), ssh_count)
 	nodes_can_ssh_file_name = config.data_path + os.sep + "nodes_can_ssh"
-	nodes_can_ssh_file = open(nodes_can_ssh_file_name, 'a')
+	nodes_can_ssh_file = open(nodes_can_ssh_file_name, 'w')
 	nodes_can_ssh_file.write(ssh_result_output)
 	nodes_can_ssh_file.close()
 	
@@ -271,7 +260,7 @@ def init_slice(config):
     key_path = config.key
     verbose = config.verbose 
     slices = api.GetSlices(auth, [slice], \
-				  ['slice_id', 'name', 'person_ids'])
+				  ['slice_id', 'name', 'person_ids', 'node_ids'])
     if not slices:
         raise "No such slice %s" % slice
     slice = slices[0]
@@ -311,7 +300,9 @@ def init_slice(config):
                  api.GetNodes(auth, {}, ['node_id'])]
     if verbose:
         print "Adding %s to all nodes" % slice['name']
-    api.AddSliceToNodes(auth, slice['slice_id'], all_nodes)
+
+    new_nodes = set(all_nodes).difference(slice['node_ids'])			
+    api.AddSliceToNodes(auth, slice['slice_id'], list(new_nodes))
 	
 	
 # create the fill/empty plot
@@ -387,7 +378,7 @@ def plot_fill_empty():
 
 
 config = Config(options)
-sleep_time = 30
+sleep_time = 900
 
 if config.slice == 'root':
 
@@ -399,7 +390,7 @@ else:
    
     if config.verbose:
 	print "Waiting %(sleep_time)d seconds for nodes to update" % locals()	 
-    # wait 15 mins for nodes to get the data
+    # wait nodes to get the data
     sleep(sleep_time)	  	
 
 # gather data
@@ -412,5 +403,5 @@ count_nodes_good_by_comon(config)
 #os.system("cp plots/*.png ~/public_html/planetlab/tests")		 		
 
 # clean up
-#empty_slice(config)		
+empty_slice(config)		
 
