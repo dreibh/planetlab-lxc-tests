@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# $Id$
 
 import os, sys, time
 from optparse import OptionParser
@@ -17,7 +18,8 @@ class TestMain:
 
     def main (self):
         try:
-            usage = """usage: %prog [options] MyplcURL"""
+            usage = """usage: %prog [options] [myplc-url]
+myplc-url defaults to the last value used, as stored in URL"""
             parser=OptionParser(usage=usage,version=self.subversion_id)
             # verbosity
             parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
@@ -38,12 +40,21 @@ class TestMain:
             pids=[]
             timset=time.strftime("%H:%M:%S", time.localtime())
             #test the existence of the URL
-            if (len (self.args)):
-                url=self.args[0]
-                print 'the myplc url is ',url
-            else:
-                print "PLease introduce a right URL for the myplc instal"
+            if (len (self.args) > 2):
+                parser.print_help()
                 sys.exit(1)
+            else if (len (self.args) == 1):
+                url=self.args[0]
+            else:
+                try:
+                    url=open("%s/URL"%self.path)
+                    url=url_file.read().strip()
+                    url_file.close()
+                except:
+                    print "Cannot determine myplc url"
+                    parser.print_help()
+                    sys.exit(1)
+            print '* Using myplc url:',url
             #check where to display Virtual machines
             if (self.options.Xterm):
                 display=self.options.Xterm
@@ -60,6 +71,12 @@ class TestMain:
                     print "no way to find the virtual file"
                     sys.exit(1)
             
+            print 'Saving myplc url into URL'
+            fsave=open('%s/URL'%self.path,"w")
+            fsave.write(url)
+            fsave.write('\n')
+            fsave.close()
+
             for plc_spec in TestConfig.plc_specs:
                 print '========>Creating plc at '+timset+':',plc_spec
                 test_plc = TestPlc(plc_spec)

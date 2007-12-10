@@ -1,3 +1,4 @@
+# $Id$
 import os
 import sys
 import xmlrpclib
@@ -36,7 +37,8 @@ class TestPlc:
 # now plc-config-tty silently creates needed directories
 #        os.system('mkdir -p /etc/planetlab/configs')
 
-        fileconf=open('tty_conf','w')
+        tmpname='/tmp/plc-config-tty-%d'%os.getpid()
+        fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',
                      'PLC_ROOT_PASSWORD',
                      'PLC_ROOT_USER',
@@ -52,11 +54,12 @@ class TestPlc:
         fileconf.write('w\n')
         fileconf.write('q\n')
         fileconf.close()
-        os.system('set -x ; cat tty_conf')
-        os.system('set -x ; chroot /plc/root  plc-config-tty < tty_conf')
+        os.system('set -x ; cat %s'%tmpname)
+        os.system('set -x ; chroot /plc/root  plc-config-tty < %s'%tmpname)
         os.system('set -x ; service plc start')
         os.system('set -x; service sendmail stop')
         os.system('set -x; chroot /plc/root service sendmail restart')
+        os.system('set -x; rm %s'%tmpname)
         
     def cleanup_plc(self):
         os.system('service plc safestop')
