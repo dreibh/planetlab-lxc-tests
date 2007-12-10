@@ -27,16 +27,11 @@ class TestPlc:
     def display_results(self, test_case_name, status, timers):
         timers=datetime.datetime.now()
         fileHandle = open (self.path+'/results.txt', 'a' )
-        fileHandle.write ( str(test_case_name)+'                    ' +str(status)+'                    '+str(timers))
+        fileHandle.write ( str(test_case_name)+'\t' +str(status)+'\t'+str(timers)+'\n')
         fileHandle.close()
-
         
 
     def config_plc(self,plc_spec):
-# Thierry 2007-07-05 
-# now plc-config-tty silently creates needed directories
-#        os.system('mkdir -p /etc/planetlab/configs')
-
         tmpname='/tmp/plc-config-tty-%d'%os.getpid()
         fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',

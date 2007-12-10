@@ -12,7 +12,7 @@ class TestSite:
     def __init__ (self,test_plc,site_spec):
 	self.test_plc=test_plc
 	self.site_spec=site_spec
-        self.timset=time.strftime("%H:%M:%S", time.localtime())
+        self.sitename=site_spec['site_fields']['name']
         
     def create_site (self):
         try:
@@ -87,26 +87,24 @@ class TestSite:
             dbg={'boot_state':'dbg'}
             secondes=15
             start_time = datetime.datetime.now() ##geting the current time
-            dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=10)##adding 10minutes
-            start=time.strftime("%H:%M:%S", time.localtime())
-            print "time in the begining  is :",start
+            dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=10)
+            utils.header("Starting checking for nodes in site %s"%self.sitename)
             
             for l in liste_nodes :
+                hostname=l['hostname']
                 while (bool):
-                    node_status=self.test_plc.server.GetNodes(self.test_plc.auth_root(),
-                                                              l['hostname'], filter)
-                    timset=time.strftime("%H:%M:%S", time.localtime())
-                    print 'the actual status for the node '+l['hostname']+' at '+str(timset)+' is :',node_status
+                    node_status=self.test_plc.server.GetNodes(self.test_plc.auth_root(),hostname, filter)
+                    utils.header('Actual status for node %s is [%s]'%(hostname,node_status))
                     try:
                         if (node_status[0] == bt):
-                            test_name='\nTest Installation Node hosted: '+l['hostname']
-                            self.test_plc.display_results(test_name, 'Successful', '')##printing out the result
-                            break ##for exsiting and renaming virtual file to just installed
+                            test_name='Test Installation Node hosted: '+hostname
+                            self.test_plc.display_results(test_name, 'Successful', '')
+                            break ##for existing and renaming virtual file to just installed
                         elif (node_status[0] ==dbg):
-                            test_name='\nTest Installation Node hosted: '+l['hostname']
-                            self.test_plc.display_results(test_name, 'En Debug', '')##printing out the result
+                            test_name='Test Installation Node hosted: '+hostname
+                            self.test_plc.display_results(test_name, 'En Debug', '')
                             bool=False
-                            break ##for exsiting and renaming virtual file to just installed
+                            break ##for existing and renaming virtual file to just installed
                         elif ( start_time  <= dead_time ) :
                             start_time=datetime.datetime.now()+ datetime.timedelta(minutes=2)
                             time.sleep(secondes)
@@ -115,15 +113,14 @@ class TestSite:
                         bool=False
                         str(e)
                 if (bool):
-                    print "Node correctly instaled and booted "
+                    utils.header("Node %s correctly instaled and booted"%hostname)
                 else :
-                    print "Node not fully booted "
+                    utils.header("Node %s not fully booted"%hostname)
                     ret_value=False
-                    test_name='\nTest Installation Node Hosted: ',l['hostname']
+                    test_name='Test Installation Node Hosted: ',hostname
                     self.test_plc.display_results(test_name, 'Failure', '')
             
-            end=time.strftime("%H:%M:%S", time.localtime())
-            print "time at the end is :",end  ##converting time to secondes
+            utils.header("End checking for nodes in site %s"%self.sitename)
             return ret_value
         except Exception, e:
             print str(e)
@@ -149,23 +146,9 @@ class TestSite:
             os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,hostname,display))
 
     def delete_known_hosts(self):
-        utils.header("messing with known_hosts (cleaning hostnames starting with 'test'")
-        try:
-            file1=open('/root/.ssh/known_hosts','r')
-            file2=open('/root/.ssh/known_hosts_temp','w')
-            while 1:
-                txt = file1.readline()
-                if txt=='':
-                    file1.close()
-                    file2.close()
-                    break
-                if txt[0:4]!='test' :
-                    file2.write(txt)
-            
-                
-            os.system('set -x ; mv -f /root/.ssh/known_hosts_temp  /root/.ssh/known_hosts')
-        except Exception, e:
-            print str(e)
+        utils.header("Messing with known_hosts (cleaning hostnames starting with 'test'")
+        sed_command="sed -i -e '/^test[0-9]/d' /root/.ssh/known_hosts"
+        os.system("set -x ; " + sed_command)
 
     def slice_access(self):
         try:
