@@ -65,7 +65,7 @@ class TestNode:
     def conffile(self,image,hostname,path):
         template='%s/template-vmplayer/node.vmx'%(path)
         actual='%s/vmplayer-%s/node.vmx'%(path,hostname)
-        sed_command="sed -e s,@BOOTCD@,%s,g %s > %s"%(image,template,actual)
+        sed_command="sed -e s,@BOOTCD@,%s/%s,g %s > %s"%(path,image,template,actual)
         utils.header('Creating %s from %s'%(actual,template))
         os.system('set -x; ' + sed_command)
 
