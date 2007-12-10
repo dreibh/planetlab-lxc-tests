@@ -98,11 +98,11 @@ class TestSite:
                     try:
                         if (node_status[0] == bt):
                             test_name='\nTest Installation Node hosted: '+l['hostname']
-                            self.test_plc.affiche_results(test_name, 'Successful', '')##printing out the result
+                            self.test_plc.display_results(test_name, 'Successful', '')##printing out the result
                             break ##for exsiting and renaming virtual file to just installed
                         elif (node_status[0] ==dbg):
                             test_name='\nTest Installation Node hosted: '+l['hostname']
-                            self.test_plc.affiche_results(test_name, 'En Debug', '')##printing out the result
+                            self.test_plc.display_results(test_name, 'En Debug', '')##printing out the result
                             bool=False
                             break ##for exsiting and renaming virtual file to just installed
                         elif ( start_time  <= dead_time ) :
@@ -115,10 +115,10 @@ class TestSite:
                 if (bool):
                     print "Node correctly instaled and booted "
                 else :
-                    print "Node not fully booted "##cheek if configuration file already exist
+                    print "Node not fully booted "
                     ret_value=False
                     test_name='\nTest Installation Node Hosted: ',l['hostname']
-                    self.test_plc.affiche_results(test_name, 'Failure', '')##printing out the result
+                    self.test_plc.display_results(test_name, 'Failure', '')
             
             end=time.strftime("%H:%M:%S", time.localtime())
             print "time at the end is :",end  ##converting time to secondes

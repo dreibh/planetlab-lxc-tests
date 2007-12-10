@@ -24,7 +24,7 @@ class TestPlc:
 		'AuthString':self.plc_spec['PLC_ROOT_PASSWORD'],
                 'Role' : self.plc_spec['role']
                 }
-    def affiche_results(self, test_case_name, status, timers):
+    def display_results(self, test_case_name, status, timers):
         timers=datetime.datetime.now()
         fileHandle = open (self.path+'/results.txt', 'a' )
         fileHandle.write ( str(test_case_name)+'                    ' +str(status)+'                    '+str(timers))

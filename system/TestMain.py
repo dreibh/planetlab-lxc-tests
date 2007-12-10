@@ -29,7 +29,7 @@ myplc-url defaults to the last value used, as stored in URL"""
                               help="Run in debug mode for eventual virtual problems")
             #exporting Display
             parser.add_option("-d","--display", action="store", dest="Xterm", default='bellami:0.0',
-                              help="export the display on the mentionneted one")
+                              help="sets DISPLAY for vmplayer")
         
             (self.options, self.args) = parser.parse_args()
 
