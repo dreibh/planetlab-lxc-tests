@@ -47,7 +47,7 @@ myplc-url defaults to the last value used, as stored in URL"""
                 url=self.args[0]
             else:
                 try:
-                    url=open("%s/URL"%self.path)
+                    url_file=open("%s/URL"%self.path)
                     url=url_file.read().strip()
                     url_file.close()
                 except:
