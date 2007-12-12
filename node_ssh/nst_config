@@ -20,3 +20,8 @@ NST_USER='USERNAME'
 # The password of the slice user's account. 
 NST_PASSWORD='PASSWORD'
 
+# Plot Lenght
+# Length of x-axis in seconds
+# 36000 seconds = 10 hours
+NST_PLOT_LENGTH=36000
+
