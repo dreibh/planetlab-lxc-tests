@@ -11,7 +11,8 @@ CROND = /etc/init.d/crond
 APPS = nst
 
 datadir := /usr/share
-appdir := /planetlab/tests/nst
+vardir := /var/lib
+appdir := /planetlab/tests/node-ssh
 
 all: $(APPS)
 
@@ -28,17 +29,21 @@ cron: $(CRON)
 	$(CROND) restart
 
 config: $(CONFIG)
-	install -D -m 750 $(CONFIG) $(datadir)/$(appdir)/$(CONFIG)
+	install -D -m 640 $(CONFIG) $(datadir)/$(appdir)/$(CONFIG)
 	install -D -m 644 $(SSH_CONFIG) /root/.ssh/config
+
 data:
-	install -d -m 755 $(datadir)/$(appdir)/plots/	
-	install -d -m 755 $(datadir)/$(appdir)/data/
-clean:
+	install -d -m 755 $(vardir)/$(appdir)/plots/	
+	install -d -m 755 $(vardir)/$(appdir)/data/
+
+cleandata:
+	rm -Rf $(vardir)/$(appdir)
+
+clean: cleandata
 	rm -Rf $(datadir)/$(appdir)
-	rm -rf /etc/cron.d/$(CRON)
 	rm -rf /usr/bin/nst
 	rm -rf /root/.ssh/config
-
+	rm -rf /etc/cron.d/$(CRON)
 	$(CROND) restart
 
-.PHONY: clean data config cron
+.PHONY: clean data config cron nst
