@@ -38,11 +38,21 @@ class TestNode:
         except Exception, e:
                 print str(e)
 
+    def add_initscripts(self):
+        try:
+            for initscript in TestConfig.initscripts:
+                utils.header('Adding Initscripts')
+                pp = pprint.PrettyPrinter(indent=4)
+                pp.pprint(initscript)
+                self.initscript_id=self.test_plc.server.AddInitScript(self.test_plc.auth_root(),
+                                                                      initscript)
+        except Exception, e:
+            print str(e)
+            exit (1)
+
     def create_slice(self, role):
         auth = self.test_site.anyuser_auth (role)
         liste_hosts=[]
-        #for l in liste_nodes_spec :
-        #    liste_hosts.append(l['hostname'])
         try:
             for slicespec in TestConfig.slices_specs :
                 utils.header('Creating Slice')
@@ -58,6 +68,11 @@ class TestNode:
                     self.test_plc.server.AddSliceToNodes(auth,
                                                          slice_id,
                                                          liste_hosts)
+                    
+                self.test_plc.server.AddSliceAttribute(self.test_plc.auth_root(),
+                                                       slice_id, 'initscript',
+                                                       slicespec['slice_initscript']['name'])
+            
         except Exception, e:
             print str(e)
             sys.exit(1)

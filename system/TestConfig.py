@@ -114,6 +114,15 @@ plc_specs = [ plc_spec1 ]
 key={'key_type':'ssh',
      'key':'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== root@onelab-test.inria.fr'}
 
+initscripts =[{ 'enabled' : True,
+                'name':'Test1',
+                'script' : '#! /bin/sh\n echo Starting test initscript: Stage 1\n date > /tmp/test_initscript_stage1.log \n ',
+                },
+              { 'enabled' : True,
+                'name':'Test2',
+                'script' : '#! /bin/sh\n echo Starting test initscript: Stage 2\n date > /tmp/test_initscript_stage2.log \n ',
+                }
+              ]
 
 slice1_spec={
 'slice_spec':{'name':'ts_slicetest1',
@@ -124,8 +133,18 @@ slice1_spec={
               },
 'slice_users' : [ site_users['pi_spec'], site_users['tech_spec'],site_users['tech_user_spec']],
 'slice_nodes' : [ site1_nodes['node1'], site1_nodes['node2'] ],
+'slice_initscript' : initscripts[0],
 }
-slices_specs= [slice1_spec]
-
-
+slice2_spec={
+'slice_spec':{'name':'ts_slicetest2',
+              'instantiation':'plc-instantiated',
+              'url':'http://foo2@ffo2.com',
+              'description':'testslice the second slice for the site testsite',
+              'max_nodes':100
+              },
+'slice_users' : [ site_users['pi_spec'], site_users['tech_spec'],site_users['tech_user_spec']],
+'slice_nodes' : [ site1_nodes['node1'], site1_nodes['node2'] ],
+'slice_initscript' : initscripts[1],
+}
+slices_specs= [slice1_spec, slice2_spec ]
 

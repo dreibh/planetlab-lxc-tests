@@ -86,7 +86,7 @@ myplc-url defaults to the last value used, as stored in URL"""
                 test_plc.install_plc(url)
                 test_plc.config_plc(plc_spec)
                 ##create all the sites under the new plc,and then populate them with
-                ##nodes,persons and slices
+                ##nodes,persons and slices(with initscripts)
                 for site_spec in plc_spec['sites']:
                     utils.header('Creating site')
                     pp.pprint(site_spec)
@@ -96,6 +96,7 @@ myplc-url defaults to the last value used, as stored in URL"""
                         pp.pprint(node_spec)
                         test_nodes.append(node_spec)
                         test_node = test_plc.init_node(test_site,node_spec,self.path)
+                test_node.add_initscripts()
                 test_node.create_slice ("pi")
                 utils.header('Starting vmware nodes')
                 test_site.run_vmware(test_nodes,display)
