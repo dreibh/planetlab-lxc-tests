@@ -13,7 +13,9 @@ parser.add_option("-s", "--slice", action="store", dest="slice", help = "Name of
 parser.add_option("-n", "--nodes", action="store", dest="nodes", help = "File that contains a list of nodes to try to access")
 parser.add_option("-k", "--key", action="store", dest="key", help = "Path to alternate public key")
 parser.add_option("-u", "--user", action="store", dest="user", help = "API user name")
-parser.add_option("-p", "--password", action="store", dest="password", help = "API password") 
+parser.add_option("-p", "--password", action="store", dest="password", help = "API password")
+parser.add_option("-g", "--graph-only", action="store", dest="graph_only", help = "Only plot the current data, then exit")
+parser.add_option("-l", "--plot-length", action="store", dest="plot_length", help = "Plot x-axis (time) length in seconds")
 parser.add_option("-v", "--verbose", action="store_true",  dest="verbose", help="Be verbose (default: %default)")
 (options, args) = parser.parse_args()
 
@@ -32,20 +34,21 @@ class Config:
 	# if options are specified use them
         # otherwise use options from config file
 	if options.config: config_file = options.config
-	else: config_file = '/usr/share/planetlab/tests/nst/nst_config'
+	else: config_file = '/usr/share/planetlab/tests/node-ssh/nst_config'
 	
 	try:
 	    execfile(config_file, self.__dict__)
 	except:
 	    raise "Could not find nst config in " + config_file
 
-	if options.url: self.NST_API_SERVER = options.url
+	if options.url: self.url = self.NST_API_SERVER = options.url
 	if options.slice: self.NST_SLICE = options.slice
 	if options.key: self.NST_KEY_PATH = options.key
 	if options.user: self.NST_USER = options.user
 	if options.password: self.NST_PASSWORD = options.password
 	if options.nodes: self.NST_NODES = options.nodes
 	else: self.NST_NODES = None
+	if options.plot_length: self.NST_PLOT_LENGTH = options.plot_length
 
 	self.api = xmlrpclib.Server(self.NST_API_SERVER)
 	self.auth = {}
@@ -55,11 +58,20 @@ class Config:
 	self.key = self.NST_KEY_PATH
 	self.slice = self.NST_SLICE
 	self.nodes = self.NST_NODES
+	self.plot_length = self.NST_PLOT_LENGTH
+	self.sleep_time = 900
 	self.verbose = options.verbose 	
 	
-	self.data_path = '/usr/share/planetlab/tests/nst/data/'
-	self.plots_path = '/usr/share/planetlab/tests/nst/plots/'	
+	# set up directories
+	self.data_path = '/var/lib/planetlab/tests/node-ssh/data/'
+	self.plots_path = '/var/lib/planetlab/tests/node-ssh/plots/'	
 	
+	# set up files
+	self.all_nodes_filename = self.data_path + os.sep + "nodes"
+	self.nodes_in_slice_filename = self.data_path + os.sep + "nodes_in_slice"
+	self.nodes_can_ssh_filename = self.data_path + os.sep + "nodes_can_ssh"
+	self.nodes_good_comon_filename = self.data_path + os.sep + "nodes_good"
+	 	
 
 # get formatted tic string for gnuplot
 def getTimeTicString(t1, t2, step):
@@ -88,11 +100,10 @@ def getTimeTicString(t1, t2, step):
 
 # count total number of nodes in PlanetLab, according to the api
 # count total number  of nodes in slice, according to the api 
-def count_nodes_by_api(config):
+def count_nodes_by_api(config, current_time, all_nodes):
 
 	# count all nodes	
-	all_nodes = config.api.GetNodes(config.auth, {}, ['node_id', 'slice_ids'])
-	all_nodes_output = "%d\t%d" % (round(time.time()), len(all_nodes))
+	all_nodes_output = "%d\t%d" % (current_time, len(all_nodes))
 
 	# count all nodes in slice
 	if config.slice == 'root':
@@ -102,16 +113,14 @@ def count_nodes_by_api(config):
 	    slice_id =config.api.GetSlices(config.auth, {'name': config.slice}, ['slice_id'])[0]['slice_id']
 	    nodes_in_slice = [row['node_id'] for row in \
 		              all_nodes if slice_id in row['slice_ids']]
-	    nodes_in_slice_output =  "%d\t%d" % (round(time.time()), len(nodes_in_slice))
+	    nodes_in_slice_output =  "%d\t%d" % (current_time, len(nodes_in_slice))
 
 	# write result to datafiles
-	all_nodes_file_name = config.data_path + os.sep + "nodes" 
-	all_nodes_file = open(all_nodes_file_name, 'a')
+	all_nodes_file = open(config.all_nodes_filename, 'a')
 	all_nodes_file.write(all_nodes_output + "\n")
 	all_nodes_file.close()
 	
-	nodes_in_slice_file_name = config.data_path + os.sep + "nodes_in_slice"
-	nodes_in_slice_file = open(nodes_in_slice_file_name, 'a')
+	nodes_in_slice_file = open(config.nodes_in_slice_filename, 'a')
 	nodes_in_slice_file.write(nodes_in_slice_output + "\n")
 	nodes_in_slice_file.close()
 	
@@ -121,23 +130,22 @@ def count_nodes_by_api(config):
  		
 
 # count total number of "good" nodes, according to CoMon
-def count_nodes_good_by_comon(config):
+def count_nodes_good_by_comon(config, current_time):
 	
 	
 	comon = urllib.urlopen("http://summer.cs.princeton.edu/status/tabulator.cgi?table=table_nodeviewshort&format=nameonly&select='resptime%20%3E%200%20&&%20((drift%20%3E%201m%20||%20(dns1udp%20%3E%2080%20&&%20dns2udp%20%3E%2080)%20||%20gbfree%20%3C%205%20||%20sshstatus%20%3E%202h)%20==%200)'")
 	good_nodes = comon.readlines()
 
-	comon_output =  "%d\t%d" % (round(time.time()), len(good_nodes))
-	nodes_good_comon_file_name = config.data_path + os.sep + "nodes_good"
-	nodes_good_comon_file = open(nodes_good_comon_file_name + "\n", 'a')
-	nodes_good_comon_file.write(comon_output)
+	comon_output =  "%d\t%d" % (current_time, len(good_nodes))
+	nodes_good_comon_file = open(config.nodes_good_comon_filename, 'a')
+	nodes_good_comon_file.write(comon_output + "\n")
 	nodes_good_comon_file.close()
 	
 	if config.verbose:
 	    print "comon: " + comon_output 
 	
 # count total number of nodes reachable by ssh
-def count_nodes_can_ssh(config):
+def count_nodes_can_ssh(config, current_time, all_nodes):
 
 	api = config.api
 	slice = config.slice
@@ -153,7 +161,6 @@ def count_nodes_can_ssh(config):
 	    verbose_text = ">/dev/null 2>&1"
 	
 	# creaet node dict
-	all_nodes = api.GetNodes(auth, {}, ['hostname', 'boot_state', 'last_updated'])
         node_dict = {}
         for node in all_nodes:
             node_dict[node['hostname']] = node
@@ -214,24 +221,22 @@ def count_nodes_can_ssh(config):
 	dead_nodes = set(node_list).difference(good_nodes)
 	
 	# write dead nodes to file
-	curr_time = round(time.time())
-	dead_node_count_output = "%d\t%d" % (curr_time, len(dead_nodes))
+	dead_node_count_output = "%d\t%d" % (current_time, len(dead_nodes))
 	dead_nodes_file_name = config.data_path + os.sep + "dead_nodes"
 	dead_nodes_file = open(dead_nodes_file_name, 'w')
 
 	for hostname in dead_nodes:
 	    boot_state = node_dict[hostname]['boot_state']
-	    last_updated = 0
-	    if node_dict[hostname]['last_updated']: 
-		last_updated = node_dict[hostname]['last_updated'] 
-	    dead_nodes_file.write("%(curr_time)d\t%(hostname)s\t%(boot_state)s\t%(last_updated)d\n" % \
+	    last_contact = 0
+	    if node_dict[hostname]['last_contact']: 
+		last_contact = node_dict[hostname]['last_contact'] 
+	    dead_nodes_file.write("%(current_time)d\t%(hostname)s\t%(boot_state)s\t%(last_contact)d\n" % \
 	   			  locals())	
 	dead_nodes_file.close() 
  		
 	# write good node count 
-	ssh_result_output =  "%d\t%d" % (round(time.time()), ssh_count)
-	nodes_can_ssh_file_name = config.data_path + os.sep + "nodes_can_ssh"
-	nodes_can_ssh_file = open(nodes_can_ssh_file_name, 'a')
+	ssh_result_output =  "%d\t%d" % (current_time, ssh_count)
+	nodes_can_ssh_file = open(config.nodes_can_ssh_filename, 'a')
 	nodes_can_ssh_file.write(ssh_result_output + "\n")
 	nodes_can_ssh_file.close()
 	
@@ -241,18 +246,18 @@ def count_nodes_can_ssh(config):
 	
 	
 # remove all nodes from a slice
-def empty_slice(config):
+def empty_slice(config, all_nodes):
 
 	if config.verbose:
 	    print "Removing %s from all nodes" % config.slice
 
-	all_nodes = [row['node_id'] for row in config.api.GetNodes(config.auth, {}, ['node_id'])]
-	config.api.DeleteSliceFromNodes(config.auth, config.slice, all_nodes)
+	all_node_ids = [row['node_id'] for row in all_nodes]
+	config.api.DeleteSliceFromNodes(config.auth, config.slice, all_node_ids)
 
 	
 # add slice to all nodes. 
 # make sure users key is up to date   
-def init_slice(config):
+def init_slice(config, all_nodes):
 
     api  = config.api	
     auth = config.auth
@@ -291,43 +296,40 @@ def init_slice(config):
         api.UpdateKey(auth, old_key['key_id'], \
 			     {'key': current_key})
 
-
-	
     # add slice to all nodes  	 		
     if verbose:
-        print "Generating list of all nodes " 
-    all_nodes = [row['node_id'] for row in \
-                 api.GetNodes(auth, {}, ['node_id'])]
+        print "Generating list of all nodes not in slice" 
+    all_node_ids = [row['node_id'] for row in all_nodes]
+    
+    new_nodes = set(all_node_ids).difference(slice['node_ids'])			
     if verbose:
-        print "Adding %s to all nodes" % slice['name']
+        print "Adding %s to nodes: %r " % (slice['name'], new_nodes)
 
-    new_nodes = set(all_nodes).difference(slice['node_ids'])			
     api.AddSliceToNodes(auth, slice['slice_id'], list(new_nodes))
 	
 	
 # create the fill/empty plot
-def plot_fill_empty():
+def plot_fill_empty(config):
 	#ticstep = 3600	# 1 hour
 	#plotlength = 36000 # 10 hours
 	ticstep = 1800
-	plotlength = 10800
-
+	plot_length = config.plot_length
 	plots_path = config.plots_path
 	
-	all_nodes_file_name = config.data_path + os.sep + "nodes"	
-	nodes_in_slice_file_name = config.data_path + os.sep + "nodes_in_slice"
-	nodes_can_ssh_file_name = config.data_path + os.sep + "nodes_can_ssh"
-	nodes_good_comon_file_name = config.data_path + os.sep + "nodes_good"
+	all_nodes_filename = config.all_nodes_filename	
+	nodes_in_slice_filename = config.nodes_in_slice_filename
+	nodes_can_ssh_filename = config.nodes_can_ssh_filename
+	nodes_good_comon_filename = config.nodes_good_comon_filename
 	
 	tmpfilename = tempfile.mktemp()
 	tmpfile = open(tmpfilename, 'w')
 	
 	starttime = -1
 	stoptime = -1
-	for datafilename in [all_nodes_file_name,
-			     nodes_in_slice_file_name, \
-			     nodes_can_ssh_file_name, \
-			     nodes_good_comon_file_name]: 
+	for datafilename in [all_nodes_filename,
+			     nodes_in_slice_filename, \
+			     nodes_can_ssh_filename, \
+			     nodes_good_comon_filename]: 
 		datafile = open(datafilename, 'r')
 		lines = datafile.readlines()
 		if len(lines) > 0:
@@ -351,8 +353,11 @@ def plot_fill_empty():
 	
 	startdate = time.strftime("%b %m, %Y - %H:%M", time.localtime(startx))
 	stopdate = time.strftime("%H:%M", time.localtime(stopx))
-	
-	tmpfile.write("""
+
+	if config.verbose:
+	    print "plotting data with start date: %(startdate)s and stop date: %(stopdate)s" % locals()
+		
+	plot_output ="""
 	set term png
 	set output "%(plots_path)s/fill_empty.png"
 	
@@ -364,15 +369,18 @@ def plot_fill_empty():
 	set xrange[%(startx)d:%(stopx)d]
 	set yrange[0:950]
 	
-	plot "%(all_nodes_file_name)s" u 1:2 w lines title "Total Nodes", \
-	     "%(nodes_in_slice_file_name)s" u 1:2 w lines title "Nodes in Slice", \
-	     "%(nodes_good_comon_file_name)s" u 1:2 w lines title \
+	plot "%(all_nodes_filename)s" u 1:2 w lines title "Total Nodes", \
+	     "%(nodes_in_slice_filename)s" u 1:2 w lines title "Nodes in Slice", \
+	     "%(nodes_good_comon_filename)s" u 1:2 w lines title \
 			"Healthy Nodes (according to CoMon)", \
-	     "%(nodes_can_ssh_file_name)s" u 1:2 w lines title "Nodes Reachable by SSH"
+	     "%(nodes_can_ssh_filename)s" u 1:2 w lines title "Nodes Reachable by SSH"
 	
-	""" % locals())
-	
+	""" 
+	tmpfile.write(plot_output % locals())
 	tmpfile.close()
+
+	if config.verbose:
+	    print plot_output % locals()
 	
 	os.system("gnuplot %s" %  tmpfilename)
 	
@@ -380,31 +388,43 @@ def plot_fill_empty():
 
 
 
+# load configuration
 config = Config(options)
-sleep_time = 900
+current_time = round(time.time())
+all_nodes = config.api.GetNodes(config.auth, {}, \
+				['node_id', 'boot_state', 'hostname', 'last_contact', 'slice_ids'])
 
+if options.graph-only:
+    plot_fill_empty(config)
+    sys.exit(0)
+
+
+# if root is specified we will ssh into root context, not a slice
+# so no need to add a slice to all nodes
 if config.slice == 'root':
 
     if config.verbose:
         print "Logging in as root"
 else:
     # set up slice and add it to nodes
-    init_slice(config)
+    init_slice(config, all_nodes)
    
     if config.verbose:
 	print "Waiting %(sleep_time)d seconds for nodes to update" % locals()	 
-    # wait nodes to get the data
-    sleep(sleep_time)	  	
+
+    # wait for nodes to get the data
+    sleep(config.sleep_time)	  	
+
 
 # gather data
-count_nodes_can_ssh(config)	
-count_nodes_by_api(config)
-count_nodes_good_by_comon(config)
+count_nodes_can_ssh(config, current_time, all_nodes)	
+count_nodes_by_api(config, current_time, all_nodes)
+count_nodes_good_by_comon(config, current_time)
     
 # update plots
-plot_fill_empty()
+plot_fill_empty(config)
 #os.system("cp plots/*.png ~/public_html/planetlab/tests")		 		
 
 # clean up
-empty_slice(config)		
+empty_slice(config, all_nodes)		
 
