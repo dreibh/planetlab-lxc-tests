@@ -14,7 +14,7 @@ parser.add_option("-n", "--nodes", action="store", dest="nodes", help = "File th
 parser.add_option("-k", "--key", action="store", dest="key", help = "Path to alternate public key")
 parser.add_option("-u", "--user", action="store", dest="user", help = "API user name")
 parser.add_option("-p", "--password", action="store", dest="password", help = "API password")
-parser.add_option("-g", "--graph-only", action="store", dest="graph_only", help = "Only plot the current data, then exit")
+parser.add_option("-g", "--graph-only", action="store_true", dest="graph_only", help = "Only plot the current data, then exit")
 parser.add_option("-l", "--plot-length", action="store", dest="plot_length", help = "Plot x-axis (time) length in seconds")
 parser.add_option("-v", "--verbose", action="store_true",  dest="verbose", help="Be verbose (default: %default)")
 (options, args) = parser.parse_args()
@@ -313,7 +313,7 @@ def plot_fill_empty(config):
 	#ticstep = 3600	# 1 hour
 	#plotlength = 36000 # 10 hours
 	ticstep = 1800
-	plot_length = config.plot_length
+	plotlength = config.plot_length
 	plots_path = config.plots_path
 	
 	all_nodes_filename = config.all_nodes_filename	
@@ -390,13 +390,14 @@ def plot_fill_empty(config):
 
 # load configuration
 config = Config(options)
-current_time = round(time.time())
-all_nodes = config.api.GetNodes(config.auth, {}, \
-				['node_id', 'boot_state', 'hostname', 'last_contact', 'slice_ids'])
 
-if options.graph-only:
+if options.graph_only:
     plot_fill_empty(config)
     sys.exit(0)
+
+current_time = round(time.time())
+all_nodes = config.api.GetNodes(config.auth, {}, \
+                                ['node_id', 'boot_state', 'hostname', 'last_contact', 'slice_ids'])
 
 
 # if root is specified we will ssh into root context, not a slice
@@ -410,7 +411,7 @@ else:
     init_slice(config, all_nodes)
    
     if config.verbose:
-	print "Waiting %(sleep_time)d seconds for nodes to update" % locals()	 
+	print "Waiting %d seconds for nodes to update" % config.sleep_time	 
 
     # wait for nodes to get the data
     sleep(config.sleep_time)	  	
