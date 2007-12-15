@@ -87,7 +87,7 @@ class TestSite:
             dbg={'boot_state':'dbg'}
             secondes=15
             start_time = datetime.datetime.now() ##geting the current time
-            dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=10)
+            dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=5)
             utils.header("Starting checking for nodes in site %s"%self.sitename)
             
             for l in liste_nodes :
@@ -113,7 +113,7 @@ class TestSite:
                         bool=False
                         str(e)
                 if (bool):
-                    utils.header("Node %s correctly instaled and booted"%hostname)
+                    utils.header("Node %s correctly installed and booted"%hostname)
                 else :
                     utils.header("Node %s not fully booted"%hostname)
                     ret_value=False
@@ -143,7 +143,8 @@ class TestSite:
         for spec in node_specs :
             hostname=spec['hostname']
             utils.header('Starting vmplayer for node %s -- see vmplayer.log'%hostname)
-            os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,hostname,display))
+#            os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,hostname,display))
+            os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
 
     def delete_known_hosts(self):
         utils.header("Messing with known_hosts (cleaning hostnames starting with 'test[0-9]')")
