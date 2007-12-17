@@ -312,8 +312,8 @@ def init_slice(config, all_nodes):
 def plot_fill_empty(config):
 	#ticstep = 3600	# 1 hour
 	#plotlength = 36000 # 10 hours
-	ticstep = 1800
-	plotlength = config.plot_length
+	ticstep = 3600
+	plotlength = int(config.plot_length)
 	plots_path = config.plots_path
 	
 	all_nodes_filename = config.all_nodes_filename	
