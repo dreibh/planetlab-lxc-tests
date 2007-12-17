@@ -21,7 +21,7 @@ class TestMain:
     def main (self):
         try:
             usage = """usage: %prog [options] [myplc-url]
-myplc-url defaults to the last value used, as stored in URL"""
+myplc-url defaults to the last value used, as stored in MYPLC-URL"""
             parser=OptionParser(usage=usage,version=self.subversion_id)
 
             parser.add_option("-d","--display", action="store", dest="Xdisplay", default='bellami:0.0',
@@ -30,14 +30,19 @@ myplc-url defaults to the last value used, as stored in URL"""
                               help="Run in verbose mode")
             parser.add_option("-r","--run", action="store", dest="run_node", 
                               help="Only starts vmplayer for the specified node")
+            parser.add_option("-h","--help", action="store_true", dest="help", default=False,
+                              help="Displays this message")
             (self.options, self.args) = parser.parse_args()
+            if self.options.help:
+                parser.print_help()
+                sys.exit(1)
 
             display=''
             url=''
             test_plcs=[]
             test_nodes=[]
             pids=[]
-            #test the existence of the URL
+            #test the existence of the url
             if (len (self.args) > 2):
                 parser.print_help()
                 sys.exit(1)
@@ -45,7 +50,7 @@ myplc-url defaults to the last value used, as stored in URL"""
                 url=self.args[0]
             else:
                 try:
-                    url_file=open("%s/URL"%self.path)
+                    url_file=open("%s/MYPLC-URL"%self.path)
                     url=url_file.read().strip()
                     url_file.close()
                 except:
@@ -68,8 +73,8 @@ myplc-url defaults to the last value used, as stored in URL"""
                     utils.header ('File not found %s - exiting'%file)
                     sys.exit(1)
             
-            utils.header('Saving current myplc url into URL')
-            fsave=open('%s/URL'%self.path,"w")
+            utils.header('Saving current myplc url into MYPLC-URL')
+            fsave=open('%s/MYPLC-URL'%self.path,"w")
             fsave.write(url)
             fsave.write('\n')
             fsave.close()
