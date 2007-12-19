@@ -2,8 +2,8 @@ import os, sys, time, base64
 import xmlrpclib
 import pprint
 
-import TestConfig
 import utils
+from TestUser import TestUser
 
 class TestNode:
 
@@ -12,71 +12,23 @@ class TestNode:
 	self.test_site=test_site
 	self.node_spec=node_spec
 
-    def create_node (self,role):
-        auth = self.test_site.anyuser_auth (role)
-        filter={'boot_state':'rins'}
-        try:
-            if (role=='pi' and self.node_spec['owned']=='pi'):
-                self.node_id = \
-                    self.test_plc.server.AddNode(auth,
-                                                 self.test_site.site_spec['site_fields']['login_base'],
-                                                 self.node_spec)
-                self.test_plc.server.AddNodeNetwork(auth,self.node_id,
-                                                    self.node_spec['network'])
-                self.test_plc.server.UpdateNode(auth, self.node_id, filter)
-                return self.node_id
-            
-            elif (role=='tech' and self.node_spec['owned']=='tech'):
-                self.node_id = \
-                    self.test_plc.server.AddNode(auth,
-                                                 self.test_site.site_spec['site_fields']['login_base'],
-                                                 self.node_spec)
-                self.test_plc.server.AddNodeNetwork(auth,self.node_id,
-                                                    self.node_spec['network'])
-                self.test_plc.server.UpdateNode(auth, self.node_id, filter)
-                return self.node_id
-        except Exception, e:
-                print str(e)
-
-    def add_initscripts(self):
-        try:
-            for initscript in TestConfig.initscripts:
-                utils.header('Adding Initscripts')
-                pp = pprint.PrettyPrinter(indent=4)
-                pp.pprint(initscript)
-                self.initscript_id=self.test_plc.server.AddInitScript(self.test_plc.auth_root(),
-                                                                      initscript)
-        except Exception, e:
-            print str(e)
-            exit (1)
-
-    def create_slice(self, role):
-        auth = self.test_site.anyuser_auth (role)
-        liste_hosts=[]
-        try:
-            for slicespec in TestConfig.slices_specs :
-                utils.header('Creating Slice')
-                pp = pprint.PrettyPrinter(indent=4)
-                pp.pprint(slicespec)
-                slice_id=self.test_plc.server.AddSlice(auth,slicespec['slice_spec'])
-                for sliceuser in slicespec['slice_users']:
-                    self.test_plc.server.AddPersonToSlice(auth, 
-                                                          sliceuser['email'], 
-                                                          slice_id)
-                for slicenode in slicespec['slice_nodes']:
-                    liste_hosts.append(slicenode['hostname'])
-                    self.test_plc.server.AddSliceToNodes(auth,
-                                                         slice_id,
-                                                         liste_hosts)
-                    
-                self.test_plc.server.AddSliceAttribute(self.test_plc.auth_root(),
-                                                       slice_id, 'initscript',
-                                                       slicespec['slice_initscript']['name'])
-            
-        except Exception, e:
-            print str(e)
-            sys.exit(1)
+    def name(self):
+        return self.node_spec['node_fields']['hostname']
         
+    def create_node (self):
+        ownername = self.node_spec['owner']
+        user_spec = self.test_site.locate_user(ownername)
+        test_user = TestUser(self.test_plc,self.test_site,user_spec)
+        auth = test_user.auth()
+        utils.header("node %s created by user %s"%(self.name(),test_user.name()))
+        filter={'boot_state':'rins'}
+        self.test_plc.server.AddNode(auth,
+                                     self.test_site.site_spec['site_fields']['login_base'],
+                                     self.node_spec['node_fields'])
+        self.test_plc.server.AddNodeNetwork(auth,self.name(),
+                                            self.node_spec['network_fields'])
+        self.test_plc.server.UpdateNode(auth, self.name(), filter)
+
     def conffile(self,image,hostname,path):
         template='%s/template-vmplayer/node.vmx'%(path)
         actual='%s/vmplayer-%s/node.vmx'%(path,hostname)
@@ -86,22 +38,39 @@ class TestNode:
 
     def create_boot_cd(self,path):
         node_spec=self.node_spec
-        hostname=node_spec['hostname']
-        try:
-            utils.header('Initializing vmplayer area for node %s'%hostname)
-            clean_dir="rm -rf %s/vmplayer-%s"%(path,hostname)
-            mkdir_command="mkdir -p %s/vmplayer-%s"%(path,hostname)
-            tar_command="tar -C %s/template-vmplayer -cf - . | tar -C %s/vmplayer-%s -xf -"%(path,path,hostname)
-            os.system('set -x; ' +clean_dir + ';' + mkdir_command + ';' + tar_command);
-            utils.header('Creating boot medium for node %s'%hostname)
-            encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), hostname, 'node-iso', '')
-            if (encoded == ''):
-                raise Exception, 'boot.iso not found'
-            file=open(path+'/vmplayer-'+hostname+'/boot_file.iso','w')
-            file.write(base64.b64decode(encoded))
-            file.close()
-            utils.header('boot cd created for %s'%hostname)
-            self.conffile('boot_file.iso',hostname, path)
-        except Exception, e:
-            print str(e)
-            sys.exit(1)
+        hostname=node_spec['node_fields']['hostname']
+        utils.header('Initializing vmplayer area for node %s'%hostname)
+        clean_dir="rm -rf %s/vmplayer-%s"%(path,hostname)
+        mkdir_command="mkdir -p %s/vmplayer-%s"%(path,hostname)
+        tar_command="tar -C %s/template-vmplayer -cf - . | tar -C %s/vmplayer-%s -xf -"%(path,path,hostname)
+        os.system('set -x; ' +clean_dir + ';' + mkdir_command + ';' + tar_command);
+        utils.header('Creating boot medium for node %s'%hostname)
+        encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), hostname, 'node-iso', '')
+        if (encoded == ''):
+            raise Exception, 'boot.iso not found'
+        file=open(path+'/vmplayer-'+hostname+'/boot_file.iso','w')
+        file.write(base64.b64decode(encoded))
+        file.close()
+        utils.header('boot cd created for %s'%hostname)
+        self.conffile('boot_file.iso',hostname, path)
+
+    def start_node (self,options):
+        model=self.node_spec['node_fields']['model']
+        if model.find("vmware") >= 0:
+            self.start_vmware(options)
+        elif model.find("qemu") >= 0:
+            self.start_qemu(options)
+        else:
+            utils.header("TestNode.start_node : ignoring model %s"%model)
+
+    def start_vmware (self,options):
+        hostname=self.node_spec['node_fields']['hostname']
+        path=options.path
+        display=options.display
+        utils.header('Starting vmplayer for node %s on %s'%(hostname,display))
+        os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
+
+    def start_qemu (self, options):
+        utils.header ("TestNode.start_qemu: not implemented yet")
+
+        

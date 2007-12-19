@@ -3,83 +3,66 @@ import sys
 import datetime
 import time
 import xmlrpclib
+import traceback
 
-from TestConfig import *
 import utils
+from TestNode import TestNode
+from TestUser import TestUser
 
 class TestSite:
 
     def __init__ (self,test_plc,site_spec):
 	self.test_plc=test_plc
 	self.site_spec=site_spec
-        self.sitename=site_spec['site_fields']['name']
         
+    def name(self):
+        return self.site_spec['site_fields']['login_base']
+
     def create_site (self):
-        try:
-            print self.test_plc.auth_root()
-            self.site_id = self.test_plc.server.AddSite(self.test_plc.auth_root(),
-							self.site_spec['site_fields'])
-	    self.test_plc.server.AddSiteAddress(self.test_plc.auth_root(),self.site_id,
-				       self.site_spec['site_address'])
+        print self.test_plc.auth_root()
+        self.site_id = self.test_plc.server.AddSite(self.test_plc.auth_root(),
+                                                    self.site_spec['site_fields'])
+        self.test_plc.server.AddSiteAddress(self.test_plc.auth_root(),self.site_id,
+                                            self.site_spec['address_fields'])
             
-	    return self.site_id
-        except Exception, e:
-	    print str(e)
+        return self.site_id
             
-    def site_id(self):
-	return self.site_id()
+    def create_users (self):
+        for user_spec in self.site_spec['users']:
+            test_user=TestUser(self.test_plc,self,user_spec)
+            test_user.create_user()
+            test_user.add_keys()            
+        
 
-    def create_user (self, user_spec):
-        try:
-            i=0
-            utils.header('Adding user %s'%user_spec['email'])
-            self.person_id=self.test_plc.server.AddPerson(self.test_plc.auth_root(),
-                                                          user_spec)
-            self.test_plc.server.UpdatePerson(self.test_plc.auth_root(),
-                                              self.person_id,{'enabled': True})
-            for role in user_spec['roles']:
-                self.test_plc.server.AddRoleToPerson(self.test_plc.auth_root(),
-                                                     role,user_spec['email'])
-            self.test_plc.server.AddPersonToSite(self.test_plc.auth_root(),
-                                                 user_spec['email'],
-                                                 self.site_spec['site_fields']['login_base'])
-        except Exception,e:
-            print str(e)
+    def delete_site (self):
+        print self.test_plc.auth_root()
+        self.test_plc.server.DeleteSite(self.test_plc.auth_root(),self.name())
+        return True
             
-    def enable_user (self, user_spec):
-        try:
-            persones=self.test_plc.server.GetPersons(self.test_plc.auth_root())
-            for person in persones:
-                if (person['enabled']!="True"):
-                    self.test_plc.server.UpdatePerson(self.test_plc.auth_root(),
-                                                      person['person_id'],
-                                                      {'enabled': True})
-        except Exception,e:
-            print str(e)
-            
-    def add_key_user(self,user_spec):
-        try:
-            auth=""
-            for userspec in self.site_spec['users']:
-                if(user_spec == userspec):
-                    for role in userspec['roles']:
-                        auth=auth+role
-                    print auth
-                    self.test_plc.server.AddPersonKey(self.anyuser_auth(auth),
-                                                      user_spec['email'], key)
-        except Exception, e:
-            print str(e)
-            
-    def anyuser_auth (self,key):
-        for person in self.site_spec['users']:
-            if person['auth_meth']== key :
-                return {'Username':person['email'],
-                        'AuthMethod':'password',
-                        'AuthString':person['password'],
-                        'Role':person['roles'][0],
-                        }
+    def delete_users(self):
+        for user_spec in self.site_spec['users']:
+            test_user=TestUser(self.test_plc,self,user_spec)
+            test_user.delete_user()
 
-    def node_check_status(self,liste_nodes,bool):
+    def locate_user (self,username):
+        for user in self.site_spec['users']:
+            if user['name'] == username:
+                return user
+            if user['user_fields']['email'] == username:
+                return user
+        raise Exception,"Cannot locate user %s"%username
+        
+    def locate_node (self,nodename):
+        for node in self.site_spec['nodes']:
+            if node['node_fields']['hostname'] == nodename:
+                return node
+        raise Exception,"Cannot locate node %s"%nodename
+        
+    # left as-is, i.e. crappy
+    def check_nodes(self):
+        # should filter out nodes not under vmware not qemu
+        node_specs=self.site_spec['nodes']
+        bool=True
         try:
             ret_value=True    
             filter=['boot_state']
@@ -88,10 +71,10 @@ class TestSite:
             secondes=15
             start_time = datetime.datetime.now() ##geting the current time
             dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=5)
-            utils.header("Starting checking for nodes in site %s"%self.sitename)
+            utils.header("Starting checking for nodes in site %s"%self.name())
             
-            for l in liste_nodes :
-                hostname=l['hostname']
+            for node_spec in node_specs :
+                hostname=node_spec['node_fields']['hostname']
                 while (bool):
                     node_status=self.test_plc.server.GetNodes(self.test_plc.auth_root(),hostname, filter)
                     utils.header('Actual status for node %s is [%s]'%(hostname,node_status))
@@ -120,91 +103,72 @@ class TestSite:
                     test_name='Test Installation Node Hosted: ',hostname
                     self.test_plc.display_results(test_name, 'Failure', '')
             
-            utils.header("End checking for nodes in site %s"%self.sitename)
+            utils.header("End checking for nodes in site %s"%self.name())
             return ret_value
         except Exception, e:
-            print str(e)
+            traceback.print_exc()
             utils.header("will kill vmware in 10 seconds")
-            time.sleep(10)
-            self.kill_all_vmwares()
-            sys.exit(1)
+            time.sleep(5)
+            self.tst_plc.kill_all_vmwares()
+            raise 
             
-    def kill_all_vmwares(self):
-        utils.header('Killing any running vmware or vmplayer instance')
-        os.system('pgrep vmware | xargs -r kill')
-        os.system('pgrep vmplayer | xargs -r kill ')
-        os.system('pgrep vmware | xargs -r kill -9')
-        os.system('pgrep vmplayer | xargs -r kill -9')
-        
-    def run_vmware(self,node_specs,display):
-        path=os.path.dirname(sys.argv[0])
-        self.kill_all_vmwares()
-        utils.header('Displaying vmplayer on DISPLAY=%s'%display)
-        for spec in node_specs :
-            hostname=spec['hostname']
-            utils.header('Starting vmplayer for node %s -- see vmplayer.log'%hostname)
-#            os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null 2>&1 >> vmplayer.log &'%(path,hostname,display))
-            os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
-
+    def start_nodes (self,options):
+        for node_spec in self.site_spec['nodes']:
+            TestNode(self.test_plc, self, node_spec).start_node(options)
+        return True
+           
     def delete_known_hosts(self):
         utils.header("Messing with known_hosts (cleaning hostnames starting with 'test[0-9]')")
         sed_command="sed -i -e '/^test[0-9]/d' /root/.ssh/known_hosts"
         os.system("set -x ; " + sed_command)
 
-    def slice_access(self):
-        try:
-            bool=True
-            bool1=True
-            secondes=15
-            self.delete_known_hosts()
-            start_time = datetime.datetime.now()
-            dead_time=start_time + datetime.timedelta(minutes=3)##adding 3minutes
-            for slice in slices_specs:
-                for slicenode in slice['slice_nodes']:
-                    hostname=slicenode['hostname']
-                    slicename=slice['slice_spec']['name']
-                    while(bool):
-                        utils.header('restarting nm on %s'%hostname)
-                        access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname )
-                        if (access==0):
-                            utils.header('nm restarted on %s'%hostname)
-                            while(bool1):
-                                utils.header('trying to connect to %s@%s'%(slicename,hostname))
+    # xxx should be attached to TestPlc
+    def check_slices(self):
+        
+        bool=True
+        bool1=True
+        secondes=15
+        self.delete_known_hosts()
+        start_time = datetime.datetime.now()
+        dead_time=start_time + datetime.timedelta(minutes=3)##adding 3minutes
+        for slice_spec in self.test_plc.plc_spec['slices']:
+            for hostname in slice_spec['nodenames']:
+                slicename=slice_spec['slice_fields']['name']
+                while(bool):
+                    utils.header('restarting nm on %s'%hostname)
+                    access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname )
+                    if (access==0):
+                        utils.header('nm restarted on %s'%hostname)
+                        while(bool1):
+                            utils.header('trying to connect to %s@%s'%(slicename,hostname))
+                            Date=os.system('set -x; ssh -i ~/.ssh/slices.rsa %s@%s date'%(slicename,hostname))
+                            if (Date==0):
+                                break
+                            elif ( start_time  <= dead_time ) :
+                                start_time=datetime.datetime.now()+ datetime.timedelta(seconds=30)
+                                time.sleep(secondes)
+                            else:
+                                bool1=False
+                        if(bool1):
+                            utils.header('connected to %s@%s -->'%(slicename,hostname))
+                        else:
+                            utils.header('%s@%s : last chance - restarting nm on %s'%(slicename,hostname,hostname))
+                            access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
+                            if (access==0):
+                                utils.header('trying to connect (2) to %s@%s'%(slicename,hostname))
                                 Date=os.system('set -x; ssh -i ~/.ssh/slices.rsa %s@%s date'%(slicename,hostname))
                                 if (Date==0):
-                                    break
-                                elif ( start_time  <= dead_time ) :
-                                    start_time=datetime.datetime.now()+ datetime.timedelta(seconds=30)
-                                    time.sleep(secondes)
+                                    utils.header('connected to %s@%s -->'%(slicename,hostname))
                                 else:
-                                    bool1=False
-                            if(bool1):
-                                utils.header('connected to %s@%s -->'%(slicename,hostname))
-                            else:
-                                utils.header('%s@%s : last chance - restarting nm on %s'%(slicename,hostname,hostname))
-                                access=os.system('set -x; ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
-                                if (access==0):
-                                    utils.header('trying to connect (2) to %s@%s'%(slicename,hostname))
-                                    Date=os.system('set -x; ssh -i ~/.ssh/slices.rsa %s@%s date'%(slicename,hostname))
-                                    if (Date==0):
-                                        utils.header('connected to %s@%s -->'%(slicename,hostname))
-                                    else:
-                                        utils.header('giving up with to %s@%s -->'%(slicename,hostname))
-                                        sys.exit(1)
-                                else :
-                                    utils.header('Last chance failed on %s@%s -->'%(slicename,hostname))
-                            break
-                        elif ( start_time  <= dead_time ) :
-                            start_time=datetime.datetime.now()+ datetime.timedelta(minutes=1)
-                            time.sleep(secondes)
-                        else:
-                            bool=False
-                                
-                    if (not bool):
-                        print 'Node manager problems'
-                        sys.exit(1)
-                    
-        except Exception, e:
-            print str(e)
-            sys.exit(1)
-   
+                                    utils.header('giving up with to %s@%s -->'%(slicename,hostname))
+                                    sys.exit(1)
+                            else :
+                                utils.header('Last chance failed on %s@%s -->'%(slicename,hostname))
+                        break
+                    elif ( start_time  <= dead_time ) :
+                        start_time=datetime.datetime.now()+ datetime.timedelta(minutes=1)
+                        time.sleep(secondes)
+                    else:
+                        bool=False
+                            
+        return bool
