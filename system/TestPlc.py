@@ -102,7 +102,7 @@ class TestPlc:
         return True
 
     def uninstall_vserver(self,options):
-        self.run_in_host("vserver --silent delete %s"%self.vservername)
+        self.run_in_host("vserver --silent %s delete"%self.vservername)
 
     def uninstall(self,options):
         if self.vserver:
@@ -119,26 +119,31 @@ class TestPlc:
         return True
 
     # xxx this would not work with hostname != localhost as mylc-init-vserver was extracted locally
-    def install_vserver(self,options):
+    def install_vserver_create(self,options):
         # we need build dir for myplc-init-vserver
         build_dir=self.path+"/build"
-        if not os.isdir(build_dir):
+        if not os.path.isdir(build_dir):
             if utils.system("svn checkout %s %s"%(options.build_url,build_dir)) != 0:
                 raise Exception,"Cannot checkout build dir"
         # the repo url is taken from myplc-url 
         # with the last two steps (i386/myplc...) removed
-        repo_url = options.build_url
-        repo_url = os.path(repo_url)
-        repo_url = os.path(repo_url)
+        repo_url = options.myplc_url
+        repo_url = os.path.dirname(repo_url)
+        repo_url = os.path.dirname(repo_url)
         command="%s/myplc-init-vserver.sh %s %s -- --interface eth0:%s"%\
-            (build_url,self.servername,repo_url,self.vserverip)
+            (build_dir,self.vservername,repo_url,self.vserverip)
         if utils.system(command) != 0:
             raise Exception,"Could not create vserver for %s"%self.vservername
-        self.run_in_host("yum -y install myplc-native")
+        return True
+
+    def install_vserver_native(self,options):
+        self.run_in_guest("yum -y install myplc-native")
+        return True
 
     def install(self,options):
         if self.vserver:
-            return self.install_vserver(options)
+            return self.install_vserver_create(options)
+            return self.install_vserver_yum(options)
         else:
             return self.install_chroot(options)
 
@@ -166,12 +171,19 @@ class TestPlc:
         utils.system('rm %s'%tmpname)
         return True
 
+    # the chroot install is slightly different to this respect
     def start(self, options):
-        utils.system('service plc start')
+        if self.vserver:
+            self.run_in_guest('service plc start')
+        else:
+            self.run_in_host('service plc start')
         return True
         
     def stop(self, options):
-        utils.system('service plc stop')
+        if self.vserver:
+            self.run_in_guest('service plc stop')
+        else:
+            self.run_in_host('service plc stop')
         return True
         
     # could use a TestKey class
