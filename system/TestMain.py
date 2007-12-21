@@ -3,7 +3,6 @@
 
 import os, sys
 from optparse import OptionParser
-import pprint
 import traceback
 
 import utils
@@ -12,9 +11,15 @@ from TestSite import TestSite
 from TestNode import TestNode
 
 
-#default_steps = ['uninstall','install','configure', 'populate' , 'check_nodes' ]
-default_steps = ['uninstall','install','configure', 'sites', 'nodes', 'initscripts', 'slices',  'bootcd', 'start_nodes', 'check-nodes', 'check-slices' ]
-other_steps = [ 'clean_sites', 'clean_slices' , 'stop_nodes' , 'db_dump' , 'fresh-install']
+default_config = [ 'onelab' ]
+
+default_steps = ['uninstall','install','configure', 'start', 'store_keys',
+                 'sites', 'nodes', 'initscripts', 'slices',  
+                 'bootcd', 'start_nodes', 
+                 'check-nodes', 'check-slices' ]
+other_steps = [ 'fresh-install', 'stop', 'clean_sites', 'clean_slices' , 'clean_keys',
+                'stop_nodes' ,  'db_dump' , 'db_restore',
+                ]
 
 class TestMain:
 
@@ -26,7 +31,7 @@ class TestMain:
     @staticmethod
     def show_env (options, message):
         utils.header (message)
-        pprint.PrettyPrinter(indent=4,depth=2).pprint(options)
+        utils.show_spec("main options",options)
 
     @staticmethod
     def optparse_list (option, opt, value, parser):
@@ -35,13 +40,14 @@ class TestMain:
         except:
             setattr(parser.values,option.dest,[value])
 
-    def main (self):
+    def test_main (self):
         usage = """usage: %prog [options] steps
 myplc-url defaults to the last value used, as stored in MYPLC-URL
 build-url defaults to the last value used, as stored in BUILD-URL
 steps refer to a method in TestPlc or to a step-* module"""
         usage += "\n  Defaut steps are %r"%default_steps
         usage += "\n  Other useful steps are %r"%other_steps
+        usage += "\n  Default config(s) are %r"%default_config
         parser=OptionParser(usage=usage,version=self.subversion_id)
         parser.add_option("-u","--url",action="store", dest="myplc_url", 
                           help="myplc URL - for locating build output")
@@ -52,6 +58,8 @@ steps refer to a method in TestPlc or to a step-* module"""
                           help="config module - can be set multiple times")
         parser.add_option("-a","--all",action="store_true",dest="all_steps", default=False,
                           help="Runs all default steps")
+        parser.add_option("-s","--state",action="store",dest="dbname",default=None,
+                           help="Used by db_dump and db_restore")
         parser.add_option("-d","--display", action="store", dest="display", default='bellami.inria.fr:0.0',
                           help="set DISPLAY for vmplayer")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
@@ -95,7 +103,7 @@ steps refer to a method in TestPlc or to a step-* module"""
         # config modules
         if not self.options.config:
             # legacy default - do not set in optparse
-            self.options.config=['onelab-chroot']
+            self.options.config=default_config
         # step modules
         if not self.options.steps:
             #default (all) steps
@@ -117,14 +125,15 @@ steps refer to a method in TestPlc or to a step-* module"""
             except :
                 traceback.print_exc()
                 print 'Cannot load config %s -- ignored'%modulename
+                raise
         # show config
-        utils.header ("Test specifications")
-        pprint.PrettyPrinter(indent=4,depth=2).pprint(all_plc_specs)
+        utils.show_spec("Test specifications",all_plc_specs)
         # build a TestPlc object from the result
         for spec in all_plc_specs:
             spec['disabled'] = False
         all_plcs = [ (x, TestPlc(x)) for x in all_plc_specs]
 
+        overall_result = True
         testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
         all_step_infos=[]
         for step in self.options.steps:
@@ -145,6 +154,7 @@ steps refer to a method in TestPlc or to a step-* module"""
                 except :
                     print 'Step %s -- ignored'%(step)
                     traceback.print_exc()
+                    overall_result = False
             
         if self.options.dry_run:
             self.show_env(self.options,"Dry run")
@@ -156,15 +166,30 @@ steps refer to a method in TestPlc or to a step-* module"""
                 if not spec['disabled']:
                     try:
                         utils.header("Running step %s on plc %s"%(name,spec['name']))
-                        if method(obj,self.options):
+                        step_result = method(obj,self.options)
+                        if step_result:
                             utils.header('Successful step %s on %s'%(name,spec['name']))
                         else:
-                            utils.header('Step %s on %s FAILED - discarding'%(name,spec['name']))
+                            overall_result = False
                             spec['disabled'] = True
+                            utils.header('Step %s on %s FAILED - discarding that plc from further steps'%(name,spec['name']))
                     except:
+                        overall_result=False
                         spec['disabled'] = True
-                        print 'Cannot run step %s on plc %s'%(name,spec['name'])
+                        utils.header ('Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(name,spec['name']))
                         traceback.print_exc()
+        return overall_result
+
+    # wrapper to shell
+    def main(self):
+        try:
+            success=self.test_main()
+            if success:
+                return 0
+            else:
+                return 1 
+        except:
+            return 2
 
 if __name__ == "__main__":
-    TestMain().main()
+    sys.exit(TestMain().main())

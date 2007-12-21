@@ -1,6 +1,5 @@
 import os, sys, time, base64
 import xmlrpclib
-import pprint
 
 import utils
 from TestUser import TestUser
@@ -34,7 +33,7 @@ class TestNode:
         actual='%s/vmplayer-%s/node.vmx'%(path,hostname)
         sed_command="sed -e s,@BOOTCD@,%s,g %s > %s"%(image,template,actual)
         utils.header('Creating %s from %s'%(actual,template))
-        os.system('set -x; ' + sed_command)
+        utils.system(sed_command)
 
     def create_boot_cd(self,path):
         node_spec=self.node_spec
@@ -43,7 +42,9 @@ class TestNode:
         clean_dir="rm -rf %s/vmplayer-%s"%(path,hostname)
         mkdir_command="mkdir -p %s/vmplayer-%s"%(path,hostname)
         tar_command="tar -C %s/template-vmplayer -cf - . | tar -C %s/vmplayer-%s -xf -"%(path,path,hostname)
-        os.system('set -x; ' +clean_dir + ';' + mkdir_command + ';' + tar_command);
+        utils.system(clean_dir)
+        utils.system(mkdir_command)
+        utils.system(tar_command);
         utils.header('Creating boot medium for node %s'%hostname)
         encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), hostname, 'node-iso', '')
         if (encoded == ''):
@@ -68,7 +69,7 @@ class TestNode:
         path=options.path
         display=options.display
         utils.header('Starting vmplayer for node %s on %s'%(hostname,display))
-        os.system('set -x; cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
+        utils.system('cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
 
     def start_qemu (self, options):
         utils.header ("TestNode.start_qemu: not implemented yet")

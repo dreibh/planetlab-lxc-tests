@@ -1,6 +1,5 @@
 import os, sys, time
 import xmlrpclib
-import pprint
 
 import utils
 

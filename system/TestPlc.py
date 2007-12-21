@@ -1,14 +1,14 @@
 # $Id$
-import os
+import os, os.path
 import sys
 import xmlrpclib
 import datetime
-import pprint
 import traceback
 import utils
 from TestSite import TestSite
 from TestNode import TestNode
 from TestUser import TestUser
+from TestKey import TestKey
 
 # step methods must take (self, options) and return a boolean
 
@@ -20,37 +20,55 @@ class TestPlc:
 	self.server=xmlrpclib.Server(self.url,allow_none=True)
 	self.path=os.path.dirname(sys.argv[0])
         try:
-            self.vserver=plc_spec['vserver']
+            self.vserverip=plc_spec['vserverip']
+            self.vservername=plc_spec['vservername']
+            self.vserver=True
         except:
-            self.vserver=None
+            self.vserver=False
         
     def name(self):
-        return self.plc_spec['name']
+        name=self.plc_spec['name']
+        if self.vserver:
+            return name+"[%s]"%self.vservername
+        else:
+            return name+"[chroot]"
 
+    # define the API methods on this object through xmlrpc
+    # would help, but not strictly necessary
     def connect (self):
-	# tricky : define les methodes de l'API sur cet object
 	pass
     
+    # build the full command so command gets run in the chroot/vserver
+    def run_command(self,command):
+        if self.vserver:
+            return "vserver %s exec %s"%(self.vservername,command)
+        else:
+            return "chroot /plc/root %s"%command
+
+    def ssh_command(self,command):
+        if self.plc_spec['hostname'] == "localhost":
+            return command
+        else:
+            return "ssh " + self.plc_spec['hostname'] + " " + command
+
+    def full_command(self,command):
+        return self.ssh_command(self.run_command(command))
+
+    def run_in_guest (self,command):
+        return utils.system(self.full_command(command))
+    def run_in_host (self,command):
+        return utils.system(self.ssh_command(command))
+
+    # xxx quick n dirty
+    def run_in_guest_piped (self,local,remote):
+        return utils.system(local+" | "+self.full_command(command))
+
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
 		'AuthMethod':'password',
 		'AuthString':self.plc_spec['PLC_ROOT_PASSWORD'],
                 'Role' : self.plc_spec['role']
                 }
-    def display_results(self, test_case_name, status, timers):
-        timers=datetime.datetime.now()
-        fileHandle = open (self.path+'/results.txt', 'a' )
-        fileHandle.write ( str(test_case_name)+'\t' +str(status)+'\t'+str(timers)+'\n')
-        fileHandle.close()
-        
-    def init_node (self,test_site,node_spec,path):
-
-        test_node = TestNode(self, test_site, node_spec)
-        test_node.create_node (test_site.locate_user("pi"))
-        test_node.create_node ("tech")
-        test_node.create_boot_cd(path)
-        return test_node
-    
     def locate_site (self,sitename):
         for site in self.plc_spec['sites']:
             if site['site_fields']['name'] == sitename:
@@ -67,29 +85,66 @@ class TestPlc:
         
     def kill_all_vmwares(self):
         utils.header('Killing any running vmware or vmplayer instance')
-        os.system('pgrep vmware | xargs -r kill')
-        os.system('pgrep vmplayer | xargs -r kill ')
-        os.system('pgrep vmware | xargs -r kill -9')
-        os.system('pgrep vmplayer | xargs -r kill -9')
+        utils.system('pgrep vmware | xargs -r kill')
+        utils.system('pgrep vmplayer | xargs -r kill ')
+        utils.system('pgrep vmware | xargs -r kill -9')
+        utils.system('pgrep vmplayer | xargs -r kill -9')
         
-    # step methods
-    def uninstall(self,options):
-        os.system('set -x; service plc safestop')
+    #################### step methods
+
+    ### uninstall
+    def uninstall_chroot(self,options):
+        self.run_in_host('service plc safestop')
         #####detecting the last myplc version installed and remove it
-        os.system('set -x; rpm -e myplc')
+        self.run_in_host('rpm -e myplc')
         ##### Clean up the /plc directory
-        os.system('set -x; rm -rf  /plc/data')
-        return True
-        
-    def install(self,options):
-        utils.header('Installing from %s'%options.myplc_url)
-        url=options.myplc_url
-        os.system('set -x; rpm -Uvh '+url)
-        os.system('set -x; service plc mount')
+        self.run_in_host('rm -rf  /plc/data')
         return True
 
+    def uninstall_vserver(self,options):
+        self.run_in_host("vserver --silent delete %s"%self.vservername)
+
+    def uninstall(self,options):
+        if self.vserver:
+            return self.uninstall_vserver(options)
+        else:
+            return self.uninstall_chroot(options)
+
+    ### install
+    def install_chroot(self,options):
+        utils.header('Installing from %s'%options.myplc_url)
+        url=options.myplc_url
+        utils.system('rpm -Uvh '+url)
+        utils.system('service plc mount')
+        return True
+
+    # xxx this would not work with hostname != localhost as mylc-init-vserver was extracted locally
+    def install_vserver(self,options):
+        # we need build dir for myplc-init-vserver
+        build_dir=self.path+"/build"
+        if not os.isdir(build_dir):
+            if utils.system("svn checkout %s %s"%(options.build_url,build_dir)) != 0:
+                raise Exception,"Cannot checkout build dir"
+        # the repo url is taken from myplc-url 
+        # with the last two steps (i386/myplc...) removed
+        repo_url = options.build_url
+        repo_url = os.path(repo_url)
+        repo_url = os.path(repo_url)
+        command="%s/myplc-init-vserver.sh %s %s -- --interface eth0:%s"%\
+            (build_url,self.servername,repo_url,self.vserverip)
+        if utils.system(command) != 0:
+            raise Exception,"Could not create vserver for %s"%self.vservername
+        self.run_in_host("yum -y install myplc-native")
+
+    def install(self,options):
+        if self.vserver:
+            return self.install_vserver(options)
+        else:
+            return self.install_chroot(options)
+
+    ### 
     def configure(self,options):
-        tmpname='/tmp/plc-config-tty-%d'%os.getpid()
+        tmpname='%s/%s.plc-config-tty'%(options.path,self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',
                      'PLC_ROOT_PASSWORD',
@@ -106,14 +161,28 @@ class TestPlc:
         fileconf.write('w\n')
         fileconf.write('q\n')
         fileconf.close()
-        os.system('set -x ; cat %s'%tmpname)
-        os.system('set -x ; chroot /plc/root  plc-config-tty < %s'%tmpname)
-        os.system('set -x ; service plc start')
-        os.system('set -x; service sendmail stop')
-        os.system('set -x; chroot /plc/root service sendmail restart')
-        os.system('set -x; rm %s'%tmpname)
+        utils.system('cat %s'%tmpname)
+        self.run_in_guest('plc-config-tty < %s'%tmpname)
+        utils.system('rm %s'%tmpname)
+        return True
+
+    def start(self, options):
+        utils.system('service plc start')
         return True
         
+    def stop(self, options):
+        utils.system('service plc stop')
+        return True
+        
+    # could use a TestKey class
+    def store_keys(self, options):
+        for key_spec in self.plc_spec['keys']:
+            TestKey(self,key_spec).store_key()
+        return True
+
+    def clean_keys(self, options):
+        utils.system("rm -rf %s/keys/"%self.path)
+
     def sites (self,options):
         return self.do_sites(options)
     
@@ -140,8 +209,7 @@ class TestPlc:
             test_site = TestSite (self,site_spec)
             utils.header("Creating nodes for site %s in %s"%(test_site.name(),self.name()))
             for node_spec in site_spec['nodes']:
-                utils.header('Creating node %s'%node_spec)
-                pprint.PrettyPrinter(indent=4).pprint(node_spec)
+                utils.show_spec('Creating node %s'%node_spec,node_spec)
                 test_node = TestNode (self,test_site,node_spec)
                 test_node.create_node ()
         return True
@@ -156,9 +224,9 @@ class TestPlc:
             
     def initscripts (self, options):
         for initscript in self.plc_spec['initscripts']:
-            utils.header('Adding Initscript %s in plc %s'%\
-                         (initscript['name'],self.plc_spec['name']))
-            pprint.PrettyPrinter(indent=4).pprint(initscript)
+            utils.show_spec('Adding Initscript %s in plc %s'%\
+                                (initscript['name'],self.plc_spec['name']),
+                            initscript)
             self.server.AddInitScript(self.auth_root(),initscript['initscript_fields'])
         return True
 
@@ -181,7 +249,7 @@ class TestPlc:
                 self.server.DeleteSlice(auth,slice_fields['name'])
                 utils.header("Deleted slice %s"%slice_fields['name'])
                 continue
-            pprint.PrettyPrinter(indent=4).pprint(slice_fields)
+            utils.show_spec("Creating slice",slice_fields)
             self.server.AddSlice(auth,slice_fields)
             utils.header('Created Slice %s'%slice_fields['name'])
             for username in slice['usernames']:
@@ -214,16 +282,35 @@ class TestPlc:
         self.kill_all_vmwares ()
         return True
 
-    def db_dump(self, options):
+    # returns the filename to use for sql dump/restore, using options.dbname if set
+    def dbfile (self, database, options):
         # uses options.dbname if it is found
         try:
             name=options.dbname
+            if not isinstance(name,StringTypes):
+                raise Exception
         except:
             t=datetime.datetime.now()
             d=t.date()
             name=str(d)
-        dump='/data/%s.sql'%name
-        os.system('chroot /plc/root pg_dump -U pgsqluser planetlab4 -f '+ dump)
+        return "/root/%s-%s.sql"%(database,name)
+
+    def db_dump(self, options):
+        
+        dump=self.dbfile("planetab4",options)
+        self.run_in_guest('pg_dump -U pgsqluser planetlab4 -f '+ dump)
         utils.header('Dumped planetlab4 database in %s'%dump)
         return True
 
+    def db_restore(self, options):
+        dump=self.dbfile("planetab4",options)
+        ##stop httpd service
+        self.run_in_guest('service httpd stop')
+        # xxx - need another wrapper
+        self.run_in_guest_piped('echo drop database planetlab4','psql --user=pgsqluser template1')
+        self.run_in_guest('createdb -U postgres --encoding=UNICODE --owner=pgsqluser planetlab4')
+        self.run_in_guest('psql -U pgsqluser planetlab4 -f '+dump)
+        ##starting httpd service
+        self.run_in_guest('service httpd start')
+
+        utils.header('Database restored from ' + dump)
