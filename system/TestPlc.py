@@ -103,6 +103,7 @@ class TestPlc:
 
     def uninstall_vserver(self,options):
         self.run_in_host("vserver --silent %s delete"%self.vservername)
+        return True
 
     def uninstall(self,options):
         if self.vserver:
