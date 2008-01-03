@@ -58,5 +58,6 @@ def log(method, method_name = None, \
         except:
             print >>logfile, " [FAILED]"
             print >> error_logfile, "%s: %s\n" % (method_name, traceback.format_exc())
+	    raise
 
     return wrapper
