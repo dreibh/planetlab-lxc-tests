@@ -13,10 +13,9 @@ from TestNode import TestNode
 
 default_config = [ 'onelab' ]
 
-default_steps = ['uninstall','install','configure', 'start', 'store_keys',
-                 'sites', 'nodes', 'initscripts', 'slices',  
-                 'bootcd', 'start_nodes', 
-                 'check-nodes', 'check-slices' ]
+default_steps = ['uninstall','install','configure', 'start', 'store_keys', 'initscripts', 
+                 'sites', 'nodes', 'slices',  
+                 'bootcd', 'start_nodes', 'check-nodes', 'check-slices' ]
 other_steps = [ 'fresh-install', 'stop', 'install_vserver_create', 'install_vserver_native',
                 'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                 'stop_nodes' ,  'db_dump' , 'db_restore',

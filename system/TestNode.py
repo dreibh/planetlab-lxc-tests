@@ -36,7 +36,7 @@ class TestNode:
             test_user = TestUser(self.test_plc,self.test_site,user_spec)
             auth = test_user.auth()
         except:
-            aut=self.test_plc.auth_root()
+            auth=self.test_plc.auth_root()
         self.test_plc.server.DeleteNode(auth,self.name())
 
     def conffile(self,image,hostname,path):
