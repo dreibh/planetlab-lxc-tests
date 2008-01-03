@@ -136,14 +136,12 @@ def keys ():
              ]
 
 def initscripts(): 
-    return [ { 'name' : 'test1',
-               'initscript_fields' : { 'enabled' : True,
-                                       'name':'Test1',
+    return [ { 'initscript_fields' : { 'enabled' : True,
+                                       'name':'script1',
                                        'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/initscript1.log \n ',
                                        }},
-             { 'name' : 'test2',
-               'initscript_fields' : { 'enabled' : True,
-                                       'name':'Test2',
+             { 'initscript_fields' : { 'enabled' : True,
+                                       'name':'script2',
                                        'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/initscript2.log \n ',
                                        }},
              ]
@@ -157,7 +155,7 @@ def slices ():
                                 },
                'usernames' : [ 'pi','tech','techuser' ],
                'nodenames' : all_nodenames(),
-               'initscriptname' : 'test1',
+               'initscriptname' : 'script1',
                'sitename' : 'main',
                'owner' : 'pi',
                },
@@ -169,7 +167,7 @@ def slices ():
                                 },
                'usernames' : [ 'user', 'pitech' ],
                'nodenames' : all_nodenames(),
-               'initscriptname' : 'test2',
+               'initscriptname' : 'script2',
                'sitename' : 'main',
                'owner' : 'pi',
                }]
