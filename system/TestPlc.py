@@ -200,12 +200,12 @@ class TestPlc:
         return self.do_sites(options)
     
     def clean_sites (self,options):
-        return self.do_sites(options,"delete")
+        return self.do_sites(options,action="delete")
     
     def do_sites (self,options,action="add"):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
-            if (action == "delete"):
+            if (action != "add"):
                 utils.header("Deleting site %s in %s"%(test_site.name(),self.name()))
                 test_site.delete_site()
                 # deleted with the site
@@ -218,13 +218,25 @@ class TestPlc:
         return True
 
     def nodes (self, options):
+        return self.do_nodes(options)
+    def clean_nodes (self, options):
+        return self.do_nodes(options,action="delete")
+
+    def do_nodes (self, options,action="add"):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
-            utils.header("Creating nodes for site %s in %s"%(test_site.name(),self.name()))
-            for node_spec in site_spec['nodes']:
-                utils.show_spec('Creating node %s'%node_spec,node_spec)
-                test_node = TestNode (self,test_site,node_spec)
-                test_node.create_node ()
+            if action != "add":
+                utils.header("Deleting nodes in site %s"%test_site.name())
+                for node_spec in site_spec['nodes']:
+                    test_node=TestNode(self,test_site,node_spec)
+                    utils.header("Deleting %s"%test_node.name())
+                    test_node.delete_node()
+            else:
+                utils.header("Creating nodes for site %s in %s"%(test_site.name(),self.name()))
+                for node_spec in site_spec['nodes']:
+                    utils.show_spec('Creating node %s'%node_spec,node_spec)
+                    test_node = TestNode (self,test_site,node_spec)
+                    test_node.create_node ()
         return True
 
     def bootcd (self, options):

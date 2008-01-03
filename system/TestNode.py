@@ -28,6 +28,17 @@ class TestNode:
                                             self.node_spec['network_fields'])
         self.test_plc.server.UpdateNode(auth, self.name(), filter)
 
+    def delete_node (self):
+        # uses the right auth as far as poss.
+        try:
+            ownername = self.node_spec['owner']
+            user_spec = self.test_site.locate_user(ownername)
+            test_user = TestUser(self.test_plc,self.test_site,user_spec)
+            auth = test_user.auth()
+        except:
+            aut=self.test_plc.auth_root()
+        self.test_plc.server.DeleteNode(auth,self.name())
+
     def conffile(self,image,hostname,path):
         template='%s/template-vmplayer/node.vmx'%(path)
         actual='%s/vmplayer-%s/node.vmx'%(path,hostname)
