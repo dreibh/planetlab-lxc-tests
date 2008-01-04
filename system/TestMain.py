@@ -10,13 +10,12 @@ from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
 
-
 default_config = [ 'onelab' ]
 
 default_steps = ['uninstall','install','configure', 'start', 'store_keys', 'initscripts', 
                  'sites', 'nodes', 'slices',  
-                 'bootcd', 'start_nodes', 'check-nodes', 'check-slices' ]
-other_steps = [ 'fresh-install', 'stop', 'install_vserver_create', 'install_vserver_native',
+                 'bootcd', 'start_nodes', 'check_nodes', 'check_slices' ]
+other_steps = [ 'fresh_install', 'stop', 'install_vserver_create', 'install_vserver_native',
                 'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                 'stop_nodes' ,  'db_dump' , 'db_restore',
                 ]
@@ -44,7 +43,7 @@ class TestMain:
         usage = """usage: %prog [options] steps
 myplc-url defaults to the last value used, as stored in MYPLC-URL
 build-url defaults to the last value used, as stored in BUILD-URL
-steps refer to a method in TestPlc or to a step-* module"""
+steps refer to a method in TestPlc or to a step_* module"""
         usage += "\n  Defaut steps are %r"%default_steps
         usage += "\n  Other useful steps are %r"%other_steps
         usage += "\n  Default config(s) are %r"%default_config
@@ -118,7 +117,7 @@ steps refer to a method in TestPlc or to a step-* module"""
 
         all_plc_specs = []
         for config in self.options.config:
-            modulename='config-'+config
+            modulename='config_'+config
             try:
                 m = __import__(modulename)
                 all_plc_specs = m.config(all_plc_specs,self.options)
@@ -140,9 +139,9 @@ steps refer to a method in TestPlc or to a step-* module"""
             # try and locate a method in TestPlc
             if testplc_method_dict.has_key(step):
                 all_step_infos += [ (step, testplc_method_dict[step] )]
-            # otherwise search for the 'run' method in the step-<x> module
+            # otherwise search for the 'run' method in the step_<x> module
             else:
-                modulename='step-'+step
+                modulename='step_'+step
                 try:
                     # locate all methods named run* in the module
                     module_dict = __import__(modulename).__dict__
