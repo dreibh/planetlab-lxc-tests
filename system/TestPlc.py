@@ -249,9 +249,7 @@ class TestPlc:
             
     def initscripts (self, options):
         for initscript in self.plc_spec['initscripts']:
-            utils.show_spec('Adding Initscript %s in plc %s'%\
-                                (initscript['name'],self.plc_spec['name']),
-                            initscript)
+            utils.show_spec('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
             self.server.AddInitScript(self.auth_root(),initscript['initscript_fields'])
         return True
 
