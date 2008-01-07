@@ -1,0 +1,36 @@
+# system test config file
+
+# DISPLAY VMPlayer will use
+DISPLAY=":0.0"
+
+HOSTNAME="localhost"
+
+DOMAIN_NAME="localhost.localdomain"
+
+#PLC_ROOT_USER="root@localhost.localdomain"
+PLC_ROOT_USER="root@localhost.localdomain"
+ 
+#PLC_ROOT_PASSWORD="password"
+PLC_ROOT_PASSWORD="root"
+
+PLC_NAME="TestLab"
+
+PLC_API_HOST="localhost.localdomain"
+
+PLC_DB_HOST="localhost.localdomain"
+
+PLC_WWW_HOST="localhost.localdomain"
+
+PLC_BOOT_HOST="localhost.localdomain"
+
+PLC_MAIL_ENABLED=1
+
+PLC_MAIL_SUPPORT_ADDRESS="root@localhost.localdomain"
+
+PLC_NET_DNS1="138.96.0.10"
+
+PLC_NET_DNS2="138.96.0.11"
+
+NODE_1_HOSTNAME="hostname"
+
+NODE_2_HOSTNAME="hostname"
