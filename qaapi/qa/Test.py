@@ -1,8 +1,7 @@
-import utils
 import sys, os
 from types import *
-from logger import log
-
+from qa import utils
+from qa.logger import log
 
 class Test:
     """
@@ -14,7 +13,7 @@ class Test:
 
     accepts = []
     returns = bool
-
+    status = "current" 
 
     def call(self, *args):
 	"""
