@@ -28,7 +28,6 @@ class QAAPI:
 	   
 	    class Dummy: pass
             paths = method.mod_name.split(".")
-	    print dir(method)
 	    
             if len(paths) > 1:
                 first = paths.pop(0)
