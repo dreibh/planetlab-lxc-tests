@@ -97,7 +97,7 @@ class QAAPI:
 
 	    for attribute in dir(module):
 		attr = getattr(module, attribute)
-	        if callable(attr):
+	        if callable(attr) and hasattr(attr, 'status'):
 		    setattr(attr, 'mod_name', module_basename+"."+attribute)
 		    callables.append(attr(self.config))
 	    return callables 
