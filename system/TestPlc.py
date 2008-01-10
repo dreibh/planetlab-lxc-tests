@@ -121,7 +121,7 @@ class TestPlc:
 
     # xxx this would not work with hostname != localhost as mylc-init-vserver was extracted locally
     def install_vserver_create(self,options):
-        # we need build dir for myplc-init-vserver
+        # we need build dir for vtest-init-vserver
         build_dir=self.path+"/build"
         if not os.path.isdir(build_dir):
             if utils.system("svn checkout %s %s"%(options.build_url,build_dir)) != 0:
@@ -131,7 +131,7 @@ class TestPlc:
         repo_url = options.myplc_url
         repo_url = os.path.dirname(repo_url)
         repo_url = os.path.dirname(repo_url)
-        command="%s/myplc-init-vserver.sh %s %s -- --interface eth0:%s"%\
+        command="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
             (build_dir,self.vservername,repo_url,self.vserverip)
         if utils.system(command) != 0:
             raise Exception,"Could not create vserver for %s"%self.vservername

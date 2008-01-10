@@ -51,7 +51,7 @@ steps refer to a method in TestPlc or to a step_* module"""
         parser.add_option("-u","--url",action="store", dest="myplc_url", 
                           help="myplc URL - for locating build output")
         parser.add_option("-b","--build",action="store", dest="build_url", 
-                          help="Build URL - for using myplc-init-vserver.sh in native mode")
+                          help="Build URL - for using vtest-init-vserver.sh in native mode")
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
                           help="config module - can be set multiple times")
