@@ -18,15 +18,36 @@ class TestNode:
         ownername = self.node_spec['owner']
         user_spec = self.test_site.locate_user(ownername)
         test_user = TestUser(self.test_plc,self.test_site,user_spec)
-        auth = test_user.auth()
+        userauth = test_user.auth()
         utils.header("node %s created by user %s"%(self.name(),test_user.name()))
-        filter={'boot_state':'rins'}
-        self.test_plc.server.AddNode(auth,
-                                     self.test_site.site_spec['site_fields']['login_base'],
-                                     self.node_spec['node_fields'])
-        self.test_plc.server.AddNodeNetwork(auth,self.name(),
+        rootauth=self.test_plc.auth_root()
+        server = self.test_plc.server
+        server.AddNode(userauth,
+                       self.test_site.site_spec['site_fields']['login_base'],
+                       self.node_spec['node_fields'])
+        # create as reinstall to avoid user confirmation
+        server.UpdateNode(userauth, self.name(), {'boot_state':'rins'})
+        # populate network interfaces - primary
+        server.AddNodeNetwork(userauth,self.name(),
                                             self.node_spec['network_fields'])
-        self.test_plc.server.UpdateNode(auth, self.name(), filter)
+        # populate network interfaces - others
+        if self.node_spec.has_key('extra_interfaces'):
+            for interface in self.node_spec['extra_interfaces']:
+                server.AddNodeNetwork(userauth,self.name(),
+                                                    interface['network_fields'])
+                if interface.has_key('attributes'):
+                    for (attribute,value) in interface['attributes'].iteritems():
+                        # locate node network
+                        nn = server.GetNodeNetworks(userauth,{'ip':interface['network_fields']['ip']})[0]
+                        nnid=nn['nodenetwork_id']
+                        # locate or create node network attribute type
+                        try:
+                            nnst = server.GetNodeNetworkSettingTypes(userauth,{'name':attribute})[0]
+                        except:
+                            nnst = server.AddNodeNetworkSettingType(rootauth,{'category':'test',
+                                                                          'name':attribute})
+                        # attach value
+                        server.AddNodeNetworkSetting(userauth,nnid,attribute,value)
 
     def delete_node (self):
         # uses the right auth as far as poss.
@@ -84,5 +105,3 @@ class TestNode:
 
     def start_qemu (self, options):
         utils.header ("TestNode.start_qemu: not implemented yet")
-
-        

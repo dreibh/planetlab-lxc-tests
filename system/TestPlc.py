@@ -239,6 +239,30 @@ class TestPlc:
                     test_node.create_node ()
         return True
 
+    # create nodegroups if needed, and populate
+    # no need for a clean_nodegroups if we are careful enough
+    def nodegroups (self, options):
+        # 1st pass to scan contents
+        groups_dict = {}
+        for site_spec in self.plc_spec['sites']:
+            test_site = TestSite (self,site_spec)
+            for node_spec in site_spec['nodes']:
+                test_node=TestNode (self,test_site,node_spec)
+                if node_spec.has_key('nodegroups'):
+                    for nodegroupname in node_spec['nodegroups']:
+                        if not groups_dict.has_key(nodegroupname):
+                            groups_dict[nodegroupname]=[]
+                        groups_dict[nodegroupname].append(test_node.name())
+        auth=self.auth_root()
+        for (nodegroupname,group_nodes) in groups_dict.iteritems():
+            try:
+                self.server.GetNodeGroups(auth,{'name':nodegroupname})[0]
+            except:
+                self.server.AddNodeGroup(auth,{'name':nodegroupname})
+            for node in group_nodes:
+                self.server.AddNodeToNodeGroup(auth,node,nodegroupname)
+        return True
+
     def bootcd (self, options):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
