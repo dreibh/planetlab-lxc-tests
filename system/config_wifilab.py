@@ -12,7 +12,7 @@ def nodes():
     return [ {'node_fields': {'hostname': 'wlab02.inria.fr',
                               'model':'Dell Latitude 830'},
               'owner' : 'pi',
-              'nodegroups' : 'wireless',
+              'nodegroups' : 'wifi',
               'network_fields': { 'method':'dhcp',
                                   'type' : 'ipv4',
                                   'ip':'138.96.250.162',

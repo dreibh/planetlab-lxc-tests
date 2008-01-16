@@ -4,6 +4,8 @@ import sys
 import xmlrpclib
 import datetime
 import traceback
+from types import StringTypes
+
 import utils
 from TestSite import TestSite
 from TestNode import TestNode
@@ -249,7 +251,10 @@ class TestPlc:
             for node_spec in site_spec['nodes']:
                 test_node=TestNode (self,test_site,node_spec)
                 if node_spec.has_key('nodegroups'):
-                    for nodegroupname in node_spec['nodegroups']:
+                    nodegroupnames=node_spec['nodegroups']
+                    if isinstance(nodegroupnames,StringTypes):
+                        nodegroupnames = [ nodegroupnames ]
+                    for nodegroupname in nodegroupnames:
                         if not groups_dict.has_key(nodegroupname):
                             groups_dict[nodegroupname]=[]
                         groups_dict[nodegroupname].append(test_node.name())
