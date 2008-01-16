@@ -20,9 +20,11 @@ def nodes():
               'extra_interfaces' : [ { 'network_fields' : 
                                        { 'method' : 'dhcp',
                                          'type' : 'ipv4',
-                                         'ip' : '138.96.250.50' },
+                                         'ip' : '138.96.250.212' },
                                        'attributes' : 
-                                       { 'ssid' : 'guest-inria-sophia' },
+                                       { 'hwaddr' : '00:1c:bf:51:2b:fd',
+                                         'essid' : 'guest-inria-sophia',
+                                         },
                                        },
                                      ],
               },
