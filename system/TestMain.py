@@ -10,19 +10,20 @@ from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
 
-default_config = [ 'onelab' ]
-
-default_steps = ['uninstall','install','configure', 'start', 'store_keys', 'initscripts', 
-                 'sites', 'nodes', 'slices', 'bootcd',  
-                 'nodegroups', 'start_nodes', 'check_nodes', 'check_slices' ]
-other_steps = [ 'fresh_install', 'stop', 'install_vserver_create', 'install_vserver_native',
-                'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
-                'stop_nodes' ,  'db_dump' , 'db_restore',
-                ]
-
 class TestMain:
 
     subversion_id = "$Id$"
+
+    default_config = [ 'onelab' ]
+
+    default_steps = ['uninstall','install','configure', 'start', 'store_keys', 'initscripts', 
+                     'sites', 'nodes', 'slices', 'bootcd',  
+                     'nodegroups', 'start_nodes', 'check_nodes', 'check_slices' ]
+    other_steps = [ 'fresh_install', 'stop', 'install_vserver_create', 'install_vserver_native',
+                    'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
+                    'stop_nodes' ,  'db_dump' , 'db_restore',
+                    ]
+    default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
 
     def __init__ (self):
 	self.path=os.path.dirname(sys.argv[0])
@@ -35,18 +36,21 @@ class TestMain:
     @staticmethod
     def optparse_list (option, opt, value, parser):
         try:
-            setattr(parser.values,option.dest,getattr(parser.values,option.dest)+[value])
+            setattr(parser.values,option.dest,getattr(parser.values,option.dest)+value.split())
         except:
-            setattr(parser.values,option.dest,[value])
+            setattr(parser.values,option.dest,value.split())
 
     def test_main (self):
-        usage = """usage: %prog [options] steps
-myplc-url defaults to the last value used, as stored in MYPLC-URL
-build-url defaults to the last value used, as stored in BUILD-URL
-steps refer to a method in TestPlc or to a step_* module"""
-        usage += "\n  Defaut steps are %r"%default_steps
-        usage += "\n  Other useful steps are %r"%other_steps
-        usage += "\n  Default config(s) are %r"%default_config
+        usage = """usage: %%prog [options] steps
+myplc-url defaults to the last value used, as stored in MYPLC-URL,
+   no default
+build-url defaults to the last value used, as stored in BUILD-URL, 
+   or %s
+config defaults to the last value used, as stored in CONFIG,
+   or %r
+steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_build_url,TestMain.default_config)
+        usage += "\n  Defaut steps are %r"%TestMain.default_steps
+        usage += "\n  Other useful steps are %r"%TestMain.other_steps
         parser=OptionParser(usage=usage,version=self.subversion_id)
         parser.add_option("-u","--url",action="store", dest="myplc_url", 
                           help="myplc URL - for locating build output")
@@ -54,7 +58,7 @@ steps refer to a method in TestPlc or to a step_* module"""
                           help="Build URL - for using vtest-init-vserver.sh in native mode")
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
-                          help="config module - can be set multiple times")
+                          help="config module - can be set multiple times, or use quotes")
         parser.add_option("-a","--all",action="store_true",dest="all_steps", default=False,
                           help="Runs all default steps")
         parser.add_option("-s","--state",action="store",dest="dbname",default=None,
@@ -69,9 +73,10 @@ steps refer to a method in TestPlc or to a step_* module"""
 
         if len(self.args) == 0:
             if self.options.all_steps:
-                self.options.steps=default_steps
+                self.options.steps=TestMain.default_steps
             else:
-                parser.print_help()
+                print 'No step found (do you mean -a ? )'
+                print "Run %s --help for help"%sys.argv[0]                        
                 sys.exit(1)
         else:
             self.options.steps = self.args
@@ -80,34 +85,47 @@ steps refer to a method in TestPlc or to a step_* module"""
         utils.header('X11 display : %s'% self.options.display)
 
         # handle defaults and option persistence
-        for (recname,filename) in ( ('myplc_url','MYPLC-URL') , ('build_url','BUILD-URL') ) :
+        for (recname,filename,default) in ( ('myplc_url','MYPLC-URL',"") , 
+                                            ('build_url','BUILD-URL',TestMain.default_build_url) ,
+                                            ('config','CONFIG',TestMain.default_config) , ) :
+            print 'handling',recname
+            path="%s/%s"%(self.path,filename)
+            is_list = isinstance(default,list)
             if not getattr(self.options,recname):
                 try:
-                    url_file=open("%s/%s"%(self.path,filename))
-                    url=url_file.read().strip()
-                    url_file.close()
-                    setattr(self.options,recname,url)
+                    parsed=file(path).readlines()
+                    if not is_list:    # strings
+                        if len(parsed) != 1:
+                            print "%s - error when parsing %s"%(sys.argv[1],path)
+                            sys.exit(1)
+                        parsed=parsed[0].strip()
+                    else:              # lists
+                        parsed=[x.strip() for x in parsed]
+                    setattr(self.options,recname,parsed)
                 except:
-                    print "Cannot determine",recname
-                    parser.print_help()
-                    sys.exit(1)
+                    if default:
+                        setattr(self.options,recname,default)
+                    else:
+                        print "Cannot determine",recname
+                        print "Run %s --help for help"%sys.argv[0]                        
+                        sys.exit(1)
             utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
 
-            fsave=open('%s/%s'%(self.path,filename),"w")
-            fsave.write(getattr(self.options,recname))
-            fsave.write('\n')
+            # save for next run
+            fsave=open(path,"w")
+            if not is_list:
+                fsave.write(getattr(self.options,recname) + "\n")
+            else:
+                for value in getattr(self.options,recname):
+                    fsave.write(value + "\n")
             fsave.close()
             utils.header('Saved %s into %s'%(recname,filename))
 
-        # config modules
-        if not self.options.config:
-            # legacy default - do not set in optparse
-            self.options.config=default_config
-        # step modules
+        # steps
         if not self.options.steps:
             #default (all) steps
             #self.options.steps=['dump','clean','install','populate']
-            self.options.steps=default_steps
+            self.options.steps=TestMain.default_steps
 
         # store self.path in options.path for the various callbacks
         self.options.path = self.path
@@ -115,6 +133,7 @@ steps refer to a method in TestPlc or to a step_* module"""
         if self.options.verbose:
             self.show_env(self.options,"Verbose")
 
+        # load configs
         all_plc_specs = []
         for config in self.options.config:
             modulename='config_'+config
