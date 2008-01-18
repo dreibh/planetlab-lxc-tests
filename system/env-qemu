@@ -6,6 +6,8 @@
 # to the virtual machine to share the
 # network connection with a host machine under FC6.
 
+#Author: Amine chaoui
+
 # Default Value
 IP_GATEWAY=0.0.0.0
 IP_HOST=0.0.0.0
