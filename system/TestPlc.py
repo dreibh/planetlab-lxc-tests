@@ -22,11 +22,12 @@ class TestPlc:
         try:
             self.vserverip=plc_spec['vserverip']
             self.vservername=plc_spec['vservername']
-            self.url="https://%s:443/PLCAPI/"%plc_spec['vservername']
+            self.url="https://%s:443/PLCAPI/"%plc_spec['vserverip']
             self.vserver=True
         except:
             self.vserver=False
             self.url="https://%s:443/PLCAPI/"%plc_spec['hostname']
+        utils.header('Using API url %s'%self.url)
 	self.server=xmlrpclib.Server(self.url,allow_none=True)
         
     def name(self):
