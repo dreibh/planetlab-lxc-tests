@@ -9,7 +9,7 @@ class install(Test):
     Installs a myplc
     """
 
-    def call(self, url=None):
+    def call(self, url=None, system_type, root_dir):
 	
 	url_path = self.config.path
 	# Determine url
@@ -36,8 +36,18 @@ class install(Test):
 	# Instal myplc from url    	 
 	if self.config.verbose:
 	    utils.header('Installing myplc from url %s' % url)
-        (stdin, stdout, stderr) = os.popen3('set -x; rpm -Uvh ' + url)
-        self.errors = stderr.readlines()
-        if self.errors: raise "\n".join(self.errors)	
+
+	# build command
+	full_command = ""
+	if system_type in ['vserv', 'vserver']:
+	    full_command += " vserver %(root_dir)s exec "
+	elif system_type in ['chroot']:
+	    pass
+	else:
+	    raise Exception, "Invalid system type %(system_type)s" % locals() 
+
+        (stdout, stderr) = utils.popen(full_command + " rpm -Uvh " + url)
+	if self.config.verbose:
+	    utils.header("\n".join(stdout))
 	
 	return 1
