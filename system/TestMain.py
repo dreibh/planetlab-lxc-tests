@@ -74,6 +74,8 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
         if len(self.args) == 0:
             if self.options.all_steps:
                 self.options.steps=TestMain.default_steps
+            elif self.options.dry_run:
+                self.options.steps=TestMain.default_steps
             else:
                 print 'No step found (do you mean -a ? )'
                 print "Run %s --help for help"%sys.argv[0]                        

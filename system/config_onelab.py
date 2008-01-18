@@ -177,7 +177,7 @@ def slices ():
 
 def plc () :
     return { 
-        'name' : 'onelab',
+        'name' : 'onelabtest',
         # as of yet, not sure we can handle foreign hosts, but this is required though
         'hostname' : 'localhost',
         # set these two items to run within a vserver
