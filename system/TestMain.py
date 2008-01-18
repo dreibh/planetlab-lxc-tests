@@ -214,6 +214,8 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
                 return 0
             else:
                 return 1 
+        except SystemExit:
+            raise
         except:
             traceback.print_exc()
             return 2
