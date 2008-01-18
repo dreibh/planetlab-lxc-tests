@@ -2,13 +2,14 @@
 import os, sys
 import traceback
 from qa.Test import Test
+from qa import utils
 
 class configure(Test):
     """
     Configure the myplc from config options in config file
     """
 
-    def call(self):
+    def call(self, system_type, root_dir):
 	tmpname = '/tmp/plc-cinfig-tty-%d' % os.getpid()
 	fileconf = open(tmpname, 'w')
 	for var in [ 'PLC_NAME',
@@ -26,12 +27,16 @@ class configure(Test):
 	fileconf.write('w\nq\n')
 	fileconf.close()
 
-	 # set configuration options
-	if self.config.verbose: os.system('set -x ; cat %s'%tmpname)
-        (stdin, stdout, stderr) = \
-            os.popen3('set -x ; chroot /plc/root  plc-config-tty < %s'%tmpname)
-        self.errors = stderr.readlines()
-        if self.errors: raise "\n".join(self.errors)
-        os.system('set -x; rm %s'%tmpname)
+	full_command = ""
+	if system_type in ['vserv', 'vserver']:
+	    full_command += " vserver %(root_dir)s exec "
+	elif system_type in ['chroot']:
+	    full_commnd += " chroot %(root_dir)s "
+	else:
+	    raise Exception, "Invalid system type %(sytem_type)s" % locals()
+
+	full_command = full_command + " plc-config-tty < %(tmpname)s" % locals()	 	
+        (stdout, stderr) = utils.popen(full_command)
+        (stdout, stderr) = utils.popen("rm %s" % tmpname)
 
 	return 1
