@@ -146,7 +146,7 @@ class TestPlc:
     def install(self,options):
         if self.vserver:
             return self.install_vserver_create(options)
-            return self.install_vserver_yum(options)
+            return self.install_vserver_native(options)
         else:
             return self.install_chroot(options)
 

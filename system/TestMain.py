@@ -48,6 +48,8 @@ build-url defaults to the last value used, as stored in BUILD-URL,
    or %s
 config defaults to the last value used, as stored in CONFIG,
    or %r
+ips defaults to the last value used, as stored in IPS,
+   default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_build_url,TestMain.default_config)
         usage += "\n  Defaut steps are %r"%TestMain.default_steps
         usage += "\n  Other useful steps are %r"%TestMain.other_steps
@@ -65,6 +67,9 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
                            help="Used by db_dump and db_restore")
         parser.add_option("-d","--display", action="store", dest="display", default='bellami.inria.fr:0.0',
                           help="set DISPLAY for vmplayer")
+        parser.add_option("-i","--ip",action="callback", callback=TestMain.optparse_list, dest="ips",
+                          nargs=1,type="string",
+                          help="allows to specify the set of IP addresses to use in vserver mode (disable scanning)")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
@@ -89,6 +94,7 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
         # handle defaults and option persistence
         for (recname,filename,default) in ( ('myplc_url','MYPLC-URL',"") , 
                                             ('build_url','BUILD-URL',TestMain.default_build_url) ,
+                                            ('ips','IPS',[]) , 
                                             ('config','CONFIG',TestMain.default_config) , ) :
             print 'handling',recname
             path="%s/%s"%(self.path,filename)
@@ -105,7 +111,7 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
                         parsed=[x.strip() for x in parsed]
                     setattr(self.options,recname,parsed)
                 except:
-                    if default:
+                    if default != "":
                         setattr(self.options,recname,default)
                     else:
                         print "Cannot determine",recname
@@ -178,7 +184,7 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
             
         if self.options.dry_run:
             self.show_env(self.options,"Dry run")
-            sys.exit(0)
+            return 0
             
         # do all steps on all plcs
         for (name,method) in all_step_infos:
@@ -209,6 +215,7 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
             else:
                 return 1 
         except:
+            traceback.print_exc()
             return 2
 
 if __name__ == "__main__":
