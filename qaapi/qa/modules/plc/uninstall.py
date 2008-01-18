@@ -8,16 +8,31 @@ class uninstall(Test):
     Completely removes the installed myplc
     """
 
-    def call(self):
+    def call(self, system_type, root_dir):
+	
+	remove_command = " rpm -e myplc " 
+	full_command = ""
+
+	if system_type in ['vserv', 'vserver']:
+	    full_command += " vserver %(root_dir)s exec "
+	elif system_type in ['chroot']:
+	    pass
+	else: 
+	    raise Exception, "Invalid system type %(system_type)s" % locals()
+	 
 	if self.config.verbose:
             utils.header("Removing myplc")
-        (stdin, stdout, stderr) = os.popen3('set -x; service plc safestop')
-        self.errors = stderr.readlines()
-        (stdin, stdout, stderr) = os.popen3('set -x; rpm -e myplc')
-        self.errors.extend(stderr.readlines())
-        if self.errors: raise "\n".join(self.errors)
-        (stdin, stdout, stderr) = os.popen3('set -x; rm -rf  /plc/data')
-        self.errors.extend(stderr.readlines())
-        if self.errors: raise "\n".join(self.errors)
+
+	(stdout, stderr) = utils.popen(full_command + "service plc safestop")
+	if self.config.verbose:
+	    utils.header("\n".join(stdout))
+		
+        (stdin, stdout, stderr) = utils.popen(full_command + remove_command)
+        if self.config.verbose:
+	    utils.header("\n".join(stdout))
+
+	(stdin, stdout, stderr) = utils.popen(full_command + " rm -rf  /plc/data")
+	if self.config.verbose:
+	    utiils.header("\n".join(stdout))
 	
 	return 1
