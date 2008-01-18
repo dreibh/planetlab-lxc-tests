@@ -1,0 +1,162 @@
+#!/bin/bash
+
+
+# Establishment of a runtime environment for a
+# virtual  machine  under QEMU, This script permits
+# to the virtual machine to share the
+# network connection with a host machine under FC6.
+
+# Default Value
+IP_GATEWAY=0.0.0.0
+IP_HOST=0.0.0.0
+IP_BROADCAST=0.0.0.0
+IP_NETMASK=0.0.0.0
+
+INTERFACE_LAN=eth0
+INTERFACE_BRIDGE=br0
+
+# Fonction de mise en place du pont
+start () {
+
+    if [ -n "$1" ]; then
+	INTERFACE_LAN=$1
+	shift
+    fi
+    set $(/sbin/ifconfig | grep $INTERFACE_LAN) >/dev/null
+    if [ -z "$1" ]; then
+	echo "Interface réseau $IF_HOTE non trouvée."
+	exit 1
+    fi
+    shift $(($# - 1))
+    echo "Using the interface" $INTERFACE_LAN
+	
+    #Restarting the udev
+    echo "Starting the udev ..."
+    /sbin/udevd restart
+    #Loding the tun/tap model
+    echo "Loading the tun module ..."
+    modprobe tun
+    set $(lsmod | grep tun) >/dev/null
+    if [ -z "$1" ]; then
+	echo "Module tun/tap not activated"
+	exit 1
+    fi
+    shift $(($# - 1))
+
+    #Giving acces in Read/Write to the tun module
+    echo "Granting the Read/Write acces to the tun module..."
+    chmod 666 /dev/net/tun
+
+
+    ##Get The BROADCAST ip @
+    set $(/sbin/ip addr show $INTERFACE_LAN | grep inet) >/dev/null 2>&1
+    if [ -n "$2" ]; then
+	IP_BROADCAST=$4
+    fi
+    shift $(($# - 1))
+    
+    #Getting the GATEWAY IP @
+    set $(netstat -rn | grep UG ) >/dev/null 2>&1
+    if [ -n "$2" ]; then
+	IP_GATEWAY=$2
+    fi
+    shift $(($# - 1))
+
+    #Getting the host IP
+    set $(ifconfig $INTERFACE_LAN 2> /dev/null | grep "inet addr:" | \
+	sed -e "s/.*addr:\([^ ]*\).*/\1/")
+    if [ -n "$1" ]; then
+	IP_HOST=$1
+    fi
+    shift $(($# - 1))
+ 
+    ##Getting the Netmask address
+    set $(ifconfig $INTERFACE_LAN 2> /dev/null | grep "inet addr:" | \
+	sed -e "s/.*Mask:\([^ ]*\).*/\1/")
+    if [ -n "$1" ]; then
+	IP_NETMASK=$1
+    fi
+    shift $(($# - 1))
+ 
+    # Création et paramétrage du pont
+    echo "Configure $INTERFACE_BRIDGE bridge..."
+    /usr/sbin/brctl addbr $INTERFACE_BRIDGE
+    #/usr/sbin/brctl stp $INTERFACE_BRIDGE yes
+    /usr/sbin/brctl addif $INTERFACE_BRIDGE $INTERFACE_LAN
+    echo "Activating promiscuous mode  $INTERFACE_LAN..."
+    /sbin/ifconfig $INTERFACE_LAN 0.0.0.0 promisc up
+    sleep 2
+    echo "IP address on $INTERFACE_BRIDGE..."
+    # static
+    /sbin/ifconfig $INTERFACE_BRIDGE $IP_HOST  broadcast $IP_BROADCAST  netmask $IP_NETMASK up
+    sleep 1
+	
+    #Reconfigure the Bridge IP @ in the host machine
+    echo "Configuring  the IP  Gateway @:" $IP_GATEWAY
+    route add default gw $IP_GATEWAY
+
+    
+    #wipe the host firewall otherwise the guest qemu can't acces to the LAN
+    echo "Wiping the firewall..." 
+    iptables -F
+    
+    #preparing the hard disk image for qemu install
+    if [  -e "hda_5.raw" ];then
+	rm -rf hda_5.raw
+    fi
+    echo "Creating hard disk for Qemu install..."
+    set $(qemu-img create hda_5.raw 5G) >/dev/null
+    if [ -z "$1" ];then
+	echo "Can't Create disk image..."
+    fi
+    shift $(($# - 1))
+    
+	
+    
+}
+
+
+#Adding a new interface to the bridge
+add () {
+        /sbin/ifconfig $1 0.0.0.0 promisc up
+        /usr/sbin/brctl addif $INTERFACE_BRIDGE $1
+}
+
+
+#Stop the actual bridged network  and Restore the original network
+stop () {
+        if [ -n "$1" ]; then
+                INTERFACE_LAN=$1
+        fi
+        TESTPONT=$(/sbin/ifconfig | grep $INTERFACE_BRIDGE)
+        if [ -z "$TESTPONT" ]; then
+                echo "Attention : pont réseau non trouvé. Vérifier la config réseau ..."
+                exit 1
+        fi
+        /usr/sbin/brctl delif $INTERFACE_BRIDGE $INTERFACE_LAN
+        /sbin/ifconfig $INTERFACE_BRIDGE down
+        /usr/sbin/brctl delbr $INTERFACE_BRIDGE
+        /sbin/service network restart
+}
+
+# 
+case $1 in
+        start)
+                start $2
+        ;;
+        stop)
+                stop $2
+        ;;
+        add)
+                add $2
+        ;;
+        *)
+                echo $"Use: env-qemu {start|add|stop} [interface]"
+                exit 1
+esac
+
+exit 0
+
+
+
+
