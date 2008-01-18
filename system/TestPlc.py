@@ -156,7 +156,7 @@ class TestPlc:
 
     def install_rpm(self,options):
         if self.vserver:
-            return self.install_rpm_vserver_create(options)
+            return self.install_rpm_vserver(options)
         else:
             return self.install_rpm_chroot(options)
 
