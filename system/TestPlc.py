@@ -18,15 +18,16 @@ class TestPlc:
 
     def __init__ (self,plc_spec):
 	self.plc_spec=plc_spec
-	self.url="https://%s:443/PLCAPI/"%plc_spec['hostname']
-	self.server=xmlrpclib.Server(self.url,allow_none=True)
 	self.path=os.path.dirname(sys.argv[0])
         try:
             self.vserverip=plc_spec['vserverip']
             self.vservername=plc_spec['vservername']
+            self.url="https://%s:443/PLCAPI/"%plc_spec['vservername']
             self.vserver=True
         except:
             self.vserver=False
+            self.url="https://%s:443/PLCAPI/"%plc_spec['hostname']
+	self.server=xmlrpclib.Server(self.url,allow_none=True)
         
     def name(self):
         name=self.plc_spec['name']
