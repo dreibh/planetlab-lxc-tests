@@ -26,8 +26,6 @@ class start(Test):
 	if self.config.verbose:
 	    utils.header(full_command)	
 
-	(stdin, stdout, stderr) = os.popen3(full_command)
-        self.errors = stderr.readlines()
-        if self.errors: raise Exception, "\n".join(self.errors)
-
-	return 1
+	(stdout, stderr) = utils.popen(full_command)
+	
+         return 1
