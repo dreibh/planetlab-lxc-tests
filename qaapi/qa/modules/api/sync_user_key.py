@@ -38,7 +38,7 @@ class sync_person_key(Test):
 	    # Make new keys
 	    self.make_keys(keys_path, keys_filename)
 	    if self.config.verbose:
-		utils.header("Made new key pair %(private_key_path)s %(public_key_path)s " \
+		utils.header("Made new key pair %(private_key_path)s %(public_key_path)s " %\
 		locals())
 	    
 	# sync public key  
