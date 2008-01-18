@@ -16,10 +16,13 @@ class TestMain:
 
     default_config = [ 'onelab' ]
 
-    default_steps = ['uninstall','install','configure', 'start', 'store_keys', 'initscripts', 
-                     'sites', 'nodes', 'slices', 'bootcd',  
-                     'nodegroups', 'start_nodes', 'check_nodes', 'check_slices' ]
-    other_steps = [ 'fresh_install', 'stop', 'install_vserver_create', 'install_vserver_native',
+    default_steps = ['uninstall','install','install_rpm',
+                     'configure', 'start', 
+                     'store_keys', 'initscripts', 
+                     'sites', 'nodes', 'slices', 
+                     'bootcd', 'nodegroups', 
+                     'start_nodes', 'check_nodes', 'check_slices' ]
+    other_steps = [ 'fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'stop_nodes' ,  'db_dump' , 'db_restore',
                     ]

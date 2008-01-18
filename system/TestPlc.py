@@ -115,14 +115,11 @@ class TestPlc:
 
     ### install
     def install_chroot(self,options):
-        utils.header('Installing from %s'%options.myplc_url)
-        url=options.myplc_url
-        utils.system('rpm -Uvh '+url)
-        utils.system('service plc mount')
+        # nothing to do
         return True
 
     # xxx this would not work with hostname != localhost as mylc-init-vserver was extracted locally
-    def install_vserver_create(self,options):
+    def install_vserver(self,options):
         # we need build dir for vtest-init-vserver
         build_dir=self.path+"/build"
         if not os.path.isdir(build_dir):
@@ -139,16 +136,29 @@ class TestPlc:
             raise Exception,"Could not create vserver for %s"%self.vservername
         return True
 
-    def install_vserver_native(self,options):
+    def install(self,options):
+        if self.vserver:
+            return self.install_vserver(options)
+        else:
+            return self.install_chroot(options)
+
+    ### install_rpm
+    def install_rpm_chroot(self,options):
+        utils.header('Installing from %s'%options.myplc_url)
+        url=options.myplc_url
+        utils.system('rpm -Uvh '+url)
+        utils.system('service plc mount')
+        return True
+
+    def install_rpm_vserver(self,options):
         self.run_in_guest("yum -y install myplc-native")
         return True
 
-    def install(self,options):
+    def install_rpm(self,options):
         if self.vserver:
-            return self.install_vserver_create(options)
-            return self.install_vserver_native(options)
+            return self.install_rpm_vserver_create(options)
         else:
-            return self.install_chroot(options)
+            return self.install_rpm_chroot(options)
 
     ### 
     def configure(self,options):
