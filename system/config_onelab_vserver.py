@@ -47,6 +47,8 @@ def config (plcs,options):
             vservername = "%s-%d-%s" % (vservername,plc_counter,simplehostname)
         plc['vservername']=vservername
         plc['vserverip']=ip
+        # temporary - for /etc/sysconfig/networking
+        plc['vserverhostname']=hostname
         plc['name'] = "%s_%s"%(plc['name'],simplehostname)
         utils.header("Attaching plc %s to vserver %s (%s)"%\
                          (plc['name'],plc['vservername'],plc['vserverip']))
