@@ -19,8 +19,7 @@ class stop(Test):
 	else:
 	    raise Exception, "Invalid system type %(system_type)s" locals() 	
 	
-	full_command += stop_command
-	full_command = full_command % locals()
+	full_command += stop_command % locals()
 
 	if self.config.verbose:
 	    utils.header(full_command)
