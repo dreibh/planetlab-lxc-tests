@@ -8,12 +8,12 @@ class stop(Test):
     Installs a myplc
     """
 
-    def call(self, system_type, vserver_or_root_dir_name):
+    def call(self, system_type, root_dir):
 
  	stop command = " /sbin/service plc stop "
 	full_command = ""
 	if system_type in ['vserv', 'vserver']:
-	    full_command += " vserver %(vserver_or_root_dir_name)s exec "
+	    full_command += " vserver %(root_dir)s exec "
 	elif system_type in ['chroot']:
 	    pass
 	else:
