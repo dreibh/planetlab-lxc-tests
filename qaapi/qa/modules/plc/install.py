@@ -39,6 +39,7 @@ class install(Test):
 
 	# build command
 	full_command = ""
+	install_command = " rpm -Uvh %(url)s "
 	if system_type in ['vserv', 'vserver']:
 	    full_command += " vserver %(root_dir)s exec "
 	elif system_type in ['chroot']:
@@ -46,7 +47,8 @@ class install(Test):
 	else:
 	    raise Exception, "Invalid system type %(system_type)s" % locals() 
 
-        (stdout, stderr) = utils.popen(full_command + " rpm -Uvh " + url)
+	full_command += install_command % locals()
+        (stdout, stderr) = utils.popen(full_command)
 	if self.config.verbose:
 	    utils.header("\n".join(stdout))
 	
