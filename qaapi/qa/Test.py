@@ -2,6 +2,7 @@ import sys, os
 from types import *
 from qa import utils
 from qa.logger import log
+from qa.Config import Config
 
 class Test:
     """
@@ -21,7 +22,7 @@ class Test:
 	"""
 	return True
 
-    def __init__(self, config):
+    def __init__(self, config = Config()):
 	self.name = self.__class__.__name__
 	self.path=os.path.dirname(sys.argv[0])
 	self.config = config
