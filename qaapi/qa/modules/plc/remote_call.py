@@ -1,0 +1,23 @@
+import os
+from qa.Test import Test
+from qa import utils
+
+class  remote_call(Test):
+    """
+    Attempt to connect to a node using the plc root key and
+    issue a command.
+    """
+
+    def call(self, root_key_path, hostname, command):
+	if not os.path.isfile(root_key_path):
+	    raise Exception, "no such private key file %(root_key_path)s" % locals()
+	 
+	full_command = "ssh -i %(root_key_path)s root@%(hostname) %(command)s" % locals()
+	if self.config.verbose:
+	    utils.header(full_command)
+	(stdout, stderr) = utils.popen(full_command)
+	if self.config.verbose:
+	    utils.header("\n".join(stdout))
+
+
+	return 1 	 		
