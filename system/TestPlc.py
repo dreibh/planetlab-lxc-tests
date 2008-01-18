@@ -136,7 +136,7 @@ class TestPlc:
             raise Exception,"Could not create vserver for %s"%self.vservername
         # xxx temporary - initialize /etc/sysconfig/networking
         networking="NETWORKING=yes\nHOSTNAME=%s\n"%self.plc_spec['vserverhostname']
-        file("/vservers/%s/etc/sysconfig/networking"%vservername,"w").write(networking)
+        file("/vservers/%s/etc/sysconfig/networking"%self.vservername,"w").write(networking)
         return True
 
     def install(self,options):
