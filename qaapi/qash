@@ -7,28 +7,31 @@
 import os, sys
 from optparse import OptionParser
 from traceback import print_exc
-
-import qa.utils
+from qa import utils
 from qa.QAAPI import QAAPI
+from qa.Test import Test
 
 sys.path.append(os.path.dirname(os.path.realpath(sys.argv[0])))
 
 parser = OptionParser(add_help_option = False)
 parser.add_option("-f", "--config", help = "configuration file")
 parser.add_option("-l", "--log", help="enable logging")
+parser.add_option("-v", "--verbose", help="be verbose")
 parser.add_option("--help", action = "help", help = "show this help message and exit")
 (options, args) = parser.parse_args()
 
 # XX Load callable tests
 try:
-   QAAPI(globals(), 
-	 options.config, 
-	 options.log)
+    qaapi = QAAPI(globals(), 
+	 config = options.config, 
+	 logging = options.log,
+	 verbose = options.verbose)
+    config = qaapi.config
+    plcapi = config.api
+    auth = config.auth
 
 except Exception, err:
-    print "Error: ", err
-    parser.print_help()
-    sys.exit(1)
+    raise
 
 # If called by a script
 if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
