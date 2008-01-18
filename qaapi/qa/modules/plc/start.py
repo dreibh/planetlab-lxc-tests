@@ -28,4 +28,7 @@ class start(Test):
 
 	(stdout, stderr) = utils.popen(full_command)
 	
-         return 1
+	if self.config.verbose:
+            utils.header("\n".join(stdout))
+         
+	return 1
