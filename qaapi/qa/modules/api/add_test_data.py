@@ -48,11 +48,12 @@ class add_test_data(Test):
 		    'hostname': node_config['TEST_NODE_HOSTNAME'],
 		    'ip':  node_config['TEST_NODE_IP'],
 		    'gateway': node_config['TEST_NODE_GATEWAY'],
-		    'dns': node_config['TEST_NODE_DNS'],
+		    'dns1': node_config['TEST_NODE_DNS'],
 		    'broadcast': node_config['TEST_NODE_BROADCAST'], 
 		    'network': node_config['TEST_NODE_NETWORK'],
 		    'netmask': node_config['TEST_NODE_NETMASK'],
-		    'slice_ids': []}
+		    'slice_ids': [],
+		    'nodenetwork_ids': []}
 	    node_list.append(node)
 	    
 	    
@@ -88,12 +89,23 @@ class add_test_data(Test):
     	    if not nodes:
         	node_id = api.AddNode(auth, site_fields['login_base'], node_fields)
 		node_fields['node_id'] = node_id
+		node = node_fields
 		nodes.append(node_fields)
 		if self.config.verbose:
 		    utils.header("Added test node")
 	    else:
+	        node = nodes[0]
 		if self.config.verbose:
 		    utils.header("Test node found")
+
+	    # Add node network
+	    if not node['nodenetwork_ids']:
+		nodenetwork_id = api.AddNodeNetwork(auth, node_fields['hostname'], node_fields)
+		if self.config.verbose:
+		    utils.header("Added test nodenetwork")
+	    else:
+	        if self.config.verbose:
+	            utils.header("Nodenetwork found")	
 	
 	# Add Test slice
 	slices = api.GetSlices(auth, [slice_fields['name']])
@@ -131,6 +143,9 @@ class add_test_data(Test):
 	    person = persons[0]
 	    if self.config.verbose:
 		utils.header("Test person found")
+	
+	# Add roles to person
+	api.AddRoleToPerson(auth, 'user', person['email'])
 
 	# Add person to site
 	if site['site_id'] not in person['site_ids']:	
@@ -149,4 +164,5 @@ class add_test_data(Test):
 	else:
 	    if self.config.verbose:
 		utils.header("Test person found on test slice")
+
 
