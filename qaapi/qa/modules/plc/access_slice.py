@@ -58,7 +58,7 @@ class access_slice(Test):
 	    host_check = os.system(ssh_command + " hostname ")
 	    if host_check == 0:
 		if self.config.verbose:
-		    utils.header("connecteed to %(slice_name)s@%(hostname)s" % locals()
+		    utils.header("connecteed to %(slice_name)s@%(hostname)s" % locals())
 		return 1
 	    else:
 		if self.config.verbose:
