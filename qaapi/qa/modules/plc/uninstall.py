@@ -28,11 +28,11 @@ class uninstall(Test):
 	if self.config.verbose:
 	    utils.header("\n".join(stdout))
 		
-        (stdin, stdout, stderr) = utils.popen(full_command + remove_command)
+        (stdout, stderr) = utils.popen(full_command + remove_command)
         if self.config.verbose:
 	    utils.header("\n".join(stdout))
 
-	(stdin, stdout, stderr) = utils.popen(full_command + " rm -rf  /plc/data")
+	(stdout, stderr) = utils.popen(full_command + " rm -rf  /plc/data")
 	if self.config.verbose:
 	    utiils.header("\n".join(stdout))
 	
