@@ -24,7 +24,7 @@ class uninstall(Test):
             utils.header("Removing myplc")
 
 	full_command = full_command % locals()
-	(stdout, stderr) = utils.popen(full_command + "service plc safestop")
+	(stdout, stderr) = utils.popen(full_command + "/sbin/service plc safestop")
 	if self.config.verbose:
 	    utils.header("\n".join(stdout))
 		
