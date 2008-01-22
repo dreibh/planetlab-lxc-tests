@@ -16,7 +16,6 @@ class install(Test):
 	if not url:
 	    try:
 
-		print self.config.path 
 	        url_file = open("%s/URL" % url_path)
 	        url = url_file.read().strip()
 	        url_file.close()
