@@ -27,10 +27,17 @@ random = Random()
 config = Config()
 auth = config.auth
 
-boot_states = config.api.GetBootStates(auth)
-roles = [role['name'] for role in config.api.GetRoles(auth)]
-methods = config.api.GetNetworkMethods(auth)
-types = config.api.GetNetworkTypes(auth)
+try: boot_states = config.api.GetBootStates(auth)
+except: boot_states = [u'boot', u'dbg', u'inst', u'new', u'rcnf', u'rins']
+
+try: roles = [role['name'] for role in config.api.GetRoles(auth)]
+except: roles = [u'admin', u'pi', u'user', u'tech']
+
+try: methods = config.api.GetNetworkMethods(auth)
+except: methods = [u'static', u'dhcp', u'proxy', u'tap', u'ipmi', u'unknown']
+
+try:types = config.api.GetNetworkTypes(auth)
+except: types = [u'ipv4']
 
 def randfloat(min = 0.0, max = 1.0):
     return float(min) + (random.random() * (float(max) - float(min)))
