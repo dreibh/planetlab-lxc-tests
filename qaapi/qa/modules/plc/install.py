@@ -9,7 +9,7 @@ class install(Test):
     Installs a myplc
     """
 
-    def call(self, url=None, system_type, root_dir):
+    def call(self, system_type, root_dir, url=None):
 	
 	url_path = self.config.path
 	# Determine url
