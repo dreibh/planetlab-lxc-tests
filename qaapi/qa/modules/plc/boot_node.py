@@ -21,7 +21,7 @@ class boot_node(Test):
 	    raise Exception, "No such node %s" 
 
 	bootimage = api.GetBootMedium(auth, hostname, image_type, '')
-	bootimage_path = '/$(tdir)s/%(hostname)s-bootcd.iso' % locals()
+	bootimage_path = '/%(tdir)s/%(hostname)s-bootcd.iso' % locals()
 
 	if self.config.verbose:
             utils.header("Creating bootcd for %(hostname)s at %(bootimage_path)s" % locals())	
