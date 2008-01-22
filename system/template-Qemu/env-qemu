@@ -107,10 +107,7 @@ start () {
 	rm -rf hda_5.raw
     fi
     echo "Creating hard disk for Qemu install..."
-    set $(pwd)
-    local_path=$1
-    shift $(($# - 1))
-    set $(qemu-img create $local_path/hda_5.raw 5G) >/dev/null
+    set $(qemu-img create hda_5.raw 5G) >/dev/null
     if [ -z "$1" ];then
 	echo "Can't Create disk image..."
     fi

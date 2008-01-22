@@ -18,7 +18,7 @@ shift $(($# -1))
 
 # qemu parameters
 RAM=320;
-TAP="tap,script=${NODE_DIR}/qemu-ifup.sh";
+TAP="tap,script=${NODE_DIR}/qemu-ifup";
 echo $NODE_DIR
 #check for the creation of new HDA
 if [ -e "$HDA" ]; then
