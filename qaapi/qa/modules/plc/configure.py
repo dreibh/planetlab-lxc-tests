@@ -23,20 +23,25 @@ class configure(Test):
                      'PLC_BOOT_HOST',
                      'PLC_NET_DNS1',
                      'PLC_NET_DNS2']:
-	    fileconf.write('e %s\n%s\n' % (var, self.config[var]))
+	    fileconf.write('e %s\n%s\n' % (var, getattr(self.config, var)))
 	fileconf.write('w\nq\n')
 	fileconf.close()
 
+	mount_command = "/sbin/service plc mount"
 	full_command = ""
 	if system_type in ['vserv', 'vserver']:
-	    full_command += " vserver %(root_dir)s exec "
+	    full_command += " vserver %(root_dir)s exec " % locals()
 	elif system_type in ['chroot']:
-	    full_commnd += " chroot %(root_dir)s "
+	    full_command += " chroot %(root_dir)s " % locals()
 	else:
 	    raise Exception, "Invalid system type %(sytem_type)s" % locals()
 
-	full_command = full_command + " plc-config-tty < %(tmpname)s" % locals()	 	
-        (stdout, stderr) = utils.popen(full_command)
+	full_command += " plc-config-tty < %(tmpname)s" % locals()
+	commands = [mount_command, full_command]
+	for command in commands:
+	    if self.config.verbose:
+	        utils.header(command)	 	
+            (stdout, stderr) = utils.popen(command)
         (stdout, stderr) = utils.popen("rm %s" % tmpname)
 
 	return 1
