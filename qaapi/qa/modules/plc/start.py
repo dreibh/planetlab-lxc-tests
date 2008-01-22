@@ -1,4 +1,3 @@
-import os, sys
 import traceback
 from qa.Test import Test
 from qa import utils
@@ -28,6 +27,6 @@ class start(Test):
 	(stdout, stderr) = utils.popen(full_command)
 	
 	if self.config.verbose:
-            utils.header("\n".join(stdout))
+            utils.header("".join(stdout))
          
 	return 1
