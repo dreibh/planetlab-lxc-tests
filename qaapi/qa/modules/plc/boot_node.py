@@ -18,7 +18,7 @@ class boot_node(Test):
 	# validate hostname
 	nodes = api.GetNodes(auth, [hostname], ['hostname'])
 	if not nodes:
-	    raise Exception, "No such node %s" 
+	    raise Exception, "No such node %(hostname)s" 
 
 	bootimage = api.GetBootMedium(auth, hostname, image_type, '')
 	bootimage_path = '/%(tdir)s/%(hostname)s-bootcd.iso' % locals()
@@ -50,4 +50,4 @@ class boot_node(Test):
             raise Exception, "Unable to boot node image\n" + \
                             "\n".join(self.errors)	
 	 
-	return True	
+	return 1	
