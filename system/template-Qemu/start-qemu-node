@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#Default Value
+set $(pwd)
+NODE_DIR=$1
+shift $(($# -1))
+CDROM_IMG=${NODE_DIR}/boot_file.iso
+HDA=$NODE_DIR/hda_5.raw;	
+
+#Getting the MAC address
+if [ ! -e "$NODE_DIR/MAC" ];then
+    echo "File for MAC Address not found"
+    exit 1
+fi
+set $(cat $NODE_DIR/MAC)
+MACADDR=$1
+shift $(($# -1))
+
+# qemu parameters
+RAM=320;
+TAP="tap,script=${NODE_DIR}/qemu-ifup.sh";
+echo $NODE_DIR
+#check for the creation of new HDA
+if [ -e "$HDA" ]; then
+    echo "Disk already existing removing  it..."
+    rm -rf $HDA
+fi
+qemu-img create $HDA 5G
+echo "New $HDA is created..."
+
+#Command for running the Qemu Emulator
+ARGS="-boot d -cdrom ${CDROM_IMG} -hda ${HDA} -m ${RAM} -net nic,macaddr=${MACADDR} -net $TAP ";
+echo "Executing qemu $ARGS";
+qemu $ARGS
+
+
+exit

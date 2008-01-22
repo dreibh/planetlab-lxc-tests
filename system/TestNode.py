@@ -102,6 +102,6 @@ class TestNode:
         display=options.display
         utils.header('Starting vmplayer for node %s on %s'%(hostname,display))
         utils.system('cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
-
+        
     def start_qemu (self, options):
         utils.header ("TestNode.start_qemu: not implemented yet")
