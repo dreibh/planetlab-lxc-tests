@@ -12,7 +12,7 @@ class  remote_call(Test):
 	if not os.path.isfile(root_key_path):
 	    raise Exception, "no such private key file %(root_key_path)s" % locals()
 	 
-	full_command = "ssh -i %(root_key_path)s root@%(hostname) %(command)s" % locals()
+	full_command = "ssh -i %(root_key_path)s root@%(hostname)s %(command)s" % locals()
 	if self.config.verbose:
 	    utils.header(full_command)
 	(stdout, stderr) = utils.popen(full_command)
