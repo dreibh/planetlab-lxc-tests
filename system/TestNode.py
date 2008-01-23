@@ -144,3 +144,7 @@ class TestNode:
         utils.system("ssh root@%s ~/%s/env-qemu start "%(host_machine, dest_dir ))
         utils.system("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s & "%( host_machine, display, dest_dir, dest_dir))
         
+    def stop_qemu(self,host_machine, hostname):
+        utils.header('Stoping qemu emulation of %s on the host machine %s and Restoring the initial network'
+                     %(hostname,host_machine))
+        utils.system("ssh root@%s ~/qemu-%s/env-qemu stop "%(host_machine, hostname ))

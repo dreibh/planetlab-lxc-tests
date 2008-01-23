@@ -96,7 +96,20 @@ class TestPlc:
         utils.system('pgrep vmplayer | xargs -r kill ')
         utils.system('pgrep vmware | xargs -r kill -9')
         utils.system('pgrep vmplayer | xargs -r kill -9')
-        
+
+    def kill_all_qemus(self):
+        for site_spec in self.plc_spec['sites']:
+            test_site = TestSite (self,site_spec)
+            for node_spec in site_spec['nodes']:
+                test_node=TestNode (self,test_site,node_spec)
+                model=node_spec['node_fields']['model']
+                host_machine=node_spec['node_fields']['host_machine']
+                hostname=node_spec['node_fields']['hostname']
+                print model
+                if model.find("qemu") >= 0:
+                    utils.system('ssh root@%s  killall qemu'%host_machine)
+                    test_node.stop_qemu(host_machine,hostname)
+                    
     #################### step methods
 
     ### uninstall
@@ -345,6 +358,7 @@ class TestPlc:
         
     def start_nodes (self, options):
         self.kill_all_vmwares()
+        self.kill_all_qemus()
         utils.header("Starting vmware nodes")
         for site_spec in self.plc_spec['sites']:
             TestSite(self,site_spec).start_nodes (options)
@@ -352,6 +366,7 @@ class TestPlc:
 
     def stop_nodes (self, options):
         self.kill_all_vmwares ()
+        self.kill_all_qemus()
         return True
 
     # returns the filename to use for sql dump/restore, using options.dbname if set
