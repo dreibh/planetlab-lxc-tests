@@ -1,0 +1,46 @@
+#!/bin/bash
+
+#Getting the MAC address and the right path
+MACPATH=~/$1/MAC
+if [ ! -e ${MACPATH} ];then
+    echo "File for MAC Address not found"
+    exit 1
+fi
+set $(cat ${MACPATH})
+MACADDR=$1
+NODE_DIR=$2
+shift $(($# -1))
+
+#default Value
+CDROM_IMG=~/${NODE_DIR}/boot_file.iso
+SCRIPT=~/${NODE_DIR}/qemu-ifup
+FILENAME=hda_5.raw
+HDA=~/${NODE_DIR}/${FILENAME};	
+
+# qemu parameters
+RAM=320;
+TAP="tap,script=$SCRIPT";
+#check for the creation of new HDA
+if [ -e "$HDA" ]; then
+    echo "Disk already existing removing  it..."
+    rm -rf $HDA
+fi
+#Creating new HDA
+echo "Creating hard disk for Qemu install under $HDA"
+set $(qemu-img create $FILENAME 5G)
+if [ -z "$1" ];then
+	echo "Can't Create disk image..."
+	exit 1
+fi
+shift $(($# - 1))
+#unfortunately :-( qemu-img don't accept a path for image but only filename
+mv ~/$FILENAME $HDA
+echo "New $HDA is created..."
+
+#Command for running the Qemu Emulator
+ARGS="-boot d -cdrom ${CDROM_IMG} -hda ${HDA} -m ${RAM} -net nic,macaddr=${MACADDR} -net $TAP -no-kqemu";
+echo "Executing qemu $ARGS";
+qemu $ARGS
+
+
+exit
