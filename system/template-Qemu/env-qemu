@@ -102,19 +102,6 @@ start () {
     echo "Wiping the firewall..." 
     iptables -F
     
-    #preparing the hard disk image for qemu install
-    if [  -e "hda_5.raw" ];then
-	rm -rf hda_5.raw
-    fi
-    echo "Creating hard disk for Qemu install..."
-    set $(qemu-img create hda_5.raw 5G) >/dev/null
-    if [ -z "$1" ];then
-	echo "Can't Create disk image..."
-    fi
-    shift $(($# - 1))
-    
-	
-    
 }
 
 
