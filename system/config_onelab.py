@@ -10,7 +10,8 @@ onelab="one-lab.org"
 # use a model that contains "vmware" to get the node actually started
 def nodes():
     nodes= [ {'node_fields': {'hostname': 'test1.one-lab.org',
-                              'model':'vmware/minhw'},
+                              'model':'vmware/minhw',
+                              'host_machine' : 'test.one-lab.org'},
               'owner' : 'pi',
               'network_fields': { 'method':'static',
                                   'type':'ipv4',
@@ -23,7 +24,8 @@ def nodes():
                                   },
               },
              { 'node_fields': {'hostname':'test2.one-lab.org',
-                               'model':'vmware/minhw'},
+                               'model':'vmware/minhw',
+                               'host_machine': 'test.one-lab.org'},
                'owner' : 'tech',
                'network_fields': {'method':'static',
                                   'type':'ipv4',
@@ -35,9 +37,25 @@ def nodes():
                                   'dns1': '192.168.132.2',
                                   },
                },
+             {'node_fields': {'hostname': 'lysithea.inria.fr',
+                              'model':'qemu/minhw',
+                              'host_machine': 'garfield.inria.fr'},
+              'owner' : 'pi',
+              'network_fields': { 'method':'static',
+                                  'type':'ipv4',
+                                  'ip':'138.96.250.153',
+                                  'gateway':'138.96.248.250',
+                                  'network':'138.96.0.0',
+                                  'broadcast':'138.96.255.255',
+                                  'netmask':'255.255.0.0',
+                                  'dns1': '138.96.0.10',
+                                  'dns2': '138.96.0.11',
+                                  'mac' : '00:0b:cd:62:50:95',
+                                  },
+              },
              ]
-#    return nodes
-    return [nodes[0]]
+    return nodes
+#    return [nodes[0]]
 
 def all_nodenames ():
     return [ node['node_fields']['hostname'] for node in nodes()]
