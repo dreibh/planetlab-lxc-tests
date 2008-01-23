@@ -37,6 +37,9 @@ class TestPlc:
         else:
             return name+"[chroot]"
 
+    def is_local (self):
+        return self.plc_spec['hostname'] == 'localhost'
+
     # define the API methods on this object through xmlrpc
     # would help, but not strictly necessary
     def connect (self):
@@ -50,10 +53,10 @@ class TestPlc:
             return "chroot /plc/root %s"%command
 
     def ssh_command(self,command):
-        if self.plc_spec['hostname'] == "localhost":
+        if self.is_local():
             return command
         else:
-            return "ssh " + self.plc_spec['hostname'] + " " + command
+            return "ssh %s sh -c '\"%s\"'"%(self.plc_spec['hostname'],command)
 
     def full_command(self,command):
         return self.ssh_command(self.run_command(command))
@@ -65,7 +68,7 @@ class TestPlc:
 
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
-        return utils.system(local+" | "+self.full_command(command))
+        return utils.system(local+" | "+self.full_command(remote))
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
@@ -123,22 +126,24 @@ class TestPlc:
     # xxx this would not work with hostname != localhost as mylc-init-vserver was extracted locally
     def install_vserver(self,options):
         # we need build dir for vtest-init-vserver
-        build_dir=self.path+"/build"
-        if not os.path.isdir(build_dir):
-            if utils.system("svn checkout %s %s"%(options.build_url,build_dir)) != 0:
-                raise Exception,"Cannot checkout build dir"
+        if self.is_local():
+            # a full path for the local calls
+            build_dir=self.path+"/build"
+        else:
+            # use a standard name - will be relative to HOME 
+            build_dir="tests-system-build"
+        build_checkout = "svn checkout %s %s"%(options.build_url,build_dir)
+        if self.run_in_host(build_checkout) != 0:
+            raise Exception,"Cannot checkout build dir"
         # the repo url is taken from myplc-url 
         # with the last two steps (i386/myplc...) removed
         repo_url = options.myplc_url
         repo_url = os.path.dirname(repo_url)
         repo_url = os.path.dirname(repo_url)
-        command="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
+        create_vserver="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
             (build_dir,self.vservername,repo_url,self.vserverip)
-        if utils.system(command) != 0:
+        if self.run_in_host(create_vserver) != 0:
             raise Exception,"Could not create vserver for %s"%self.vservername
-        # xxx temporary - initialize /etc/sysconfig/network
-        network="NETWORKING=yes\nHOSTNAME=%s\n"%self.plc_spec['vserverhostname']
-        file("/vservers/%s/etc/sysconfig/network"%self.vservername,"w").write(network)
         return True
 
     def install(self,options):
@@ -151,8 +156,8 @@ class TestPlc:
     def install_rpm_chroot(self,options):
         utils.header('Installing from %s'%options.myplc_url)
         url=options.myplc_url
-        utils.system('rpm -Uvh '+url)
-        utils.system('service plc mount')
+        self.run_in_host('rpm -Uvh '+url)
+        self.run_in_host('service plc mount')
         return True
 
     def install_rpm_vserver(self,options):
@@ -185,7 +190,7 @@ class TestPlc:
         fileconf.write('q\n')
         fileconf.close()
         utils.system('cat %s'%tmpname)
-        self.run_in_guest('plc-config-tty < %s'%tmpname)
+        self.run_in_guest_piped('cat %s'%tmpname,'plc-config-tty')
         utils.system('rm %s'%tmpname)
         return True
 

@@ -44,18 +44,21 @@ class TestMain:
             setattr(parser.values,option.dest,value.split())
 
     def test_main (self):
+        steps_message="Defaut steps are\n\t%s"%(" ".join(TestMain.default_steps))
+        steps_message += "\nOther useful steps are\n\t %s"%(" ".join(TestMain.other_steps))
         usage = """usage: %%prog [options] steps
-myplc-url defaults to the last value used, as stored in MYPLC-URL,
+myplc-url defaults to the last value used, as stored in arg-myplc-url,
    no default
-build-url defaults to the last value used, as stored in BUILD-URL, 
+build-url defaults to the last value used, as stored in arg-build-url, 
    or %s
-config defaults to the last value used, as stored in CONFIG,
+config defaults to the last value used, as stored in arg-config,
    or %r
-ips defaults to the last value used, as stored in IPS,
+ips defaults to the last value used, as stored in arg-ips,
    default is to use IP scanning
-steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_build_url,TestMain.default_config)
-        usage += "\n  Defaut steps are %r"%TestMain.default_steps
-        usage += "\n  Other useful steps are %r"%TestMain.other_steps
+steps refer to a method in TestPlc or to a step_* module
+===
+"""%(TestMain.default_build_url,TestMain.default_config)
+        usage += steps_message
         parser=OptionParser(usage=usage,version=self.subversion_id)
         parser.add_option("-u","--url",action="store", dest="myplc_url", 
                           help="myplc URL - for locating build output")
@@ -63,16 +66,18 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
                           help="Build URL - for using vtest-init-vserver.sh in native mode")
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
-                          help="config module - can be set multiple times, or use quotes")
+                          help="Config module - can be set multiple times, or use quotes")
         parser.add_option("-a","--all",action="store_true",dest="all_steps", default=False,
-                          help="Runs all default steps")
+                          help="Run all default steps")
+        parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
+                          help="List known steps")
         parser.add_option("-s","--state",action="store",dest="dbname",default=None,
                            help="Used by db_dump and db_restore")
         parser.add_option("-d","--display", action="store", dest="display", default='bellami.inria.fr:0.0',
-                          help="set DISPLAY for vmplayer")
+                          help="Set DISPLAY for vmplayer")
         parser.add_option("-i","--ip",action="callback", callback=TestMain.optparse_list, dest="ips",
                           nargs=1,type="string",
-                          help="allows to specify the set of IP addresses to use in vserver mode (disable scanning)")
+                          help="Specify the set of IP addresses to use in vserver mode (disable scanning)")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
@@ -84,6 +89,9 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
                 self.options.steps=TestMain.default_steps
             elif self.options.dry_run:
                 self.options.steps=TestMain.default_steps
+            elif self.options.list_steps:
+                print steps_message
+                sys.exit(1)
             else:
                 print 'No step found (do you mean -a ? )'
                 print "Run %s --help for help"%sys.argv[0]                        
@@ -91,14 +99,11 @@ steps refer to a method in TestPlc or to a step_* module"""%(TestMain.default_bu
         else:
             self.options.steps = self.args
 
-        # display display
-        utils.header('X11 display : %s'% self.options.display)
-
         # handle defaults and option persistence
-        for (recname,filename,default) in ( ('myplc_url','MYPLC-URL',"") , 
-                                            ('build_url','BUILD-URL',TestMain.default_build_url) ,
-                                            ('ips','IPS',[]) , 
-                                            ('config','CONFIG',TestMain.default_config) , ) :
+        for (recname,filename,default) in ( ('myplc_url','arg-myplc-url',"") , 
+                                            ('build_url','arg-build-url',TestMain.default_build_url) ,
+                                            ('ips','arg-ips',[]) , 
+                                            ('config','arg-config',TestMain.default_config) , ) :
             print 'handling',recname
             path="%s/%s"%(self.path,filename)
             is_list = isinstance(default,list)

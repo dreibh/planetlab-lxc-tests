@@ -156,7 +156,7 @@ def plc () :
     return { 
         'name' : 'wifilab',
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'localhost',
+        'hostname' : 'pdx',
         # set these two items to run within a vserver
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
