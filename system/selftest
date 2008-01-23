@@ -1,5 +1,127 @@
 #!/bin/bash
 
+SELF_HOST=$1
+SELF_IP=$2
+# all below addresses are those of the qemu host
+[ -n "$SELF_HOST" ] && SELF_HOST="selftest.$(hostname)"
+[ -n "$SELF_IP"   ] && SELF_IP="10.1.159.48"
+
+
+####################################################
+# setup MyPLC
+
+# install from repo
 yum -y install myplc-native
+
+# make sure its stopped
+service plc stop
+
+# turn off plc until its been configured
+chkconfig plc off
+
+####################################################
+# configure myplc for testing purposes
+config=$(mktemp)
+PW=$(od -N 16 -x /dev/urandom | head -1 | sed "s, ,,g")
+
+echo "e PLC_ROOT_PASSWORD" >> $config
+echo "$PW" >> $config
+
+echo "e PLC_NAME" >> $config
+echo "selftest" >> $config
+
+echo "e PLC_ROOT_USER" >> $config
+echo "selftest" >> $config
+
+echo "e PLC_MAIL_ENABLED" >> $config
+echo 0 >> $config
+
+echo "e PLC_MAIL_SUPPORT_ADDRESS" >> $config
+echo "mef@cs.princeton.edu" >> $config
+
+echo "e PLC_DB_HOST" >> $config
+echo $SELF_HOST >> $config
+
+echo "e PLC_API_HOST" >> $config
+echo $SELF_HOST >> $config
+
+echo "e PLC_WWW_HOST" >> $config
+echo $SELF_HOST >> $config
+
+echo "e PLC_BOOT_HOST" >> $config
+echo $SELF_HOST >> $config
+
+echo "e PLC_DB_IP" >> $config
+echo $SELF_IP >> $config
+
+echo "e PLC_API_IP" >> $config
+echo $SELF_IP >> $config
+
+echo "e PLC_WWW_IP" >> $config
+echo $SELF_IP >> $config
+
+echo "e PLC_BOOT_IP" >> $config
+echo $SELF_IP >> $config
+
+echo "e PLC_NET_DNS1" >> $config
+echo $SELF_IP >> $config
+
+echo "e PLC_NET_DNS2" >> $config
+echo $SELF_IP >> $config
+
+echo "w" >> $config
+echo "q" >> $config
+
+plc-config-tty < $config
+
+echo "$PW" > /etc/planetlab/pw
+chmod 400 /etc/planetlab/pw
+
+rm -f $config
+
+#not yet
+service plc start
+
+####################################################
+# run api tests
+
+### TBD
+
+# go no further than this for now
+exit 0
+
+
+####################################################
+# configure a node @ the local myplc
+
+# xxx execute plcsh with the appropriate set of commands to
+# - create a site
+# - create a node
+# - 
+
+
+# grab a bootcd image with the configuration file built in
+BOOTCDIMG=""
+
+# setup qemu to run the node from the bootcd
+
 yum -y install qemu
+testdir=$(mktemp -d /var/tmp/selftest.XXXX)
+cd $testdir
+qemu-img create -f qcow disk.img 5GB
+
+if [ -f "$BOOTCDIMG" ] ; then
+    # run qemu
+    # -x for serial line console
+    # -m 512 (512MB memory)
+    # -cdrom
+    qemu -x -m 512 -cdrom $BOOTCDIMG
+fi
+
+
+cd -
+
+# run node tests
+
+rm -rf $testdir
 exit 0
