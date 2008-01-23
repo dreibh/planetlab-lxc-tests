@@ -13,12 +13,12 @@ class boot_node(Test):
     def call(self, hostname, image_type = 'node-iso', disk_size="4G"):
 	api = self.config.api
 	auth = self.config.auth
-	tdir = "/tmp/"
+	self.tdir = "/tmp/"
 	
 	# validate hostname
 	nodes = api.GetNodes(auth, [hostname], ['hostname'])
 	if not nodes:
-	    raise Exception, "No such node %(hostname)s" 
+	    raise Exception, "No such node %(hostname)s" % locals() 
 
 	bootimage = api.GetBootMedium(auth, hostname, image_type, '')
 	bootimage_path = '/%(tdir)s/%(hostname)s-bootcd.iso' % locals()
@@ -50,4 +50,17 @@ class boot_node(Test):
             raise Exception, "Unable to boot node image\n" + \
                             "\n".join(self.errors)	
 	 
-	return 1	
+	return 1
+
+    def get_image_medium(self, hostname, image_type, path):
+	api = self.config.api
+	auth = self.config.auth
+	
+	file = open(path, 'w')
+	if image-type in ['node-floppy', 'node-iso', 'node-usb', 'generic-iso', 'generic-usb']:
+	    image = api.GetBootMedium(auth, hostname, image_type, '')
+	  
+	    
+
+	
+	 		
