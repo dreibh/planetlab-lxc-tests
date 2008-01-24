@@ -1,12 +1,12 @@
 import sys, os
 import traceback
-import qa.modules
-from qa.Config import Config
-from qa.logger import log	
+import tests
+from Config import Config
+from logger import log	
 
 class QAAPI:
    
-    modules_path = os.path.realpath(qa.modules.__path__[0])
+    tests_path = os.path.realpath(tests.__path__[0])
     methods = []
 		
 	
@@ -14,20 +14,21 @@ class QAAPI:
 	if config is None: self.config = Config()
 	else: self.config = Config(config)
 
-	module_files = self.module_files(self.modules_path)
+	test_files = self.test_files(self.tests_path)
 	callables = set()
         # determine what is callable
-	for file in module_files:
-	    callables.update(self.callables(file))
+	for file in test_files:
+	    tests = self.callables(file)
+	    tests = filter(lambda t: t.test_name not in ['Test'], tests)
+	    callables.update(tests)
 		
 	# Add methods to self and global environemt	
-        for method in callables:	    
-	    if logging: method = log(method, method.mod_name)
+        for method in callables:
+	    if logging: method = log(method, method.test_name)
 	    elif hasattr(self.config, 'log') and self.config.log:
-	        method = log(method, method.mod_name)
-	   
+	        method = log(method, method.test_name)
 	    class Dummy: pass
-            paths = method.mod_name.split(".")
+            paths = method.test_name.split(".")
 	    
             if len(paths) > 1:
                 first = paths.pop(0)
@@ -45,60 +46,60 @@ class QAAPI:
                     if not hasattr(obj, path):
                         if path == paths[-1]:
                             setattr(obj, path, method)
-		            globals[method.mod_name]=obj  
+		            globals[method.test_name]=obj  
                         else:
                             setattr(obj, path, Dummy())
                     obj = getattr(obj, path)
 	    else:
 	        if globals is not None:
-	            globals[method.mod_name] = method		
+	            globals[method.test_name] = method		
 
-    def module_files(self, module_dir):
+    def test_files(self, tests_dir):
 	"""
 	Build a list of files   
     	"""     
 	
-	# Load files from modules direcotry
+	# Load files from tests direcotry
         real_files = lambda name: not name.startswith('__init__') \
                                   and  name.endswith('.py')
         remove_ext = lambda name: name.split(".py")[0]
-        iterator = os.walk(module_dir)
+        iterator = os.walk(tests_dir)
         (root, basenames, files) = iterator.next()
-        module_base = ""
-        module_files = []
-        module_files.extend([method_base+file for file in map(remove_ext, filter(real_files, files))])
-
-        # recurse through directory             
+        test_base = ""
+        test_files = []
+        test_files.extend([test_base+file for file in map(remove_ext, filter(real_files, files))])
+        
+  	# recurse through directory             
         for (root, dirs, files) in iterator:
             parts = root.split(os.sep)
             for basename in basenames:
                 if basename in parts:
-                    module_base = ".".join(parts[parts.index(basename):])+"."
+                    test_base = ".".join(parts[parts.index(basename):])+"."
             files = filter(real_files, files)
             files = map(remove_ext, files)
-            module_files.extend([module_base+file for file in  files])
+            test_files.extend([test_base+file for file in  files])
+	return list(set(test_files)) 
 
-	return module_files 
-
-    def callables(self, module_file):
+    def callables(self, test_file):
     	"""
     	Return a new instance of the specified method. 
     	"""	 
         
     	# Get new instance of method
-	parts = module_file.split(".")
+	parts = test_file.split(".")
 	# add every part except for the last to name (filename)
-	module_dir =  "qa.modules."
-	module_basename = ".".join(parts[:-1])
-	module_path = module_dir + module_file
+	tests_dir =  "tests."
+	test_basename = ".".join(parts[:-1])
+	if test_basename: test_basename += '.'
+	test_path = tests_dir + test_file
     	try:
-	    module = __import__(module_path, globals(), locals(), module_path)
+	    test = __import__(test_path, globals(), locals(), test_path)
 	    callables = []
 
-	    for attribute in dir(module):
-		attr = getattr(module, attribute)
+	    for attribute in dir(test):
+		attr = getattr(test, attribute)
 	        if callable(attr) and hasattr(attr, 'status'):
-		    setattr(attr, 'mod_name', module_basename+"."+attribute)
+		    setattr(attr, 'test_name', test_basename+attribute)
 		    callables.append(attr(self.config))
 	    return callables 
     	except ImportError, AttributeError:
