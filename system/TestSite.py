@@ -54,56 +54,6 @@ class TestSite:
                 return node
         raise Exception,"Cannot locate node %s"%nodename
         
-    # left as-is, i.e. crappy
-    def check_nodes(self):
-        # should filter out nodes not under vmware not qemu
-        node_specs=self.site_spec['nodes']
-        bool=True
-        try:
-            ret_value=True    
-            filter=['boot_state']
-            bt={'boot_state':'boot'}
-            dbg={'boot_state':'dbg'}
-            secondes=15
-            start_time = datetime.datetime.now() ##geting the current time
-            dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=5)
-            utils.header("Starting checking for nodes in site %s"%self.name())
-            
-            for node_spec in node_specs :
-                hostname=node_spec['node_fields']['hostname']
-                while (bool):
-                    node_status=self.test_plc.server.GetNodes(self.test_plc.auth_root(),hostname, filter)
-                    utils.header('Actual status for node %s is [%s]'%(hostname,node_status))
-                    try:
-                        if (node_status[0] == bt):
-                            utils.header('%s has reached boot state'%hostname)
-                            break 
-                        elif (node_status[0] ==dbg):
-                            utils.header('%s has reached debug state'%hostname)
-                            bool=False
-                            break 
-                        elif ( start_time  <= dead_time ) :
-                            start_time=datetime.datetime.now()+ datetime.timedelta(minutes=2)
-                            time.sleep(secondes)
-                        else: bool=False
-                    except OSError ,e :
-                        bool=False
-                        str(e)
-                if (bool):
-                    utils.header("Node %s correctly installed and booted"%hostname)
-                else :
-                    utils.header("Node %s not fully booted"%hostname)
-                    ret_value=False
-            
-            utils.header("End checking for nodes in site %s"%self.name())
-            return ret_value
-        except Exception, e:
-            traceback.print_exc()
-            utils.header("will kill vmware in 10 seconds")
-            time.sleep(5)
-            self.tst_plc.kill_all_vmwares()
-            raise 
-            
     def start_nodes (self,options):
         for node_spec in self.site_spec['nodes']:
             TestNode(self.test_plc, self, node_spec).start_node(options)

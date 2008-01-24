@@ -1,5 +1,7 @@
 # $Id$
 import os, os.path
+import datetime
+import time
 import sys
 import xmlrpclib
 import datetime
@@ -301,6 +303,35 @@ class TestPlc:
                 self.server.AddNodeToNodeGroup(auth,node,nodegroupname)
         return True
 
+    def check_nodes(self,options):
+        status=True
+        start_time = datetime.datetime.now()
+        dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=5)
+        booted_nodes=[]
+        for site_spec in self.plc_spec['sites']:
+            test_site = TestSite (self,site_spec)
+            utils.header("Starting checking for nodes in site %s"%self.name())
+            notfullybooted_nodes=[ node_spec['node_fields']['hostname'] for node_spec in site_spec['nodes'] ]
+            nbr_nodes= len(notfullybooted_nodes)
+            while (status):
+                for node_spec in site_spec['nodes']:
+                    hostname=node_spec['node_fields']['hostname']
+                    if (hostname in notfullybooted_nodes): #to avoid requesting already booted node
+                        test_node=TestNode (self,test_site,node_spec)
+                        host_machine=node_spec['node_fields']['host_machine']
+                        node_status=test_node.get_node_status(hostname,host_machine)
+                        if (node_status):
+                            booted_nodes.append(hostname)
+                            del notfullybooted_nodes[notfullybooted_nodes.index(hostname)]
+                if ( not notfullybooted_nodes): break
+                elif ( start_time  <= dead_time ) :
+                    start_time=datetime.datetime.now()+ datetime.timedelta(minutes=2)
+                    time.sleep(15)
+                else: status=False
+            for nodeup in booted_nodes : utils.header("Node %s correctly installed and booted"%node)
+            for nodedown  in notfullybooted_nodes : utils.header("Node %s not fully booted"%node)
+            return status
+    
     def bootcd (self, options):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)

@@ -60,6 +60,18 @@ class TestNode:
             auth=self.test_plc.auth_root()
         self.test_plc.server.DeleteNode(auth,self.name())
 
+    def get_node_status(self,hostname,host_machine):
+        filter=['boot_state']
+        status=False
+        node_status=self.test_plc.server.GetNodes(self.test_plc.auth_root(),hostname, filter)
+        utils.header('Actual status for node %s is [%s]'%(hostname,node_status))
+        if (node_status[0]['boot_state'] == 'boot'):
+            utils.header('%s has reached boot state'%hostname)
+            status=True 
+        elif (node_status[0]['boot_state'] == 'dbg' ):
+            utils.header('%s has reached debug state'%hostname)
+        return status
+
     def conffile(self,image,hostname,path):
         model=self.node_spec['node_fields']['model']
         host_machine=self.node_spec['node_fields']['host_machine']    
