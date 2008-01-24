@@ -3,8 +3,8 @@
 SELF_HOST=$1
 SELF_IP=$2
 # all below addresses are those of the qemu host
-[ -n "$SELF_HOST" ] && SELF_HOST="selftest.$(hostname)"
-[ -n "$SELF_IP"   ] && SELF_IP="10.1.159.48"
+[ -z "$SELF_HOST" ] && SELF_HOST="selftest.$(hostname)"
+[ -z "$SELF_IP"   ] && SELF_IP="10.1.159.48"
 
 
 ####################################################
