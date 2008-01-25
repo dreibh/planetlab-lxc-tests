@@ -245,11 +245,16 @@ class api_unit_test(Test):
     
     def call(self,
 	     sites = 2,
+	     boot_sates = 2,
+	     conf_files = 3,
 	     nodes = 4,
              address_types = 3,
              addresses = 2,
-             persons = 10, 
-	     keys = 3
+             persons = 4, 
+	     keys = 3,
+	     key_types = 3,	
+	     slices = 4,
+	     initscripts = 4,	
 	    ):
 	self.api = self.config.api
 	self.auth = self.config.auth
@@ -257,10 +262,40 @@ class api_unit_test(Test):
 	self.methods_tested = set()
 	self.methods_failed = set()
 
+	# Begin testing methods
 	try:
 	    try:
+		#self.boot_state_ids = self.BootStates(boot_states)
 	        self.site_ids = self.Sites(sites)
-        	self.node_ids = self.Nodes(nodes)
+	 	#self.peer_ids = self.Peers(peers)
+		self.address_type_ids = self.AddressTypes(address_types)
+	        self.addresse_ids = self.Addresses(addresses)
+        	#self.conf_files = self.ConfFiles(conf_files)
+		#self.network_method_ids = self.NetworkMethods()
+		#self.network_type_ids = self.NetworkTypes()
+		#self.nodegroup_ids = self.NodeGroups()
+		self.node_ids = self.Nodes(nodes)
+		#self.node_network_ids = self.NodeNetworks(node_networks)
+		#self.node_network_setting_type_ids = self.NodeNetworkSettingsTypes(node_network_settings_types)
+		#self.node_network_setting_ids = self.NodeNetworkSettings(node_network_settings)
+		#self.pcu_protocol_types_ids = self.PCUProtocolTypes(pcu_protocol_types)
+		#self.pcus_ids = self.PCUs(pcus)
+		#self.pcu_types_ids = self.PCUTypes(pcu_types)
+		#self.role_ids = self.Roles(roles)
+		self.person_ids = self.Persons(persons)
+		self.key_ids = self.Keys(keys)
+		#self.key_types = self.KeyTypes(key_types)
+		#self.slice_attribute_type_ids = self.SliceAttributeTypes(slice_attribute_types)
+		#self.slice_instantiation_ids = self.SliceInstantiations(slice_instantiations)
+		#self.slice_ids = self.Slices(slices)
+		#self.slice_attribute_ids = self.SliceAttributes(slice_attributes)
+		#self.initscript_ids = self.InitScripts(initscripts)
+
+		# self.message_ids = self.Messages(messages)	
+		#self.NotifPersons()
+		# Test GetEventObject only 
+		#self.event_object_ids = self.GetEventObjects()
+		#self.event_ids = self.GetEvents() 
 	    except:
 		print_exc()
 	finally:
@@ -318,9 +353,22 @@ class api_unit_test(Test):
 	return wrapper
  
     def cleanup(self):
-        #if self.person_ids: self.DeletePersons()
-        #if self.address_ids: self.DeleteAddresses()
-        #if self.address_type_ids: self.DeleteAddressTypes()
+        if hasattr(self, 'initscript_ids'): self.DeleteInitScripts()
+	if hasattr(self, 'slice_attribute_ids'): self.DeleteSliceAttributes()
+	if hasattr(self, 'slice_ids'): self.DeleteSlices()
+	if hasattr(self, 'slice_instantiation_ids'): self.DeleteSliceInstantiations()
+	if hasattr(self, 'slice_attribute_type_ids'): self.DeleteSliceAttributeTypes()
+	if hasattr(self, 'slice_attribute_ids'): self.DeleteSliceAttributes()
+	if hasattr(self, 'key_type_ids'): self.DeleteKeyTypes()
+	if hasattr(self, 'key_ids'): self.DeleteKeys()
+	if hasattr(self, 'person_ids'): self.DeletePersons()
+        if hasattr(self, 'role_ids'): self.DeleteRoles()
+	if hasattr(self, 'pcu_type_ids'): self.DeletePCUTypes()
+	if hasattr(self, 'pcu_ids'): self.DeletePCUs()
+	if hasattr(self, 'pcu_protocol_type_ids'): self.DeleteProtocolTypes()		
+	if hasattr(self, 'node_network_setting_ids'): self.DeleteNodeNetworkSettings()
+	if hasattr(self, 'attress_ids'): self.DeleteAddresses()
+        if hasattr(self, 'attress_type_ids'): self.DeleteAddressTypes()
         if hasattr(self, 'node_ids'): self.DeleteNodes()
 	if hasattr(self, 'site_ids'): self.DeleteSites()
 	
