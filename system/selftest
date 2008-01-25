@@ -31,13 +31,13 @@ echo "e PLC_NAME" >> $config
 echo "selftest" >> $config
 
 echo "e PLC_ROOT_USER" >> $config
-echo "selftest" >> $config
+echo "root@localhost.localdomain" >> $config
 
 echo "e PLC_MAIL_ENABLED" >> $config
 echo 0 >> $config
 
 echo "e PLC_MAIL_SUPPORT_ADDRESS" >> $config
-echo "mef@cs.princeton.edu" >> $config
+echo "build@lists.planet-lab.org" >> $config
 
 echo "e PLC_DB_HOST" >> $config
 echo $SELF_HOST >> $config
