@@ -1,3 +1,4 @@
+#!/usr/bin/python
 
 import os, sys
 import traceback
@@ -9,13 +10,12 @@ class plc_install(Test):
     Installs a myplc
     """
 
-    def call(self, system_type, root_dir, url=None):
+    def call(self, url=None):
 	
 	url_path = self.config.path
 	# Determine url
 	if not url:
 	    try:
-
 	        url_file = open("%s/URL" % url_path)
 	        url = url_file.read().strip()
 	        url_file.close()
@@ -34,21 +34,24 @@ class plc_install(Test):
 	
 	# Instal myplc from url    	 
 	if self.config.verbose:
-	    utils.header('Installing myplc from url %s' % url)
+	    utils.header('Downloading myplc from url %s' % url)
+
+	url_parts = url.split(os.sep)
+	rpm_file = url[-1:]
+	download_cmd = "wget %(url)s /tmp/%(rpm_file)s" % locals()
 
 	# build command
-	full_command = ""
-	install_command = " rpm -Uvh %(url)s "
-	if system_type in ['vserv', 'vserver']:
-	    full_command += " vserver %(root_dir)s exec "
-	elif system_type in ['chroot']:
-	    pass
-	else:
-	    raise Exception, "Invalid system type %(system_type)s" % locals() 
+	rpm_install = "rpm -Uvh /tmp/%(rpm_file)s" % locals()
+	yum_install = "yum -y localinstall /tmp/%(rpm_file)s" % locals()
 
-	full_command += install_command % locals()
-        try: (stdout, stderr) = utils.popen(full_command)
-	except: (stdout, stderr) = utils.popen("yum localupdate %(url)s")
+	if self.config.verbose:
+	    utils.header("Trying: %(rpm_install)s" % locals())
+        try: 
+   	    (stdout, stderr) = utils.popen(rpm_install)
+	except:
+	    if self.config.verbose:
+		utils.header("Trying %(yum_install)s" % locals()) 
+	    (stdout, stderr) = utils.popen(yum_install)
 
 	if self.config.verbose:
 	    utils.header("\n".join(stdout))

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import os, sys
 from Test import Test
 from qa import utils

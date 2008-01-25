@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 import os, sys
 import traceback
 from Test import Test
@@ -9,7 +9,7 @@ class plc_configure(Test):
     Configure the myplc from config options in config file
     """
 
-    def call(self, system_type, root_dir):
+    def call(self):
 	tmpname = '/tmp/plc-cinfig-tty-%d' % os.getpid()
 	fileconf = open(tmpname, 'w')
 	for var in [ 'PLC_NAME',
@@ -27,21 +27,10 @@ class plc_configure(Test):
 	fileconf.write('w\nq\n')
 	fileconf.close()
 
-	mount_command = "/sbin/service plc mount"
-	full_command = ""
-	if system_type in ['vserv', 'vserver']:
-	    full_command += " vserver %(root_dir)s exec " % locals()
-	elif system_type in ['chroot']:
-	    full_command += " chroot %(root_dir)s " % locals()
-	else:
-	    raise Exception, "Invalid system type %(sytem_type)s" % locals()
-
-	full_command += " plc-config-tty < %(tmpname)s" % locals()
-	commands = [mount_command, full_command]
-	for command in commands:
-	    if self.config.verbose:
-	        utils.header(command)	 	
-            (stdout, stderr) = utils.popen(command)
+	command = "/sbin/service plc mount && plc-config-tty < %(tmpname)s" % locals()
+	if self.config.verbose:
+	    utils.header(command)	 	
+        (stdout, stderr) = utils.popen(command)
         (stdout, stderr) = utils.popen("rm %s" % tmpname)
 
 	return 1

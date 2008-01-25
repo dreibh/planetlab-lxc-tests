@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import os, sys
 import traceback
 from Test import Test
@@ -8,31 +10,20 @@ class plc_uninstall(Test):
     Completely removes the installed myplc
     """
 
-    def call(self, system_type, root_dir):
+    def call(self, remove_all = False):
 	
-	remove_command = " rpm -e myplc " 
-	full_command = ""
+	command = "/sbin/service plc safestop; rpm -e myplc " 
+	if remove_all:
+	    command += " && rm -rf /plc/data" 
 
-	if system_type in ['vserv', 'vserver']:
-	    full_command += " vserver %(root_dir)s exec "
-	elif system_type in ['chroot']:
-	    pass
-	else: 
-	    raise Exception, "Invalid system type %(system_type)s" % locals()
-	 
 	if self.config.verbose:
             utils.header("Removing myplc")
 
-	full_command = full_command % locals()
-	(stdout, stderr) = utils.popen(full_command + "/sbin/service plc safestop")
+	(stdout, stderr) = utils.popen(command)
 	if self.config.verbose:
 	    utils.header("\n".join(stdout))
 		
-        (stdout, stderr) = utils.popen(full_command + remove_command)
-        if self.config.verbose:
-	    utils.header("\n".join(stdout))
-
-	(stdout, stderr) = utils.popen(full_command + " rm -rf  /plc/data")
+	(stdout, stderr) = utils.popen(command)
 	if self.config.verbose:
 	    utiils.header("\n".join(stdout))
 	

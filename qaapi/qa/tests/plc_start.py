@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import traceback
 import sys
 from Test import Test
@@ -8,24 +10,14 @@ class plc_start(Test):
     Starts the myplc service
     """
 
-    def call(self, system_type, root_dir):
+    def call(self):
 	
-	start_command = " /sbin/service plc start "
-	full_command = ""
-
-	if system_type in ['vserv', 'vserver']:
-	    full_command += " vserver %(root_dir)s exec "
-	elif system_type in ['chroot']:
-	    pass
-	else:
-	    raise Exception, "Invalid system type %(system_type)s" % locals()
-	
-	full_command += start_command % locals()
+	command = " /sbin/service plc start "
 
 	if self.config.verbose:
-	    utils.header(full_command)	
+	    utils.header(command)	
 
-	(stdout, stderr) = utils.popen(full_command)
+	(stdout, stderr) = utils.popen(command)
 	
 	if self.config.verbose:
             utils.header("".join(stdout))
