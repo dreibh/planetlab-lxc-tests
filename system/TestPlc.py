@@ -304,6 +304,7 @@ class TestPlc:
         return True
 
     def check_nodes(self,options):
+        time.sleep(10)#Wait for the qemu to mount. Only  matter of display
         status=True
         start_time = datetime.datetime.now()
         dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=5)
