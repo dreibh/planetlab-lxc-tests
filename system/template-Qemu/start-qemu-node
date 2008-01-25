@@ -27,14 +27,13 @@ if [ -e "$HDA" ]; then
 fi
 #Creating new HDA
 echo "Creating hard disk for Qemu install under $HDA"
+cd ~/$NODE_DIR
 set $(qemu-img create $FILENAME 5G)
 if [ -z "$1" ];then
 	echo "Can't Create disk image..."
 	exit 1
 fi
 shift $(($# - 1))
-#unfortunately :-( qemu-img don't accept a path for image but only filename
-mv ~/$FILENAME $HDA
 echo "New $HDA is created..."
 
 #Command for running the Qemu Emulator
