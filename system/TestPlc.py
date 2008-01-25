@@ -329,8 +329,8 @@ class TestPlc:
                     start_time=datetime.datetime.now()+ datetime.timedelta(minutes=2)
                     time.sleep(15)
                 else: status=False
-            for nodeup in booted_nodes : utils.header("Node %s correctly installed and booted"%node)
-            for nodedown  in notfullybooted_nodes : utils.header("Node %s not fully booted"%node)
+            for nodeup in booted_nodes : utils.header("Node %s correctly installed and booted"%nodeup)
+            for nodedown  in notfullybooted_nodes : utils.header("Node %s not fully booted"%nodedown)
             return status
     
     def bootcd (self, options):
