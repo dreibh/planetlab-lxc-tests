@@ -52,18 +52,6 @@ class boot_node(Test):
 	 
 	return 1
 
-    def get_image_medium(self, hostname, image_type, path):
-	api = self.config.api
-	auth = self.config.auth
-	
-	file = open(path, 'w')
-	if image-type in ['node-floppy', 'node-iso', 'node-usb', 'generic-iso', 'generic-usb']:
-	    image = api.GetBootMedium(auth, hostname, image_type, '')
-	    image = base64.b64.decode(image)
-	    
-        file.write(image)
-	file.close() 
-	    
 if __name__ == '__main__':
     args = tuple(sys.argv[1:])
     boot_node()(*args)  
