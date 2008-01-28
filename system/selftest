@@ -63,12 +63,6 @@ echo $SELF_IP >> $config
 echo "e PLC_BOOT_IP" >> $config
 echo $SELF_IP >> $config
 
-echo "e PLC_NET_DNS1" >> $config
-echo $SELF_IP >> $config
-
-echo "e PLC_NET_DNS2" >> $config
-echo $SELF_IP >> $config
-
 echo "w" >> $config
 echo "q" >> $config
 
