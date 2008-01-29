@@ -1,6 +1,7 @@
+#!/usr/bin/env /usr/share/plc_api/plcsh
 import os, sys
-from qa import utils
 from Test import Test
+from qa import utils
 
 class sync_person_key(Test):
     """
@@ -9,7 +10,7 @@ class sync_person_key(Test):
     specified user if one doesnt exist already.	 
     """
 
-    def make_keys(path, name):
+    def make_keys(self, path, name):
         if not os.path.isdir(path):
             os.mkdir(path)
         key_path = path + os.sep + name
@@ -17,8 +18,6 @@ class sync_person_key(Test):
         (stdout, stderr) = utils.popen(command)
 
     def call(self, email):
-	api = self.config.api
-	auth = self.config.auth
 	email_parts = email.split("@")
 	keys_filename = email_parts[0]
 	keys_path = self.config.KEYS_PATH 
@@ -26,7 +25,7 @@ class sync_person_key(Test):
 	public_key_path = private_key_path + ".pub"
 	
 	# Validate person
-	persons = api.GetPersons(auth, [email], ['person_id', 'key_ids'])
+	persons = GetPersons([email], ['person_id', 'key_ids'])
 	if not persons:
 	    raise Exception, "No such person %(email)s"
 	person = persons[0]
@@ -44,19 +43,19 @@ class sync_person_key(Test):
 	public_key_file = open(public_key_path, 'r')
 	public_key = public_key_file.readline()
 		
-	keys = api.GetKeys(auth, person['key_ids'])
+	keys = GetKeys(person['key_ids'])
 	if not keys:
 	    # Add current key to db
-	    key_fields = {'type': 'rsa',
+	    key_fields = {'key_type': 'ssh',
 			  'key': public_key}
-	    api.AddPersonKey(auth, person['person_id'], key_fields)
+	    AddPersonKey(person['person_id'], key_fields)
 	    if self.config.verbose:
 		utils.header("Added public key in %(public_key_path)s to db" % locals() )
 	else:
 	    # keys need to be checked and possibly updated
 	    key = keys[0]
 	    if key['key'] != public_key:
-		api.UpdateKey(auth, key['key_id'], public_key)
+		UpdateKey(key['key_id'], public_key)
 		if self.config.verbose:
 		    utils.header("Updated plc with new public key in %(public_key_path)s " % locals())
 	    else:
@@ -64,5 +63,5 @@ class sync_person_key(Test):
 		    utils.header("Key in %(public_key_path)s matchs public key in plc" % locals())    	 		
 
 if __name__ == '__main__':
-    args = typle(sys.argv[1:])
-    sync_user_key()(*args)	    	
+    args = tuple(sys.argv[1:])
+    sync_person_key()(*args)	    	
