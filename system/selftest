@@ -77,7 +77,14 @@ rm -f $config
 service plc start
 
 ####################################################
-# run api tests
+QA_TESTSUITE="qaapi"
+SVNPATH="http://svn.planet-lab.org/svn/"
+
+# check out test suite
+svn export ${SVNPATH}/tests/trunk/${QA_TESTSUITE} /tmp/${QA_TESTSUITE}
+cd /tmp/${QA_TESTSUITE}/
+./runtests.py
+
 
 ### TBD
 
