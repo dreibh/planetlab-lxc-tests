@@ -2,7 +2,7 @@
 #
 # Sample myplc testing script that makes use of 
 # qaapi modules. 
-
+import sys
 from pprint import pprint
 from qa.Config import Config
 from qa.tests.plc_configure import plc_configure
@@ -28,6 +28,8 @@ add_test_data()()
 # Update plc with tests user's current public key
 sync_person_key()(person)
 
+# exit for now untill we get node booted with correct network
+sys.exit(0)
 # Boot test node and confirm boot state
 boot_node()(node)
 if get_boot_state()(node) not in ['boot']:
@@ -36,7 +38,7 @@ if get_boot_state()(node) not in ['boot']:
 # Restart node manager on the node
 priv_key_path = "/etc/planetlab/root_ssh_key.rsa" % locals() 
 restart_nm = 'service nm restart'	
-remote_call(priv_key_path, node, restart_nm)
+node_remote_call(priv_key_path, node, restart_nm)
 
 # Try to access the test  slice on the test node
 email = config.TEST_PERSON_EMAIL
