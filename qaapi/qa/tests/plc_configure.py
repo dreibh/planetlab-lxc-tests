@@ -10,23 +10,23 @@ class plc_configure(Test):
     """
 
     def call(self):
-	tmpname = '/tmp/plc-cinfig-tty-%d' % os.getpid()
+
+	# Get plc configuration variables
+	plc_vars = []
+	for attr in dir(self.config):
+	    if attr.startswith('PLC'):
+		plc_vars.append(attr)
+		
+	# Write temporary plc-config file
+	tmpname = '/tmp/plc-config-tty-%d' % os.getpid()
 	fileconf = open(tmpname, 'w')
-	for var in [ 'PLC_NAME',
-                     'PLC_ROOT_PASSWORD',
-                     'PLC_ROOT_USER',
-                     'PLC_MAIL_ENABLED',
-                     'PLC_MAIL_SUPPORT_ADDRESS',
-                     'PLC_DB_HOST',
-                     'PLC_API_HOST',
-                     'PLC_WWW_HOST',
-                     'PLC_BOOT_HOST',
-                     'PLC_NET_DNS1',
-                     'PLC_NET_DNS2']:
+	for var in plc_vars:
+	    print 'e %s\n%s\n' % (var, getattr(self.config, var))
 	    fileconf.write('e %s\n%s\n' % (var, getattr(self.config, var)))
 	fileconf.write('w\nq\n')
 	fileconf.close()
 
+	# Update config file
 	command = "/sbin/service plc mount && plc-config-tty < %(tmpname)s" % locals()
 	if self.config.verbose:
 	    utils.header(command)	 	
