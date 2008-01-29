@@ -128,7 +128,7 @@ class TestNode:
             nodepath="%s/real-%s"%(path,hostname)
             utils.system("rm -rf %s"%nodepath)
             utils.system("mkdir %s"%nodepath)
-            file=open("%s/%s"%(nodepath,/boot_file.iso),'w')
+            file=open("%s/%s"%(nodepath,"/boot_file.iso"),'w')
 
         file.write(base64.b64decode(encoded))
         file.close()
