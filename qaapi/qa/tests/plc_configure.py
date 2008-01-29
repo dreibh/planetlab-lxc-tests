@@ -21,7 +21,6 @@ class plc_configure(Test):
 	tmpname = '/tmp/plc-config-tty-%d' % os.getpid()
 	fileconf = open(tmpname, 'w')
 	for var in plc_vars:
-	    print 'e %s\n%s\n' % (var, getattr(self.config, var))
 	    fileconf.write('e %s\n%s\n' % (var, getattr(self.config, var)))
 	fileconf.write('w\nq\n')
 	fileconf.close()
