@@ -43,7 +43,7 @@ class TestMain:
         except:
             setattr(parser.values,option.dest,value.split())
 
-    def test_main (self):
+    def run (self):
         steps_message="Defaut steps are\n\t%s"%(" ".join(TestMain.default_steps))
         steps_message += "\nOther useful steps are\n\t %s"%(" ".join(TestMain.other_steps))
         usage = """usage: %%prog [options] steps
@@ -195,29 +195,32 @@ steps refer to a method in TestPlc or to a step_* module
             return 0
             
         # do all steps on all plcs
-        for (name,method) in all_step_infos:
+        for (stepname,method) in all_step_infos:
             for (spec,obj) in all_plcs:
-                if not spec['disabled']:
+                plcname=spec['name']
+                if spec['disabled']:
+                    utils.header("Plc %s is disabled - skipping step %s"%(plcname,stepname))
+                else:
                     try:
-                        utils.header("Running step %s on plc %s"%(name,spec['name']))
+                        utils.header("Running step %s on plc %s"%(stepname,plcname))
                         step_result = method(obj,self.options)
                         if step_result:
-                            utils.header('Successful step %s on %s'%(name,spec['name']))
+                            utils.header('Successful step %s on %s'%(stepname,plcname))
                         else:
                             overall_result = False
                             spec['disabled'] = True
-                            utils.header('Step %s on %s FAILED - discarding that plc from further steps'%(name,spec['name']))
+                            utils.header('Step %s on %s FAILED - discarding that plc from further steps'%(stepname,plcname))
                     except:
                         overall_result=False
                         spec['disabled'] = True
-                        utils.header ('Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(name,spec['name']))
+                        utils.header ('Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(stepname,plcname))
                         traceback.print_exc()
         return overall_result
 
-    # wrapper to shell
+    # wrapper to run, returns a shell-compatible result
     def main(self):
         try:
-            success=self.test_main()
+            success=self.run()
             if success:
                 return 0
             else:
