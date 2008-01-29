@@ -10,9 +10,6 @@ class add_test_data(Test):
     """   
     def call(self):
 
-	#api = self.config.api
-	#auth = self.config.auth
-
 	# Make sure some required fields are in config
 	required_fields = ['TEST_SITE_NAME', 'TEST_SITE_LOGIN_BASE', 'TEST_SLICE_NAME', 'TEST_PERSON_EMAIL']
 	required_node_fields = ['TEST_NODE_TYPE', 'TEST_NODE_METHOD', 'TEST_NODE_HOSTNAME', 'TEST_NODE_IP',
@@ -178,6 +175,7 @@ class add_test_data(Test):
 	else:
 	    if self.config.verbose:
 		utils.header("Test person found on test slice")
+	return 1
 
 if __name__ == '__main__':
     args = tuple(sys.argv[1:])
