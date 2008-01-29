@@ -32,7 +32,7 @@ class Test:
 
     def __init__(self, config = Config()):
 	self.name = self.__class__.__name__
-	self.path=os.path.dirname(sys.argv[0])
+	self.path=os.path.abspath(os.path.dirname(sys.argv[0]))
 	self.config = config
 	self.errors = []
 
@@ -47,8 +47,18 @@ class Test:
 	# Check that the right number of arguments were passed in
         #if len(args) < len(min_args) or len(args) > len(max_args):
         #    raise Exception#, (len(args), len(min_args), len(max_args))
-		
-	result = self.call(*args, **kwds)
+
+	module = self.__class__.__module__.replace(".", os.sep)
+	file = self.path + os.sep + module + ".py"
+	try:
+	    result = self.call(*args, **kwds)
+	except NameError:
+	    command = "%s %s" % (file, " ".join(args))
+	    utils.header(command)
+	    (stdout, stderr) = utils.popen(command)
+	    print "".join(stdout)
+	    result = None
+ 
 	return result	
 	    
 
