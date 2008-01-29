@@ -7,39 +7,26 @@
 
 onelab="one-lab.org"
 
-# use a model that contains "vmware" to get the node actually started
+# we use only thw Qemu node for this config
 def nodes():
-    nodes= [ {'node_fields': {'hostname': 'test1.one-lab.org',
-                              'model':'vmware/minhw',
-                              'host_machine' : 'localhost'},
+    nodes= [ {'node_fields': {'hostname': 'lysithea.inria.fr',
+                              'model':'qemu/minhw',
+                              'host_machine': 'bellami.inria.fr'},
               'owner' : 'pi',
               'network_fields': { 'method':'static',
                                   'type':'ipv4',
-                                  'ip':'192.168.132.128',
-                                  'gateway':'192.168.132.1',
-                                  'network':'192.168.132.0',
-                                  'broadcast':'192.168.132.255',
-                                  'netmask':'255.255.255.0',
-                                  'dns1': '192.168.132.2',
+                                  'ip':'138.96.250.153',
+                                  'gateway':'138.96.248.250',
+                                  'network':'138.96.0.0',
+                                  'broadcast':'138.96.255.255',
+                                  'netmask':'255.255.0.0',
+                                  'dns1': '138.96.0.10',
+                                  'dns2': '138.96.0.11',
+                                  'mac' : '00:0b:cd:62:50:95',
                                   },
               },
-             { 'node_fields': {'hostname':'test2.one-lab.org',
-                               'model':'vmware/minhw',
-                               'host_machine': 'localhost'},
-               'owner' : 'tech',
-               'network_fields': {'method':'static',
-                                  'type':'ipv4',
-                                  'ip':'192.168.132.130',
-                                  'gateway':'192.168.132.1',
-                                  'network':'192.168.132.0',
-                                  'broadcast':'192.168.132.255',
-                                  'netmask':'255.255.255.0',
-                                  'dns1': '192.168.132.2',
-                                  },
-               },
              ]
     return nodes
-#    return [nodes[0]]
 
 def all_nodenames ():
     return [ node['node_fields']['hostname'] for node in nodes()]
@@ -82,9 +69,9 @@ def all_usernames ():
     return [ user['name'] for user in users()]
 
 def sites ():
-    return [ {'site_fields' : {'name':'mainsite',
-                               'login_base':'main',
-                               'abbreviated_name':'PLanettest',
+    return [ {'site_fields' : {'name':'SecondSite',
+                               'login_base':'scd',
+                               'abbreviated_name':'SecondSite',
                                'max_slices':100,
                                'url':'http://onelab-test.inria.fr',
                                },
@@ -139,17 +126,17 @@ def keys ():
 
 def initscripts(): 
     return [ { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'script1',
-                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/initscript1.log \n ',
+                                       'name':'script11',
+                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 11; date) > /tmp/initscript11.log \n ',
                                        }},
              { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'script2',
-                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/initscript2.log \n ',
+                                       'name':'script22',
+                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 22; date) > /tmp/initscript22.log \n ',
                                        }},
              ]
 
 def slices ():
-    both = [ { 'slice_fields': {'name':'main_slicetest1',
+    both = [ { 'slice_fields': {'name':'scd_slicetest1',
                                 'instantiation':'plc-instantiated',
                                 'url':'http://foo@ffo.com',
                                 'description':'testslice the first slice for the site testsite',
@@ -157,25 +144,26 @@ def slices ():
                                 },
                'usernames' : [ 'pi','tech','techuser' ],
                'nodenames' : all_nodenames(),
-               'initscriptname' : 'script1',
-               'sitename' : 'main',
+               'initscriptname' : 'script11',
+               'sitename' : 'SecondSite',
                'owner' : 'pi',
                },
-             { 'slice_fields': {'name':'main_slicetest2',
-                                'instantiation':'plc-instantiated',
-                                'url':'http://foo2@ffo2.com',
-                                'description':'testslice the second slice for the site testsite',
-                                'max_nodes':100
-                                },
-               'usernames' : [ 'user', 'pitech' ],
-               'nodenames' : all_nodenames(),
-               'initscriptname' : 'script2',
-               'sitename' : 'main',
-               'owner' : 'pi',
-               }]
+             {'slice_fields': {'name':'scd_slicetest2',
+                               'instantiation':'plc-instantiated',
+                               'url':'http://foo2@ffo2.com',
+                               'description':'testslice the second slice for the site testsite',
+                               'max_nodes':100
+                               },
+              'usernames' : [ 'user', 'pitech' ],
+              'nodenames' : all_nodenames(),
+              'initscriptname' : 'script22',
+              'sitename' : 'main',
+              'owner' : 'pi',
+              }
+             ]
     # I suspect the check_slices stuff to work improperly with 2 slices
-#    return both
-    return [both[0]]
+    return both
+#    return [both[0]]
 
 def plc () :
     return { 
