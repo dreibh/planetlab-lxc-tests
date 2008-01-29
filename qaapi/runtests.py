@@ -18,7 +18,7 @@ config = Config()
 node = config.TEST_NODE_HOSTNAME_1
 person = config.TEST_PERSON_EMAIL
 
-plc_configure()()
+#plc_configure()()
 #plc_start()()
 
 # Add test site, node, person and slice data
