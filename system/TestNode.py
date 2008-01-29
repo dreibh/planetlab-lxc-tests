@@ -124,6 +124,8 @@ class TestNode:
             utils.system(copy_command)
             utils.header('Creating boot medium for node %s'%hostname)
             file=open(path+'/qemu-'+hostname+'/boot_file.iso','w')
+        else:
+            file=open(path+'/real-'+hostname+'/boot_file.iso','w')
 
         file.write(base64.b64decode(encoded))
         file.close()
