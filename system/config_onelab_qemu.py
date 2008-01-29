@@ -69,11 +69,11 @@ def all_usernames ():
     return [ user['name'] for user in users()]
 
 def sites ():
-    return [ {'site_fields' : {'name':'SecondSite',
-                               'login_base':'scd',
-                               'abbreviated_name':'SecondSite',
+    return [ {'site_fields' : {'name':'qemu',
+                               'login_base':'qemu',
+                               'abbreviated_name':'QemuSite',
                                'max_slices':100,
-                               'url':'http://onelab-test.inria.fr',
+                               'url':'http://one-lab.org',
                                },
               'address_fields' : {'line1':'route des lucioles',
                                   'city':'sophia',
@@ -136,7 +136,7 @@ def initscripts():
              ]
 
 def slices ():
-    both = [ { 'slice_fields': {'name':'scd_slicetest1',
+    both = [ { 'slice_fields': {'name':'qemu_slicetest1',
                                 'instantiation':'plc-instantiated',
                                 'url':'http://foo@ffo.com',
                                 'description':'testslice the first slice for the site testsite',
@@ -148,7 +148,7 @@ def slices ():
                'sitename' : 'SecondSite',
                'owner' : 'pi',
                },
-             {'slice_fields': {'name':'scd_slicetest2',
+             {'slice_fields': {'name':'qemu_slicetest2',
                                'instantiation':'plc-instantiated',
                                'url':'http://foo2@ffo2.com',
                                'description':'testslice the second slice for the site testsite',
@@ -157,7 +157,7 @@ def slices ():
               'usernames' : [ 'user', 'pitech' ],
               'nodenames' : all_nodenames(),
               'initscriptname' : 'script22',
-              'sitename' : 'main',
+              'sitename' : 'qemu',
               'owner' : 'pi',
               }
              ]
@@ -167,22 +167,22 @@ def slices ():
 
 def plc () :
     return { 
-        'name' : 'onelabtest',
+        'name' : 'onelabqemu',
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'localhost',
+        'hostname' : 'bellami.inria.fr',
         # set these two items to run within a vserver
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
         'role' : 'root',
-        'PLC_ROOT_USER' : 'root@test.one-lab.org',
+        'PLC_ROOT_USER' : 'root@bellami.inria.fr',
         'PLC_ROOT_PASSWORD' : 'test++',
         'PLC_NAME' : 'TestLab',
         'PLC_MAIL_ENABLED':'true',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'mohamed-amine.chaoui@sophia.inria.fr',
-        'PLC_DB_HOST' : 'test.one-lab.org',
-        'PLC_API_HOST' : 'test.one-lab.org',
-        'PLC_WWW_HOST' : 'test.one-lab.org',
-        'PLC_BOOT_HOST' : 'test.one-lab.org',
+        'PLC_DB_HOST' : 'bellami.inria.fr',
+        'PLC_API_HOST' : 'bellami.inria.fr',
+        'PLC_WWW_HOST' : 'bellami.inria.fr',
+        'PLC_BOOT_HOST' : 'bellami.inria.fr',
         'PLC_NET_DNS1' : '138.96.0.10',
         'PLC_NET_DNS2' : '138.96.0.11',
         'sites' : sites(),

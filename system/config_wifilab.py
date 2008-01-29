@@ -156,20 +156,20 @@ def plc () :
     return { 
         'name' : 'wifilab',
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'pdx',
+        'hostname' : 'wlab24.inria.fr',
         # set these two items to run within a vserver
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
         'role' : 'root',
-        'PLC_ROOT_USER' : 'root@bellami.inria.fr',
+        'PLC_ROOT_USER' : 'root@wlab24.inria.fr',
         'PLC_ROOT_PASSWORD' : 'test++',
-        'PLC_NAME' : 'TestLab',
+        'PLC_NAME' : 'WifiLab',
         'PLC_MAIL_ENABLED':'true',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
-        'PLC_DB_HOST' : 'bellami.inria.fr',
-        'PLC_API_HOST' : 'bellami.inria.fr',
-        'PLC_WWW_HOST' : 'bellami.inria.fr',
-        'PLC_BOOT_HOST' : 'bellami.inria.fr',
+        'PLC_DB_HOST' : 'wlab24.inria.fr',
+        'PLC_API_HOST' : 'wlab24.inria.fr',
+        'PLC_WWW_HOST' : 'wlab24.inria.fr',
+        'PLC_BOOT_HOST' : 'wlab24.inria.fr',
         'PLC_NET_DNS1' : '138.96.0.10',
         'PLC_NET_DNS2' : '138.96.0.11',
         'sites' : sites(),
