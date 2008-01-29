@@ -105,12 +105,12 @@ class TestPlc:
             for node_spec in site_spec['nodes']:
                 test_node=TestNode (self,test_site,node_spec)
                 model=node_spec['node_fields']['model']
-                host_machine=node_spec['node_fields']['host_machine']
+                host_box=node_spec['node_fields']['host_box']
                 hostname=node_spec['node_fields']['hostname']
                 print model
                 if model.find("qemu") >= 0:
-                    utils.system('ssh root@%s  killall qemu'%host_machine)
-                    test_node.stop_qemu(host_machine,hostname)
+                    utils.system('ssh root@%s  killall qemu'%host_box)
+                    test_node.stop_qemu(host_box,hostname)
                     
     #################### step methods
 
@@ -319,8 +319,8 @@ class TestPlc:
                     hostname=node_spec['node_fields']['hostname']
                     if (hostname in notfullybooted_nodes): #to avoid requesting already booted node
                         test_node=TestNode (self,test_site,node_spec)
-                        host_machine=node_spec['node_fields']['host_machine']
-                        node_status=test_node.get_node_status(hostname,host_machine)
+                        host_box=node_spec['node_fields']['host_box']
+                        node_status=test_node.get_node_status(hostname,host_box)
                         if (node_status):
                             booted_nodes.append(hostname)
                             del notfullybooted_nodes[notfullybooted_nodes.index(hostname)]

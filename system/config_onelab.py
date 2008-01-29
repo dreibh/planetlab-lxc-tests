@@ -11,7 +11,7 @@ onelab="one-lab.org"
 def nodes():
     nodes= [ {'node_fields': {'hostname': 'test1.one-lab.org',
                               'model':'vmware/minhw',
-                              'host_machine' : 'localhost'},
+                              'host_box' : 'localhost'},
               'owner' : 'pi',
               'network_fields': { 'method':'static',
                                   'type':'ipv4',
@@ -25,7 +25,7 @@ def nodes():
               },
              { 'node_fields': {'hostname':'test2.one-lab.org',
                                'model':'vmware/minhw',
-                               'host_machine': 'localhost'},
+                               'host_box': 'localhost'},
                'owner' : 'tech',
                'network_fields': {'method':'static',
                                   'type':'ipv4',
