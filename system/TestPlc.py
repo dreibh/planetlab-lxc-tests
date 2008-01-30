@@ -13,6 +13,7 @@ from TestSite import TestSite
 from TestNode import TestNode
 from TestUser import TestUser
 from TestKey import TestKey
+from TestSlice import TestSlice
 
 # step methods must take (self, options) and return a boolean
 
@@ -340,7 +341,7 @@ class TestPlc:
                 test_node=TestNode (self,test_site,node_spec)
                 test_node.create_boot_cd(options.path)
         return True
-            
+                
     def initscripts (self, options):
         for initscript in self.plc_spec['initscripts']:
             utils.show_spec('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
@@ -353,41 +354,28 @@ class TestPlc:
     def clean_slices (self, options):
         return self.do_slices("delete")
 
-    ### would need a TestSlice class
-    def do_slices (self, add_or_delete="add"):
+    def do_slices (self,  action="add"):
         for slice in self.plc_spec['slices']:
             site_spec = self.locate_site (slice['sitename'])
             test_site = TestSite(self,site_spec)
-            owner_spec = test_site.locate_user(slice['owner'])
-            auth = TestUser(self,test_site,owner_spec).auth()
-            slice_fields = slice['slice_fields']
-            slice_name = slice_fields['name']
-            if (add_or_delete == "delete"):
-                self.server.DeleteSlice(auth,slice_fields['name'])
-                utils.header("Deleted slice %s"%slice_fields['name'])
-                continue
-            utils.show_spec("Creating slice",slice_fields)
-            self.server.AddSlice(auth,slice_fields)
-            utils.header('Created Slice %s'%slice_fields['name'])
-            for username in slice['usernames']:
-                user_spec=test_site.locate_user(username)
-                test_user=TestUser(self,test_site,user_spec)
-                self.server.AddPersonToSlice(auth, test_user.name(), slice_name)
-
-            hostnames=[]
-            for nodename in slice['nodenames']:
-                node_spec=test_site.locate_node(nodename)
-                test_node=TestNode(self,test_site,node_spec)
-                hostnames += [test_node.name()]
-            utils.header("Adding %r in %s"%(hostnames,slice_name))
-            self.server.AddSliceToNodes(auth, slice_name, hostnames)
-            if slice.has_key('initscriptname'):
-                isname=slice['initscriptname']
-                utils.header("Adding initscript %s in %s"%(isname,slice_name))
-                self.server.AddSliceAttribute(self.auth_root(), slice_name,
-                                              'initscript',isname)
+            test_slice=TestSlice(self,test_site,slice)
+            if action != "add":
+                utils.header("Deleting slices in site %s"%test_site.name())
+                test_slice.delete_slice()
+            else:    
+                utils.show_spec("Creating slice",slice)
+                test_slice.create_slice()
+                utils.header('Created Slice %s'%slice['slice_fields']['name'])
         return True
         
+    def check_slices(self, options):
+        for slice_spec in self.plc_spec['slices']:
+            site_spec = self.locate_site (slice_spec['sitename'])
+            test_site = TestSite(self,site_spec)
+            test_slice=TestSlice(self,test_site,slice_spec)
+            status=test_slice.do_check_slices()
+            return status
+    
     def start_nodes (self, options):
         self.kill_all_vmwares()
         self.kill_all_qemus()
