@@ -1,6 +1,7 @@
 # $Id$
 import time
 import os
+import commands
 
 def header(message):
     now=time.strftime("%H:%M:%S", time.localtime())
@@ -16,6 +17,11 @@ def popen(command, fatal=True):
     errors = filter(remove_set_x, stderr.readlines())
     
     if fatal and errors:
-	raise Exception, "\n".join(errors)	
+	raise Exception, "".join(errors)	
     return (output, errors)    
-     
+    
+def commands(command, fatal = True):
+    (status, output) = commands.getstatusoutput(command)
+    if fatal and not status == 0:
+	raise Exception, "%(command)s Failed:\n%(output)s" % locals()
+    return (status, output)	   		 
