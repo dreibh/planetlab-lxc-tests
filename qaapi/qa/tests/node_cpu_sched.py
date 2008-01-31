@@ -75,21 +75,21 @@ def run_test(testlist):
 
 ### Test 1: test hard rate-limiting to 25% (should get <= 25%)
 def test_1():
-    test = CpuTest(ctx=600, cpu=0, resv=25, share=0, min=15, max=25, 
+    test = CpuTest(ctx=600, cpu=0, resv=25, share=0, min=24, max=25, 
                    desc = "Test 1: single ctx, 25% resv")
 
     return run_test([ test ])
 
 ### Test 2: test share scheduling of a single task (should get 100%)
 def test_2():
-    test = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=95, max=100, 
+    test = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=99, max=100, 
                    desc = "Test 2: single ctx, one share")
 
     return run_test([ test ])
 
 ### Test 3: test hard & share scheduling of a single task (should get 100%)
 def test_3():
-    test = CpuTest(ctx=600, cpu=0, resv=25, share=1, min=95, max=100, 
+    test = CpuTest(ctx=600, cpu=0, resv=25, share=1, min=99, max=100, 
                    desc = "Test 3: single ctx, 25% resv, one share")
 
     return run_test([ test ])
@@ -113,7 +113,7 @@ def test_5():
                    desc = "        ctx 2, two shares")
     test3 = CpuTest(ctx=602, cpu=0, resv=0, share=3, min=44, max=47, 
                    desc = "        ctx 3, three shares")
-    test4 = CpuTest(ctx=603, cpu=0, resv=10, share=0, min=7, max=10, 
+    test4 = CpuTest(ctx=603, cpu=0, resv=10, share=0, min=9, max=10, 
                    desc = "        ctx 4, 10% resv")
 
     return run_test([ test1, test2, test3, test4 ])
@@ -126,16 +126,16 @@ def test_6():
                    desc = "        ctx 2, two shares")
     test3 = CpuTest(ctx=602, cpu=0, resv=0, share=3, min=29, max=31, 
                    desc = "        ctx 3, three shares")
-    test4 = CpuTest(ctx=603, cpu=0, resv=30, share=1, min=35, max=40, 
+    test4 = CpuTest(ctx=603, cpu=0, resv=30, share=1, min=38, max=41, 
                    desc = "        ctx 4, 30% resv, one share")
 
     return run_test([ test1, test2, test3, test4 ])
 
 ### Test 7: SMP active (both tasks should get 100% on an SMP)
 def test_7():
-    test1 = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=95, max=100, 
+    test1 = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=99, max=100, 
                    desc = "Test 7: ctx 1, processor 1")
-    test2 = CpuTest(ctx=601, cpu=1, resv=0, share=1, min=95, max=100, 
+    test2 = CpuTest(ctx=601, cpu=1, resv=0, share=1, min=99, max=100, 
                    desc = "        ctx 2, processor 2")
 
     return run_test([ test1, test2 ])
