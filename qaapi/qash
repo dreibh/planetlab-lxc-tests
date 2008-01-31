@@ -28,7 +28,6 @@ try:
     config = qaapi.config
     plcapi = config.api
     auth = config.auth
-
 except Exception, err:
     raise
 
