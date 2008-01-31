@@ -61,3 +61,4 @@ def log(method, method_name = None, \
 	    raise
 
     return wrapper
+
