@@ -36,12 +36,14 @@ if get_boot_state()(node) not in ['boot']:
     raise Exception, "%(node)s not fully booted" % locals()
 
 # Restart node manager on the node
-priv_key_path = "/etc/planetlab/root_ssh_key.rsa" % locals() 
 restart_nm = 'service nm restart'	
-node_remote_call(priv_key_path, node, restart_nm)
+node_remote_call(node, restart_nm)
 
 # Try to access the test  slice on the test node
 email = config.TEST_PERSON_EMAIL
 slice = config.TEST_SLICE_NAME
 access_slice(email, slice, node)
+
+# Run node tests
+node_run_tests()(node)
    
