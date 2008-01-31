@@ -55,13 +55,13 @@ class TestSlice:
         
     ###the logic is quit wrong, must be rewritten
     def do_check_slices(self):
-        utils.header("wainting for the node to fully boot")
-        time.sleep(120)
+        utils.header("wainting for the nodes to fully boot")
+        time.sleep(300)
         bool=bool1=True
         secondes=15
         self.delete_known_hosts()
         start_time = datetime.datetime.now()
-        dead_time=start_time + datetime.timedelta(minutes=5)##adding 3minutes
+        dead_time=start_time + datetime.timedelta(minutes=6)
         for slice_spec in self.test_plc.plc_spec['slices']:
             for hostname in slice_spec['nodenames']:
                 slicename=slice_spec['slice_fields']['name']
@@ -99,7 +99,7 @@ class TestSlice:
                         else:
                             utils.header('%s@%s : last chance - restarting nm on %s'%(slicename,hostname,hostname))
                             access=utils.system('ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
-                            time.sleep(120)##temoprally adding some delay due to the network slowness 
+                            time.sleep(240)##temoprally adding some delay due to the network slowness 
                             if (access==0):
                                 utils.header('trying to connect (2) to %s@%s'%(slicename,hostname))
                                 Date=utils.system('ssh -i %s %s@%s date'%(privatekey,slicename,hostname))
