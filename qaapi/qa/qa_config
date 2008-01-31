@@ -1,36 +1,60 @@
 # system test config file
 
-# DISPLAY VMPlayer will use
-DISPLAY=":0.0"
+# Be verbose
+VERBOSE=1
 
-HOSTNAME="localhost"
+# Where to store the public/private keys 
+KEYS_PATH="/tmp/keys/"
 
-DOMAIN_NAME="localhost.localdomain"
+# PLC Configuration
 
-#PLC_ROOT_USER="root@localhost.localdomain"
 PLC_ROOT_USER="root@localhost.localdomain"
  
-#PLC_ROOT_PASSWORD="password"
 PLC_ROOT_PASSWORD="root"
 
 PLC_NAME="TestLab"
-
-PLC_API_HOST="localhost.localdomain"
-
-PLC_DB_HOST="localhost.localdomain"
-
-PLC_WWW_HOST="localhost.localdomain"
-
-PLC_BOOT_HOST="localhost.localdomain"
 
 PLC_MAIL_ENABLED=1
 
 PLC_MAIL_SUPPORT_ADDRESS="root@localhost.localdomain"
 
-PLC_NET_DNS1="138.96.0.10"
 
-PLC_NET_DNS2="138.96.0.11"
+# Test Site Configuration
 
-NODE_1_HOSTNAME="hostname"
+TEST_SITE_NAME="TestSite"
 
-NODE_2_HOSTNAME="hostname"
+TEST_SITE_LOGIN_BASE="test"
+
+# Test Slice Configuration
+
+TEST_SLICE_NAME="test_slice"
+
+# Test Person Configuration
+
+TEST_PERSON_EMAIL="test@home.org"
+
+
+# Test Node Configuration
+
+TEST_NODE_TYPE_1="ipv4"
+
+TEST_NODE_METHOD_1="static"
+
+TEST_NODE_HOSTNAME_1="tnode-vm1.home.org"
+
+TEST_NODE_IP_1="192.168.85.12"
+
+TEST_NODE_GATEWAY_1="192.168.85.1"
+
+TEST_NODE_DNS_1="192.168.85.1"
+
+TEST_NODE_NETWORK_1="192.168.85.0"
+
+TEST_NODE_BROADCAST_1="192.168.85.255"
+
+TEST_NODE_NETMASK_1="255.255.255.0"
+
+
+
+# Extra Node Configurations
+# NODE_2_HOSTNAME="tnode-vm2.home.org"
