@@ -51,11 +51,11 @@ class TestSlice:
     def delete_known_hosts(self):
         utils.header("Messing with known_hosts (cleaning hostnames starting with 'test[0-9]')")
         sed_command="sed -i -e '/^test[0-9]/d' /root/.ssh/known_hosts"
-        utils.system(sed_command)
+        self.test_plc.run_in_guest(sed_command)
         
     ###the logic is quit wrong, must be rewritten
     def do_check_slices(self):
-        utils.header("wainting for the nodes to fully boot")
+        utils.header("waiting for the nodes to fully boot")
         time.sleep(300)
         bool=bool1=True
         secondes=15
@@ -81,7 +81,7 @@ class TestSlice:
     
                 while(bool):
                     utils.header('restarting nm on %s'%hostname)
-                    access=utils.system('ssh -i /etc/planetlab/root_ssh_key.rsa root@%s service nm restart'%hostname )
+                    access=self.test_plc.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa root@%s service nm restart'%hostname )
                     if (access==0):
                         utils.header('nm restarted on %s'%hostname)
                         while(bool1):
