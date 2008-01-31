@@ -1,5 +1,4 @@
-#!/usr/bin/env /usr/share/plc_api/plcsh
-
+#!/usr/bin/python
 import os,sys
 from Test import Test
 from qa import utils
@@ -9,7 +8,8 @@ class add_test_data(Test):
     Adds the test data found in config to the plc db
     """   
     def call(self):
-
+	api = self.config.api
+	auth = self.config.auth
 	# Make sure some required fields are in config
 	required_fields = ['TEST_SITE_NAME', 'TEST_SITE_LOGIN_BASE', 'TEST_SLICE_NAME', 'TEST_PERSON_EMAIL']
 	required_node_fields = ['TEST_NODE_TYPE', 'TEST_NODE_METHOD', 'TEST_NODE_HOSTNAME', 'TEST_NODE_IP',
@@ -70,11 +70,9 @@ class add_test_data(Test):
 
 
 	# Add Test site
-	#sites = api.GetSites(auth, {'login_base': site_fields['login_base']})
-	sites = GetSites({'login_base': site_fields['login_base']})
+	sites = api.GetSites(auth, {'login_base': site_fields['login_base']})
 	if not sites:
-    	    #site_id =  api.AddSite(auth, site_fields)
-	    site_id = AddSite(site_fields)
+	    site_id = api.AddSite(auth, site_fields)
 	    site_fields['site_id'] = site_id
 	    site = site_fields
 	    if self.config.verbose:
@@ -86,11 +84,9 @@ class add_test_data(Test):
 
 	# Add Test nodes
 	for node_fields in node_list:
-    	    #nodes = api.GetNodes(auth, [node_fields['hostname']])
-    	    nodes = GetNodes([node_fields['hostname']])
+    	    nodes = api.GetNodes(auth, [node_fields['hostname']])
 	    if not nodes:
-        	#node_id = api.AddNode(auth, site_fields['login_base'], node_fields)
-		node_id = AddNode(site_fields['login_base'], node_fields)
+		node_id = api.AddNode(auth, site_fields['login_base'], node_fields)
 		node_fields['node_id'] = node_id
 		node = node_fields
 		nodes.append(node_fields)
@@ -103,8 +99,7 @@ class add_test_data(Test):
 
 	    # Add node network
 	    if not node['nodenetwork_ids']:
-		#nodenetwork_id = api.AddNodeNetwork(auth, node_fields['hostname'], node_fields)
-		nodenetwork_id = AddNodeNetwork(node_fields['hostname'], node_fields)
+		nodenetwork_id = api.AddNodeNetwork(auth, node_fields['hostname'], node_fields)
 		if self.config.verbose:
 		    utils.header("Added test nodenetwork")
 	    else:
@@ -112,11 +107,9 @@ class add_test_data(Test):
 	            utils.header("Nodenetwork found")	
 	
 	# Add Test slice
-	#slices = api.GetSlices(auth, [slice_fields['name']])
-	slices = GetSlices([slice_fields['name']])
+	slices = api.GetSlices(auth, [slice_fields['name']])
 	if not slices:
-	    #slice_id = api.AddSlice(auth, slice_fields)
-	    slice_id = AddSlice(slice_fields)
+	    slice_id = api.AddSlice(auth, slice_fields)
 	    slice_fields['slice_id'] = slice_id
 	    slice = slice_fields
 	    if self.config.verbose:
@@ -130,8 +123,7 @@ class add_test_data(Test):
 	node_ids = [n['node_id'] for n in nodes]
 	node_ids = filter(lambda node_id: node_id not in slice['node_ids'], node_ids)
 	if node_ids:
-	    #api.AddSliceToNodes(auth, slice['name'], node_ids)
-	    AddSliceToNodes(slice['name'], node_ids)
+	    api.AddSliceToNodes(auth, slice['name'], node_ids)
 	    if self.config.verbose:
 		utils.header("Added test slice to test nodes")
 	else:
@@ -139,11 +131,9 @@ class add_test_data(Test):
 		utils.header("Test slice found on test nodes")
 
 	# Add test person
-	#persons = api.GetPersons(auth, [person_fields['email']])
-	persons = GetPersons([person_fields['email']])
+	persons = api.GetPersons(auth, [person_fields['email']])
     	if not persons:
-      	    #person_id = api.AddPerson(auth, person_fields)
-	    person_id = AddPerson(person_fields)
+	    person_id = api.AddPerson(auth, person_fields)
 	    person_fields['person_id'] = person_id
 	    person = person_fields
 	    if self.config.verbose:
@@ -154,12 +144,10 @@ class add_test_data(Test):
 		utils.header("Test person found")
 	
 	# Add roles to person
-	#api.AddRoleToPerson(auth, 'user', person['email'])
-	AddRoleToPerson('user', person['email'])
+	api.AddRoleToPerson(auth, 'user', person['email'])
 	# Add person to site
 	if site['site_id'] not in person['site_ids']:	
-	    #api.AddPersonToSite(auth, person['email'], site['login_base'])
-	    AddPersonToSite(person['email'], site['login_base'])
+	    api.AddPersonToSite(auth, person['email'], site['login_base'])
 	    if self.config.verbose:
 		utils.header("Added test person to test site")
 	else:
@@ -168,8 +156,7 @@ class add_test_data(Test):
 
 	# Add person to slice
 	if slice['slice_id'] not in person['slice_ids']:
-            #api.AddPersonToSlice(auth, person_fields['email'], slice_fields['name'])
-	    AddPersonToSlice(person_fields['email'], slice_fields['name'])
+            api.AddPersonToSlice(auth, person_fields['email'], slice_fields['name'])
 	    if self.config.verbose:
 		utils.header("Added test person to slice")
 	else:

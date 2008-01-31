@@ -1,4 +1,4 @@
-#!/usr/bin/env /usr/share/plc_api/plcsh
+#!/usr/bin/python
 
 import os,sys
 import base64
@@ -13,14 +13,16 @@ class boot_node(Test):
     """
 
     def call(self, hostname, image_type = 'node-iso', disk_size="4G"):
+	api = self.config.api
+	auth = self.config.auth
 	tdir = "/tmp/"
 	
 	# validate hostname
-	nodes = GetNodes([hostname], ['hostname'])
+	nodes = api.GetNodes(auth, [hostname], ['hostname'])
 	if not nodes:
 	    raise Exception, "No such node %(hostname)s" % locals() 
 
-	bootimage = GetBootMedium(hostname, image_type, '')
+	bootimage = api.GetBootMedium(auth, hostname, image_type, '')
 	bootimage_path = '/%(tdir)s/%(hostname)s-bootcd.iso' % locals()
 
 	if self.config.verbose:

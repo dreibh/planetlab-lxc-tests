@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import os, sys
 import time
 from qa import utils
