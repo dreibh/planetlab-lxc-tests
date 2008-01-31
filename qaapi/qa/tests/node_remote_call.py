@@ -9,7 +9,7 @@ class node_remote_call(Test):
     issue a command.
     """
 
-    def call(self, root_key_path, hostname, command):
+    def call(self, hostname, command, root_key_path = "/etc/planetlab/root_ssh_key.rsa"):
 	if not os.path.isfile(root_key_path):
 	    raise Exception, "no such private key file %(root_key_path)s" % locals()
 	 
