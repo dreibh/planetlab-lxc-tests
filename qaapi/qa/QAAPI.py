@@ -70,14 +70,14 @@ class QAAPI:
         test_files.extend([test_base+file for file in map(remove_ext, filter(real_files, files))])
         
   	# recurse through directory             
-        for (root, dirs, files) in iterator:
-            parts = root.split(os.sep)
-            for basename in basenames:
-                if basename in parts:
-                    test_base = ".".join(parts[parts.index(basename):])+"."
-            files = filter(real_files, files)
-            files = map(remove_ext, files)
-            test_files.extend([test_base+file for file in  files])
+        #for (root, dirs, files) in iterator:
+        #    parts = root.split(os.sep)
+        #    for basename in basenames:
+        #        if basename in parts:
+        #            test_base = ".".join(parts[parts.index(basename):])+"."
+        #    files = filter(real_files, files)
+        #    files = map(remove_ext, files)
+        #    test_files.extend([test_base+file for file in  files])
 	return list(set(test_files)) 
 
     def callables(self, test_file):
