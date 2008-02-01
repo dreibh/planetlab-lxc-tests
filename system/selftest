@@ -11,7 +11,9 @@ SELF_IP=$2
 # setup MyPLC
 
 # install from repo
-yum -y install myplc-native
+rpm -q myplc-native > /dev/null
+installed=$?
+[ $installed -eq 1 ] && yum -y install myplc-native
 
 # make sure its stopped
 service plc stop
@@ -22,58 +24,73 @@ chkconfig plc off
 ####################################################
 # configure myplc for testing purposes
 config=$(mktemp)
-PW=$(od -N 16 -x /dev/urandom | head -1 | sed "s, ,,g")
 
-echo "e PLC_ROOT_PASSWORD" >> $config
-echo "$PW" >> $config
+function genpassword()
+{
+	len=$1
+	[ -z "$len" ] && len=8
+	python <<EOF
+import crypt, random, string
+salt = [random.choice(string.letters + string.digits + "./") for i in range(0,$len)]
+print "".join(salt)
+EOF
+}
 
-echo "e PLC_NAME" >> $config
-echo "selftest" >> $config
+# create new 16 char random password
+PW=$(genpassword 16)
 
-echo "e PLC_ROOT_USER" >> $config
-echo "root@localhost.localdomain" >> $config
+cat > $config <<EOF
+e PLC_ROOT_PASSWORD
+$PW
 
-echo "e PLC_MAIL_ENABLED" >> $config
-echo 0 >> $config
+e PLC_NAME
+selftest
 
-echo "e PLC_MAIL_SUPPORT_ADDRESS" >> $config
-echo "build@lists.planet-lab.org" >> $config
+e PLC_ROOT_USER
+root@localhost.localdomain
 
-echo "e PLC_DB_HOST" >> $config
-echo $SELF_HOST >> $config
+e PLC_MAIL_ENABLED
+0
 
-echo "e PLC_API_HOST" >> $config
-echo $SELF_HOST >> $config
+e PLC_MAIL_SUPPORT_ADDRESS
+build@lists.planet-lab.org
 
-echo "e PLC_WWW_HOST" >> $config
-echo $SELF_HOST >> $config
+e PLC_DB_HOST
+$SELF_HOST
 
-echo "e PLC_BOOT_HOST" >> $config
-echo $SELF_HOST >> $config
+e PLC_API_HOST
+$SELF_HOST
 
-echo "e PLC_DB_IP" >> $config
-echo $SELF_IP >> $config
+e PLC_WWW_HOST
+$SELF_HOST
 
-echo "e PLC_API_IP" >> $config
-echo $SELF_IP >> $config
+e PLC_BOOT_HOST
+$SELF_HOST
 
-echo "e PLC_WWW_IP" >> $config
-echo $SELF_IP >> $config
+e PLC_DB_IP
+$SELF_IP
 
-echo "e PLC_BOOT_IP" >> $config
-echo $SELF_IP >> $config
+e PLC_API_IP
+$SELF_IP
 
-echo "w" >> $config
-echo "q" >> $config
+e PLC_WWW_IP
+$SELF_IP
+
+e PLC_BOOT_IP
+$SELF_IP
+
+w
+q
+EOF
 
 plc-config-tty < $config
 
 echo "$PW" > /etc/planetlab/pw
 chmod 400 /etc/planetlab/pw
 
+# remove temporary config file
 rm -f $config
 
-#not yet
 service plc start
 
 ####################################################
@@ -81,50 +98,60 @@ QA_TESTSUITE="qaapi"
 SVNPATH="http://svn.planet-lab.org/svn/"
 
 # check out test suite
-svn export ${SVNPATH}/tests/trunk/${QA_TESTSUITE} /tmp/${QA_TESTSUITE}
-cd /tmp/${QA_TESTSUITE}/
-chmod +x runtests.py
-chmod +x qa/tests/*
-./runtests.py
-
-
-### TBD
-
-# go no further than this for now
-exit 0
-
+# temporarily disabling -- mef
+#svn export ${SVNPATH}/tests/trunk/${QA_TESTSUITE} /tmp/${QA_TESTSUITE}
+#cd /tmp/${QA_TESTSUITE}/
+#chmod +x runtests.py
+#chmod +x qa/tests/*
+#./runtests.py
 
 ####################################################
-# configure a node @ the local myplc
+# configure a site and a node @ the local myplc for qemu testing
 
-# xxx execute plcsh with the appropriate set of commands to
-# - create a site
-# - create a node
-# - 
+# configure a selftest site
+TESTVERS="3.4"
+TESTHOST="qemu-1.$(hostname)"
+TESTSITE="st"
+TESTNAME="Self Test"
+TESTABR="selftest"
+TESTURL="http://selftest.doesnotexist"
+TESTDISK="/selftest.img"
+TESTCONF="/selftest.txt"
+config=$(mktemp)
+cat > $config <<EOF
+# create a test site
+DeleteSite("$TESTSITE")
+AddSite({"name":"$TESTNAME","url":"$TESTURL","max_slices":10,"login_base":"$TESTSITE","is_public":True,"abbreviated_name":"$TESTABR"})
+# create a test node for qemu
+AddNode("st",{"boot_state":"rins","model":"qemu/minhw","hostname":"$TESTHOST","version":"$TESTVERS"})
+# set up the nodenetwork setting for qemu
+AddNodeNetwork("$TESTHOST",{"network":"10.0.2.0","hostname":"$TESTHOST","is_primary":True,"dns1":"$SELF_IP","method":"static","type":"ipv4","netmask":"255.255.255.0","broadcast":"10.0.2.255","gateway":"10.0.2.2"})
+# Download the node's boot cd iso
+GetBootMedium("$TESTHOST","node-floppy","$TESTCONF")
+EOF
+cat $config | plcsh
+rm -f $config
 
-
-# grab a bootcd image with the configuration file built in
-BOOTCDIMG=""
+# generate custom iso
+SERIAL="ttyS0:115200:n:8"
+/usr/share/bootcd/build.sh -s $SERIAL -O selftest -f $TESTCONF -t iso_cramfs
+SNAME=$(echo $SERIAL | sed 's,:,,g')
+TESTISO="./selftest-serial-$SNAME-cramfs.iso"
 
 # setup qemu to run the node from the bootcd
+rpm -q qemu > /dev/null
+installed=$?
+[ $install -eq 1 ] && yum -y install qemu
+qemu-img create -f qcow $TESTDISK 5GB
 
-yum -y install qemu
-testdir=$(mktemp -d /var/tmp/selftest.XXXX)
-cd $testdir
-qemu-img create -f qcow disk.img 5GB
+# run qemu
+# -nographic -> for serial line console
+# -boot d -> to boot from cdrom 
+# -cdrom -> specifies iso file to serve as cdrom
+# -m 512 -> 512MB memory
 
-if [ -f "$BOOTCDIMG" ] ; then
-    # run qemu
-    # -x for serial line console
-    # -m 512 (512MB memory)
-    # -cdrom
-    qemu -x -m 512 -cdrom $BOOTCDIMG
-fi
-
-
-cd -
+[ -f "$TESTDISK" -a -f "$TESTISO" ] && qemu-system-x86_64 -boot d -nographic -m 512 -cdrom $TESTISO $TESTDISK
 
 # run node tests
 
-rm -rf $testdir
 exit 0
