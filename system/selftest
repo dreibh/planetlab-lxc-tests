@@ -141,7 +141,7 @@ TESTISO="./selftest-serial-$SNAME-cramfs.iso"
 # setup qemu to run the node from the bootcd
 rpm -q qemu > /dev/null
 installed=$?
-[ $install -eq 1 ] && yum -y install qemu
+[ $installed -eq 1 ] && yum -y install qemu
 qemu-img create -f qcow $TESTDISK 5GB
 
 # run qemu
