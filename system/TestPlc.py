@@ -122,6 +122,8 @@ class TestPlc:
         self.run_in_host('rpm -e myplc')
         ##### Clean up the /plc directory
         self.run_in_host('rm -rf  /plc/data')
+        ##### stop any running vservers
+        self.run_in_host('for vserver in $(cd /vservers ; ls) ; do vserver $vserver stop ; done')
         return True
 
     def uninstall_vserver(self,options):
