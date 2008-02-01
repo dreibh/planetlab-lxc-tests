@@ -131,9 +131,12 @@ class TestPlc:
     def uninstall(self,options):
         # if there's a chroot-based myplc running, and then a native-based myplc is being deployed
         # it sounds safer to have the former uninstalled too
-        # so let's call both methods uncondionnally
-        self.uninstall_vserver(options)
-        self.uninstall_chroot(options)
+        # now the vserver method cannot be invoked for chroot instances as vservername is required
+        if self.vserver:
+            self.uninstall_vserver(options)
+            self.uninstall_chroot(options)
+        else:
+            self.uninstall_chroot(options)
         return True
 
     ### install
