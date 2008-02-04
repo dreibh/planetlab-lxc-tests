@@ -14,6 +14,9 @@ class TestSlice:
         self.test_site=test_site
 	self.slice_spec=slice_spec
 
+    def name(self):
+        return self.slice_spec['slice_fields']['name']
+
     def delete_slice(self):
         owner_spec = self.test_site.locate_user(self.slice_spec['owner'])
         auth = TestUser(self,self.test_site,owner_spec).auth()
@@ -46,22 +49,25 @@ class TestSlice:
             isname=self.slice_spec['initscriptname']
             utils.header("Adding initscript %s in %s"%(isname,slice_name))
             self.test_plc.server.AddSliceAttribute(self.test_plc.auth_root(), slice_name,'initscript',isname)
-            
         
-    def delete_known_hosts(self):
-        utils.header("Messing with known_hosts (cleaning hostnames starting with 'test[0-9]')")
-        sed_command="sed -i -e '/^test[0-9]/d' /root/.ssh/known_hosts"
-        self.test_plc.run_in_guest(sed_command)
-        
+    def clear_known_hosts (self):
+        utils.header("Messing with known_hosts for slice %s"%self.name())
+        # scan nodenames
+        for nodename in self.slice_spec['nodenames']:
+            self.test_plc.run_in_guest("sed -i -e '/^%s/d' /root/.ssh/known_hosts"%nodename)
+
     ###the logic is quit wrong, must be rewritten
     def do_check_slices(self):
-        utils.header("waiting for the nodes to fully boot")
-        time.sleep(300)
+        # Do not wait here, as this step can be run directly in which case you don't want to wait
+        # just add the 5 minutes to the overall timeout
+        #utils.header("Waiting for the nodes to fully boot")
+        #time.sleep(300)
         bool=bool1=True
         secondes=15
-        self.delete_known_hosts()
+        self.test_plc.clear_ssh_config()
+        self.clear_known_hosts()
         start_time = datetime.datetime.now()
-        dead_time=start_time + datetime.timedelta(minutes=6)
+        dead_time=start_time + datetime.timedelta(minutes=11)
         for slice_spec in self.test_plc.plc_spec['slices']:
             for hostname in slice_spec['nodenames']:
                 slicename=slice_spec['slice_fields']['name']

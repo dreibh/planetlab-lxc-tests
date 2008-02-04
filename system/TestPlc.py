@@ -53,7 +53,7 @@ class TestPlc:
         if self.vserver:
             return "vserver %s exec %s"%(self.vservername,command)
         else:
-            return "chroot /plc/root %s"%command
+            return "chroot /plc/root sh -c \\\"%s\\\""%command
 
     def ssh_command(self,command):
         if self.is_local():
@@ -104,15 +104,16 @@ class TestPlc:
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
             for node_spec in site_spec['nodes']:
-                test_node=TestNode (self,test_site,node_spec)
-                model=node_spec['node_fields']['model']
-                host_box=node_spec['node_fields']['host_box']
-                hostname=node_spec['node_fields']['hostname']
-                print model
-                if model.find("qemu") >= 0:
-                    utils.system('ssh root@%s  killall qemu'%host_box)
-                    test_node.stop_qemu(host_box,hostname)
+                TestNode (self,test_site,node_spec).stop_qemu()
                     
+    def clear_ssh_config (self):
+        # using ssh -o "BatchMode yes" is too tricky due to quoting - let's use the config
+        utils.header("Setting BatchMode and StrictHostKeyChecking in ssh config")
+        self.run_in_guest("sed -i -e '/BatchMode/d' /root/.ssh/config 2> /dev/null")
+        self.run_in_guest_piped("echo BatchMode yes", "cat >> /root/.ssh/config")
+        self.run_in_guest("sed -i -e '/StrictHostKeyChecking/d' /root/.ssh/config 2> /dev/null")
+        self.run_in_guest_piped("echo StrictHostKeyChecking no", "cat >> /root/.ssh/config")
+            
     #################### step methods
 
     ### uninstall
@@ -327,8 +328,8 @@ class TestPlc:
                     hostname=node_spec['node_fields']['hostname']
                     if (hostname in notfullybooted_nodes): #to avoid requesting already booted node
                         test_node=TestNode (self,test_site,node_spec)
-                        host_box=node_spec['node_fields']['host_box']
-                        node_status=test_node.get_node_status(hostname,host_box)
+                        host_box=test_node.host_box()
+                        node_status=test_node.get_node_status(hostname)
                         if (node_status):
                             booted_nodes.append(hostname)
                             del notfullybooted_nodes[notfullybooted_nodes.index(hostname)]

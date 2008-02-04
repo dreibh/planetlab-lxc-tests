@@ -10,8 +10,8 @@ onelab="one-lab.org"
 # we use only thw Qemu node for this config
 def nodes():
     nodes= [ {'node_fields': {'hostname': 'lysithea.inria.fr',
-                              'model':'qemu/minhw',
-                              'host_box': 'bellami.inria.fr'},
+                              'model':'qemu/minhw', } ,
+              'host_box': 'bellami.inria.fr',
               'owner' : 'pi',
               'network_fields': { 'method':'static',
                                   'type':'ipv4',

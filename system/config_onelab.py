@@ -8,10 +8,11 @@
 onelab="one-lab.org"
 
 # use a model that contains "vmware" to get the node actually started
+# host_box is taken as 'localhost' if omitted (should be a direct field in the node spec)
 def nodes():
     nodes= [ {'node_fields': {'hostname': 'test1.one-lab.org',
-                              'model':'vmware/minhw',
-                              'host_box' : 'localhost'},
+                              'model':'vmware/minhw', },
+              'host_box' : 'test.one-lab.org',
               'owner' : 'pi',
               'network_fields': { 'method':'static',
                                   'type':'ipv4',
@@ -24,8 +25,8 @@ def nodes():
                                   },
               },
              { 'node_fields': {'hostname':'test2.one-lab.org',
-                               'model':'vmware/minhw',
-                               'host_box': 'localhost'},
+                               'model':'vmware/minhw', } ,
+               'host_box' : 'test.one-lab.org',
                'owner' : 'tech',
                'network_fields': {'method':'static',
                                   'type':'ipv4',

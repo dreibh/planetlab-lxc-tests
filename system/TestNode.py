@@ -14,6 +14,20 @@ class TestNode:
     def name(self):
         return self.node_spec['node_fields']['hostname']
         
+    def is_vmware (self):
+        model=self.node_spec['node_fields']['model']
+        return model.find("vmware") >= 0
+
+    def is_qemu (self):
+        model=self.node_spec['node_fields']['model']
+        return model.find("qemu") >= 0
+
+    def host_box (self):
+        try:
+            return self.node_spec['host_box']
+        except:
+            return 'localhost'
+
     def create_node (self):
         ownername = self.node_spec['owner']
         user_spec = self.test_site.locate_user(ownername)
@@ -60,7 +74,7 @@ class TestNode:
             auth=self.test_plc.auth_root()
         self.test_plc.server.DeleteNode(auth,self.name())
 
-    def get_node_status(self,hostname,host_box):
+    def get_node_status(self,hostname):
         filter=['boot_state']
         status=False
         node_status=self.test_plc.server.GetNodes(self.test_plc.auth_root(),hostname, filter)
@@ -74,15 +88,15 @@ class TestNode:
 
     def conffile(self,image,hostname,path):
         model=self.node_spec['node_fields']['model']
-        if model.find("vmware") >= 0:
-            host_box=self.node_spec['node_fields']['host_box']    
+        if self.is_vmware():
+            host_box=self.host_box()
             template='%s/template-vmplayer/node.vmx'%(path)
             actual='%s/vmplayer-%s/node.vmx'%(path,hostname)
             sed_command="sed -e s,@BOOTCD@,%s,g %s > %s"%(image,template,actual)
             utils.header('Creating %s from %s'%(actual,template))
             utils.system(sed_command)
-        elif  model.find("qemu") >= 0:
-            host_box=self.node_spec['node_fields']['host_box']    
+        elif self.is_qemu():
+            host_box=self.host_box()
             mac=self.node_spec['network_fields']['mac']
             dest_dir="qemu-%s"%(hostname)
             utils.header('Storing the mac address for node %s'%hostname)
@@ -90,7 +104,7 @@ class TestNode:
             file.write('%s\n'%mac)
             file.write(dest_dir)
             file.close()
-            utils.header ('Transfert of configuration files for node %s into %s '%(hostname,host_box))
+            utils.header ('Transferring configuration files for node %s into %s '%(hostname,host_box))
             cleandir_command="ssh root@%s rm -rf %s"%(host_box, dest_dir)
             createdir_command = "ssh root@%s mkdir -p  %s"%(host_box, dest_dir)
             utils.system(cleandir_command)
@@ -153,7 +167,7 @@ class TestNode:
         utils.system('cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
         
     def start_qemu (self, options):
-        host_box=self.node_spec['node_fields']['host_box']
+        host_box=self.host_box()
         hostname=self.node_spec['node_fields']['hostname']
         path=options.path
         display=options.display
@@ -162,7 +176,13 @@ class TestNode:
         utils.system("ssh root@%s ~/%s/env-qemu start "%(host_box, dest_dir ))
         utils.system("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s & "%( host_box, display, dest_dir, dest_dir))
         
-    def stop_qemu(self,host_box, hostname):
+    def stop_qemu(self):
+        if not self.is_qemu():
+            return True
+        hostname=self.node_spec['node_fields']['hostname']
+        host_box=self.host_box()
+        utils.system('ssh root@%s  killall qemu'%host_box)
         utils.header('Stoping qemu emulation of %s on the host machine %s and Restoring the initial network'
                      %(hostname,host_box))
         utils.system("ssh root@%s ~/qemu-%s/env-qemu stop "%(host_box, hostname ))
+        return True
