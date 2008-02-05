@@ -116,6 +116,13 @@ class TestPlc:
                 return site
         raise Exception,"Cannot locate site %s"%sitename
         
+    def locate_node (self,nodename):
+        for site in self.plc_spec['sites']:
+            for node in site['nodes']:
+                if node['node_fields']['hostname'] == nodename:
+                    return (site,node)
+        raise Exception,"Cannot locate node %s"%nodename
+        
     def locate_key (self,keyname):
         for key in self.plc_spec['keys']:
             if key['name'] == keyname:
@@ -374,6 +381,13 @@ class TestPlc:
                 if boot_state == 'boot':
                     utils.header ("%s has reached the 'boot' state"%hostname)
                 else:
+                    # if it's a real node, never mind
+                    (site_spec,node_spec)=self.locate_node(hostname)
+                    test_node = TestNode(self,site_spec,node_spec)
+                    if test_node.is_real():
+                        utils.header("WARNING - Real node %s in %s - ignored"%(hostname,boot_state))
+                        # let's cheat
+                        boot_state = 'boot'
                     if datetime.datetime.now() > graceout:
                         utils.header ("%s still in '%s' state"%(hostname,boot_state))
                 status[hostname] = boot_state

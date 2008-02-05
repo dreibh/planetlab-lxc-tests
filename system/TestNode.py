@@ -22,6 +22,9 @@ class TestNode:
         model=self.node_spec['node_fields']['model']
         return model.find("qemu") >= 0
 
+    def is_real (self):
+        return (not self.is_vmware()) and (not self.is_qemu())
+
     def host_box (self):
         try:
             return self.node_spec['host_box']
