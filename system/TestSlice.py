@@ -54,7 +54,7 @@ class TestSlice:
         utils.header("Messing with known_hosts for slice %s"%self.name())
         # scan nodenames
         for nodename in self.slice_spec['nodenames']:
-            self.test_plc.run_in_guest("sed -i -e '/^%s/d' /root/.ssh/known_hosts"%nodename)
+            self.test_plc.run_in_guest("sed -i -e /^%s/d /root/.ssh/known_hosts"%nodename)
 
     ###the logic is quit wrong, must be rewritten
     def do_check_slices(self):
@@ -64,7 +64,6 @@ class TestSlice:
         #time.sleep(300)
         bool=bool1=True
         secondes=15
-        self.test_plc.clear_ssh_config()
         self.clear_known_hosts()
         start_time = datetime.datetime.now()
         dead_time=start_time + datetime.timedelta(minutes=11)
@@ -77,14 +76,20 @@ class TestSlice:
                     user_spec=self.test_site.locate_user(username)
                     for keyname in user_spec['keynames']:
                         key_spec=self.test_plc.locate_key(keyname)
-                        publickey=TestKey(self.test_plc,key_spec).publicpath()
-                        privatekey=TestKey(self.test_plc,key_spec).privatepath()
+                        test_key=TestKey(self.test_plc,key_spec)
+                        publickey=test_key.publicpath()
+                        privatekey=test_key.privatepath()
+                        keyname=test_key.name()
                         if os.path.isfile(publickey) and os.path.isfile(privatekey):
                             found=True
                             break
                 if not found:
                     raise Exception,"Cannot find a valid key for slice %s"%slicename
     
+                # create dir in plc root image
+                self.test_plc.run_in_guest("mkdir /root/keys")
+                remote_privatekey="/root/keys/%s.rsa"%keyname
+                self.test_plc.copy_in_guest(privatekey,remote_privatekey,True)
                 while(bool):
                     utils.header('restarting nm on %s'%hostname)
                     access=self.test_plc.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa root@%s service nm restart'%hostname )
@@ -92,7 +97,7 @@ class TestSlice:
                         utils.header('nm restarted on %s'%hostname)
                         while(bool1):
                             utils.header('trying to connect to %s@%s'%(slicename,hostname))
-                            Date=utils.system('ssh -i %s %s@%s date'%(privatekey,slicename,hostname))
+                            Date=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,slicename,hostname))
                             if (Date==0):
                                 break
                             elif ( start_time  <= dead_time ) :
@@ -104,11 +109,11 @@ class TestSlice:
                             utils.header('connected to %s@%s -->'%(slicename,hostname))
                         else:
                             utils.header('%s@%s : last chance - restarting nm on %s'%(slicename,hostname,hostname))
-                            access=utils.system('ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
+                            access=self.test_plc.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
                             time.sleep(240)##temoprally adding some delay due to the network slowness 
                             if (access==0):
                                 utils.header('trying to connect (2) to %s@%s'%(slicename,hostname))
-                                Date=utils.system('ssh -i %s %s@%s date'%(privatekey,slicename,hostname))
+                                Date=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,slicename,hostname))
                                 if (Date==0):
                                     utils.header('connected to %s@%s -->'%(slicename,hostname))
                                 else:

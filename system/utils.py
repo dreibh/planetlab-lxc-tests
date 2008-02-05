@@ -16,7 +16,7 @@ def show_spec(message,spec,depth=2):
 
 def system(command):
     now=time.strftime("%H:%M:%S", time.localtime())
-    print "+",now
+    print "+",now,':',command
     return os.system("set -x; " + command)
 
 # checks whether a given hostname/ip responds to ping

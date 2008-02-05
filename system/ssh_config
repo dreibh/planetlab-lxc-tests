@@ -1,0 +1,4 @@
+# this config to be stored in /root/.ssh/config within the myplc image, either chroot or vserver
+# this is to prevent ssh from complaining/prompting
+BatchMode yes
+StrictHostKeyChecking no

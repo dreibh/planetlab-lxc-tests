@@ -18,7 +18,7 @@ class TestMain:
 
     default_steps = ['uninstall','install','install_rpm',
                      'configure', 'start', 
-                     'store_keys', 'initscripts', 
+                     'clear_ssh_config','store_keys', 'initscripts', 
                      'sites', 'nodes', 'slices', 
                      'bootcd', 'nodegroups', 
                      'start_nodes', 'check_nodes', 'check_slices' ]

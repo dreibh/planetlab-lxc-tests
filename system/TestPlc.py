@@ -15,6 +15,17 @@ from TestUser import TestUser
 from TestKey import TestKey
 from TestSlice import TestSlice
 
+# inserts a backslash before each occurence of the following chars
+# \ " ' < > & | ; ( ) $ *
+def backslash_shell_specials (command):
+    result=''
+    for char in command:
+        if char in "\\\"'<>&|;()$*":
+            result +='\\'+char
+        else:
+            result +=char
+    return result
+
 # step methods must take (self, options) and return a boolean
 
 class TestPlc:
@@ -48,30 +59,48 @@ class TestPlc:
     def connect (self):
 	pass
     
-    # build the full command so command gets run in the chroot/vserver
-    def run_command(self,command):
+    # command gets run in the chroot/vserver
+    def host_to_guest(self,command):
         if self.vserver:
             return "vserver %s exec %s"%(self.vservername,command)
         else:
-            return "chroot /plc/root sh -c \\\"%s\\\""%command
+            return "chroot /plc/root %s"%backslash_shell_specials(command)
 
-    def ssh_command(self,command):
+    # command gets run on the right box
+    def to_host(self,command):
         if self.is_local():
             return command
         else:
-            return "ssh %s sh -c '\"%s\"'"%(self.plc_spec['hostname'],command)
+            return "ssh %s %s"%(self.plc_spec['hostname'],backslash_shell_specials(command))
 
     def full_command(self,command):
-        return self.ssh_command(self.run_command(command))
+        return self.to_host(self.host_to_guest(command))
 
     def run_in_guest (self,command):
         return utils.system(self.full_command(command))
     def run_in_host (self,command):
-        return utils.system(self.ssh_command(command))
+        return utils.system(self.to_host(command))
 
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
         return utils.system(local+" | "+self.full_command(remote))
+
+    # copy a file to the myplc root image - pass in_data=True if the file must go in /plc/data
+    def copy_in_guest (self, localfile, remotefile, in_data=False):
+        if in_data:
+            chroot_dest="/plc/data"
+        else:
+            chroot_dest="/plc/root"
+        if self.is_local():
+            if not self.vserver:
+                utils.system("cp %s %s/%s"%(localfile,chroot_dest,remotefile))
+            else:
+                utils.system("cp %s /vservers/%s/%s"%(localfile,self.vservername,remotefile))
+        else:
+            if not self.vserver:
+                utils.system("scp %s %s:%s/%s"%(localfile,self.plc_spec['hostname'],chroot_dest,remotefile))
+            else:
+                utils.system("scp %s %s@/vservers/%s/%s"%(localfile,self.plc_spec['hostname'],self.vservername,remotefile))
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
@@ -93,6 +122,7 @@ class TestPlc:
                 return key
         raise Exception,"Cannot locate key %s"%keyname
         
+    # this should be run on the nodes' host_box, not locally to the plc
     def kill_all_vmwares(self):
         utils.header('Killing any running vmware or vmplayer instance')
         utils.system('pgrep vmware | xargs -r kill')
@@ -106,13 +136,15 @@ class TestPlc:
             for node_spec in site_spec['nodes']:
                 TestNode (self,test_site,node_spec).stop_qemu()
                     
-    def clear_ssh_config (self):
-        # using ssh -o "BatchMode yes" is too tricky due to quoting - let's use the config
-        utils.header("Setting BatchMode and StrictHostKeyChecking in ssh config")
-        self.run_in_guest("sed -i -e '/BatchMode/d' /root/.ssh/config 2> /dev/null")
-        self.run_in_guest_piped("echo BatchMode yes", "cat >> /root/.ssh/config")
-        self.run_in_guest("sed -i -e '/StrictHostKeyChecking/d' /root/.ssh/config 2> /dev/null")
-        self.run_in_guest_piped("echo StrictHostKeyChecking no", "cat >> /root/.ssh/config")
+    def clear_ssh_config (self,options):
+        # install local ssh_config file as root's .ssh/config - ssh should be quiet
+        # dir might need creation first
+        self.run_in_guest("mkdir /root/.ssh")
+        self.run_in_guest("chmod 700 /root/.ssh")
+        # this does not work - > redirection somehow makes it until an argument to cat
+        #self.run_in_guest_piped("cat ssh_config","cat > /root/.ssh/config")
+        self.copy_in_guest("ssh_config","/root/.ssh/config",True)
+        return True
             
     #################### step methods
 
@@ -124,7 +156,7 @@ class TestPlc:
         ##### Clean up the /plc directory
         self.run_in_host('rm -rf  /plc/data')
         ##### stop any running vservers
-        self.run_in_host('for vserver in $(cd /vservers ; ls) ; do vserver $vserver stop ; done')
+        self.run_in_host('for vserver in $(ls /vservers/* | sed -e s,/vservers/,,) ; do vserver $vserver stop ; done')
         return True
 
     def uninstall_vserver(self,options):
@@ -312,36 +344,56 @@ class TestPlc:
                 self.server.AddNodeToNodeGroup(auth,node,nodegroupname)
         return True
 
-    def check_nodes(self,options):
-        time.sleep(10)#Wait for the qemu to mount. Only  matter of display
-        status=True
-        start_time = datetime.datetime.now()
-        dead_time=datetime.datetime.now()+ datetime.timedelta(minutes=5)
-        booted_nodes=[]
+    def all_hostnames (self) :
+        hostnames = []
         for site_spec in self.plc_spec['sites']:
-            test_site = TestSite (self,site_spec)
-            utils.header("Starting checking for nodes in site %s"%self.name())
-            notfullybooted_nodes=[ node_spec['node_fields']['hostname'] for node_spec in site_spec['nodes'] ]
-            nbr_nodes= len(notfullybooted_nodes)
-            while (status):
-                for node_spec in site_spec['nodes']:
-                    hostname=node_spec['node_fields']['hostname']
-                    if (hostname in notfullybooted_nodes): #to avoid requesting already booted node
-                        test_node=TestNode (self,test_site,node_spec)
-                        host_box=test_node.host_box()
-                        node_status=test_node.get_node_status(hostname)
-                        if (node_status):
-                            booted_nodes.append(hostname)
-                            del notfullybooted_nodes[notfullybooted_nodes.index(hostname)]
-                if ( not notfullybooted_nodes): break
-                elif ( start_time  <= dead_time ) :
-                    start_time=datetime.datetime.now()+ datetime.timedelta(minutes=2)
-                    time.sleep(15)
-                else: status=False
-            for nodeup in booted_nodes : utils.header("Node %s correctly installed and booted"%nodeup)
-            for nodedown  in notfullybooted_nodes : utils.header("Node %s not fully booted"%nodedown)
-            return status
-    
+            hostnames += [ node_spec['node_fields']['hostname'] \
+                           for node_spec in site_spec['nodes'] ]
+        return hostnames
+
+    # gracetime : during the first <gracetime> minutes nothing gets printed
+    def do_check_nodes (self, minutes, gracetime=2):
+
+        # compute timeout
+        timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
+        graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
+
+        # the nodes that haven't checked yet - start with a full list and shrink over time
+        tocheck = self.all_hostnames()
+        utils.header("checking nodes %r"%tocheck)
+        # create a dict hostname -> status
+        status = dict ( [ (hostname,'undef') for hostname in tocheck ] )
+
+        while tocheck:
+            # get their status
+            tocheck_status=self.server.GetNodes(self.auth_root(), tocheck, ['hostname','boot_state' ] )
+            # update status
+            for array in tocheck_status:
+                hostname=array['hostname']
+                boot_state=array['boot_state']
+                if boot_state == 'boot':
+                    utils.header ("%s has reached the 'boot' state"%hostname)
+                else:
+                    if datetime.datetime.now() > graceout:
+                        utils.header ("%s still in '%s' state"%(hostname,boot_state))
+                status[hostname] = boot_state
+            # refresh tocheck
+            tocheck = [ hostname for (hostname,boot_state) in status.iteritems() if boot_state != 'boot' ]
+
+            if not tocheck:
+                return True
+            if datetime.datetime.now() > timeout:
+                for hostname in tocheck:
+                    utils.header("FAILURE due to %s in '%s' state"%(hostname,status[hostname]))
+                return False
+            # otherwise, sleep for a while
+            time.sleep(15)
+        # only useful in empty plcs
+        return True
+
+    def check_nodes(self,options):
+        return self.do_check_nodes(minutes=5)
+
     def bootcd (self, options):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
