@@ -24,6 +24,7 @@ def nodes():
                                        'attributes' : 
                                        { 'hwaddr' : '00:1c:bf:51:2b:fd',
                                          'essid' : 'guest-inria-sophia',
+                                         'ifname' : 'wlan0',
                                          },
                                        },
                                      ],
