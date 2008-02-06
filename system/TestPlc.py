@@ -404,14 +404,30 @@ class TestPlc:
 
     def check_nodesStatus(self,options):
         return self.do_check_nodesStatus(minutes=5)
-
+    
+    #to scan and store the nodes's public keys and avoid to ask for confirmation when  ssh 
+    def scan_publicKeys(self,hostnames):
+        try:
+            temp_knownhosts="/root/known_hosts"
+            remote_knownhosts="/root/.ssh/known_hosts"
+            self.run_in_host("touch %s"%temp_knownhosts )
+            for hostname in hostnames:
+                utils.header("Scan Public %s key and store it in the known_host file(under the root image) "%hostname)
+                scan=self.run_in_host('ssh-keyscan -t rsa %s >> %s '%(hostname,temp_knownhosts))
+            #Store the public keys in the right root image
+            self.copy_in_guest(temp_knownhosts,remote_knownhosts,True)
+            #clean the temp keys file used
+            self.run_in_host('rm -f  %s '%temp_knownhosts )
+        except Exception, err:
+            print err
+            
     def do_check_nodesSsh(self,minutes):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         #graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
         tocheck = self.all_hostnames()
+        self.scan_publicKeys(tocheck)
         utils.header("checking Connectivity on nodes %r"%tocheck)
-        
         while tocheck:
             for hostname in tocheck:
                 # try to ssh in nodes
