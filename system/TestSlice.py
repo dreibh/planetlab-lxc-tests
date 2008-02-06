@@ -55,7 +55,9 @@ class TestSlice:
         # scan nodenames
         for nodename in self.slice_spec['nodenames']:
             self.test_plc.run_in_guest("sed -i -e /^%s/d /root/.ssh/known_hosts"%nodename)
-
+        #scan public key and update the known_host file in the root image
+        self.test_plc.scan_publicKeys(self.slice_spec['nodenames'])
+        
     def locate_key(self,slice_spec):
         # locate the first avail. key
         found=False
