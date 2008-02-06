@@ -21,7 +21,7 @@ class TestMain:
                      'clear_ssh_config','store_keys', 'initscripts', 
                      'sites', 'nodes', 'slices', 
                      'bootcd', 'nodegroups', 
-                     'start_nodes', 'check_nodes', 'check_slices' ]
+                     'start_nodes', 'check_nodesStatus','standby','check_nodesConnectivity', 'check_slices' ]
     other_steps = [ 'fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'stop_nodes' ,  'db_dump' , 'db_restore',
@@ -82,6 +82,8 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run in verbose mode")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
+        parser.add_option("-f","--forcenm", action="store_true", dest="forcenm", default=False, 
+                          help="Force the NM to restart in check_slices step")
         (self.options, self.args) = parser.parse_args()
 
         if len(self.args) == 0:

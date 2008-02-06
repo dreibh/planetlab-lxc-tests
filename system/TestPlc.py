@@ -359,18 +359,15 @@ class TestPlc:
         return hostnames
 
     # gracetime : during the first <gracetime> minutes nothing gets printed
-    def do_check_nodes (self, minutes, gracetime=2):
-
+    def do_check_nodesStatus (self, minutes, gracetime=2):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
-
         # the nodes that haven't checked yet - start with a full list and shrink over time
         tocheck = self.all_hostnames()
         utils.header("checking nodes %r"%tocheck)
         # create a dict hostname -> status
         status = dict ( [ (hostname,'undef') for hostname in tocheck ] )
-
         while tocheck:
             # get their status
             tocheck_status=self.server.GetNodes(self.auth_root(), tocheck, ['hostname','boot_state' ] )
@@ -390,10 +387,10 @@ class TestPlc:
                         boot_state = 'boot'
                     if datetime.datetime.now() > graceout:
                         utils.header ("%s still in '%s' state"%(hostname,boot_state))
+                        graceout=datetime.datetime.now()+datetime.timedelta(1)
                 status[hostname] = boot_state
             # refresh tocheck
             tocheck = [ hostname for (hostname,boot_state) in status.iteritems() if boot_state != 'boot' ]
-
             if not tocheck:
                 return True
             if datetime.datetime.now() > timeout:
@@ -405,9 +402,45 @@ class TestPlc:
         # only useful in empty plcs
         return True
 
-    def check_nodes(self,options):
-        return self.do_check_nodes(minutes=5)
+    def check_nodesStatus(self,options):
+        return self.do_check_nodesStatus(minutes=5)
 
+    def do_check_nodesSsh(self,minutes):
+        # compute timeout
+        timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
+        #graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
+        tocheck = self.all_hostnames()
+        utils.header("checking Connectivity on nodes %r"%tocheck)
+        
+        while tocheck:
+            for hostname in tocheck:
+                # try to ssh in nodes
+                access=self.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa root@%s date'%hostname )
+                if (not access):
+                    utils.header('The node %s is sshable -->'%hostname)
+                    # refresh tocheck
+                    tocheck.remove(hostname)
+            if not tocheck:
+                return True
+            if datetime.datetime.now() > timeout:
+                for hostname in tocheck:
+                    utils.header("FAILURE to ssh into %s"%hostname)
+                return False
+            # otherwise, sleep for a while
+            time.sleep(15)
+        # only useful in empty plcs
+        return True
+        
+    def check_nodesConnectivity(self, options):
+        return  self.do_check_nodesSsh(minutes=2)
+            
+    def standby(self,options):
+        #Method for waiting a while when nodes are booting and being sshable,giving time to NM to be up
+        utils.header('Entering in StanbdBy mode at %s'%datetime.datetime.now())
+        time.sleep(900)
+        utils.header('Exist StandBy mode at %s'%datetime.datetime.now())
+        return True
+    
     def bootcd (self, options):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
@@ -447,7 +480,7 @@ class TestPlc:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
             test_slice=TestSlice(self,test_site,slice_spec)
-            status=test_slice.do_check_slices()
+            status=test_slice.do_check_slices(options)
             return status
     
     def start_nodes (self, options):
