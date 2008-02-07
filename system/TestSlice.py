@@ -74,7 +74,7 @@ class TestSlice:
         #create dir in plc root image
         remote_privatekey="/root/keys/%s.rsa"%keyname
         if not os.path.isfile(remote_privatekey):
-            self.test_plc.run_in_guest("mkdir  /root/keys" )
+            self.test_plc.run_in_guest("mkdir -p /root/keys" )
             self.test_plc.copy_in_guest(privatekey,remote_privatekey,True)
 
         return (found,remote_privatekey)
