@@ -20,7 +20,7 @@ def nodes():
               'extra_interfaces' : [ { 'network_fields' : 
                                        { 'method' : 'static',
                                          'type' : 'ipv4',
-                                         'mac' : '00:1c:bf:51:2b:fd',
+                                         'mac' : '00:1B:77:70:F4:C6',
                                          'ip' : '138.96.250.212',
                                          'network' : '138.96.0.0',
                                          'dns1': '138.96.0.10',
