@@ -23,6 +23,8 @@ class Logfile:
 
 
 
+logfile = Logfile('qaapi.log')
+
 def log(method, method_name = None, \
 	log_filename = 'system.log', errorlog_filename = 'system_error.log'):
     """
