@@ -145,7 +145,7 @@ def slices ():
                'usernames' : [ 'pi','tech','techuser' ],
                'nodenames' : all_nodenames(),
                'initscriptname' : 'script11',
-               'sitename' : 'SecondSite',
+               'sitename' : 'qemu',
                'owner' : 'pi',
                },
              {'slice_fields': {'name':'qemu_slicetest2',
