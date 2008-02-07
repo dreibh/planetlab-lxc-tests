@@ -79,45 +79,48 @@ class TestSlice:
 
         return (found,remote_privatekey)
 
-    def do_check_slices(self,options):
+    def do_check_slice(self,options):
         bool=True
         self.clear_known_hosts()
         start_time = datetime.datetime.now()
         dead_time=start_time + datetime.timedelta(minutes=15)
-        for slice_spec in self.test_plc.plc_spec['slices']:
-            for hostname in slice_spec['nodenames']:
-                slicename=slice_spec['slice_fields']['name']
-                (found,remote_privatekey)=self.locate_key(slice_spec)
-                if( not found):
-                    raise Exception,"Cannot find a valid key for slice %s"%slicename
-                    break 
-                while(bool):
-                    utils.header('trying to connect to %s@%s'%(slicename,hostname))
-                    Date=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,slicename,hostname))
-                    if (Date==0):
-                        break
-                    elif ( start_time  <= dead_time ) :
-                        start_time=datetime.datetime.now()+ datetime.timedelta(seconds=45)
-                        time.sleep(45)
-                    elif (options.forcenm):
-                        utils.header('%s@%s : restarting nm in case is in option on %s'%(slicename,hostname,hostname))
-                        access=self.test_plc.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
-                        if (access==0):
-                            utils.header('nm restarted on %s'%hostname)
-                        else:
-                            utils.header('%s@%s : Failed to restart the NM on %s'%(slicename,hostname,hostname))
-                        utils.header('Try to reconnect to  %s@%s after the tentative of restarting NM'%(slicename,hostname))
-                        connect=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,slicename,hostname))
-                        if (not connect):
-                            utils.header('connected to %s@%s -->'%(slicename,hostname))
-                            break
-                        else:
-                            utils.header('giving up with to %s@%s -->'%(slicename,hostname))
-                            bool=False
-                            break
+        slice_spec = self.slice_spec
+        for hostname in slice_spec['nodenames']:
+            (site_spec,node_spec) = self.test_plc.locate_node(hostname)
+            if TestNode.is_real_model(node_spec['node_fields']['model']):
+                utils.header("WARNING : Checking slice %s on real node %s skipped"%(self.name(),hostname))
+                continue
+            (found,remote_privatekey)=self.locate_key(slice_spec)
+            if not found :
+                raise Exception,"Cannot find a valid key for slice %s"%self.name()
+                break 
+            while (bool):
+                utils.header('trying to connect to %s@%s'%(self.name(),hostname))
+                Date=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,self.name(),hostname))
+                if (Date==0):
+                    break
+                elif ( start_time  <= dead_time ) :
+                    start_time=datetime.datetime.now()+ datetime.timedelta(seconds=45)
+                    time.sleep(45)
+                elif (options.forcenm):
+                    utils.header('%s@%s : restarting nm in case is in option on %s'%(self.name(),hostname,hostname))
+                    access=self.test_plc.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
+                    if (access==0):
+                        utils.header('nm restarted on %s'%hostname)
                     else:
+                        utils.header('%s@%s : Failed to restart the NM on %s'%(self.name(),hostname,hostname))
+                    utils.header('Try to reconnect to  %s@%s after the tentative of restarting NM'%(self.name(),hostname))
+                    connect=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,self.name(),hostname))
+                    if (not connect):
+                        utils.header('connected to %s@%s -->'%(self.name(),hostname))
+                        break
+                    else:
+                        utils.header('giving up with to %s@%s -->'%(self.name(),hostname))
                         bool=False
                         break
+                else:
+                    bool=False
+                    break
         return bool
 
          

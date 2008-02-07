@@ -380,8 +380,7 @@ class TestPlc:
                 else:
                     # if it's a real node, never mind
                     (site_spec,node_spec)=self.locate_node(hostname)
-                    test_node = TestNode(self,site_spec,node_spec)
-                    if test_node.is_real():
+                    if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header("WARNING - Real node %s in %s - ignored"%(hostname,boot_state))
                         # let's cheat
                         boot_state = 'boot'
@@ -435,6 +434,11 @@ class TestPlc:
                 if (not access):
                     utils.header('The node %s is sshable -->'%hostname)
                     # refresh tocheck
+                    tocheck.remove(hostname)
+                else:
+                    (site_spec,node_spec)=self.locate_node(hostname)
+                    if TestNode.is_real_model(node_spec['node_fields']['model']):
+                        utils.header ("WARNING : check ssh access into real node %s - skipped"%hostname)
                     tocheck.remove(hostname)
             if not tocheck:
                 return True
@@ -496,7 +500,7 @@ class TestPlc:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
             test_slice=TestSlice(self,test_site,slice_spec)
-            status=test_slice.do_check_slices(options)
+            status=test_slice.do_check_slice(options)
             return status
     
     def start_nodes (self, options):

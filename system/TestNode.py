@@ -14,16 +14,24 @@ class TestNode:
     def name(self):
         return self.node_spec['node_fields']['hostname']
         
+    @staticmethod
+    def is_vmware_model(model):
+        return model.find("vmware") >= 0        
     def is_vmware (self):
-        model=self.node_spec['node_fields']['model']
-        return model.find("vmware") >= 0
+        return TestNode.is_vmware_model(self.node_spec['node_fields']['model'])
 
-    def is_qemu (self):
-        model=self.node_spec['node_fields']['model']
+    @staticmethod
+    def is_qemu_model (model):
         return model.find("qemu") >= 0
+    def is_qemu (self):
+        return TestNode.is_qemu_model(self.node_spec['node_fields']['model'])
 
+    @staticmethod
+    def is_real_model (model):
+        return (not TestNode.is_vmware_model(model)) \
+            and (not TestNode.is_qemu_model(model))
     def is_real (self):
-        return (not self.is_vmware()) and (not self.is_qemu())
+        return TestNode.is_real_model (self.node_spec['node_fields']['model'])
 
     def host_box (self):
         try:
