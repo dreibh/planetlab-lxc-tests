@@ -2,6 +2,7 @@ import xmlrpclib
 import os
 import sys
 import re
+import socket
 import utils
 
 class Config:
@@ -10,6 +11,7 @@ class Config:
     tests_path = path + os.sep + 'tests'
     node_tests_path = tests_path + os.sep + 'node'
     slice_tests_path = tests_path + os.sep + 'slice'				
+
     def __init__(self, config_file = path+os.sep+'qa_config'):
 	# Load config file
 	try:
@@ -40,8 +42,7 @@ class Config:
 	    self.api_type = 'xmlrpc'
 
 	# try setting hostname and ip
-	(stdout, stderr) = utils.popen("hostname")
-        self.hostname = stdout[0].strip()
+        self.hostname = socket.gethostname()
         (stdout, stderr) = utils.popen("/sbin/ifconfig eth0 | grep 'inet addr'")
         inet_addr = re.findall('inet addr:[0-9\.^\w]*', stdout[0])[0]
         parts = inet_addr.split(":")
