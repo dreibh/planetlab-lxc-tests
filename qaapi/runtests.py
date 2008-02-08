@@ -14,36 +14,41 @@ from qa.tests.get_boot_state import get_boot_state
 from qa.tests.node_remote_call import node_remote_call
 from qa.tests.access_slice import access_slice
 
-config = Config()
-node = config.TEST_NODE_HOSTNAME_1
-person = config.TEST_PERSON_EMAIL
+def main(args):
+    if len(args) > 0:
+        config = Config(args[0])
+    else:
+        config = Config()
 
-#plc_configure()()
-#plc_start()()
+    node = config.TEST_NODE_HOSTNAME_1
 
-# Add test site, node, person and slice data
-# Adds slice to node and person to slice 
-add_test_data()()
+    plc_configure(config)()
+    plc_start(config)()
 
-# Update plc with tests user's current public key
-sync_person_key()(person)
+    # Add test site, node, person and slice data
+    # Adds slice to node and person to slice 
+    add_test_data(config)()
 
-# exit for now untill we get node booted with correct network
-sys.exit(0)
-# Boot test node and confirm boot state
-boot_node()(node)
-if get_boot_state()(node) not in ['boot']:
-    raise Exception, "%(node)s not fully booted" % locals()
+    # Update plc with tests user's current public key
+    person = config.TEST_PERSON_EMAIL
+    sync_person_key(config)(person)
 
-# Restart node manager on the node
-restart_nm = 'service nm restart'	
-node_remote_call(node, restart_nm)
+    sys.exit(0)
 
-# Try to access the test  slice on the test node
-email = config.TEST_PERSON_EMAIL
-slice = config.TEST_SLICE_NAME
-access_slice(email, slice, node)
+    # Boot test node and confirm boot state
+    boot_node(config)(node)
 
-# Run node tests
-node_run_tests()(node)
-   
+    # Restart node manager on the node
+    restart_nm = 'service nm restart'	
+    node_remote_call(node, restart_nm)
+
+    # Try to access the test  slice on the test node
+    email = config.TEST_PERSON_EMAIL
+    slice = config.TEST_SLICE_NAME
+    access_slice(email, slice, node)
+
+    # Run node tests
+    node_run_tests(config)(node)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
