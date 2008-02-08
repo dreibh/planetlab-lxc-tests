@@ -30,7 +30,8 @@ class Test:
 	"""
 	return True
 
-    def __init__(self, config = Config()):
+    def __init__(self, config = None):
+        if config is None: config = Config()
 	self.name = self.__class__.__name__
 	self.path=os.path.abspath(os.path.dirname(sys.argv[0]))
 	self.config = config
