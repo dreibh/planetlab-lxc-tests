@@ -18,6 +18,8 @@ PLC_MAIL_ENABLED=1
 
 PLC_MAIL_SUPPORT_ADDRESS="root@localhost.localdomain"
 
+PLC_API_HOST="localhost"
+
 
 # Test Site Configuration
 
