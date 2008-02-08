@@ -15,6 +15,15 @@ rpm -q myplc-native > /dev/null
 installed=$?
 [ $installed -eq 1 ] && yum -y install myplc-native
 
+# setup qemu to run the node from the bootcd
+rpm -q qemu > /dev/null
+installed=$?
+[ $installed -eq 1 ] && yum -y install qemu
+
+
+exit 0
+
+
 # make sure its stopped
 service plc stop
 
@@ -138,10 +147,6 @@ SERIAL="ttyS0:115200:n:8"
 SNAME=$(echo $SERIAL | sed 's,:,,g')
 TESTISO="./selftest-serial-$SNAME-cramfs.iso"
 
-# setup qemu to run the node from the bootcd
-rpm -q qemu > /dev/null
-installed=$?
-[ $installed -eq 1 ] && yum -y install qemu
 qemu-img create -f qcow $TESTDISK 5GB
 
 # run qemu
