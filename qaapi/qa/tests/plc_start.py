@@ -12,7 +12,7 @@ class plc_start(Test):
 
     def call(self):
 	
-	command = " /sbin/service plc start "
+	command = "/sbin/service plc start "
 
 	if self.config.verbose:
 	    utils.header(command)	
