@@ -3,6 +3,7 @@ import os, sys
 import traceback
 from Test import Test
 from qa import utils
+import tempfile
 
 class plc_configure(Test):
     """
@@ -13,6 +14,16 @@ class plc_configure(Test):
 	
 	services = ['API', 'DB', 'WWW', 'BOOT']
 	plc_options = [] 
+        # Turn off plc (for good measure)
+	command = "/sbin/service plc stop"
+	if self.config.verbose: utils.header(command)
+        (stdout, stderr) = utils.popen(command)
+
+	# mount plc (need to do this optionally, as we do not want this for myplc-native)
+	command = "/sbin/service plc mount"
+	if self.config.verbose: utils.header(command)
+        (stdout, stderr) = utils.popen(command)
+
 	# Get plc configuration variables
 	if plc_config_option is not None and \
 	   plc_config_value  is not None:
@@ -31,19 +42,27 @@ class plc_configure(Test):
 		    plc_options.append((attr, getattr(self.config, attr)))
 		
 	# Write temporary plc-config file
-	tmpname = '/tmp/plc-config-tty-%d' % os.getpid()
-	fileconf = open(tmpname, 'w')
-	for (option, value) in plc_options:
-	    fileconf.write('e %s\n%s\n' % (option, value) )
-	fileconf.write('w\nq\n')
-	fileconf.close()
-
-	# Update plc config file
-	command = "plc-config-tty < %(tmpname)s" % locals()
+        tmpfconf, tmpfname = tempfile.mkstemp(".config","plc-config-tty")
 	if self.config.verbose:
-	    utils.header(command)	 	
+            utils.header("generate temporary config file %(tmpfname)s"%locals())
+	for (option, value) in plc_vars:
+            os.write(tmpfconf, 'e %s\n%s\n' % (optin, value))
+        os.write(tmpfconf,'w\nq\n')
+	os.close(tmpfconf)
+
+        # configure plc
+	command = "plc-config-tty < %(tmpfname)s" % locals()
+	if self.config.verbose: utils.header(command)
         (stdout, stderr) = utils.popen(command)
-        (stdout, stderr) = utils.popen("rm %s" % tmpname)
+
+	# clean up temporary conf file
+	if self.config.verbose: utils.header("removing %(tmpfname)s"%locals())
+        os.unlink(tmpfname)
+
+	# umount plc (need to do this optionally, as we do not want this for myplc-native)
+	command = "/sbin/service plc umount"
+	if self.config.verbose: utils.header(command)
+        (stdout, stderr) = utils.popen(command)
 
 	return 1
 
