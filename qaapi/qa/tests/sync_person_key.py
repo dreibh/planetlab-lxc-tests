@@ -46,11 +46,10 @@ class sync_person_key(Test):
 	public_key_file = open(public_key_path, 'r')
 	public_key = public_key_file.readline()
 		
+        key_fields = {'key_type': 'ssh', 'key': public_key}
 	keys = api.GetKeys(auth, person['key_ids'])
 	if not keys:
 	    # Add current key to db
-	    key_fields = {'key_type': 'ssh',
-			  'key': public_key}
 	    api.AddPersonKey(auth, person['person_id'], key_fields)
 	    if self.config.verbose:
 		utils.header("Added public key in %(public_key_path)s to db" % locals() )
@@ -58,7 +57,7 @@ class sync_person_key(Test):
 	    # keys need to be checked and possibly updated
 	    key = keys[0]
 	    if key['key'] != public_key:
-		api.UpdateKey(auth, key['key_id'], public_key)
+		api.UpdateKey(auth, key['key_id'], key_fields)
 		if self.config.verbose:
 		    utils.header("Updated plc with new public key in %(public_key_path)s " % locals())
 	    else:
