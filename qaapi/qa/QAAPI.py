@@ -2,6 +2,7 @@ import sys, os
 import traceback
 import tests
 from Config import Config
+from tests.Test import Test
 from logger import log	
 
 class QAAPI:
@@ -95,12 +96,14 @@ class QAAPI:
     	try:
 	    test = __import__(test_path, globals(), locals(), test_path)
 	    callables = []
-
 	    for attribute in dir(test):
 		attr = getattr(test, attribute)
 	        if callable(attr) and hasattr(attr, 'status'):
 		    setattr(attr, 'test_name', test_basename+attribute)
-		    callables.append(attr(self.config))
+		    try:
+			test_instance = attr(self.config)
+		    	callables.append(test_instance)
+		    except: pass
 	    return callables 
     	except ImportError, AttributeError:
 	    raise  
