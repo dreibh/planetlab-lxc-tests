@@ -21,7 +21,7 @@ class TestMain:
                      'clear_ssh_config','store_keys', 'initscripts', 
                      'sites', 'nodes', 'slices', 
                      'bootcd', 'nodegroups', 
-                     'start_nodes', 'check_nodesStatus','standby','check_nodesConnectivity', 'check_slices' ]
+                     'start_nodes','standby', 'check_nodesStatus','check_nodesConnectivity', 'check_slices' ]
     other_steps = [ 'fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'stop_nodes' ,  'db_dump' , 'db_restore',

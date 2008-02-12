@@ -7,40 +7,26 @@
 
 onelab="one-lab.org"
 
-# use a model that contains "vmware" to get the node actually started
 # host_box is taken as 'localhost' if omitted (should be a direct field in the node spec)
 def nodes():
-    nodes= [ {'node_fields': {'hostname': 'test1.one-lab.org',
-                              'model':'vmware/minhw', },
-              'host_box' : 'test.one-lab.org',
-              'owner' : 'pi',
-              'network_fields': { 'method':'static',
-                                  'type':'ipv4',
-                                  'ip':'192.168.132.128',
-                                  'gateway':'192.168.132.1',
-                                  'network':'192.168.132.0',
-                                  'broadcast':'192.168.132.255',
-                                  'netmask':'255.255.255.0',
-                                  'dns1': '192.168.132.2',
-                                  },
-              },
-             { 'node_fields': {'hostname':'test2.one-lab.org',
-                               'model':'vmware/minhw', } ,
-               'host_box' : 'test.one-lab.org',
-               'owner' : 'tech',
-               'network_fields': {'method':'static',
-                                  'type':'ipv4',
-                                  'ip':'192.168.132.130',
-                                  'gateway':'192.168.132.1',
-                                  'network':'192.168.132.0',
-                                  'broadcast':'192.168.132.255',
-                                  'netmask':'255.255.255.0',
-                                  'dns1': '192.168.132.2',
-                                  },
-               },
-             ]
+    nodes= [{'node_fields': {'hostname': 'lysithea.inria.fr',
+                             'model':'qemu/minhw', } ,
+             'host_box': 'test.one-lab.org',
+             'owner' : 'pi',
+             'network_fields': { 'method':'static',
+                                 'type':'ipv4',
+                                 'ip':'138.96.250.153',
+                                 'gateway':'138.96.248.250',
+                                 'network':'138.96.0.0',
+                                 'broadcast':'138.96.255.255',
+                                 'netmask':'255.255.0.0',
+                                 'dns1': '138.96.0.10',
+                                 'dns2': '138.96.0.11',
+                                 'mac' : '00:0b:cd:62:50:95',
+                                 },
+             },
+            ]
     return nodes
-#    return [nodes[0]]
 
 def all_nodenames ():
     return [ node['node_fields']['hostname'] for node in nodes()]
@@ -174,9 +160,7 @@ def slices ():
                'sitename' : 'main',
                'owner' : 'pi',
                }]
-    # I suspect the check_slices stuff to work improperly with 2 slices
-#    return both
-    return [both[0]]
+    return both
 
 def plc () :
     return { 

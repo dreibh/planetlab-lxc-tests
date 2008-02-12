@@ -13,13 +13,7 @@ class TestNode:
 
     def name(self):
         return self.node_spec['node_fields']['hostname']
-        
-    @staticmethod
-    def is_vmware_model(model):
-        return model.find("vmware") >= 0        
-    def is_vmware (self):
-        return TestNode.is_vmware_model(self.node_spec['node_fields']['model'])
-
+    
     @staticmethod
     def is_qemu_model (model):
         return model.find("qemu") >= 0
@@ -28,8 +22,7 @@ class TestNode:
 
     @staticmethod
     def is_real_model (model):
-        return (not TestNode.is_vmware_model(model)) \
-            and (not TestNode.is_qemu_model(model))
+        return not TestNode.is_qemu_model(model)
     def is_real (self):
         return TestNode.is_real_model (self.node_spec['node_fields']['model'])
 
@@ -99,14 +92,7 @@ class TestNode:
 
     def conffile(self,image,hostname,path):
         model=self.node_spec['node_fields']['model']
-        if self.is_vmware():
-            host_box=self.host_box()
-            template='%s/template-vmplayer/node.vmx'%(path)
-            actual='%s/vmplayer-%s/node.vmx'%(path,hostname)
-            sed_command="sed -e s,@BOOTCD@,%s,g %s > %s"%(image,template,actual)
-            utils.header('Creating %s from %s'%(actual,template))
-            utils.system(sed_command)
-        elif self.is_qemu():
+        if self.is_qemu():
             host_box=self.host_box()
             mac=self.node_spec['network_fields']['mac']
             dest_dir="qemu-%s"%(hostname)
@@ -122,7 +108,7 @@ class TestNode:
             utils.system(createdir_command)
             scp_command = "scp -r %s/qemu-%s/* root@%s:/root/%s"%(path,hostname,host_box,dest_dir)
             utils.system(scp_command)
-        
+
     def create_boot_cd(self,path):
         model=self.node_spec['node_fields']['model']
         node_spec=self.node_spec
@@ -130,18 +116,8 @@ class TestNode:
         encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), hostname, 'node-iso', '')
         if (encoded == ''):
             raise Exception, 'boot.iso not found'
-            
-        if model.find("vmware") >= 0:
-            utils.header('Initializing vmplayer area for node %s'%hostname)
-            clean_dir="rm -rf %s/vmplayer-%s"%(path,hostname)
-            mkdir_command="mkdir -p %s/vmplayer-%s"%(path,hostname)
-            tar_command="tar -C %s/template-vmplayer -cf - . | tar -C %s/vmplayer-%s -xf -"%(path,path,hostname)
-            utils.system(clean_dir)
-            utils.system(mkdir_command)
-            utils.system(tar_command);
-            utils.header('Creating boot medium for node %s'%hostname)
-            file=open(path+'/vmplayer-'+hostname+'/boot_file.iso','w')
-        elif  model.find("qemu") >= 0:
+
+        if  model.find("qemu") >= 0:
             clean_dir="rm -rf %s/qemu-%s"%(path,hostname)
             mkdir_command="mkdir -p %s/qemu-%s"%(path,hostname)
             utils.system(clean_dir)
@@ -160,40 +136,43 @@ class TestNode:
         file.close()
         utils.header('boot cd created for %s'%hostname)
         self.conffile('boot_file.iso',hostname, path)
-
+    
     def start_node (self,options):
         model=self.node_spec['node_fields']['model']
-        if model.find("vmware") >= 0:
-            self.start_vmware(options)
-        elif model.find("qemu") >= 0:
+        #starting the Qemu nodes before 
+        if model.find("qemu") >= 0:
             self.start_qemu(options)
         else:
             utils.header("TestNode.start_node : ignoring model %s"%model)
 
-    def start_vmware (self,options):
-        hostname=self.node_spec['node_fields']['hostname']
-        path=options.path
-        display=options.display
-        utils.header('Starting vmplayer for node %s on %s'%(hostname,display))
-        utils.system('cd %s/vmplayer-%s ; DISPLAY=%s vmplayer node.vmx < /dev/null >/dev/null 2>/dev/null &'%(path,hostname,display))
+    def get_host_in_hostbox(self,hostbox,test_site):
+        hosts=[]
+        for node_spec in test_site.site_spec['nodes']:
+            if (node_spec['host_box'] == hostbox):
+                hosts.append((node_spec['node_fields']['hostname'],node_spec['node_fields']['model']))
+        return hosts
         
     def start_qemu (self, options):
+        utils.header("Starting Qemu nodes")
         host_box=self.host_box()
         hostname=self.node_spec['node_fields']['hostname']
         path=options.path
         display=options.display
         dest_dir="qemu-%s"%(hostname)
         utils.header('Starting qemu for node %s '%(hostname))
-        utils.system("ssh root@%s ~/%s/env-qemu start "%(host_box, dest_dir ))
-        utils.system("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s & "%( host_box, display, dest_dir, dest_dir))
+        self.test_plc.run_in_host("ssh root@%s ~/%s/%s/env-qemu start"%(host_box, path, dest_dir ))
+        self.test_plc.run_in_host("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s & "%( host_box, display, dest_dir, dest_dir))
         
-    def stop_qemu(self):
-        if not self.is_qemu():
+    def stop_qemu(self,node_spec):
+        try:
+            if self.is_qemu_model(node_spec['node_fields']['model']):
+                hostname=node_spec['node_fields']['hostname']
+                host_box=node_spec['host_box']
+                self.test_plc.run_in_host('ssh root@%s  killall qemu'%host_box)
+                utils.header('Stoping qemu emulation of %s on the host machine %s and Restoring the initial network'
+                             %(hostname,host_box))
+                self.test_plc.run_in_host("ssh root@%s ~/qemu-%s/env-qemu stop "%(host_box, hostname ))
             return True
-        hostname=self.node_spec['node_fields']['hostname']
-        host_box=self.host_box()
-        utils.system('ssh root@%s  killall qemu'%host_box)
-        utils.header('Stoping qemu emulation of %s on the host machine %s and Restoring the initial network'
-                     %(hostname,host_box))
-        utils.system("ssh root@%s ~/qemu-%s/env-qemu stop "%(host_box, hostname ))
-        return True
+        except Exception,e :
+            print str(e)
+            return False

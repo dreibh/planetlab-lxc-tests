@@ -16,11 +16,11 @@ from TestKey import TestKey
 from TestSlice import TestSlice
 
 # inserts a backslash before each occurence of the following chars
-# \ " ' < > & | ; ( ) $ *
+# \ " ' < > & | ; ( ) $ * ~ @
 def backslash_shell_specials (command):
     result=''
     for char in command:
-        if char in "\\\"'<>&|;()$*":
+        if char in "\\\"'<>&|;()$*~@":
             result +='\\'+char
         else:
             result +=char
@@ -128,21 +128,28 @@ class TestPlc:
             if key['name'] == keyname:
                 return key
         raise Exception,"Cannot locate key %s"%keyname
-        
-    # this should be run on the nodes' host_box, not locally to the plc
-    def kill_all_vmwares(self):
-        utils.header('Killing any running vmware or vmplayer instance')
-        utils.system('pgrep vmware | xargs -r kill')
-        utils.system('pgrep vmplayer | xargs -r kill ')
-        utils.system('pgrep vmware | xargs -r kill -9')
-        utils.system('pgrep vmplayer | xargs -r kill -9')
 
+    #this to catch up all different hostboxes used in this plc
+    def locate_hostBoxes(self,site_spec):
+        #Get The first host box to avoid returning a long list with the same host box
+        #in case  only one is used for all the nodes
+        HostBoxes=[site_spec['nodes'][0]['host_box']]
+        for node_spec in site_spec['nodes']:
+            if node_spec['host_box']!= HostBoxes[0]:
+                HostBoxes.append( node_spec['host_box'])
+
+        return HostBoxes
+            
     def kill_all_qemus(self):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
-            for node_spec in site_spec['nodes']:
-                TestNode (self,test_site,node_spec).stop_qemu()
-                    
+            hostboxes_list=self.locate_hostBoxes(site_spec)
+            if (hostboxes_list):
+                for node_spec in site_spec['nodes']:
+                    TestNode(self,test_site,node_spec).stop_qemu(node_spec)
+            else:
+                utils.header("No emulated node running on this PLC config ignore the kill() step")
+            
     def clear_ssh_config (self,options):
         # install local ssh_config file as root's .ssh/config - ssh should be quiet
         # dir might need creation first
@@ -456,8 +463,8 @@ class TestPlc:
             
     def standby(self,options):
         #Method for waiting a while when nodes are booting and being sshable,giving time to NM to be up
-        utils.header('Entering in StanbdBy mode at %s'%datetime.datetime.now())
-        time.sleep(900)
+        utils.header('Entering in StanbdBy mode for 10min at %s'%datetime.datetime.now())
+        time.sleep(600)
         utils.header('Exist StandBy mode at %s'%datetime.datetime.now())
         return True
     
@@ -504,15 +511,13 @@ class TestPlc:
             return status
     
     def start_nodes (self, options):
-        self.kill_all_vmwares()
         self.kill_all_qemus()
-        utils.header("Starting vmware nodes")
+        utils.header("Starting  nodes")
         for site_spec in self.plc_spec['sites']:
             TestSite(self,site_spec).start_nodes (options)
         return True
 
     def stop_nodes (self, options):
-        self.kill_all_vmwares ()
         self.kill_all_qemus()
         return True
 
