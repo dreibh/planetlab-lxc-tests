@@ -508,7 +508,9 @@ class TestPlc:
             test_site = TestSite(self,site_spec)
             test_slice=TestSlice(self,test_site,slice_spec)
             status=test_slice.do_check_slice(options)
-            return status
+            if (not status):
+                return False
+        return status
     
     def start_nodes (self, options):
         self.kill_all_qemus()
