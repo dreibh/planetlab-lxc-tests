@@ -44,12 +44,12 @@ class plc_configure(Test):
 	# Write temporary plc-config file
         tmpfconf, tmpfname = tempfile.mkstemp(".config","plc-config-tty")
 	if self.config.verbose:
-            utils.header("generate temporary config file %(tmpfname)s"%locals())
-	for (option, value) in plc_vars:
-            os.write(tmpfconf, 'e %s\n%s\n' % (optin, value))
+            utils.header("generating temporary config file %(tmpfname)s"%locals())
+	for (option, value) in plc_options:
+            os.write(tmpfconf, 'e %s\n%s\n' % (option, value))
         os.write(tmpfconf,'w\nq\n')
 	os.close(tmpfconf)
-
+        
         # configure plc
 	command = "plc-config-tty < %(tmpfname)s" % locals()
 	if self.config.verbose: utils.header(command)
