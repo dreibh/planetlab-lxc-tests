@@ -18,7 +18,7 @@ FILENAME=hda_5.raw
 HDA=~/${NODE_DIR}/${FILENAME};	
 
 # qemu parameters
-RAM=320;
+RAM=520;
 TAP="tap,script=$SCRIPT";
 #check for the creation of new HDA
 if [ -e "$HDA" ]; then
@@ -28,7 +28,7 @@ fi
 #Creating new HDA
 echo "Creating hard disk for Qemu install under $HDA"
 cd ~/$NODE_DIR
-set $(qemu-img create $FILENAME 5G)
+set $(qemu-img create $FILENAME 10G)
 if [ -z "$1" ];then
 	echo "Can't Create disk image..."
 	exit 1

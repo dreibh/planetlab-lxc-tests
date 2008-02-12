@@ -36,6 +36,9 @@ start () {
     echo "Starting the udev ..."
     /sbin/udevd restart
     #Loding the tun/tap model
+    echo "Loading the kqemu patch module ..."
+    modprobe kqemu
+    #Loding the tun/tap model
     echo "Loading the tun module ..."
     modprobe tun
     set $(lsmod | grep tun) >/dev/null
