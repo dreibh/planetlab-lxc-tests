@@ -16,11 +16,11 @@ from TestKey import TestKey
 from TestSlice import TestSlice
 
 # inserts a backslash before each occurence of the following chars
-# \ " ' < > & | ; ( ) $ * ~ @
+# \ " ' < > & | ; ( ) $ * ~ 
 def backslash_shell_specials (command):
     result=''
     for char in command:
-        if char in "\\\"'<>&|;()$*~@":
+        if char in "\\\"'<>&|;()$*~":
             result +='\\'+char
         else:
             result +=char
