@@ -28,6 +28,17 @@ def backslash_shell_specials (command):
 
 # step methods must take (self, options) and return a boolean
 
+def standby(minutes):
+        utils.header('Entering StandBy for %d mn'%minutes)
+        time.sleep(60*minutes)
+        return True
+
+def standby_generic (func):
+    def actual(self,options):
+        minutes=int(func.__name__.split("_")[1])
+        return standby(minutes)
+    return actual
+
 class TestPlc:
 
     def __init__ (self,plc_spec):
@@ -366,7 +377,7 @@ class TestPlc:
         return hostnames
 
     # gracetime : during the first <gracetime> minutes nothing gets printed
-    def do_check_nodesStatus (self, minutes, gracetime=2):
+    def do_nodes_booted (self, minutes, gracetime=2):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
@@ -408,8 +419,8 @@ class TestPlc:
         # only useful in empty plcs
         return True
 
-    def check_nodesStatus(self,options):
-        return self.do_check_nodesStatus(minutes=5)
+    def nodes_booted(self,options):
+        return self.do_nodes_booted(minutes=5)
     
     #to scan and store the nodes's public keys and avoid to ask for confirmation when  ssh 
     def scan_publicKeys(self,hostnames):
@@ -458,16 +469,9 @@ class TestPlc:
         # only useful in empty plcs
         return True
         
-    def check_nodesConnectivity(self, options):
+    def nodes_ssh(self, options):
         return  self.do_check_nodesSsh(minutes=2)
             
-    def standby(self,options):
-        #Method for waiting a while when nodes are booting and being sshable,giving time to NM to be up
-        utils.header('Entering in StanbdBy mode for 10min at %s'%datetime.datetime.now())
-        time.sleep(600)
-        utils.header('Exist StandBy mode at %s'%datetime.datetime.now())
-        return True
-    
     def bootcd (self, options):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
@@ -555,3 +559,45 @@ class TestPlc:
         self.run_in_guest('service httpd start')
 
         utils.header('Database restored from ' + dump)
+
+    @standby_generic 
+    def standby_1(): pass
+    @standby_generic 
+    def standby_2(): pass
+    @standby_generic 
+    def standby_3(): pass
+    @standby_generic 
+    def standby_4(): pass
+    @standby_generic 
+    def standby_5(): pass
+    @standby_generic 
+    def standby_6(): pass
+    @standby_generic 
+    def standby_7(): pass
+    @standby_generic 
+    def standby_8(): pass
+    @standby_generic 
+    def standby_9(): pass
+    @standby_generic 
+    def standby_10(): pass
+    @standby_generic 
+    def standby_11(): pass
+    @standby_generic 
+    def standby_12(): pass
+    @standby_generic 
+    def standby_13(): pass
+    @standby_generic 
+    def standby_14(): pass
+    @standby_generic 
+    def standby_15(): pass
+    @standby_generic 
+    def standby_16(): pass
+    @standby_generic 
+    def standby_17(): pass
+    @standby_generic 
+    def standby_18(): pass
+    @standby_generic 
+    def standby_19(): pass
+    @standby_generic 
+    def standby_20(): pass
+    

@@ -21,10 +21,11 @@ class TestMain:
                      'clear_ssh_config','store_keys', 'initscripts', 
                      'sites', 'nodes', 'slices', 
                      'bootcd', 'nodegroups', 
-                     'start_nodes','standby', 'check_nodesStatus','check_nodesConnectivity', 'check_slices' ]
+                     'start_nodes', 'standby_4','nodes_booted','standby_6','nodes_ssh', 'check_slices' ]
     other_steps = [ 'fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'stop_nodes' ,  'db_dump' , 'db_restore',
+                    'standby_1 through 20',
                     ]
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
 
