@@ -37,7 +37,7 @@ shift $(($# - 1))
 echo "New $HDA is created..."
 
 #Command for running the Qemu Emulator
-ARGS="-boot d -cdrom ${CDROM_IMG} -hda ${HDA} -m ${RAM} -net nic,macaddr=${MACADDR} -net $TAP -no-kqemu";
+ARGS="-boot d -cdrom ${CDROM_IMG} -hda ${HDA} -m ${RAM}  -net nic,macaddr=${MACADDR} -net $TAP ";
 echo "Executing qemu $ARGS";
 qemu $ARGS
 

@@ -25,6 +25,22 @@ def nodes():
                                  'mac' : '00:0b:cd:62:50:95',
                                  },
              },
+            {'node_fields': {'hostname': 'pluton.inria.fr',
+                             'model':'qemu/minhw', } ,
+             'host_box': 'test.one-lab.org',
+             'owner' : 'pi',
+             'network_fields': { 'method':'static',
+                                 'type':'ipv4',
+                                 'ip':'138.96.250.151',
+                                 'gateway':'138.96.248.250',
+                                 'network':'138.96.0.0',
+                                 'broadcast':'138.96.255.255',
+                                 'netmask':'255.255.0.0',
+                                 'dns1': '138.96.0.10',
+                                 'dns2': '138.96.0.11',
+                                 'mac' : '00:08:02:33:4d:9e',
+                                 },
+             },
             ]
     return nodes
 

@@ -19,7 +19,12 @@ INTERFACE_BRIDGE=br0
 
 # Fonction de mise en place du pont
 start () {
-
+    #if we have already configured the same host_box no need to do it again
+    set $(/sbin/ifconfig | grep $INTERFACE_BRIDGE) >/dev/null
+    if [ -n "$1" ]; then
+	echo "Interface bridge $INTERFACE_BRIDGE already exist."
+	exit 0
+    fi
     if [ -n "$1" ]; then
 	INTERFACE_LAN=$1
 	shift
@@ -35,6 +40,8 @@ start () {
     #Restarting the udev
     echo "Starting the udev ..."
     /sbin/udevd restart
+    echo "Starting the kqemu patch module ..."
+    modprobe kqemu
     #Loding the tun/tap model
     echo "Loading the kqemu patch module ..."
     modprobe kqemu
