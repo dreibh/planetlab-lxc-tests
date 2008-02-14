@@ -169,19 +169,10 @@ class TestNode:
         self.test_plc.run_in_host("ssh root@%s ~/%s/%s/env-qemu start"%(host_box, path, dest_dir ))
         self.test_plc.run_in_host("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s & "%( host_box, display, dest_dir, dest_dir))
         
-# needs rework - node_spec is a local atribute, no need to pass it
-# the code that stops ALL qemu instance on a given box has moved to TestBox
-# this code below should only kill THE qemu instance that goes with that particular hostname
-#    def stop_qemu(self,node_spec):
-#        try:
-#            if self.is_qemu_model(node_spec['node_fields']['model']):
-#                hostname=node_spec['node_fields']['hostname']
-#                host_box=node_spec['host_box']
-#                self.test_plc.run_in_host('ssh root@%s  killall qemu'%host_box)
-#                utils.header('Stoping qemu emulation of %s on the host machine %s and Restoring the initial network'
-#                             %(hostname,host_box))
-#                self.test_plc.run_in_host("ssh root@%s ~/qemu-%s/env-qemu stop "%(host_box, hostname ))
-#            return True
-#        except Exception,e :
-#            print str(e)
-#            return False
+    def kill_qemu (self):
+        hostname = self.name()
+        # kill the right processes 
+        command="kill $(ps $(pgrep qemu) | grep %s | awk '{print $1;}')"%hostname
+        utils.header("Stopping qemu for host %s on box %s"%(hostname,self.host_box()))
+        TestBox(self.host_box()).run(command)
+        return True

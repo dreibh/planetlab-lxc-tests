@@ -16,17 +16,6 @@ from TestKey import TestKey
 from TestSlice import TestSlice
 from TestBox import TestBox
 
-# inserts a backslash before each occurence of the following chars
-# \ " ' < > & | ; ( ) $ * ~ 
-def backslash_shell_specials (command):
-    result=''
-    for char in command:
-        if char in "\\\"'<>&|;()$*~":
-            result +='\\'+char
-        else:
-            result +=char
-    return result
-
 # step methods must take (self, options) and return a boolean
 
 def standby(minutes):
@@ -76,14 +65,14 @@ class TestPlc:
         if self.vserver:
             return "vserver %s exec %s"%(self.vservername,command)
         else:
-            return "chroot /plc/root %s"%backslash_shell_specials(command)
+            return "chroot /plc/root %s"%utils.backslash_shell_specials(command)
 
     # command gets run on the right box
     def to_host(self,command):
         if self.is_local():
             return command
         else:
-            return "ssh %s %s"%(self.plc_spec['hostname'],backslash_shell_specials(command))
+            return "ssh %s %s"%(self.plc_spec['hostname'],utils.backslash_shell_specials(command))
 
     def full_command(self,command):
         return self.to_host(self.host_to_guest(command))
@@ -143,34 +132,44 @@ class TestPlc:
 
     # all different hostboxes used in this plc
     def gather_hostBoxes(self):
-        # maps on sites and nodes, return [ (host_box,hostname) ]
+        # maps on sites and nodes, return [ (host_box,test_node) ]
         tuples=[]
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
             for node_spec in site_spec['nodes']:
                 test_node = TestNode (self, test_site, node_spec)
                 if not test_node.is_real():
-                    tuples.append( (test_node.host_box(),node_spec['node_fields']['hostname']) )
+                    tuples.append( (test_node.host_box(),test_node) )
         # transform into a dict { 'host_box' -> [ hostnames .. ] }
         result = {}
-        for (box,hostname) in tuples:
+        for (box,node) in tuples:
             if not result.has_key(box):
-                result[box]=[hostname]
+                result[box]=[node]
             else:
-                result[box].append(hostname)
+                result[box].append(node)
         return result
                     
     # a step for checking this stuff
     def showboxes (self,options):
         print 'showboxes'
-        for (box,hosts) in self.gather_hostBoxes().iteritems():
-            print box,":"," + ".join(hosts)
+        for (box,nodes) in self.gather_hostBoxes().iteritems():
+            print box,":"," + ".join( [ node.name() for node in nodes ] )
         return True
 
-    def kill_all_qemus(self):
-        for (box,hosts) in self.gather_hostBoxes().iteritems():
+    # make this a valid step
+    def kill_all_qemus(self,options):
+        for (box,nodes) in self.gather_hostBoxes().iteritems():
             # this is the brute force version, kill all qemus on that host box
             TestBox(box).kill_all_qemus()
+        return True
+
+    # kill only the right qemus
+    def kill_qemus(self,options):
+        for (box,nodes) in self.gather_hostBoxes().iteritems():
+            # the fine-grain version
+            for node in nodes:
+                node.kill_qemu()
+        return True
 
     def clear_ssh_config (self,options):
         # install local ssh_config file as root's .ssh/config - ssh should be quiet
@@ -528,7 +527,6 @@ class TestPlc:
         return status
     
     def start_nodes (self, options):
-        self.kill_all_qemus()
         utils.header("Starting  nodes")
         for site_spec in self.plc_spec['sites']:
             TestSite(self,site_spec).start_nodes (options)
@@ -536,6 +534,10 @@ class TestPlc:
 
     def stop_nodes (self, options):
         self.kill_all_qemus()
+        return True
+
+    def check_tcp (self, options):
+        print 'check_tcp not yet implemented'
         return True
 
     # returns the filename to use for sql dump/restore, using options.dbname if set

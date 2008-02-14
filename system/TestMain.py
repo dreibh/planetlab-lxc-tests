@@ -21,10 +21,13 @@ class TestMain:
                      'clear_ssh_config','store_keys', 'initscripts', 
                      'sites', 'nodes', 'slices', 
                      'bootcd', 'nodegroups', 
-                     'start_nodes', 'standby_4','nodes_booted','standby_6','nodes_ssh', 'check_slices' ]
+                     'kill_all_qemus', 'start_nodes', 
+                     'standby_4', 'nodes_booted',
+                     'standby_6','nodes_ssh', 'check_slices',
+                     'check_tcp' ]
     other_steps = [ 'fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
-                    'stop_nodes' ,  'db_dump' , 'db_restore',
+                    'kill_qemus', 'stop_nodes' ,  'db_dump' , 'db_restore',
                     'standby_1 through 20',
                     ]
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
@@ -208,15 +211,15 @@ steps refer to a method in TestPlc or to a step_* module
                         utils.header("Running step %s on plc %s"%(stepname,plcname))
                         step_result = method(obj,self.options)
                         if step_result:
-                            utils.header('Successful step %s on %s'%(stepname,plcname))
+                            utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
                         else:
                             overall_result = False
                             spec['disabled'] = True
-                            utils.header('Step %s on %s FAILED - discarding that plc from further steps'%(stepname,plcname))
+                            utils.header('********** Step %s on %s FAILED - discarding that plc from further steps'%(stepname,plcname))
                     except:
                         overall_result=False
                         spec['disabled'] = True
-                        utils.header ('Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(stepname,plcname))
+                        utils.header ('********** Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(stepname,plcname))
                         traceback.print_exc()
         return overall_result
 

@@ -36,3 +36,15 @@ def check_ping (hostname):
     command="ping -c 1 %s 1 %s"%(ping_timeout_option,hostname)
     (status,output) = commands.getstatusoutput(command)
     return status == 0
+
+# inserts a backslash before each occurence of the following chars
+# \ " ' < > & | ; ( ) $ * ~ 
+def backslash_shell_specials (command):
+    result=''
+    for char in command:
+        if char in "\\\"'<>&|;()$*~":
+            result +='\\'+char
+        else:
+            result +=char
+    return result
+
