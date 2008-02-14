@@ -163,9 +163,20 @@ class TestPlc:
             TestBox(box).kill_all_qemus()
         return True
 
+    # make this a valid step
+    def list_all_qemus(self,options):
+        for (box,nodes) in self.gather_hostBoxes().iteritems():
+	    # push the script
+	    TestBox(box).copy("qemu_kill.sh")	
+            # this is the brute force version, kill all qemus on that host box
+            TestBox(box).run("./qemu_kill.sh -l")
+        return True
+
     # kill only the right qemus
     def kill_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
+	    # push the script
+	    TestBox(box).copy("qemu_kill.sh")	
             # the fine-grain version
             for node in nodes:
                 node.kill_qemu()

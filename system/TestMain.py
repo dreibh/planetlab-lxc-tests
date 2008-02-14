@@ -27,7 +27,8 @@ class TestMain:
                      'check_tcp' ]
     other_steps = [ 'fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
-                    'kill_qemus', 'stop_nodes' ,  'db_dump' , 'db_restore',
+                    'list_all_qemus', 'kill_qemus', 'stop_nodes' ,  
+                    'db_dump' , 'db_restore',
                     'standby_1 through 20',
                     ]
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
