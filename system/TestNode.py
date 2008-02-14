@@ -172,7 +172,7 @@ class TestNode:
     def kill_qemu (self):
         hostname = self.name()
         # kill the right processes 
-        command="kill $(ps $(pgrep qemu) | grep %s | awk '{print $1;}')"%hostname
+        command="./qemu_kill.sh %s"%hostname
         utils.header("Stopping qemu for host %s on box %s"%(hostname,self.host_box()))
         TestBox(self.host_box()).run(command)
         return True
