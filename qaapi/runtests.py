@@ -27,6 +27,7 @@ def main(args):
 
     # Add test site, node, person and slice data
     # Adds slice to node and person to slice 
+    config.update_api()
     add_test_data(config)()
 
     # Update plc with tests user's current public key
