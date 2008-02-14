@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id$
 COMMAND=$(basename $0)
 
 hostname=$1; shift

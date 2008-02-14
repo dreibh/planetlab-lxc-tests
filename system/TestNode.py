@@ -151,15 +151,8 @@ class TestNode:
         else:
             utils.header("TestNode.start_node : ignoring model %s"%model)
 
-    def get_host_in_hostbox(self,hostbox,test_site):
-        hosts=[]
-        for node_spec in test_site.site_spec['nodes']:
-            if (node_spec['host_box'] == hostbox):
-                hosts.append((node_spec['node_fields']['hostname'],node_spec['node_fields']['model']))
-        return hosts
-        
     def start_qemu (self, options):
-        utils.header("Starting Qemu nodes")
+        utils.header("Starting Qemu node")
         host_box=self.host_box()
         hostname=self.node_spec['node_fields']['hostname']
         path=options.path

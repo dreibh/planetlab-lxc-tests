@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # $Id$
 
-import os, sys
+import sys, os, os.path
 from optparse import OptionParser
 import traceback
 
@@ -24,7 +24,8 @@ class TestMain:
                      'kill_all_qemus', 'start_nodes', 
                      'standby_4', 'nodes_booted',
                      'standby_6','nodes_ssh', 'check_slices',
-                     'check_tcp' ]
+                     'check_tcp',
+                     'kill_qemus', ]
     other_steps = [ 'fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'list_all_qemus', 'kill_qemus', 'stop_nodes' ,  
@@ -152,6 +153,8 @@ steps refer to a method in TestPlc or to a step_* module
 
         # store self.path in options.path for the various callbacks
         self.options.path = self.path
+        # this is useful when propagating on host boxes, to avoid conflicts
+        self.options.buildname = os.path.basename (os.path.abspath (self.path))
 
         if self.options.verbose:
             self.show_env(self.options,"Verbose")
