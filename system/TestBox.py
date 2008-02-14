@@ -9,15 +9,15 @@ class TestBox:
         self.hostname=hostname
         self.key=key
 
-    def run (command):
+    def run (self,command):
         if self.hostname == "localhost":
             return utils.system(command)
         else:
             if self.key:
                 to_run="ssh -i %s.rsa %s %s"%(self.key,self.hostname,command)
             else:
-                to_run="ssh %s %s"%(self.key,self.hostname,command)
+                to_run="ssh %s %s"%(self.hostname,command)
             return utils.system(to_run)
         
-    def step_all_qemus(hostname):
+    def kill_all_qemus(self):
         self.run("killall qemu")
