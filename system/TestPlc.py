@@ -14,6 +14,7 @@ from TestNode import TestNode
 from TestUser import TestUser
 from TestKey import TestKey
 from TestSlice import TestSlice
+from TestBox import TestBox
 
 # inserts a backslash before each occurence of the following chars
 # \ " ' < > & | ; ( ) $ * ~ 
@@ -140,27 +141,37 @@ class TestPlc:
                 return key
         raise Exception,"Cannot locate key %s"%keyname
 
-    #this to catch up all different hostboxes used in this plc
-    def locate_hostBoxes(self,site_spec):
-        #Get The first host box to avoid returning a long list with the same host box
-        #in case  only one is used for all the nodes
-        HostBoxes=[site_spec['nodes'][0]['host_box']]
-        for node_spec in site_spec['nodes']:
-            if node_spec['host_box']!= HostBoxes[0]:
-                HostBoxes.append( node_spec['host_box'])
-
-        return HostBoxes
-            
-    def kill_all_qemus(self):
+    # all different hostboxes used in this plc
+    def gather_hostBoxes(self):
+        # maps on sites and nodes, return [ (host_box,hostname) ]
+        tuples=[]
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
-            hostboxes_list=self.locate_hostBoxes(site_spec)
-            if (hostboxes_list):
-                for node_spec in site_spec['nodes']:
-                    TestNode(self,test_site,node_spec).stop_qemu(node_spec)
+            for node_spec in site_spec['nodes']:
+                test_node = TestNode (self, test_site, node_spec)
+                if not test_node.is_real():
+                    tuples.append( (test_node.host_box(),node_spec['node_fields']['hostname']) )
+        # transform into a dict { 'host_box' -> [ hostnames .. ] }
+        result = {}
+        for (box,hostname) in tuples:
+            if not result.has_key(box):
+                result[box]=[hostname]
             else:
-                utils.header("No emulated node running on this PLC config ignore the kill() step")
-            
+                result[box].append(hostname)
+        return result
+                    
+    # a step for checking this stuff
+    def showboxes (self,options):
+        print 'showboxes'
+        for (box,hosts) in self.gather_hostBoxes().iteritems():
+            print box,":"," + ".join(hosts)
+        return True
+
+    def kill_all_qemus(self):
+        for (box,hosts) in self.gather_hostBoxes().iteritems():
+            # this is the brute force version, kill all qemus on that host box
+            TestBox(box).kill_all_qemus()
+
     def clear_ssh_config (self,options):
         # install local ssh_config file as root's .ssh/config - ssh should be quiet
         # dir might need creation first
