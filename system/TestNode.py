@@ -110,10 +110,12 @@ class TestNode:
             utils.header ('Transferring configuration files for node %s into %s '%(hostname,host_box))
             cleandir_command="ssh root@%s rm -rf %s"%(host_box, dest_dir)
             createdir_command = "ssh root@%s mkdir -p  %s"%(host_box, dest_dir)
-            utils.system(cleandir_command)
-            utils.system(createdir_command)
+            createlog_command = "ssh root@%s touch  %s/%s.log "%(host_box, dest_dir,hostname)
+            self.test_plc.run_in_host(cleandir_command)
+            self.test_plc.run_in_host(createdir_command)
+            self.test_plc.run_in_host(createlog_command)
             scp_command = "scp -r %s/qemu-%s/* root@%s:/root/%s"%(path,hostname,host_box,dest_dir)
-            utils.system(scp_command)
+            self.test_plc.run_in_host(scp_command)
 
     def create_boot_cd(self,path):
         model=self.node_spec['node_fields']['model']
@@ -126,16 +128,16 @@ class TestNode:
         if  model.find("qemu") >= 0:
             clean_dir="rm -rf %s/qemu-%s"%(path,hostname)
             mkdir_command="mkdir -p %s/qemu-%s"%(path,hostname)
-            utils.system(clean_dir)
-            utils.system(mkdir_command)
+            self.test_plc.run_in_host(clean_dir)
+            self.test_plc.run_in_host(mkdir_command)
             copy_command="cp -r  %s/template-Qemu/* %s/qemu-%s"%(path,path,hostname)
-            utils.system(copy_command)
+            self.test_plc.run_in_host(copy_command)
             utils.header('Creating boot medium for node %s'%hostname)
             file=open(path+'/qemu-'+hostname+'/boot_file.iso','w')
         else:
             nodepath="%s/real-%s"%(path,hostname)
-            utils.system("rm -rf %s"%nodepath)
-            utils.system("mkdir %s"%nodepath)
+            self.test_plc.run_in_host("rm -rf %s"%nodepath)
+            self.test_plc.run_in_host("mkdir %s"%nodepath)
             file=open("%s/%s"%(nodepath,"/boot_file.iso"),'w')
 
         file.write(base64.b64decode(encoded))
@@ -158,9 +160,12 @@ class TestNode:
         path=options.path
         display=options.display
         dest_dir="qemu-%s"%(hostname)
-        utils.header('Starting qemu for node %s '%(hostname))
-        self.test_plc.run_in_host("ssh root@%s ~/%s/%s/env-qemu start"%(host_box, path, dest_dir ))
-        self.test_plc.run_in_host("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s & "%( host_box, display, dest_dir, dest_dir))
+        utils.header('Starting qemu for node %s and Redirect logs to /%s/%s.log '
+                     %(hostname, dest_dir, hostname))
+        self.test_plc.run_in_host("ssh root@%s ~/%s/%s/env-qemu start >> ~/%s/%s.log "
+                                  %(host_box, path, dest_dir, dest_dir, hostname ))
+        self.test_plc.run_in_host("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
+                                  %( host_box, display, dest_dir, dest_dir, dest_dir, hostname))
         
     def kill_qemu (self):
         hostname = self.name()

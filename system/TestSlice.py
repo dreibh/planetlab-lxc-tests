@@ -79,6 +79,19 @@ class TestSlice:
 
         return (found,remote_privatekey)
 
+    def get_initscript(self):
+        (found,remote_privatekey)=self.locate_key(self.slice_spec)
+        if not found :
+            raise Exception,"Cannot find a valid key for slice %s"%self.name()
+        for hostname in  self.slice_spec['nodenames']:
+            utils.header("Checking initiscript %s on the slice %s@%s"
+                         %(self.slice_spec['initscriptname'],self.name(),hostname))
+            init_file=self.test_plc.run_in_guest('ssh -i %s %s@%s ls -l /tmp/init* '%(remote_privatekey,self.name(),hostname))
+            if ( init_file):
+                return False
+            
+        return True
+    
     def do_check_slice(self,options):
         bool=True
         self.clear_known_hosts()

@@ -23,7 +23,7 @@ class TestMain:
                      'bootcd', 'nodegroups', 
                      'kill_all_qemus', 'start_nodes', 
                      'standby_4', 'nodes_booted',
-                     'standby_6','nodes_ssh', 'check_slices',
+                     'standby_6','nodes_ssh', 'check_slices','check_initscripts',
                      'check_tcp',
                      'kill_qemus', ]
     other_steps = [ 'fresh_install', 'stop', 

@@ -492,7 +492,7 @@ class TestPlc:
         
     def nodes_ssh(self, options):
         return  self.do_check_nodesSsh(minutes=2)
-            
+    
     def bootcd (self, options):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
@@ -500,7 +500,20 @@ class TestPlc:
                 test_node=TestNode (self,test_site,node_spec)
                 test_node.create_boot_cd(options.path)
         return True
-                
+
+    def do_check_intiscripts(self):
+	    for site_spec in self.plc_spec['sites']:
+		    test_site = TestSite (self,site_spec)
+		    for slice_spec in self.plc_spec['slices']:
+			    test_slice=TestSlice (self,test_site,slice_spec)
+			    init_status=test_slice.get_initscript()
+			    if (not init_status):
+				    return False
+		    return init_status
+	    
+    def check_initscripts(self, options):
+	    return self.do_check_intiscripts()
+	            
     def initscripts (self, options):
         for initscript in self.plc_spec['initscripts']:
             utils.show_spec('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
