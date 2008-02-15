@@ -27,6 +27,14 @@ class TestNode:
     def is_real (self):
         return TestNode.is_real_model (self.node_spec['node_fields']['model'])
 
+    @staticmethod
+    def is_local(host_box):
+        if (host_box == "localhost"): return True
+        else: return False
+
+    def buildname(self):
+        return self.test_plc.options.buildname
+        
     def host_box (self):
         if self.is_real ():
             utils.header("WARNING : real nodes dont have a host box")
@@ -101,21 +109,22 @@ class TestNode:
         if self.is_qemu():
             host_box=self.host_box()
             mac=self.node_spec['network_fields']['mac']
-            dest_dir="qemu-%s"%(hostname)
+            dest_dir=self.buildname()+"/qemu-%s"%(hostname)
             utils.header('Storing the mac address for node %s'%hostname)
             file=open(path+'/qemu-'+hostname+'/MAC','a')
             file.write('%s\n'%mac)
             file.write(dest_dir)
             file.close()
             utils.header ('Transferring configuration files for node %s into %s '%(hostname,host_box))
-            cleandir_command="ssh root@%s rm -rf %s"%(host_box, dest_dir)
-            createdir_command = "ssh root@%s mkdir -p  %s"%(host_box, dest_dir)
-            createlog_command = "ssh root@%s touch  %s/%s.log "%(host_box, dest_dir,hostname)
-            self.test_plc.run_in_host(cleandir_command)
-            self.test_plc.run_in_host(createdir_command)
-            self.test_plc.run_in_host(createlog_command)
-            scp_command = "scp -r %s/qemu-%s/* root@%s:/root/%s"%(path,hostname,host_box,dest_dir)
-            self.test_plc.run_in_host(scp_command)
+            if ( not  self.is_local(host_box)):
+                cleandir_command="ssh root@%s rm -rf %s"%(host_box, dest_dir)
+                createdir_command = "ssh root@%s mkdir -p  %s"%(host_box, dest_dir)
+                createlog_command = "ssh root@%s touch  %s/%s.log "%(host_box, dest_dir,hostname)
+                self.test_plc.run_in_host(cleandir_command)
+                self.test_plc.run_in_host(createdir_command)
+                self.test_plc.run_in_host(createlog_command)
+                scp_command = "scp -r %s/qemu-%s/* root@%s:/root/%s"%(path,hostname,host_box,dest_dir)
+                self.test_plc.run_in_host(scp_command)
 
     def create_boot_cd(self,path):
         model=self.node_spec['node_fields']['model']
@@ -159,14 +168,20 @@ class TestNode:
         hostname=self.node_spec['node_fields']['hostname']
         path=options.path
         display=options.display
-        dest_dir="qemu-%s"%(hostname)
+        dest_dir=self.buildname()+"/qemu-%s"%(hostname)
         utils.header('Starting qemu for node %s and Redirect logs to /%s/%s.log '
                      %(hostname, dest_dir, hostname))
-        self.test_plc.run_in_host("ssh root@%s ~/%s/%s/env-qemu start >> ~/%s/%s.log "
-                                  %(host_box, path, dest_dir, dest_dir, hostname ))
-        self.test_plc.run_in_host("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
-                                  %( host_box, display, dest_dir, dest_dir, dest_dir, hostname))
-        
+        if (not  self.is_local(host_box)):
+            self.test_plc.run_in_host("ssh root@%s ~/%s/env-qemu start >> ~/%s/%s.log "
+                                      %(host_box,  dest_dir, dest_dir, hostname ))
+            self.test_plc.run_in_host("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
+                                      %( host_box, display, dest_dir, dest_dir, dest_dir, hostname))
+        else:
+            self.test_plc.run_in_host(" ~/%s/env-qemu start >> ~/%s/%s.log "
+                                      %(dest_dir, dest_dir, hostname ))
+            self.test_plc.run_in_host(" DISPLAY=%s  ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
+                                      %(display, dest_dir, dest_dir, dest_dir, hostname))
+
     def kill_qemu (self):
         hostname = self.name()
         # kill the right processes 
