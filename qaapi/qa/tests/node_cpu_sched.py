@@ -73,17 +73,17 @@ def run_test(testlist):
 
     return failures
 
-### Test 1: test hard rate-limiting to 25% (should get <= 25%)
+### Test 1: test share scheduling of a single task (should get 100%)
 def test_1():
-    test = CpuTest(ctx=600, cpu=0, resv=25, share=0, min=24, max=25, 
-                   desc = "Test 1: single ctx, 25% resv")
+    test = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=99, max=100, 
+                   desc = "Test 1: single ctx, one share")
 
     return run_test([ test ])
 
-### Test 2: test share scheduling of a single task (should get 100%)
+### Test 2: test hard rate-limiting to 25% (should get <= 25%)
 def test_2():
-    test = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=99, max=100, 
-                   desc = "Test 2: single ctx, one share")
+    test = CpuTest(ctx=600, cpu=0, resv=25, share=0, min=24, max=25, 
+                   desc = "Test 2: single ctx, 25% resv")
 
     return run_test([ test ])
 
@@ -131,14 +131,93 @@ def test_6():
 
     return run_test([ test1, test2, test3, test4 ])
 
+### Now, run all tests on two processors
 ### Test 7: SMP active (both tasks should get 100% on an SMP)
 def test_7():
     test1 = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=99, max=100, 
-                   desc = "Test 7: ctx 1, processor 1")
+                   desc = "Test 7: ctx 1, processor 1, one share")
     test2 = CpuTest(ctx=601, cpu=1, resv=0, share=1, min=99, max=100, 
-                   desc = "        ctx 2, processor 2")
+                   desc = "        ctx 2, processor 2, one share")
 
     return run_test([ test1, test2 ])
+
+### Test 8: SMP, test hard rate-limiting to 25% (should get <= 25%)
+def test_8():
+    test1 = CpuTest(ctx=600, cpu=0, resv=25, share=0, min=24, max=25, 
+                   desc = "Test 8: ctx 1, proc 1, 25% resv")
+    test2 = CpuTest(ctx=601, cpu=1, resv=25, share=0, min=24, max=25, 
+                   desc = "        ctx 2, proc 2, 25% resv")
+
+    return run_test([ test1, test2 ])
+
+### Test 9: SMP, test hard & share scheduling of a single task 
+def test_9():
+    test1 = CpuTest(ctx=600, cpu=0, resv=25, share=1, min=99, max=100, 
+                   desc = "Test 9: ctx 1, proc 1, 25% resv, one share")
+    test2 = CpuTest(ctx=601, cpu=1, resv=25, share=1, min=99, max=100, 
+                   desc = "        ctx 2, proc 2, 25% resv, one share")
+
+    return run_test([ test1, test2 ])
+
+### Test 10: SMP, test relative share scheduling of several tasks
+def test_10():
+    test1 = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=15, max=17, 
+                   desc = "Test 10: ctx 1, proc 1, one share")
+    test2 = CpuTest(ctx=601, cpu=0, resv=0, share=2, min=32, max=34, 
+                   desc = "         ctx 2, proc 1, two shares")
+    test3 = CpuTest(ctx=602, cpu=0, resv=0, share=3, min=49, max=51, 
+                   desc = "         ctx 3, proc 1, three shares")
+    test4 = CpuTest(ctx=603, cpu=1, resv=0, share=1, min=15, max=17, 
+                   desc = "         ctx 4, proc 2, one share")
+    test5 = CpuTest(ctx=604, cpu=1, resv=0, share=2, min=32, max=34, 
+                   desc = "         ctx 5, proc 2, two shares")
+    test6 = CpuTest(ctx=605, cpu=1, resv=0, share=3, min=49, max=51, 
+                   desc = "         ctx 6, proc 2, three shares")
+
+    return run_test([ test1, test2, test3, test4, test5, test6 ])
+
+### Test 11: SMP, test hard rate limit and shares
+def test_11():
+    test1 = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=14, max=16, 
+                   desc = "Test 11: ctx 1, proc 1, one share")
+    test2 = CpuTest(ctx=601, cpu=0, resv=0, share=2, min=29, max=33, 
+                   desc = "         ctx 2, proc 1, two shares")
+    test3 = CpuTest(ctx=602, cpu=0, resv=0, share=3, min=44, max=47, 
+                   desc = "         ctx 3, proc 1, three shares")
+    test4 = CpuTest(ctx=603, cpu=0, resv=10, share=0, min=9, max=10, 
+                   desc = "         ctx 4, proc 1, 10% resv")
+    test5 = CpuTest(ctx=604, cpu=1, resv=0, share=1, min=14, max=16, 
+                   desc = "         ctx 5, proc 2, one share")
+    test6 = CpuTest(ctx=605, cpu=1, resv=0, share=2, min=29, max=33, 
+                   desc = "         ctx 6, proc 2, two shares")
+    test7 = CpuTest(ctx=606, cpu=1, resv=0, share=3, min=44, max=47, 
+                   desc = "         ctx 7, proc 2, three shares")
+    test8 = CpuTest(ctx=607, cpu=1, resv=10, share=0, min=9, max=10, 
+                   desc = "         ctx 8, proc 2, 10% resv")
+
+    return run_test([ test1, test2, test3, test4, test5, test6, test7, test8 ])
+
+### Test 12: SMP, test guarantee and shares
+def test_12():
+    test1 = CpuTest(ctx=600, cpu=0, resv=0, share=1, min=9, max=11, 
+                   desc = "Test 12: ctx 1, proc 1, one share")
+    test2 = CpuTest(ctx=601, cpu=0, resv=0, share=2, min=19, max=21, 
+                   desc = "         ctx 2, proc 1, two shares")
+    test3 = CpuTest(ctx=602, cpu=0, resv=0, share=3, min=29, max=31, 
+                   desc = "         ctx 3, proc 1, three shares")
+    test4 = CpuTest(ctx=603, cpu=0, resv=30, share=1, min=38, max=41, 
+                   desc = "         ctx 4, proc 1, 30% resv, one share")
+    test5 = CpuTest(ctx=604, cpu=1, resv=0, share=1, min=9, max=11, 
+                   desc = "         ctx 5, proc 2, one share")
+    test6 = CpuTest(ctx=605, cpu=1, resv=0, share=2, min=19, max=21, 
+                   desc = "         ctx 6, proc 2, two shares")
+    test7 = CpuTest(ctx=606, cpu=1, resv=0, share=3, min=29, max=31, 
+                   desc = "         ctx 7, proc 2, three shares")
+    test8 = CpuTest(ctx=607, cpu=1, resv=30, share=1, min=38, max=41, 
+                   desc = "         ctx 8, proc 2, 30% resv, one share")
+
+    return run_test([ test1, test2, test3, test4, test5, test6, test7, test8 ])
+
 
 def main():
     failures = 0
@@ -150,6 +229,11 @@ def main():
     failures += test_5()
     failures += test_6()
     failures += test_7()
+    failures += test_8()
+    failures += test_9()
+    failures += test_10()
+    failures += test_11()
+    failures += test_12()
 
     return failures
 
