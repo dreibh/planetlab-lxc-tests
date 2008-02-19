@@ -243,7 +243,7 @@ def random_attribute_type():
     return {
         'name': randstr(100),
         'description': randstr(254),
-        'min_role_id': random.sample(roles.values(), 1)[0],
+        'min_role_id': random.sample(roles, 1)[0],
         }
 
 def random_pcu_type():
@@ -1059,7 +1059,7 @@ class api_unit_test(Test):
             attribute_type = attribute_types[0]
             self.isequal(attribute_type, attribute_type_fields, 'UpdateSliceAttributeType - isequal')
 
-        attribute_types = GetSliceAttributeType(auth, attribute_type_ids)
+        attribute_types = GetSliceAttributeTypes(auth, attribute_type_ids)
         if attribute_types is not None:
 	    at_ids = [at['attribute_type_id'] for at in attribute_types] 
             self.islistequal(attribute_type_ids, at_ids, 'GetSliceAttributeTypes - isequal')
@@ -1088,26 +1088,25 @@ class api_unit_test(Test):
     def SliceInstantiations(self, n = 2):
 	insts = []
         AddSliceInstantiation= self.debug(api.AddSliceInstantiation)
-        GetSliceInstantiations = self.debug(api.GetSliceInstantiaton)
+        GetSliceInstantiations = self.debug(api.GetSliceInstantiations)
 
         for i in range(n):
-            instantiation_fields = random_instantiation()
-            result = AddSliceInstantiation(auth, instantiation_fields)
+            inst = randstr(10)
+            result = AddSliceInstantiation(auth, inst)
             if result is None: continue
-	    instantiation = instantiation_fields['instantiation']
-	    insts.append(instantiation)		
+	    insts.append(inst)		
 
             # Check slice instantiaton
-            instantiations = GetSliceInstantiation(auth, ['instantiation'])
+            instantiations = GetSliceInstantiations(auth)
             if instantiations is None: continue
+	    instantiations = filter(lambda x: x in [inst], instantiations)
             instantiation = instantiations[0]
-            self.isequal(instantiation, instantiation_fields, 'AddSliceInstantiation - isequal')
+            self.isequal(instantiation, inst, 'AddSliceInstantiation - isequal')
 
 	
         instantiations = GetSliceInstantiations(auth, insts)
         if instantiations is not None:
-            inst_list = [i['instantiaion'] for i in instantiations]
-            self.islistequal(insts, inst_list, 'GetSliceInstantiations - isequal')
+            self.islistequal(insts, instantiations, 'GetSliceInstantiations - isequal')
 
         if self.config.verbose:
             utils.header("Added slice instantiations: %s" % insts)
@@ -1122,7 +1121,8 @@ class api_unit_test(Test):
             result = DeleteSliceInstantiation(auth, instantiation)
 
         # Check 
-        instantiations = GetSliceInstnatiations(auth, self.slice_instantiations)
+        instantiations = GetSliceInstantiations(auth)
+	instantiations = filter(lambda x: x in self.slice_instantiations, instantiations)
         self.islistequal(instantiations, [], 'DeleteSliceInstantiation - check')
         if self.config.verbose:
             utils.header("Deleted slice instantiations" % self.slice_instantiations)
@@ -1134,7 +1134,7 @@ class api_unit_test(Test):
         AddSlice = self.debug(api.AddSlice)
         GetSlices = self.debug(api.GetSlices)
         UpdateSlice = self.debug(api.UpdateSlice)
-	AddSliceToNode = self.debug(api.AddSliceToNode)
+	AddSliceToNode = self.debug(api.AddSliceToNodes)
         for i in range(n):
             # Add Site
             slice_fields = random_slice()
