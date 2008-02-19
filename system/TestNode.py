@@ -130,7 +130,7 @@ class TestNode:
         model=self.node_spec['node_fields']['model']
         node_spec=self.node_spec
         hostname=node_spec['node_fields']['hostname']
-        encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), hostname, 'node-iso', '')
+        encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), hostname, 'node-iso', '', ['serial'])
         if (encoded == ''):
             raise Exception, 'boot.iso not found'
 
@@ -167,20 +167,19 @@ class TestNode:
         host_box=self.host_box()
         hostname=self.node_spec['node_fields']['hostname']
         path=options.path
-        display=options.display
         dest_dir=self.buildname()+"/qemu-%s"%(hostname)
         utils.header('Starting qemu for node %s and Redirect logs to /%s/%s.log '
                      %(hostname, dest_dir, hostname))
         if (not  self.is_local(host_box)):
             self.test_plc.run_in_host("ssh root@%s ~/%s/env-qemu start >> ~/%s/%s.log "
                                       %(host_box,  dest_dir, dest_dir, hostname ))
-            self.test_plc.run_in_host("ssh  root@%s DISPLAY=%s  ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
-                                      %( host_box, display, dest_dir, dest_dir, dest_dir, hostname))
+            self.test_plc.run_in_host("ssh  root@%s   ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
+                                      %( host_box, dest_dir, dest_dir, dest_dir, hostname))
         else:
             self.test_plc.run_in_host(" ~/%s/env-qemu start >> ~/%s/%s.log "
                                       %(dest_dir, dest_dir, hostname ))
-            self.test_plc.run_in_host(" DISPLAY=%s  ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
-                                      %(display, dest_dir, dest_dir, dest_dir, hostname))
+            self.test_plc.run_in_host(" ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
+                                      %(dest_dir, dest_dir, dest_dir, hostname))
 
     def kill_qemu (self):
         hostname = self.name()
