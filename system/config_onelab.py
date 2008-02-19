@@ -178,6 +178,27 @@ def slices ():
                }]
     return both
 
+def all_slicenames ():
+    return [ slice['slice_fields']['name'] for slice in slices()]
+
+def tcp_param():
+    param = [{ 'tcp_fields' :  {'peer_name' : 'server',
+                                'slice_name' :all_slicenames()[0],
+                                'server_name': all_nodenames()[0]
+                                },
+               
+               },
+             { 'tcp_fields':{'peer_name' : 'client',
+                             'slice_name' :all_slicenames()[1],
+                             'client_name': all_nodenames()[1],
+                             'peer_server' :  all_nodenames()[0],
+                             'server_port' : 22
+                             },
+               },
+             
+             ]
+    return param
+
 def plc () :
     return { 
         'name' : 'onelabtest',
@@ -202,6 +223,7 @@ def plc () :
         'keys' : keys(),
         'initscripts': initscripts(),
         'slices' : slices(),
+        'tcp_param' : tcp_param(),
     }
 
 def config (plc_specs,options):

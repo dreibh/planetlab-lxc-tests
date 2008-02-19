@@ -14,6 +14,7 @@ from TestNode import TestNode
 from TestUser import TestUser
 from TestKey import TestKey
 from TestSlice import TestSlice
+from TestSliver import TestSliver
 from TestBox import TestBox
 
 # step methods must take (self, options) and return a boolean
@@ -462,7 +463,6 @@ class TestPlc:
     def do_check_nodesSsh(self,minutes):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
-        #graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
         tocheck = self.all_hostnames()
         self.scan_publicKeys(tocheck)
         utils.header("checking Connectivity on nodes %r"%tocheck)
@@ -478,8 +478,8 @@ class TestPlc:
                     (site_spec,node_spec)=self.locate_node(hostname)
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header ("WARNING : check ssh access into real node %s - skipped"%hostname)
-                    tocheck.remove(hostname)
-            if not tocheck:
+			tocheck.remove(hostname)
+            if  not tocheck:
                 return True
             if datetime.datetime.now() > timeout:
                 for hostname in tocheck:
@@ -502,14 +502,16 @@ class TestPlc:
         return True
 
     def do_check_intiscripts(self):
-	    for site_spec in self.plc_spec['sites']:
-		    test_site = TestSite (self,site_spec)
-		    for slice_spec in self.plc_spec['slices']:
-			    test_slice=TestSlice (self,test_site,slice_spec)
-			    init_status=test_slice.get_initscript()
-			    if (not init_status):
-				    return False
-		    return init_status
+	for site_spec in self.plc_spec['sites']:
+		test_site = TestSite (self,site_spec)
+		test_node = TestNode (self,test_site,site_spec['nodes'])
+		for slice_spec in self.plc_spec['slices']:
+			test_slice=TestSlice (self,test_site,slice_spec)
+			test_sliver=TestSliver(self,test_node,test_slice)
+			init_status=test_sliver.get_initscript(slice_spec)
+			if (not init_status):
+				return False
+		return init_status
 	    
     def check_initscripts(self, options):
 	    return self.do_check_intiscripts()
@@ -561,8 +563,13 @@ class TestPlc:
         return True
 
     def check_tcp (self, options):
-        print 'check_tcp not yet implemented'
-        return True
+	    #we just need to create a sliver object nothing else
+	    test_sliver=TestSliver(self,
+				   TestNode(self, TestSite(self,self.plc_spec['sites'][0]),
+					    self.plc_spec['sites'][0]['nodes'][0]),
+				   TestSlice(self,TestSite(self,self.plc_spec['sites'][0]),
+					     self.plc_spec['slices']))
+	    return test_sliver.do_check_tcp(self.plc_spec['tcp_param'],options)
 
     # returns the filename to use for sql dump/restore, using options.dbname if set
     def dbfile (self, database, options):

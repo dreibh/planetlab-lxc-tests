@@ -17,6 +17,11 @@ class TestSlice:
     def name(self):
         return self.slice_spec['slice_fields']['name']
 
+    def get_slice(self,slice_name):
+        for slice_spec in self.test_plc.plc_spec['slices']:
+            if(slice_spec['slice_fields']['name']== slice_name):
+                return slice_spec
+
     def delete_slice(self):
         owner_spec = self.test_site.locate_user(self.slice_spec['owner'])
         auth = TestUser(self,self.test_site,owner_spec).auth()
@@ -79,19 +84,6 @@ class TestSlice:
 
         return (found,remote_privatekey)
 
-    def get_initscript(self):
-        (found,remote_privatekey)=self.locate_key(self.slice_spec)
-        if not found :
-            raise Exception,"Cannot find a valid key for slice %s"%self.name()
-        for hostname in  self.slice_spec['nodenames']:
-            utils.header("Checking initiscript %s on the slice %s@%s"
-                         %(self.slice_spec['initscriptname'],self.name(),hostname))
-            init_file=self.test_plc.run_in_guest('ssh -i %s %s@%s ls -l /tmp/init* '%(remote_privatekey,self.name(),hostname))
-            if ( init_file):
-                return False
-            
-        return True
-    
     def do_check_slice(self,options):
         bool=True
         self.clear_known_hosts()
