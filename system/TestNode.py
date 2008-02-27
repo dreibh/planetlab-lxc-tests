@@ -170,16 +170,15 @@ class TestNode:
         dest_dir=self.buildname()+"/qemu-%s"%(hostname)
         utils.header('Starting qemu for node %s and Redirect logs to /%s/%s.log '
                      %(hostname, dest_dir, hostname))
-        if (not  self.is_local(host_box)):
-            self.test_plc.run_in_host("ssh root@%s ~/%s/env-qemu start >> ~/%s/%s.log "
-                                      %(host_box,  dest_dir, dest_dir, hostname ))
-            self.test_plc.run_in_host("ssh  root@%s   ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
-                                      %( host_box, dest_dir, dest_dir, dest_dir, hostname))
+        if (not self.is_local(host_box)):
+            host_string="ssh root@",host_box
         else:
-            self.test_plc.run_in_host(" ~/%s/env-qemu start >> ~/%s/%s.log "
-                                      %(dest_dir, dest_dir, hostname ))
-            self.test_plc.run_in_host(" ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
-                                      %(dest_dir, dest_dir, dest_dir, hostname))
+            host_string=""
+        
+        self.test_plc.run_in_host(" %s ~/%s/env-qemu start >> ~/%s/%s.log "
+                                  %(host_string,  dest_dir, dest_dir, hostname ))
+        self.test_plc.run_in_host(" %s ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
+                                  %(host_string, dest_dir, dest_dir, dest_dir, hostname))
 
     def kill_qemu (self):
         hostname = self.name()
