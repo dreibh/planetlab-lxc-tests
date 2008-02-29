@@ -67,8 +67,8 @@ class TestNode:
             for interface in self.node_spec['extra_interfaces']:
                 server.AddNodeNetwork(userauth,self.name(),
                                                     interface['network_fields'])
-                if interface.has_key('attributes'):
-                    for (attribute,value) in interface['attributes'].iteritems():
+                if interface.has_key('settings'):
+                    for (attribute,value) in interface['settings'].iteritems():
                         # locate node network
                         nn = server.GetNodeNetworks(userauth,{'ip':interface['network_fields']['ip']})[0]
                         nnid=nn['nodenetwork_id']
@@ -77,7 +77,7 @@ class TestNode:
                             nnst = server.GetNodeNetworkSettingTypes(userauth,{'name':attribute})[0]
                         except:
                             nnst = server.AddNodeNetworkSettingType(rootauth,{'category':'test',
-                                                                          'name':attribute})
+                                                                              'name':attribute})
                         # attach value
                         server.AddNodeNetworkSetting(userauth,nnid,attribute,value)
 
