@@ -13,7 +13,7 @@ fi
 
 #default Value
 SCRIPT=./qemu-ifup
-HDA=./FILENAME=hda_5.raw
+HDA=./hda_5.raw
 
 # qemu parameters
 RAM=520;
@@ -27,7 +27,7 @@ fi
 #Creating new HDA
 echo "Creating hard disk for Qemu install under $HDA"
 
-img=$(qemu-img create $FILENAME 10G)
+img=$(qemu-img create $HDA 10G)
 if [ -z "$img" ];then
 	echo "Can't Create disk image..."
 	exit 1
