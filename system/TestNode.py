@@ -104,55 +104,52 @@ class TestNode:
             utils.header('%s has reached debug state'%hostname)
         return status
 
-    def conffile(self,image,hostname,path):
+    def qemu_config(self,hostname,path):
         model=self.node_spec['node_fields']['model']
-        if self.is_qemu():
-            host_box=self.host_box()
-            mac=self.node_spec['network_fields']['mac']
-            dest_dir=self.buildname()+"/qemu-%s"%(hostname)
-            utils.header('Storing the mac address for node %s'%hostname)
-            file=open(path+'/qemu-'+hostname+'/MAC','a')
-            file.write('%s\n'%mac)
-            file.write(dest_dir)
-            file.close()
-            utils.header ('Transferring configuration files for node %s into %s '%(hostname,host_box))
-            if ( not  self.is_local(host_box)):
-                cleandir_command="ssh root@%s rm -rf %s"%(host_box, dest_dir)
-                createdir_command = "ssh root@%s mkdir -p  %s"%(host_box, dest_dir)
-                createlog_command = "ssh root@%s touch  %s/%s.log "%(host_box, dest_dir,hostname)
-                self.test_plc.run_in_host(cleandir_command)
-                self.test_plc.run_in_host(createdir_command)
-                self.test_plc.run_in_host(createlog_command)
-                scp_command = "scp -r %s/qemu-%s/* root@%s:/root/%s"%(path,hostname,host_box,dest_dir)
-                self.test_plc.run_in_host(scp_command)
+        if not self.is_qemu():
+            raise Exception,"wrong"
+        host_box=self.host_box()
+        mac=self.node_spec['network_fields']['mac']
+        # dest_dir is the path that needs to be relevant when qemu is invoked
+        conf_filename="%s/qemu-%s/start-qemu.conf"%(path,hostname)
+        utils.header('Storing qemu config for %s in %s'%(hostname,conf_filename))
+        file=open(conf_filename,'w')
+        file.write('MACADDR=%s\n'%mac)
+        file.write('NODE_ISO=%s.iso\n'%hostname)
+        file.close()
+        if ( not  self.is_local(host_box)):
+            dest_dir="%s/qemu-%s"%(self.buildname(),hostname)
+            utils.header ("Transferring configuration files for node %s"%hostname)
+            utils.header ("Using dir %s on %s"%(dest_dir,host_box))
+            self.test_plc.run_in_host("ssh root@%s rm -rf %s"%(host_box, dest_dir))
+            self.test_plc.run_in_host("ssh root@%s mkdir -p  %s"%(host_box, dest_dir))
+            self.test_plc.run_in_host("ssh root@%s touch  %s/%s.log "%(host_box, dest_dir,hostname))
+            self.test_plc.run_in_host("scp -r %s/qemu-%s/* root@%s:%s"%(path,hostname,host_box,dest_dir))
 
     def create_boot_cd(self,path):
         model=self.node_spec['node_fields']['model']
         node_spec=self.node_spec
         hostname=node_spec['node_fields']['hostname']
+        utils.header("Calling GetBootMedium for %s"%hostname)
         encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), hostname, 'node-iso', '', ['serial'])
         if (encoded == ''):
             raise Exception, 'boot.iso not found'
 
         if  model.find("qemu") >= 0:
-            clean_dir="rm -rf %s/qemu-%s"%(path,hostname)
-            mkdir_command="mkdir -p %s/qemu-%s"%(path,hostname)
-            self.test_plc.run_in_host(clean_dir)
-            self.test_plc.run_in_host(mkdir_command)
-            copy_command="cp -r  %s/template-Qemu/* %s/qemu-%s"%(path,path,hostname)
-            self.test_plc.run_in_host(copy_command)
-            utils.header('Creating boot medium for node %s'%hostname)
-            file=open(path+'/qemu-'+hostname+'/boot_file.iso','w')
+            nodepath="%s/qemu-%s"%(path,hostname)
+            self.test_plc.run_in_host("rm -rf %s"%nodepath)
+            self.test_plc.run_in_host("mkdir -p %s"%nodepath)
+            template="%s/template-Qemu"%path
+            self.test_plc.run_in_host("cp -r %s/* %s"%(template,nodepath))
+            self.qemu_config(hostname, path)
         else:
             nodepath="%s/real-%s"%(path,hostname)
             self.test_plc.run_in_host("rm -rf %s"%nodepath)
-            self.test_plc.run_in_host("mkdir %s"%nodepath)
-            file=open("%s/%s"%(nodepath,"/boot_file.iso"),'w')
+            self.test_plc.run_in_host("mkdir -p %s"%nodepath)
 
-        file.write(base64.b64decode(encoded))
-        file.close()
-        utils.header('boot cd created for %s'%hostname)
-        self.conffile('boot_file.iso',hostname, path)
+        filename="%s/%s.iso"%(nodepath,hostname)
+        utils.header('Storing boot medium into %s'%filename)
+        file(filename,'w').write(base64.b64decode(encoded))
     
     def start_node (self,options):
         model=self.node_spec['node_fields']['model']
@@ -163,21 +160,20 @@ class TestNode:
             utils.header("TestNode.start_node : ignoring model %s"%model)
 
     def start_qemu (self, options):
-        utils.header("Starting Qemu node")
+        utils.header("Starting qemu node")
         host_box=self.host_box()
         hostname=self.node_spec['node_fields']['hostname']
-        path=options.path
         dest_dir=self.buildname()+"/qemu-%s"%(hostname)
-        utils.header('Starting qemu for node %s and Redirect logs to /%s/%s.log '
-                     %(hostname, dest_dir, hostname))
+        utils.header("Starting qemu for node %s on %s"%(hostname,host_box))
+
         if (not self.is_local(host_box)):
-            host_string="ssh root@",host_box
+            host_string="ssh root@%s"%host_box
         else:
             host_string=""
         
-        self.test_plc.run_in_host(" %s ~/%s/env-qemu start >> ~/%s/%s.log "
+        self.test_plc.run_in_host("%s ~/%s/env-qemu start >> ~/%s/%s.log "
                                   %(host_string,  dest_dir, dest_dir, hostname ))
-        self.test_plc.run_in_host(" %s ~/%s/start-qemu-node %s >> ~/%s/%s.log & "
+        self.test_plc.run_in_host("%s ~/%s/start-qemu-node >> ~/%s/%s.log & "
                                   %(host_string, dest_dir, dest_dir, dest_dir, hostname))
 
     def kill_qemu (self):

@@ -40,7 +40,7 @@ class TestMain:
     @staticmethod
     def show_env (options, message):
         utils.header (message)
-        utils.show_spec("main options",options)
+        utils.pprint("main options",options)
 
     @staticmethod
     def optparse_list (option, opt, value, parser):
@@ -108,11 +108,13 @@ steps refer to a method in TestPlc or to a step_* module
             self.options.steps = self.args
 
         # handle defaults and option persistence
-        for (recname,filename,default) in ( ('myplc_url','arg-myplc-url',"") , 
-                                            ('build_url','arg-build-url',TestMain.default_build_url) ,
-                                            ('ips','arg-ips',[]) , 
-                                            ('config','arg-config',TestMain.default_config) , ) :
-            print 'handling',recname
+        for (recname,filename,default) in (
+            ('build_url','arg-build-url',TestMain.default_build_url) ,
+            ('ips','arg-ips',[]) , 
+            ('config','arg-config',TestMain.default_config) , 
+            ('myplc_url','arg-myplc-url',"") , 
+            ) :
+#            print 'handling',recname
             path="%s/%s"%(self.path,filename)
             is_list = isinstance(default,list)
             if not getattr(self.options,recname):
@@ -143,7 +145,7 @@ steps refer to a method in TestPlc or to a step_* module
                 for value in getattr(self.options,recname):
                     fsave.write(value + "\n")
             fsave.close()
-            utils.header('Saved %s into %s'%(recname,filename))
+#            utils.header('Saved %s into %s'%(recname,filename))
 
         # steps
         if not self.options.steps:
@@ -171,7 +173,7 @@ steps refer to a method in TestPlc or to a step_* module
                 print 'Cannot load config %s -- ignored'%modulename
                 raise
         # show config
-        utils.show_spec("Test specifications",all_plc_specs)
+        utils.show_test_spec("Test specifications",all_plc_specs)
         # build a TestPlc object from the result
         for spec in all_plc_specs:
             spec['disabled'] = False

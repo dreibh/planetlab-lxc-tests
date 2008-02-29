@@ -359,7 +359,7 @@ class TestPlc:
             else:
                 utils.header("Creating nodes for site %s in %s"%(test_site.name(),self.name()))
                 for node_spec in site_spec['nodes']:
-                    utils.show_spec('Creating node %s'%node_spec,node_spec)
+                    utils.pprint('Creating node %s'%node_spec,node_spec)
                     test_node = TestNode (self,test_site,node_spec)
                     test_node.create_node ()
         return True
@@ -518,7 +518,7 @@ class TestPlc:
 	            
     def initscripts (self, options):
         for initscript in self.plc_spec['initscripts']:
-            utils.show_spec('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
+            utils.pprint('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
             self.server.AddInitScript(self.auth_root(),initscript['initscript_fields'])
         return True
 
@@ -537,7 +537,7 @@ class TestPlc:
                 utils.header("Deleting slices in site %s"%test_site.name())
                 test_slice.delete_slice()
             else:    
-                utils.show_spec("Creating slice",slice)
+                utils.pprint("Creating slice",slice)
                 test_slice.create_slice()
                 utils.header('Created Slice %s'%slice['slice_fields']['name'])
         return True
