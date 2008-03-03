@@ -562,7 +562,7 @@ class TestPlc:
         return True
 
     def stop_nodes (self, options):
-        self.kill_all_qemus()
+        self.kill_all_qemus(options)
         return True
 
     def check_tcp (self, options):
