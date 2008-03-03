@@ -125,3 +125,11 @@ def backslash_shell_specials (command):
             result +=char
     return result
 
+# check main IP address against the provided hostname
+def is_local (hostname):
+    if hostname == "localhost":
+        return True
+    import socket
+    local_ip = socket.gethostbyname(socket.gethostname())
+    remote_ip = socket.gethostbyname(hostname)
+    return local_ip==remote_ip

@@ -9,8 +9,11 @@ class TestBox:
         self.hostname=hostname
         self.key=key
 
+    def is_local(self):
+        return utils.is_local (self.hostname)
+
     def run (self,command):
-        if self.hostname == "localhost":
+        if self.is_local():
             return utils.system(command)
         else:
             if self.key:
@@ -22,7 +25,7 @@ class TestBox:
             return utils.system(to_run)
         
     def copy (self,local_file):
-        if self.hostname == "localhost":
+        if self.is_local():
             return 0
         else:
             if self.key:
