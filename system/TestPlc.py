@@ -164,23 +164,23 @@ class TestPlc:
     def kill_all_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # this is the brute force version, kill all qemus on that host box
-            TestBox(box).kill_all_qemus()
+            TestBox(box,options.buildname).kill_all_qemus()
         return True
 
     # make this a valid step
     def list_all_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
 	    # push the script
-	    TestBox(box).copy("qemu_kill.sh")	
+	    TestBox(box,options.buildname).copy("qemu_kill.sh")	
             # this is the brute force version, kill all qemus on that host box
-            TestBox(box).run("./qemu_kill.sh -l")
+            TestBox(box,options.buildname).run_in_buildname("qemu_kill.sh -l")
         return True
 
     # kill only the right qemus
     def kill_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
 	    # push the script
-	    TestBox(box).copy("qemu_kill.sh")	
+	    TestBox(box,options.buildname).copy("qemu_kill.sh")	
             # the fine-grain version
             for node in nodes:
                 node.kill_qemu()
@@ -501,7 +501,9 @@ class TestPlc:
             test_site = TestSite (self,site_spec)
             for node_spec in site_spec['nodes']:
                 test_node=TestNode (self,test_site,node_spec)
-                test_node.create_boot_cd(options.path)
+                test_node.prepare_area()
+                test_node.create_boot_cd()
+		test_node.configure_qemu()
         return True
 
     def do_check_intiscripts(self):

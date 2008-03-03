@@ -36,6 +36,7 @@ class TestMain:
 
     def __init__ (self):
 	self.path=os.path.dirname(sys.argv[0])
+        os.chdir(self.path)
 
     @staticmethod
     def show_env (options, message):
@@ -115,7 +116,7 @@ steps refer to a method in TestPlc or to a step_* module
             ('myplc_url','arg-myplc-url',"") , 
             ) :
 #            print 'handling',recname
-            path="%s/%s"%(self.path,filename)
+            path=filename
             is_list = isinstance(default,list)
             if not getattr(self.options,recname):
                 try:

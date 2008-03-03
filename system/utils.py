@@ -130,6 +130,11 @@ def is_local (hostname):
     if hostname == "localhost":
         return True
     import socket
-    local_ip = socket.gethostbyname(socket.gethostname())
-    remote_ip = socket.gethostbyname(hostname)
-    return local_ip==remote_ip
+    try:
+        local_ip = socket.gethostbyname(socket.gethostname())
+        remote_ip = socket.gethostbyname(hostname)
+        return local_ip==remote_ip
+    except:
+        header("WARNING : something wrong in is_local with hostname=%s"%hostname)
+        return False
+    
