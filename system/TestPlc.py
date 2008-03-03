@@ -53,8 +53,11 @@ class TestPlc:
         else:
             return name+"[chroot]"
 
+    def hostname(self):
+        return self.plc_spec['hostname']
+
     def is_local (self):
-        return self.plc_spec['hostname'] == 'localhost'
+        return utils.is_local(self.hostname())
 
     # define the API methods on this object through xmlrpc
     # would help, but not strictly necessary
@@ -73,7 +76,7 @@ class TestPlc:
         if self.is_local():
             return command
         else:
-            return "ssh %s %s"%(self.plc_spec['hostname'],utils.backslash_shell_specials(command))
+            return "ssh %s %s"%(self.hostname(),utils.backslash_shell_specials(command))
 
     def full_command(self,command):
         return self.to_host(self.host_to_guest(command))
@@ -100,9 +103,9 @@ class TestPlc:
                 utils.system("cp %s /vservers/%s/%s"%(localfile,self.vservername,remotefile))
         else:
             if not self.vserver:
-                utils.system("scp %s %s:%s/%s"%(localfile,self.plc_spec['hostname'],chroot_dest,remotefile))
+                utils.system("scp %s %s:%s/%s"%(localfile,self.hostname(),chroot_dest,remotefile))
             else:
-                utils.system("scp %s %s@/vservers/%s/%s"%(localfile,self.plc_spec['hostname'],self.vservername,remotefile))
+                utils.system("scp %s %s@/vservers/%s/%s"%(localfile,self.hostname(),self.vservername,remotefile))
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
