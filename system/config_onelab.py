@@ -11,7 +11,7 @@ onelab="one-lab.org"
 def nodes():
     nodes= [{'node_fields': {'hostname': 'lysithea.inria.fr',
                              'model':'qemu/minhw', } ,
-             'host_box': 'localhost',
+             'host_box': 'test.onelab.org',
              'owner' : 'pi',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
@@ -27,7 +27,7 @@ def nodes():
              },
             {'node_fields': {'hostname': 'pluton.inria.fr',
                              'model':'qemu/minhw', } ,
-             'host_box': 'localhost',
+             'host_box': 'test.one-lab.org',
              'owner' : 'pi',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
@@ -203,7 +203,7 @@ def plc () :
     return { 
         'name' : 'onelabtest',
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'localhost',
+        'hostname' : 'test.one-lab.org',
         # set these two items to run within a vserver
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
