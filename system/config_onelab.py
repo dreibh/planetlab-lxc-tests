@@ -11,7 +11,7 @@ onelab="one-lab.org"
 def nodes():
     nodes= [{'node_fields': {'hostname': 'lysithea.inria.fr',
                              'model':'qemu/minhw', } ,
-             'host_box': 'test.onelab.org',
+             'host_box': 'test.one-lab.org',
              'owner' : 'pi',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
