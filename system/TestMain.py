@@ -16,7 +16,7 @@ class TestMain:
 
     default_config = [ 'onelab' ]
 
-    default_steps = ['uninstall','install','install_rpm',
+    default_steps = ['uninstall','install','cache_rpm','install_rpm',
                      'configure', 'start', 
                      'clear_ssh_config','store_keys', 'initscripts', 
                      'sites', 'nodes', 'slices', 
