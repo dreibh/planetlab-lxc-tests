@@ -259,19 +259,20 @@ class TestPlc:
             return self.install_chroot(options)
     
     ### install_rpm
-    def cache_rpm(self,options):
+    def cache_rpm(self,url):
         self.run_in_host('rm -rf *.rpm')
-        utils.header('Curling rpm from %s'%options.myplc_url)
-	url=options.myplc_url
+	utils.header('Curling rpm from %s'%url)
 	id= self.run_in_host('curl -O '+url)
 	if (id != 0):
-		raise Exception,"Could not get rpm from  %s"%options.myplc_url
+		raise Exception,"Could not get rpm from  %s"%url
 	        return False
 	return True
 
     def install_rpm_chroot(self,options):
         rpm = os.path.basename(options.myplc_url)
-        utils.header('Installing the :  %s'%rpm)
+	if (not os.path.isfile(rpm)):
+		self.cache_rpm(options.myplc_url)
+	utils.header('Installing the :  %s'%rpm)
         self.run_in_host('rpm -Uvh '+rpm)
         self.run_in_host('service plc mount')
         return True
