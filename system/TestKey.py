@@ -11,9 +11,9 @@ class TestKey:
         return self.key_spec['name']
 
     def publicpath(self):
-        return "%s/keys/%s.pub"%(self.test_plc.path,self.name())
+        return "/root/%s/keys/%s.pub"%(self.test_plc.path,self.name())
     def privatepath(self):
-        return "%s/keys/%s.rsa"%(self.test_plc.path,self.name())
+        return "/root/%s/keys/%s.rsa"%(self.test_plc.path,self.name())
 
     def store_key(self):
         pub=self.publicpath()

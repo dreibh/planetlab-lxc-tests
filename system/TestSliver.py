@@ -50,7 +50,7 @@ class TestSliver:
         for tcp_spec in tcp_param:
             #copy the tcptest file under the chroot
             path=options.path
-            localfile=path+"/tcptest.py"
+            localfile="/root/"+path+"/tcptest.py"
             remotefile="tcptest.py"
             self.test_plc.copy_in_guest(localfile, remotefile, False)
             peer_param=tcp_spec['tcp_fields']
