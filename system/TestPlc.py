@@ -289,7 +289,7 @@ class TestPlc:
 
     ### 
     def configure(self,options):
-        tmpname='%s/%s.plc-config-tty'%(options.path,self.name())
+        tmpname='/root/%s/%s.plc-config-tty'%(options.path,self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',
                      'PLC_ROOT_PASSWORD',
