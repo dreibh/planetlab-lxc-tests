@@ -154,8 +154,6 @@ steps refer to a method in TestPlc or to a step_* module
             #self.options.steps=['dump','clean','install','populate']
             self.options.steps=TestMain.default_steps
 
-        # store self.path in options.path for the various callbacks
-        self.options.path = self.path
         # this is useful when propagating on host boxes, to avoid conflicts
         self.options.buildname = os.path.basename (os.path.abspath (self.path))
 
