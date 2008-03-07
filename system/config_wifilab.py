@@ -39,6 +39,14 @@ def nodes():
                                        'settings' : { 'essid' : 'guest-inria-sophia',
                                                       'ifname' : 'wlan0',},
                                        },
+                                     { 'network_fields' : { 'method' : 'dhcp',
+                                                            'type' : 'ipv4',
+                                                            'mac' : '00:20:A6:4E:FF:E6',
+                                                            'ip' : '138.96.250.50',
+                                                            'hostname' : 'radio40.inria.fr', },
+                                       'settings' : { 'essid' : 'guest-inria-sophia',
+                                                      'ifname' : 'ath0',},
+                                       },
                                      ],
               }
     node17 = {'node_fields': {'hostname': 'wlab17.inria.fr', 'model':'Dell Latitude 830'},
@@ -185,7 +193,7 @@ def plc () :
         # as of yet, not sure we can handle foreign hosts, but this is required though
         'hostname' : 'wlab24.inria.fr',
         # set these two items to run within a vserver
-        # 'vservername': '138.96.250.131'
+        # 'vservername': 'somename'
         # 'vserverip': '138.96.250.131'
         'role' : 'root',
         'PLC_ROOT_USER' : 'root@wlab24.inria.fr',
