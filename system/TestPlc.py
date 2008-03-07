@@ -213,7 +213,7 @@ class TestPlc:
 
     def stop_all_vservers (self,options):
         ##### stop any running vservers
-        self.run_in_host('for vserver in $(ls -d /vservers/* | sed -e s,/vservers/,,) ; do vserver $vserver stop ; done')
+        self.run_in_host('for vserver in $(ls -d /vservers/* | sed -e s,/vservers/,,) ; do echo Stopping $vserver; vserver $vserver stop ; done')
 	return True
 
     def uninstall(self,options):
