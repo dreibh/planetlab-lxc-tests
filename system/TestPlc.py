@@ -245,6 +245,7 @@ class TestPlc:
         # with the last two steps (i386/myplc...) removed
         repo_url = options.myplc_url
         repo_url = os.path.dirname(repo_url)
+        repo_url = os.path.dirname(repo_url)
         create_vserver="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
             (build_dir,self.vservername,repo_url,self.vserverip)
         if self.run_in_host(create_vserver) != 0:
