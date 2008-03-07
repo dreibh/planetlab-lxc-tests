@@ -205,13 +205,16 @@ class TestPlc:
         self.run_in_host('rpm -e myplc')
         ##### Clean up the /plc directory
         self.run_in_host('rm -rf  /plc/data')
-        ##### stop any running vservers
-        self.run_in_host('for vserver in $(ls /vservers/* | sed -e s,/vservers/,,) ; do vserver $vserver stop ; done')
         return True
 
     def uninstall_vserver(self,options):
         self.run_in_host("vserver --silent %s delete"%self.vservername)
         return True
+
+    def stop_all_vservers (self,options):
+        ##### stop any running vservers
+        self.run_in_host('for vserver in $(ls /vservers/* | sed -e s,/vservers/,,) ; do vserver $vserver stop ; done')
+	return True
 
     def uninstall(self,options):
         # if there's a chroot-based myplc running, and then a native-based myplc is being deployed
@@ -222,6 +225,7 @@ class TestPlc:
             self.uninstall_chroot(options)
         else:
             self.uninstall_chroot(options)
+	    self.stop_all_vservers(options)
         return True
 
     ### install

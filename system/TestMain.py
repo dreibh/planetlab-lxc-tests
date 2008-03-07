@@ -26,7 +26,7 @@ class TestMain:
                      'standby_6','nodes_ssh', 'check_slices','check_initscripts',
                      'check_tcp',
                      'kill_qemus', ]
-    other_steps = [ 'fresh_install', 'stop', 
+    other_steps = [ 'stop_all_vservers','fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'list_all_qemus', 'kill_qemus', 'stop_nodes' ,  
                     'db_dump' , 'db_restore',
