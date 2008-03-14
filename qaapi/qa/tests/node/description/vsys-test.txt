@@ -1,0 +1,15 @@
+Description:
+
+Subtest #1 -
+
+Create a new vsys entry, expect it to show up in a slice
+
+Subtest #2 -
+
+Connect to the entry, receive output, validate it and repeat the process 100
+times.
+
+Subtest #3 -
+
+Clean up the entry and expect it to disappear from within the slice.
+
