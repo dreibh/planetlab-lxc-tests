@@ -1,0 +1,10 @@
+There are many stages of this test. Basically planetflow2 is a 'chain of responsibility'. There are a set of dots and a set of arcs joining these dots, and each arc has to be tested. Specifically, the arcs are:
+
+(i) The packet should be received by the user-space data-collection process in root context
+(ii) The packet should get incorporated in one or the other flow
+(iii) The flow should get serialized into the fprobe raw dumps
+(iv) The logs get shipped out to PF central
+(v) The logs at PF central are successfully imported into silk - and the packet seen in (i) is appropriately reflected in the database.
+
+For now, this test supports only (i) and (ii).
+It sends out a packet and checks if it shows up as a flow. If it succeeds, it means that ULOG and fprobe are running fine, which means that flows are getting collected at least on the node.
