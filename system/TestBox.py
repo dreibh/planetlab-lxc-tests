@@ -20,7 +20,7 @@ class TestBox:
     
     def tar_logs(self):
         if os.path.isdir("nodeslogs"):
-            tar_command="tar cvf nodeslogs.tar nodeslogs/ && rm -rf nodeslogs"
+            tar_command="tar cvf nodeslogs.tar nodeslogs/"
             self.run_in_buildname (tar_command)
             return True
         return False
