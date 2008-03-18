@@ -10,22 +10,27 @@ class plc_uninstall(Test):
     Completely removes the installed myplc
     """
 
-    def call(self, remove_all = False):
+    def call(self, plc_name = None, remove_all = False):
+
+	# Get plc configuration from config
+        plc = PLC(self.config)
+        plcs = getattr(self.config, 'plcs', [])
+        for p in plcs:
+            if p['name'] in [plc_name]:
+                plc.update(p)
 	
-	command = "/sbin/service plc safestop; rpm -e myplc " 
+	command = "/sbin/service plc safestop && rpm -e myplc " 
 	if remove_all:
 	    command += " && rm -rf /plc/data" 
 
 	if self.config.verbose:
             utils.header("Removing myplc")
-
-	(stdout, stderr) = utils.popen(command)
-	if self.config.verbose:
-	    utils.header("\n".join(stdout))
+	    utils.header("\n".join(command))
+	
+	(status, output) = plc.commands(command)
 		
-	(stdout, stderr) = utils.popen(command)
 	if self.config.verbose:
-	    utiils.header("\n".join(stdout))
+	    utiils.header("\n".join(output))
 	
 	return 1
 

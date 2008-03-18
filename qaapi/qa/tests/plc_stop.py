@@ -4,23 +4,30 @@ import os, sys
 import traceback
 from Test import Test
 from qa import utils
+from qa.PLCs import PLC, PLCs
 
 class plc_stop(Test):
     """
     Installs a myplc
     """
 
-    def call(self):
-        
- 	command = " /sbin/service plc stop "
+    def call(self, plc_name):
+	
+        # Get plc qa config
+        plc = PLC(self.config)
+        plcs = getattr(self.config, 'plcs', [])
+        for p in plcs:
+            if p['name'] in [plc_name]:
+                plc.update(p)
 
+ 	command = " /sbin/service plc stop "
 	if self.config.verbose:
 	    utils.header(command)
 	
-	(stdout, stderr) = utils.popen(command)
+	(status, output) = plc.commands(command)
 
 	if self.config.verbose:
-	    utils.header("\n".join(stdout))
+	    utils.header(output)
 
 	return 1
 

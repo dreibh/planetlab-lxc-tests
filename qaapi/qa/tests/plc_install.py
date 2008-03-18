@@ -4,15 +4,25 @@ import os, sys
 import traceback
 from qa import utils
 from Test import Test
+from qa.PLCs import PLC, PLCs
 
 class plc_install(Test):
     """
     Installs a myplc
     """
 
-    def call(self, url=None):
+    def call(self, plc_name, url=None):
+	
+	# Get plc qa config
+	plc = PLC(self.config)
+	plcs = getattr(self.config, 'plcs', [])  
+	for p in plcs:
+	    if p['name'] in [plc_name]:
+		plc.update(p) 
+      
 	
 	url_path = self.config.path
+
 	# Determine url
 	if not url:
 	    try:
@@ -36,26 +46,23 @@ class plc_install(Test):
 	if self.config.verbose:
 	    utils.header('Downloading myplc from url %s' % url)
 
+	# build commands
 	url_parts = url.split(os.sep)
 	rpm_file = url[-1:]
 	download_cmd = "wget %(url)s /tmp/%(rpm_file)s" % locals()
-
-	# build command
 	rpm_install = "rpm -Uvh /tmp/%(rpm_file)s" % locals()
 	yum_install = "yum -y localinstall /tmp/%(rpm_file)s" % locals()
 
 	if self.config.verbose:
 	    utils.header("Trying: %(rpm_install)s" % locals())
         try: 
-   	    (stdout, stderr) = utils.popen(rpm_install)
+   	    (status, output) = plc.commands(rpm_install)
 	except:
 	    if self.config.verbose:
-		utils.header("Trying %(yum_install)s" % locals()) 
-	    (stdout, stderr) = utils.popen(yum_install)
+		utils.header("Trying %(yum_install)s" % locals())
+	    (status, output) = plc.commands(download_cmd) 
+	    (status, output) = plc.commands(yum_install)
 
-	if self.config.verbose:
-	    utils.header("\n".join(stdout))
-	
 	return 1
 
 if __name__ == '__main__':
