@@ -17,7 +17,14 @@ class TestBox:
 
     def is_local(self):
         return utils.is_local (self.hostname())
-
+    
+    def tar_logs(self):
+        if os.path.isdir("nodeslogs"):
+            tar_command="tar cvf nodeslogs.tar nodeslogs/ && rm -rf nodeslogs"
+            self.run_in_buildname (tar_command)
+            return True
+        return False
+    
     def run_in_buildname (self,command):
         if self.is_local():
             return utils.system(command)

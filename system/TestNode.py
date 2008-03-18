@@ -105,6 +105,8 @@ class TestNode:
     def prepare_area(self):
         utils.system("rm -rf %s"%self.areaname())
         utils.system("mkdir %s"%self.areaname())
+        #create the tar log file
+        utils.system("rm -rf nodeslogs && mkdir nodeslogs")
         if self.is_qemu():
             utils.system("rsync -v -a --exclude .svn template-qemu/ %s/"%self.areaname())
 
@@ -151,12 +153,15 @@ class TestNode:
         test_box = self.test_box()
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 
-        test_box.run_in_buildname("qemu-%s/env-qemu start >> qemu-%s/env-qemu.log"%(
-                self.name(),self.name()))
-        test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> qemu-%s/start-qemu-node.log &"%(
+        test_box.run_in_buildname("qemu-%s/env-qemu start >> nodeslogs/%s.log"%(self.name(),self.name()))
+        test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> nodeslogs/%s.log &"%(
                 self.name(),self.name()))
 
     def kill_qemu (self):
+        #Prepare the log file before killing the nodes
+        test_box = self.test_box()
+        if(not test_box.tar_logs()):
+            utils.header("Failed to get the nodes log files")
         # kill the right processes 
         utils.header("Stopping qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
         command="qemu_kill.sh %s"%self.name()
