@@ -51,14 +51,7 @@ class Test:
 
 	module = self.__class__.__module__.replace(".", os.sep)
 	file = self.path + os.sep + module + ".py"
-	try:
-	    result = self.call(*args, **kwds)
-	except NameError:
-	    command = "%s %s" % (file, " ".join(args))
-	    utils.header(command)
-	    (stdout, stderr) = utils.popen(command)
-	    print "".join(stdout)
-	    result = None
+	result = self.call(*args, **kwds)
  
 	return result	
 	    
