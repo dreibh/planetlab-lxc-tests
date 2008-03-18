@@ -27,6 +27,17 @@ class PLC(dict, Remote):
 	self.config = config
 	self.config.update_api(self)
 
+    def start_xmlrpc_server(self):
+	"""
+	PLCAPI comes with a SimpleServer script that allows you to run a 
+	standalone http server that listens on the specified port.
+	This is useful for running multiple api servers on the same machine.
+	"""
+	if 'host' in self and not host in ['localhost', None]:
+	    server_script = "/usr/share/plc_api/Server.py" 
+	    self.commands("%s -p %s" % (server_script, self['port']))    
+ 
+
 class PLCs(list, Table):
 
     def __init__(self, config, plcs):
