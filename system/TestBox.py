@@ -2,8 +2,8 @@
 # this models a box that hosts qemu nodes
 # could probably also be used for boxes that host plc instances
 import os.path
-
 import utils
+from TestSsh import TestSsh
 
 class TestBox:
 
@@ -11,7 +11,8 @@ class TestBox:
         self.hostname_value=hostname
         self.buildname=buildname
         self.key=key
-
+        self.test_ssh=TestSsh(self)
+        
     def hostname (self):
         return self.hostname_value
 
@@ -26,25 +27,10 @@ class TestBox:
         return False
     
     def run_in_buildname (self,command):
-        if self.is_local():
-            return utils.system(command)
-        ssh_comand="ssh "
-        if self.key:
-            ssh_comand += "-i %s.rsa "%(self.key)
-        ssh_command += "%s/%s"%(self.buildname,utils.backslash_shell_specials(command))
-        return utils.system(ssh_command)
-        
+        return self.test_ssh.run_in_buildname (command)
     # should use rsync instead
     def copy (self,local_file,recursive=False):
-        if self.is_local():
-            return 0
-        command="scp "
-        if recursive: command += "-r "
-        if self.key:
-            command += "-i %s.rsa "
-        command +="%s %s:%s/%s"%(local_file,self.hostname(),self.buildname,
-                                 os.path.basename(local_file) or ".")
-        return utils.system(command)
+        return self.test_ssh.copy (local_file,recursive=False)
         
     def clean_dir (self):
         if self.is_local():

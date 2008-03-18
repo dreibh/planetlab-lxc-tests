@@ -16,6 +16,7 @@ from TestKey import TestKey
 from TestSlice import TestSlice
 from TestSliver import TestSliver
 from TestBox import TestBox
+from TestSsh import TestSsh
 
 # step methods must take (self, options) and return a boolean
 
@@ -35,6 +36,7 @@ class TestPlc:
     def __init__ (self,plc_spec):
 	self.plc_spec=plc_spec
 	self.path=os.path.dirname(sys.argv[0])
+	self.test_ssh=TestSsh(self)
         try:
             self.vserverip=plc_spec['vserverip']
             self.vservername=plc_spec['vservername']
@@ -64,32 +66,13 @@ class TestPlc:
     def connect (self):
 	pass
     
-    # command gets run in the chroot/vserver
+    #command gets run in the chroot/vserver
     def host_to_guest(self,command):
         if self.vserver:
             return "vserver %s exec %s"%(self.vservername,command)
         else:
             return "chroot /plc/root %s"%utils.backslash_shell_specials(command)
-
-    # command gets run on the right box
-    def to_host(self,command):
-        if self.is_local():
-            return command
-        else:
-            return "ssh %s %s"%(self.hostname(),utils.backslash_shell_specials(command))
-
-    def full_command(self,command):
-        return self.to_host(self.host_to_guest(command))
-
-    def run_in_guest (self,command):
-        return utils.system(self.full_command(command))
-    def run_in_host (self,command):
-        return utils.system(self.to_host(command))
-
-    # xxx quick n dirty
-    def run_in_guest_piped (self,local,remote):
-        return utils.system(local+" | "+self.full_command(remote))
-
+    
     # copy a file to the myplc root image - pass in_data=True if the file must go in /plc/data
     def copy_in_guest (self, localfile, remotefile, in_data=False):
         if in_data:
@@ -189,8 +172,8 @@ class TestPlc:
     def clear_ssh_config (self,options):
         # install local ssh_config file as root's .ssh/config - ssh should be quiet
         # dir might need creation first
-        self.run_in_guest("mkdir /root/.ssh")
-        self.run_in_guest("chmod 700 /root/.ssh")
+        self.test_ssh.run_in_guest("mkdir /root/.ssh")
+        self.test_ssh.run_in_guest("chmod 700 /root/.ssh")
         # this does not work - > redirection somehow makes it until an argument to cat
         #self.run_in_guest_piped("cat ssh_config","cat > /root/.ssh/config")
         self.copy_in_guest("ssh_config","/root/.ssh/config",True)
@@ -200,21 +183,18 @@ class TestPlc:
 
     ### uninstall
     def uninstall_chroot(self,options):
-        self.run_in_host('service plc safestop')
+        self.test_ssh.run_in_host('service plc safestop')
         #####detecting the last myplc version installed and remove it
-        self.run_in_host('rpm -e myplc')
+        self.test_ssh.run_in_host('rpm -e myplc')
         ##### Clean up the /plc directory
-        self.run_in_host('rm -rf  /plc/data')
+        self.test_ssh.run_in_host('rm -rf  /plc/data')
+        ##### stop any running vservers
+        self.test_ssh.run_in_host('for vserver in $(ls /vservers/* | sed -e s,/vservers/,,) ; do vserver $vserver stop ; done')
         return True
 
     def uninstall_vserver(self,options):
-        self.run_in_host("vserver --silent %s delete"%self.vservername)
+        self.test_ssh.run_in_host("vserver --silent %s delete"%self.vservername)
         return True
-
-    def stop_all_vservers (self,options):
-        ##### stop any running vservers
-        self.run_in_host('for vserver in $(ls -d /vservers/* | sed -e s,/vservers/,,) ; do echo Stopping $vserver; vserver $vserver stop ; done')
-	return True
 
     def uninstall(self,options):
         # if there's a chroot-based myplc running, and then a native-based myplc is being deployed
@@ -225,7 +205,6 @@ class TestPlc:
             self.uninstall_chroot(options)
         else:
             self.uninstall_chroot(options)
-	    self.stop_all_vservers(options)
         return True
 
     ### install
@@ -243,16 +222,15 @@ class TestPlc:
             # use a standard name - will be relative to HOME 
             build_dir="tests-system-build"
         build_checkout = "svn checkout %s %s"%(options.build_url,build_dir)
-        if self.run_in_host(build_checkout) != 0:
+        if self.test_ssh.run_in_host(build_checkout) != 0:
             raise Exception,"Cannot checkout build dir"
         # the repo url is taken from myplc-url 
         # with the last two steps (i386/myplc...) removed
         repo_url = options.myplc_url
         repo_url = os.path.dirname(repo_url)
-        repo_url = os.path.dirname(repo_url)
         create_vserver="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
             (build_dir,self.vservername,repo_url,self.vserverip)
-        if self.run_in_host(create_vserver) != 0:
+        if self.test_ssh.run_in_host(create_vserver) != 0:
             raise Exception,"Could not create vserver for %s"%self.vservername
         return True
 
@@ -264,9 +242,9 @@ class TestPlc:
     
     ### install_rpm
     def cache_rpm(self,url):
-        self.run_in_host('rm -rf *.rpm')
+        self.test_ssh.run_in_host('rm -rf *.rpm')
 	utils.header('Curling rpm from %s'%url)
-	id= self.run_in_host('curl -O '+url)
+	id= self.test_ssh.run_in_host('curl -O '+url)
 	if (id != 0):
 		raise Exception,"Could not get rpm from  %s"%url
 	        return False
@@ -277,12 +255,12 @@ class TestPlc:
 	if (not os.path.isfile(rpm)):
 		self.cache_rpm(options.myplc_url)
 	utils.header('Installing the :  %s'%rpm)
-        self.run_in_host('rpm -Uvh '+rpm)
-        self.run_in_host('service plc mount')
+        self.test_ssh.run_in_host('rpm -Uvh '+rpm)
+        self.test_ssh.run_in_host('service plc mount')
         return True
 
     def install_rpm_vserver(self,options):
-        self.run_in_guest("yum -y install myplc-native")
+        self.test_ssh.run_in_guest("yum -y install myplc-native")
         return True
 
     def install_rpm(self,options):
@@ -311,23 +289,23 @@ class TestPlc:
         fileconf.write('q\n')
         fileconf.close()
         utils.system('cat %s'%tmpname)
-        self.run_in_guest_piped('cat %s'%tmpname,'plc-config-tty')
+        self.test_ssh.run_in_guest_piped('cat %s'%tmpname,'plc-config-tty')
         utils.system('rm %s'%tmpname)
         return True
 
     # the chroot install is slightly different to this respect
     def start(self, options):
         if self.vserver:
-            self.run_in_guest('service plc start')
+            self.test_ssh.run_in_guest('service plc start')
         else:
-            self.run_in_host('service plc start')
+            self.test_ssh.run_in_host('service plc start')
         return True
         
     def stop(self, options):
         if self.vserver:
-            self.run_in_guest('service plc stop')
+            self.test_ssh.run_in_guest('service plc stop')
         else:
-            self.run_in_host('service plc stop')
+            self.test_ssh.run_in_host('service plc stop')
         return True
         
     # could use a TestKey class
@@ -467,14 +445,14 @@ class TestPlc:
         try:
             temp_knownhosts="/root/known_hosts"
             remote_knownhosts="/root/.ssh/known_hosts"
-            self.run_in_host("touch %s"%temp_knownhosts )
+            self.test_ssh.run_in_host("touch %s"%temp_knownhosts )
             for hostname in hostnames:
                 utils.header("Scan Public %s key and store it in the known_host file(under the root image) "%hostname)
-                scan=self.run_in_host('ssh-keyscan -t rsa %s >> %s '%(hostname,temp_knownhosts))
+                scan=self.test_ssh.run_in_host('ssh-keyscan -t rsa %s >> %s '%(hostname,temp_knownhosts))
             #Store the public keys in the right root image
             self.copy_in_guest(temp_knownhosts,remote_knownhosts,True)
             #clean the temp keys file used
-            self.run_in_host('rm -f  %s '%temp_knownhosts )
+            self.test_ssh.run_in_host('rm -f  %s '%temp_knownhosts )
         except Exception, err:
             print err
             
@@ -487,7 +465,7 @@ class TestPlc:
         while tocheck:
             for hostname in tocheck:
                 # try to ssh in nodes
-                access=self.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa root@%s date'%hostname )
+                access=self.test_ssh.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa root@%s date'%hostname )
                 if (not access):
                     utils.header('The node %s is sshable -->'%hostname)
                     # refresh tocheck
@@ -607,20 +585,20 @@ class TestPlc:
     def db_dump(self, options):
         
         dump=self.dbfile("planetab4",options)
-        self.run_in_guest('pg_dump -U pgsqluser planetlab4 -f '+ dump)
+        self.test_ssh.run_in_guest('pg_dump -U pgsqluser planetlab4 -f '+ dump)
         utils.header('Dumped planetlab4 database in %s'%dump)
         return True
 
     def db_restore(self, options):
         dump=self.dbfile("planetab4",options)
         ##stop httpd service
-        self.run_in_guest('service httpd stop')
+        self.test_ssh.run_in_guest('service httpd stop')
         # xxx - need another wrapper
-        self.run_in_guest_piped('echo drop database planetlab4','psql --user=pgsqluser template1')
-        self.run_in_guest('createdb -U postgres --encoding=UNICODE --owner=pgsqluser planetlab4')
-        self.run_in_guest('psql -U pgsqluser planetlab4 -f '+dump)
+        self.test_ssh.run_in_guest_piped('echo drop database planetlab4','psql --user=pgsqluser template1')
+        self.test_ssh.run_in_guest('createdb -U postgres --encoding=UNICODE --owner=pgsqluser planetlab4')
+        self.test_ssh.run_in_guest('psql -U pgsqluser planetlab4 -f '+dump)
         ##starting httpd service
-        self.run_in_guest('service httpd start')
+        self.test_ssh.run_in_guest('service httpd start')
 
         utils.header('Database restored from ' + dump)
 

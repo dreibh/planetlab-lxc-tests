@@ -6,6 +6,7 @@ import time
 from TestKey import TestKey
 from TestUser import TestUser
 from TestNode import TestNode
+from TestSsh import TestSsh
 
 class TestSlice:
 
@@ -13,10 +14,17 @@ class TestSlice:
 	self.test_plc=test_plc
         self.test_site=test_site
 	self.slice_spec=slice_spec
-
+        self.test_ssh=TestSsh(self)
+        
     def name(self):
         return self.slice_spec['slice_fields']['name']
-
+    
+    def is_local(self):
+        return self.test_plc.is_local()
+    
+    def host_to_guest(self,command):
+        return self.test_plc.host_to_guest(command)
+    
     def get_slice(self,slice_name):
         for slice_spec in self.test_plc.plc_spec['slices']:
             if(slice_spec['slice_fields']['name']== slice_name):
@@ -59,7 +67,7 @@ class TestSlice:
         utils.header("Messing with known_hosts for slice %s"%self.name())
         # scan nodenames
         for nodename in self.slice_spec['nodenames']:
-            self.test_plc.run_in_guest("sed -i -e /^%s/d /root/.ssh/known_hosts"%nodename)
+            self.test_ssh.run_in_guest("sed -i -e /^%s/d /root/.ssh/known_hosts"%nodename)
         #scan public key and update the known_host file in the root image
         self.test_plc.scan_publicKeys(self.slice_spec['nodenames'])
         
@@ -79,7 +87,7 @@ class TestSlice:
         #create dir in plc root image
         remote_privatekey="/root/keys/%s.rsa"%keyname
         if not os.path.isfile(remote_privatekey):
-            self.test_plc.run_in_guest("mkdir -p /root/keys" )
+            self.test_ssh.run_in_guest("mkdir -p /root/keys" )
             self.test_plc.copy_in_guest(privatekey,remote_privatekey,True)
 
         return (found,remote_privatekey)
@@ -101,7 +109,7 @@ class TestSlice:
                 break 
             while (bool):
                 utils.header('trying to connect to %s@%s'%(self.name(),hostname))
-                Date=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,self.name(),hostname))
+                Date=self.test_ssh.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,self.name(),hostname))
                 if (Date==0):
                     break
                 elif ( start_time  <= dead_time ) :
@@ -109,13 +117,13 @@ class TestSlice:
                     time.sleep(45)
                 elif (options.forcenm):
                     utils.header('%s@%s : restarting nm in case is in option on %s'%(self.name(),hostname,hostname))
-                    access=self.test_plc.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
+                    access=self.test_ssh.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa  root@%s service nm restart'%hostname)
                     if (access==0):
                         utils.header('nm restarted on %s'%hostname)
                     else:
                         utils.header('%s@%s : Failed to restart the NM on %s'%(self.name(),hostname,hostname))
                     utils.header('Try to reconnect to  %s@%s after the tentative of restarting NM'%(self.name(),hostname))
-                    connect=self.test_plc.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,self.name(),hostname))
+                    connect=self.test_ssh.run_in_guest('ssh -i %s %s@%s date'%(remote_privatekey,self.name(),hostname))
                     if (not connect):
                         utils.header('connected to %s@%s -->'%(self.name(),hostname))
                         break
