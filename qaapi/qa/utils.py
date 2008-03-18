@@ -1,7 +1,7 @@
 # $Id$
 import time
 import os
-import commands
+from commands import getstatusoutput
 from logger import logfile
 
 def header(message):
@@ -25,9 +25,10 @@ def popen(command, fatal=True):
     return (output, errors)    
     
 def commands(command, fatal = True):
-    (status, output) = commands.getstatusoutput(command)
+    (status, output) = getstatusoutput(command)
     print >> logfile, "+ "+command
     print >> logfile, output.strip() 		
     if fatal and not status == 0:
 	raise Exception, "%(command)s Failed:\n%(output)s" % locals()
     return (status, output)	   		 
+
