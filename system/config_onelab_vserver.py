@@ -3,12 +3,12 @@ import os.path
 
 # the pool of IP addresses available
 # from 01 to 09
-available = [ ( 'vnode%02d.inria.fr'%i, '138.96.250.13%d'%i) for i in range(1,10) ]
+available = [ ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, 'ab:cd:ef:00:00:%02d'%i) for i in range(1,10) ]
 
 # let's be flexible
 def locate (user_provided):
     global available
-    for (hostname,ip) in available:
+    for (hostname,ip,mac) in available:
         if hostname.find(user_provided) >=0 or ip.find(user_provided) >=0:
             return (hostname,ip)
 
@@ -28,7 +28,7 @@ def config (plcs,options):
             ### locating the next available hostname (using ping)
             while True:
                 try:
-                    (hostname,ip)=available.pop()
+                    (hostname,ip,mac)=available.pop()
                     utils.header('vserver IP assignment : scanning IP %s'%ip)
                     if not utils.check_ping(hostname):
                         utils.header('IP %s is OK'%ip)
