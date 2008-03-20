@@ -160,7 +160,7 @@ class TestPlc:
         return True
 
     # kill only the right qemus
-    def kill_qemus(self,options):
+    def force_kill_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
 	    # push the script
 	    TestBox(box,options.buildname).copy("qemu_kill.sh")	

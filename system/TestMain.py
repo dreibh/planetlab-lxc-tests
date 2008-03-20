@@ -25,7 +25,7 @@ class TestMain:
                      'standby_4', 'nodes_booted',
                      'standby_6','nodes_ssh', 'check_slices','check_initscripts',
                      'check_tcp',
-                     'kill_qemus', ]
+                     'force_kill_qemus', ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'list_all_qemus', 'kill_qemus', 'stop_nodes' ,  
@@ -176,6 +176,7 @@ steps refer to a method in TestPlc or to a step_* module
         # build a TestPlc object from the result
         for spec in all_plc_specs:
             spec['disabled'] = False
+            spec['forced']= True
         all_plcs = [ (x, TestPlc(x)) for x in all_plc_specs]
         # expose to the various objects
         for (spec,obj) in all_plcs:
@@ -214,6 +215,16 @@ steps refer to a method in TestPlc or to a step_* module
                 plcname=spec['name']
                 if spec['disabled']:
                     utils.header("Plc %s is disabled - skipping step %s"%(plcname,stepname))
+                    if (stepname.find("force")==0 and spec['forced']) :
+                        utils.header("Plc %s is disabled but running step %s anyway"
+                                     %(plcname,stepname))
+                        step_result = method(obj,self.options)
+                        if step_result:
+                            utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
+                        else:
+                            overall_result = False
+                            spec['forced'] = False
+                            utils.header('********** Step %s on %s FAILED - discarding that plc from further steps'%(stepname,plcname))
                 else:
                     try:
                         utils.header("Running step %s on plc %s"%(stepname,plcname))
