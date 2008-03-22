@@ -19,10 +19,9 @@ def main(args):
         config = Config(args[0])
     else:
         config = Config()
+    config.load("qa/config.py")
 
-    node = config.TEST_NODE_HOSTNAME_1
-
-    plc_configure(config)()
+    plc_configure(config)("testPLC")
     plc_start(config)()
 
     # Add test site, node, person and slice data
@@ -31,11 +30,11 @@ def main(args):
     add_test_data(config)()
 
     # Update plc with tests user's current public key
-    person = config.TEST_PERSON_EMAIL
-    sync_person_key(config)(person)
+    # person = config.TEST_PERSON_EMAIL
+    # sync_person_key(config)(person)
+
 
     sys.exit(0)
-
     # Boot test node and confirm boot state
     boot_node(config)(node)
 
