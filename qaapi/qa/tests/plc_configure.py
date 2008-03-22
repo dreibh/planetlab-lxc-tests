@@ -53,14 +53,14 @@ class plc_configure(Test):
 	# Write temporary plc-config file
 	# XX use plc instance to copy file
         tmpfconf, tmpfname = tempfile.mkstemp(".config","plc-config-tty", '/usr/tmp/')
-	tmpfname_parts = tempfname.split(os.sep)
+	tmpfname_parts = tmpfname.split(os.sep)
 	if self.config.verbose:
             utils.header("generating temporary config file %(tmpfname)s"%locals())
 	for (option, value) in plc_options:
             os.write(tmpfconf, 'e %s\n%s\n' % (option, value))
         os.write(tmpfconf,'w\nq\n')
 	os.close(tmpfconf)
-	plc.scp(tmpfname, "%s:/usr/tmp" % (plc['host']))
+	#plc.scp(tmpfname, "%s:/usr/tmp" % (plc['host']))
 
         # configure plc
 	command = "plc-config-tty < %(tmpfname)s" % locals()
