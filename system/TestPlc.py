@@ -59,7 +59,7 @@ class TestPlc:
         return self.plc_spec['hostname']
 
     def is_local (self):
-        return TestSsh.is_local(self.hostname())
+        return self.test_ssh.is_local()
 
     # define the API methods on this object through xmlrpc
     # would help, but not strictly necessary

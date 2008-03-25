@@ -13,7 +13,7 @@ class TestSliver:
         self.test_ssh =TestSsh(self)
 
     def is_local(self):
-        return self.test_plc.is_local()
+        return self.test_ssh.is_local()
     
     def host_to_guest(self,command):
         return self.test_plc.host_to_guest(command)

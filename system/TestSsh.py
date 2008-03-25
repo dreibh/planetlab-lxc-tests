@@ -23,7 +23,7 @@ class TestSsh:
 
     # check main IP address against the provided hostname
     @staticmethod
-    def is_local (hostname):
+    def is_local_hostname (hostname):
         if hostname == "localhost":
             return True
         import socket
@@ -32,7 +32,7 @@ class TestSsh:
             remote_ip = socket.gethostbyname(hostname)
             return local_ip==remote_ip
         except:
-            header("WARNING : something wrong in is_local with hostname=%s"%hostname)
+            header("WARNING : something wrong in is_local_hostname with hostname=%s"%hostname)
             return False
 
     def __init__(self,caller):
@@ -41,13 +41,13 @@ class TestSsh:
     def hostname(self):
         return self.caller.hostname()
     def is_local(self):
-        return self.caller.is_local()
+        return TestSsh.is_local_hostname(self.hostname())
     def buildname(self):
         return self.caller.buildname()
 
     # command gets run on the right box
     def to_host(self,command):
-        if self.caller.is_local():
+        if self.is_local():
             return command
         else:
             return "ssh %s %s"%(self.hostname(),TestSsh.backslash_shell_specials(command))
