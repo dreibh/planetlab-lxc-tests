@@ -110,7 +110,7 @@ def sites ():
                                'login_base':'wifi',
                                'abbreviated_name':'wifi',
                                'max_slices':100,
-                               'url':'http://onelab-test.inria.fr',
+                               'url':'http://testbox1.one-lab.org',
                                },
               'address_fields' : {'line1':'route des lucioles',
                                   'city':'sophia',
