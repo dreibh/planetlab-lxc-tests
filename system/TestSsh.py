@@ -81,7 +81,7 @@ class TestSsh:
         if recursive: command += "-r "
         if self.caller.key:
             command += "-i %s.rsa "
-        command +="%s %s:%s/%s"%(local_file,self.hostname(),self.buildname,
+        command +="%s %s:%s/%s"%(local_file,self.hostname(),self.buildname(),
                                  os.path.basename(local_file) or ".")
         return utils.system(command)
         
