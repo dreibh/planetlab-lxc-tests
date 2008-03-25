@@ -32,7 +32,7 @@ class TestSsh:
             remote_ip = socket.gethostbyname(hostname)
             return local_ip==remote_ip
         except:
-            header("WARNING : something wrong in is_local_hostname with hostname=%s"%hostname)
+            utils.header("WARNING : something wrong in is_local_hostname with hostname=%s"%hostname)
             return False
 
     def __init__(self,caller):
