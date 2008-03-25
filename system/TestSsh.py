@@ -35,15 +35,16 @@ class TestSsh:
             utils.header("WARNING : something wrong in is_local_hostname with hostname=%s"%hostname)
             return False
 
-    def __init__(self,caller):
+    # buildname is the name of a directory that we can use in $hostname's homedir (/root)
+    def __init__(self,caller,buildname=None,key=None):
         self.caller=caller
+        self.buildname=buildname
+        self._key=key
 
     def hostname(self):
         return self.caller.hostname()
     def is_local(self):
         return TestSsh.is_local_hostname(self.hostname())
-    def buildname(self):
-        return self.caller.buildname()
 
     # command gets run on the right box
     def to_host(self,command):
@@ -66,22 +67,28 @@ class TestSsh:
         return utils.system(local+" | "+self.full_command(remote))
     
     def run_in_buildname (self,command):
+        if not self.buildname:
+            utils.header ("WARNING : TestSsh.run_in_buildname without a buildname")
+            return 1
         if self.is_local():
             return utils.system(command)
         ssh_command="ssh "
         if self.caller.key:
             ssh_command += "-i %s.rsa "%(self.caller.key)
-        ssh_command += "%s/%s"%(self.buildname(),TestSsh.backslash_shell_specials(command))
+        ssh_command += "%s/%s"%(self.buildname,TestSsh.backslash_shell_specials(command))
         return utils.system(ssh_command)
 
     def copy (self,local_file,recursive=False):
+        if not self.buildname:
+            utils.header ("WARNING : TestSsh.copy without a buildname")
+            return 1
         if self.is_local():
             return 0
         command="scp "
         if recursive: command += "-r "
         if self.caller.key:
             command += "-i %s.rsa "
-        command +="%s %s:%s/%s"%(local_file,self.hostname(),self.buildname(),
+        command +="%s %s:%s/%s"%(local_file,self.hostname(),self.buildname,
                                  os.path.basename(local_file) or ".")
         return utils.system(command)
         

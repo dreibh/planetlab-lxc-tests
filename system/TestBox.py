@@ -11,7 +11,7 @@ class TestBox:
         self.hostname_value=hostname
         self.buildname=buildname
         self.key=key
-        self.test_ssh=TestSsh(self)
+        self.test_ssh=TestSsh(self,buildname)
         
     def hostname (self):
         return self.hostname_value
