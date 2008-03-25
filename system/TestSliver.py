@@ -10,13 +10,13 @@ class TestSliver:
         self.test_plc=test_plc
 	self.test_node=test_node
         self.test_slice=test_slice
-        self.test_ssh =TestSsh(self)
+        self.test_ssh =TestSsh(self.test_plc.test_ssh)
 
     def is_local(self):
         return self.test_ssh.is_local()
     
     def host_to_guest(self,command):
-        return self.test_plc.host_to_guest(command)
+        return self.test_plc.host_to_guest(self.test_plc.vserver,self.test_plc.vservername,command)
     
     def get_privateKey(self,slice_spec):
         try:
@@ -32,7 +32,7 @@ class TestSliver:
         for hostname in  slice_spec['nodenames']:
             utils.header("Checking initiscript %s on the slice %s@%s"
                          %(slice_spec['initscriptname'],self.test_slice.name(),hostname))
-            init_file=self.test_ssh.run_in_guest('ssh -i %s %s@%s ls -l /tmp/init* '
+            init_file=self.test_plc.run_in_guest('ssh -i %s %s@%s ls -l /tmp/init* '
                                                  %(remote_privatekey,self.test_slice.name(),hostname))
             if ( init_file):
                 return False
@@ -43,13 +43,13 @@ class TestSliver:
         if peer_spec['peer_name']=="server":
             tcp_command="ssh -i %s %s@%s ./tcptest.py server -t 10"%(remote_privatekey, peer_spec['slice_name'],
                                                                    peer_spec['server_name'])
-            return self.test_ssh.run_in_guest(tcp_command)
+            return self.test_plc.run_in_guest(tcp_command)
         
         else:
             tcp_command="ssh -i %s %s@%s ./tcptest.py client -a %s -p %d"%(remote_privatekey, peer_spec['slice_name'],
                                                                            peer_spec['client_name'],peer_spec['peer_server'],
                                                                            peer_spec['server_port'])
-            return self.test_ssh.run_in_guest(tcp_command)
+            return self.test_plc.run_in_guest(tcp_command)
 
 
 
@@ -67,7 +67,7 @@ class TestSliver:
                 (found,remote_privatekey)=self.get_privateKey(slice_spec)
                 cp_server_command="scp -i %s ./tcptest.py %s@%s:"%(remote_privatekey,peer_param['slice_name'],
                                                                    peer_param['server_name'])
-                self.test_ssh.run_in_guest(cp_server_command)
+                self.test_plc.run_in_guest(cp_server_command)
                 serv_status=self.run_tcpcheck(peer_param,remote_privatekey)
                 if (serv_status):
                     utils.header("FAILED to check loop Connexion  on the %s server side"%peer_param['server_name'])
@@ -80,7 +80,7 @@ class TestSliver:
                 (found,remote_privatekey)=self.get_privateKey(slice_spec)
                 cp_client_command="scp -i %s ./tcptest.py %s@%s:"%(remote_privatekey, peer_param['slice_name'],
                                                                    peer_param['client_name'])
-                self.test_ssh.run_in_guest(cp_client_command)
+                self.test_plc.run_in_guest(cp_client_command)
                 client_status=self.run_tcpcheck(peer_param,remote_privatekey)
                 if ( serv_status):
                     utils.header("FAILED to Contact the server %s from the client side %s"%(peer_param['peer_server'],
@@ -88,7 +88,7 @@ class TestSliver:
                     return False
 
 
-        self.test_ssh.run_in_guest("rm -rf tcptest.py")
+        self.test_plc.run_in_guest("rm -rf tcptest.py")
         return True
 
 

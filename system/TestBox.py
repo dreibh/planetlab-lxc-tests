@@ -11,7 +11,7 @@ class TestBox:
         self.hostname_value=hostname
         self.buildname=buildname
         self.key=key
-        self.test_ssh=TestSsh(self,buildname)
+        self.test_ssh=TestSsh(self.hostname_value,self.buildname,self.key)
         
     def hostname (self):
         return self.hostname_value
@@ -30,18 +30,15 @@ class TestBox:
         return self.test_ssh.run_in_buildname (command)
     # should use rsync instead
     def copy (self,local_file,recursive=False):
-        return self.test_ssh.copy (local_file,recursive=False)
-        
-    def clean_dir (self):
-        if self.is_local():
-            return 0
-        return utils.system("rm -rf %s"%self.buildname)            
+        return self.test_ssh.copy (local_file,recursive)
 
-    def mkdir (self):
-        if self.is_local():
-            return 0
-        return utils.system("mkdir %s"%self.buildname)            
+    def clean_dir (self,dirname):
+        return self.test_ssh.clean_dir(dirname)
+
+    def mkdir (self,direname):
+        return self.test_ssh.mkdir(direname)
+ 
 
     def kill_all_qemus(self):
-        self.run_in_buildname("killall qemu")
+        utils.system(self.test_ssh.to_host("killall qemu"))
 

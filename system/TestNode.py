@@ -11,7 +11,7 @@ class TestNode:
 	self.test_plc=test_plc
 	self.test_site=test_site
 	self.node_spec=node_spec
-
+        
     def name(self):
         return self.node_spec['node_fields']['hostname']
     
@@ -137,10 +137,12 @@ class TestNode:
         # if relevant, push the qemu area onto the host box
         if ( not self.test_box().is_local()):
             utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
-            self.test_box().clean_dir()
-            self.test_box().mkdir()
+            self.test_box().clean_dir(self.buildname())
+            self.test_box().mkdir(self.buildname())
+            self.test_box().mkdir("nodeslogs")
             self.test_box().copy(self.areaname(),recursive=True)
 
+            
     def start_node (self,options):
         model=self.node_spec['node_fields']['model']
         #starting the Qemu nodes before 
@@ -154,8 +156,7 @@ class TestNode:
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 
         test_box.run_in_buildname("qemu-%s/env-qemu start >> nodeslogs/%s.log"%(self.name(),self.name()))
-        test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> nodeslogs/%s.log &"%(
-                self.name(),self.name()))
+        test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> nodeslogs/%s.log &"%(self.name(),self.name()))
 
     def kill_qemu (self):
         #Prepare the log file before killing the nodes
