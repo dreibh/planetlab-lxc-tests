@@ -114,27 +114,4 @@ def check_ping (hostname):
     (status,output) = commands.getstatusoutput(command)
     return status == 0
 
-# inserts a backslash before each occurence of the following chars
-# \ " ' < > & | ; ( ) $ * ~ 
-def backslash_shell_specials (command):
-    result=''
-    for char in command:
-        if char in "\\\"'<>&|;()$*~":
-            result +='\\'+char
-        else:
-            result +=char
-    return result
-
-# check main IP address against the provided hostname
-def is_local (hostname):
-    if hostname == "localhost":
-        return True
-    import socket
-    try:
-        local_ip = socket.gethostbyname(socket.gethostname())
-        remote_ip = socket.gethostbyname(hostname)
-        return local_ip==remote_ip
-    except:
-        header("WARNING : something wrong in is_local with hostname=%s"%hostname)
-        return False
     

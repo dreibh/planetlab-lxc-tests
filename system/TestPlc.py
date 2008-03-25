@@ -59,7 +59,7 @@ class TestPlc:
         return self.plc_spec['hostname']
 
     def is_local (self):
-        return utils.is_local(self.hostname())
+        return TestSsh.is_local(self.hostname())
 
     # define the API methods on this object through xmlrpc
     # would help, but not strictly necessary
@@ -71,7 +71,7 @@ class TestPlc:
         if self.vserver:
             return "vserver %s exec %s"%(self.vservername,command)
         else:
-            return "chroot /plc/root %s"%utils.backslash_shell_specials(command)
+            return "chroot /plc/root %s"%TestSsh.backslash_shell_specials(command)
     
     # copy a file to the myplc root image - pass in_data=True if the file must go in /plc/data
     def copy_in_guest (self, localfile, remotefile, in_data=False):

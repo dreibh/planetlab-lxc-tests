@@ -17,7 +17,7 @@ class TestBox:
         return self.hostname_value
 
     def is_local(self):
-        return utils.is_local (self.hostname())
+        return TestSsh.is_local (self.hostname())
     
     def tar_logs(self):
         if os.path.isdir("nodeslogs"):
