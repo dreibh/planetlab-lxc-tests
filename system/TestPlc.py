@@ -212,7 +212,6 @@ class TestPlc:
         # nothing to do
         return True
 
-    # xxx this would not work with hostname != localhost as mylc-init-vserver was extracted locally
     def install_vserver(self,options):
         # we need build dir for vtest-init-vserver
         if self.is_local():
@@ -220,14 +219,16 @@ class TestPlc:
             build_dir=self.path+"/build"
         else:
             # use a standard name - will be relative to HOME 
-            build_dir="tests-system-build"
+            build_dir="options.buildname"
+	# run checkout in any case - would do an update if already exists
         build_checkout = "svn checkout %s %s"%(options.build_url,build_dir)
         if self.test_ssh.run_in_host(build_checkout) != 0:
             raise Exception,"Cannot checkout build dir"
         # the repo url is taken from myplc-url 
         # with the last two steps (i386/myplc...) removed
         repo_url = options.myplc_url
-        repo_url = os.path.dirname(repo_url)
+        for level in [ 'rpmname','arch' ]:
+	    repo_url = os.path.dirname(repo_url)
         create_vserver="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
             (build_dir,self.vservername,repo_url,self.vserverip)
         if self.test_ssh.run_in_host(create_vserver) != 0:
