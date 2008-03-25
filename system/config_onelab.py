@@ -203,7 +203,7 @@ def plc () :
     return { 
         'name' : 'onelabtest',
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'test.one-lab.org',
+        'hostname' : 'testbox2.one-lab.org',
         # set these two items to run within a vserver
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
