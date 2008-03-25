@@ -71,7 +71,7 @@ class TestSsh:
         ssh_command="ssh "
         if self.caller.key:
             ssh_command += "-i %s.rsa "%(self.caller.key)
-        ssh_command += "%s/%s"%(self.buildname,TestSsh.backslash_shell_specials(command))
+        ssh_command += "%s/%s"%(self.buildname(),TestSsh.backslash_shell_specials(command))
         return utils.system(ssh_command)
 
     def copy (self,local_file,recursive=False):
