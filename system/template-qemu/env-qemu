@@ -16,6 +16,7 @@ IP_NETMASK=0.0.0.0
 
 INTERFACE_LAN=eth0
 INTERFACE_BRIDGE=br0
+brctl=/usr/sbin/brctl
 
 # Fonction de mise en place du pont
 start () {
@@ -89,12 +90,16 @@ start () {
 	IP_NETMASK=$1
     fi
     shift $(($# - 1))
- 
+    #check if the module brctl is there
+    if  [ ! -e $brctl ] ; then
+	echo "Module Brctl  '/usr/sbin/brctl' is not found"
+	exit 0
+    fi
     # Création et paramétrage du pont
     echo "Configure $INTERFACE_BRIDGE bridge..."
-    /usr/sbin/brctl addbr $INTERFACE_BRIDGE
+    $brctl addbr $INTERFACE_BRIDGE
     #/usr/sbin/brctl stp $INTERFACE_BRIDGE yes
-    /usr/sbin/brctl addif $INTERFACE_BRIDGE $INTERFACE_LAN
+    $brctl addif $INTERFACE_BRIDGE $INTERFACE_LAN
     echo "Activating promiscuous mode  $INTERFACE_LAN..."
     /sbin/ifconfig $INTERFACE_LAN 0.0.0.0 promisc up
     sleep 2
@@ -132,9 +137,14 @@ stop () {
                 echo "Attention : pont réseau non trouvé. Vérifier la config réseau ..."
                 exit 1
         fi
-        /usr/sbin/brctl delif $INTERFACE_BRIDGE $INTERFACE_LAN
+        #check if the module brctl is there
+	if [  ! -e $brctl  ] ;then
+	    echo "Module Brctl  '/usr/sbin/brctl' is not found"
+	    exit 0
+	fi
+        $brctl delif $INTERFACE_BRIDGE $INTERFACE_LAN
         /sbin/ifconfig $INTERFACE_BRIDGE down
-        /usr/sbin/brctl delbr $INTERFACE_BRIDGE
+        $brctl delbr $INTERFACE_BRIDGE
         /sbin/service network restart
 }
 
@@ -155,7 +165,3 @@ case $1 in
 esac
 
 exit 0
-
-
-
-
