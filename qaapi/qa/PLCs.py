@@ -1,6 +1,6 @@
 import os
 import copy
-import qa.utils	
+import utils	
 from Remote import Remote
 from Table import Table
 
@@ -9,10 +9,10 @@ class PLC(dict, Remote):
 	'name': 'TestPLC', 				# PLC Name			
 	'host': 'localhost',				# Node Hostname
 	'ip':	'127.0.0.1',				# IP
-	'chroot': None,
+	'chroot': None,					# Path to the chroot
 	'vserver': None, 				# Vserver where this PLC lives
-	'rootkey': '/home/tmack/.ssh/plc-root', 	# Root Key
-	'api_path': '/PLCAPI/', 				# PLCAPI path 
+	'rootkey': None,			 	# Root Key
+	'api_path': '/PLCAPI/', 			# PLCAPI path 
 	'port': '443' 					# PLCAPI port
 	
 	}
@@ -34,9 +34,9 @@ class PLC(dict, Remote):
 	standalone http server that listens on the specified port.
 	This is useful for running multiple api servers on the same machine.
 	"""
-	if 'host' in self and not 'host' in ['localhost', None]:
+	if 'port' in self and not self['port'] in ['443', None]:
 	    server_script = "/usr/share/plc_api/Server.py" 
-	    self.commands("%s -p %s" % (server_script, self['port']))    
+	    self.popen3("%s -p %s &" % (server_script, self['port']))    
 	    if self.config.verbose:
 		utils.header("Starting api server at %s on listening on port %s" % (self['host'], self['port']))     
 
