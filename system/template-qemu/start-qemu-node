@@ -36,9 +36,9 @@ fi
 echo "New $HDA is created..."
 
 #Command for running the Qemu Emulator
-ARGS="-boot d -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM}  -net nic,macaddr=${MACADDR} -net $TAP -nographic";
+ARGS="-boot d -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM}  -net nic,macaddr=${MACADDR} -net $TAP -nographic -kernel-kqemu";
 echo "Running qemu $ARGS";
-qemu $ARGS
+qemu-system-x86_64 $ARGS
 
 
 exit
