@@ -1,4 +1,5 @@
 import utils
+import os
 
 class Remote:
 
@@ -6,7 +7,7 @@ class Remote:
 	if 'chroot' in self and self['chroot']:
 	    command = " chroot %s %s" % (self['chroot'], command)
 	if 'vserver' in self and self['vserver']:
-            command = " vserver %s exec '%s' " % (self['vserver'], command)
+            command = " vserver %s exec %s " % (self['vserver'], command)
         if 'host' in self and self['host'] not in ['localhost']:
             options = ""
             if 'rootkey' in self and self['rootkey']:
@@ -17,12 +18,20 @@ class Remote:
 
     def popen(self, command, fatal = True):
 	command = self.get_remote_command(command)
-	#utils.header(command)
+	if self.config.verbose:
+	    utils.header(command)
 	return utils.popen(command, fatal)
+
+    def popen3(self, command):
+	command = self.get_remote_command(command)
+	if self.config.verbose:
+	    utils.header(command)
+	return utils.popen3(command) 
 
     def commands(self, command, fatal = True):
 	command = self.get_remote_command(command) 
-        #utils.header(command)
+        if self.config.verbose:
+	    utils.header(command)
 	return utils.commands(command, fatal)
 
     def scp(self, src, dest):
@@ -43,7 +52,7 @@ class Remote:
 	if len(src_parts) == 1:
 	    src_cmd = src
 	elif src_parts[0].find('localhost')  != -1: 
-	    src_cmd = src_parts[1]
+	    src_cmd = path + os.sep + src_parts[1]
 	else:
 	    host, file  = src_parts[0], src_parts[1]
 	    src_cmd = 'root@%(host)s:%(path)s%(file)s ' % locals()
@@ -51,13 +60,13 @@ class Remote:
 	if len(dest_parts) == 1:
 	    dest_cmd = dest
 	elif dest_parts[0].find('localhost') != -1:
-	    dest_cmd = dest_parts[1]
+	    dest_cmd = path +os.sep+ dest_parts[1]
 	else:
 	    host, file = dest_parts[0], dest_parts[1]
 	    dest_cmd = 'root@%(host)s:%(path)s%(file)s'  % locals()
 
-	print dest_parts
 	command = 'scp %(options)s %(src_cmd)s %(dest_cmd)s' % locals()
-	utils.header(command)
+	if self.config.verbose:
+	    utils.header(command)
 	return utils.commands(command)	    
 
