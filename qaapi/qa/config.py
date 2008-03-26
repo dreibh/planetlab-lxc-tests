@@ -8,14 +8,20 @@ plcs = [
 	{'name': 'TestPLC',
          'host': 'localhost',
          'ip': '127.0.0.1',
-         'rootkey': '/home/tmack/.ssh/plc-root',
          'url': 'https://localhost.localdomain/',
          'port': '443'
-        }
+        },
+	{'name': 'ParisPLC',
+	 'host': 'localhost',
+	 'ip': '127.0.0.1',
+	 'url': 'https://localhost.localdomain/',
+	 'port': '443',
+	 'chroot': '/plc/root/'
+	}
 	]
 
 sites = [
-	{'plc': 'TestPLC',
+	{'plc': 'ParisPLC',
 	 'name': 'TestSite1',
 	 'login_base': 'ts',
 	 'enabled': True,
@@ -27,7 +33,7 @@ sites = [
 	]
 
 nodes = [
-	{'plc': 'TestPLC',
+	{'plc': 'ParisPLC',   	
 	 'site': 'ts',
 	 'hostname': 'vm1.paris.cs.princeton.edu',
 	 'host': 'localhost',
@@ -42,10 +48,11 @@ nodes = [
 			   'broadcast': '10.0.2.255'
 			   }]
 	}
+	
 	]
 
 slices = [
-	{'plc': 'TestPLC', 
+	{'plc': 'ParisPLC',   
 	 'name': 'ts_slice1',
 	 'instantiation': 'plc-instantiated',
 	 'max_nodes': 1000,
@@ -56,7 +63,7 @@ slices = [
 	]
 
 persons = [
-	{'plc': 'TestPLC',
+	{'plc': 'ParisPLC',
 	 'first_name': 'fname',
 	 'last_name': 'lname',
 	 'password': 'password',
