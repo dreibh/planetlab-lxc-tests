@@ -80,6 +80,18 @@ class Config:
 	node_test_files = os.listdir(self.node_tests_path)
 	self.node_test_files = filter(valid_node_test_files, node_test_files) 
 
+    def get_plc(self, plc_name):
+	plc = PLC(self)
+	if hasattr(self, 'plcs')  and plc_name in self.plcs.keys():
+	    plc.update(self.plcs[plc_name])
+	return plc
+
+    def get_node(self, hostname):
+	node = Node(self)
+	if hasattr(self, 'nodes') and hostname in self.nodes.keys():
+	    node.update(self.nodes[hostname])
+	return node			
+
     def load(self, conffile):
 	
 	confdata = {}
@@ -92,14 +104,14 @@ class Config:
 	config = Config()
 	for loadable in loadables:
 	    if loadable in confdata and loadable in ['plcs']:
-	        setattr(self, loadable, PLCs(config, confdata[loadable]))
+	        setattr(self, loadable, PLCs(config, confdata[loadable]).dict('name'))
 	    elif loadable in confdata and loadable in ['nodes']:
-		setattr(self, loadable, Nodes(config, confdata[loadable])) 		
+		setattr(self, loadable, Nodes(config, confdata[loadable]).dict('hostname')) 		
 	    elif loadable in confdata and loadable in ['sites']:
-		setattr(self, loadable, Sites(confdata[loadable]))
+		setattr(self, loadable, Sites(confdata[loadable]).dict('login_base'))
 	    elif loadable in confdata and loadable in ['slices']:
-		setattr(self, loadable, Slices(confdata[loadable]))
+		setattr(self, loadable, Slices(confdata[loadable]).dict('name'))
 	    elif loadable in confdata and loadable in ['persons']:
-		setattr(self, loadable, Persons(confdata[loadable])) 
+		setattr(self, loadable, Persons(confdata[loadable]).dict('email')) 
 	    
 	
