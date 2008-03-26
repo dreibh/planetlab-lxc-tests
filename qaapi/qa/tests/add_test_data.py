@@ -11,16 +11,9 @@ class add_test_data(Test):
     def call(self,  plc_name = None):
 
 	# Determine which plc to talk to 
-        plc = PLC(self.config)
-        plcs = getattr(self.config, 'plcs', [])
-        for p in plcs:
-            if p['name'] in [plc_name]:
-                plc.update(p)
-        plc.config.update_api(plc)
-
+	plc = self.config.get_plc(plc_name)
         api = plc.config.api
         auth = plc.config.auth
-
 
 	# Search config for objects that belong to this plc
 	# Any object with 'plc' defined as this plc's name or with 
