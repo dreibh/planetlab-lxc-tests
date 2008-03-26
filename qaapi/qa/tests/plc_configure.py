@@ -14,12 +14,7 @@ class plc_configure(Test):
     def call(self, plc_name, plc_config_option=None, plc_config_value=None):
 	
 	# Get plc configuration from config
-        plc = PLC(self.config)
-        plcs = getattr(self.config, 'plcs', [])
-        for p in plcs:
-            if p['name'] in [plc_name]:
-                plc.update(p)
-
+	plc = self.config.get_plc(plc_name)
 	services = ['API', 'DB', 'WWW', 'BOOT']
 	plc_options = [] 
         
