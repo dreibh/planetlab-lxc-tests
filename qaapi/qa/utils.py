@@ -23,6 +23,11 @@ def popen(command, fatal=True):
     if fatal and errors:
 	raise Exception, "".join(errors)	
     return (output, errors)    
+
+def popen3(command):
+    (stdin, stdout, stderr) = os.popen3(command)
+    print >> logfile, "+ "+command
+    return (stdin, stdout, stderr)	 	 	
     
 def commands(command, fatal = True):
     (status, output) = getstatusoutput(command)
