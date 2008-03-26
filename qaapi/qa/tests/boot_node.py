@@ -7,8 +7,10 @@ import time
 import tempfile
 import select
 import base64
+import traceback
 from Test import Test
 from qa import utils
+from qa.Nodes import Node, Nodes
 
 image_types = ['node-iso', 'node-usb', 'generic-iso', 'generic-usb']
 
@@ -29,7 +31,7 @@ class boot_node(Test):
         nodes = self.config.api.GetNodes(self.config.auth, [hostname], ['boot_state'])
         node = nodes[0]
         boot_state = node['boot_state']
-        if self.config.verbose:
+        if True or self.config.verbose:
             utils.header("%(hostname)s boot_state is %(boot_state)s" % locals()) 
             
         if boot_state in ['boot', 'debug']:
@@ -44,56 +46,79 @@ class boot_node(Test):
         return self.exit
         
     def console_nanny(self,console_states):
-        ready = select.select([],[self.stdout],[],1)[1]
+        #ready = select.select([],[self.stdout],[],1)[1]
         output = 0
-        if len(ready)>0:
+        if True or len(ready)>0:
             output = 1
-            line = self.stdout.readline()
-            for searchstring in console_states.keys():
-                result = line.find(searchstring)
+            retry = True
+            while retry:
+                try:
+                    lines = self.stdout.readlines()
+                    retry = False
+                except IOError, e:
+                    pass
+
+            #for searchstring in console_states.keys():
+            #    result = line.find(searchstring)
                 # if result... ret = console_states[searchstring]
-                break
+            #    break
                 # check result for whether we found it
 
             # for now just print it out
-            utils.header(line) 
+	    for line in lines:
+                print line
+            	utils.header(line) 
             # should be parsing for special strings that indicate whether
             # we've reached a particular state within the boot sequence
 
         return output
 
     def call(self, hostname, image_type = 'node-iso', disk_size="4G", wait = 30):
-        # wait up to 30 minutes for a node to boot and install itself correctly
+        
+	# Get this nodes configuration 
+	node = self.config.get_node(hostname)
+	# Which plc does this node talk to 
+	plc = self.config.get_plc(node['plc'])
+	print node
+        api = plc.config.api
+        auth = plc.config.auth
+	host = node['host']
+	bootimage_filename = '%(hostname)s-bootcd.iso' % locals()
+	tmpdir = '/usr/tmp/'
+	homedir = node['homedir']
+	diskimage_path = "/%(homedir)s/%(hostname)s-hda.img" % locals() 
+        bootimage_tmppath = "%(tmpdir)s/%(bootimage_filename)s" % locals()
+	bootimage_path = "%(homedir)s/%(bootimage_filename)s" % locals()
+	if host in ['localhost', None]:
+	    remote_bootimage_path = bootimage_path
+	else:
+	    remote_bootimage_path = "%(host)s:%(bootimage_path)s" % locals()	
+	 
+	# wait up to 30 minutes for a node to boot and install itself correctly
         self.hostname = hostname
         self.totaltime = 60*60*wait
 
-	api = self.config.api
-	auth = self.config.auth
-	tdir = "/usr/tmp/"
-	
 	# validate hostname
 	nodes = api.GetNodes(auth, [hostname], ['hostname'])
 	if not nodes:
-	    raise Exception, "No such node %(hostname)s" % locals() 
-
-	bootimage = api.GetBootMedium(auth, hostname, image_type, '')
-	bootimage_path = '/%(tdir)s/%(hostname)s-bootcd.iso' % locals()
-
+	    raise Exception, "%s not found at plc  %s" % (hostname, plc['name'])
+	node.update(nodes[0])
+	
+	# Create boot image
 	if self.config.verbose:
-            utils.header("Creating bootcd for %(hostname)s at %(bootimage_path)s" % locals())	
-	# Create a temporary bootcd file
-	fp = open(bootimage_path, 'w')
+            utils.header("Creating bootcd for %(hostname)s at %(host)s:%(bootimage_path)s" % locals())	
+	bootimage = api.GetBootMedium(auth, hostname, image_type, '', ['serial'])
+	fp = open(bootimage_tmppath, 'w')
 	fp.write(base64.b64decode(bootimage))
 	fp.close()
+
+	# Move the boot image to the nodes home directory
+	node.commands("mkdir -p %(homedir)s" % locals())
+	node.scp(bootimage_tmppath, "%(remote_bootimage_path)s" % locals())
 	
 	# Create a temporary disk image
-	diskimage_path = "/%(tdir)s/%(hostname)s-hda.img" % locals() 
 	qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage_path)s %(disk_size)s" % locals()
-	(stdin, stdout, stderr) = os.popen3(qemu_img_cmd)
-	self.errors = stderr.readlines()
-	if self.errors: 
-	    raise Exception, "Unable to create disk image\n" + \
-			    "\n".join(self.errors)
+	node.commands(qemu_img_cmd)
 
 	if self.config.verbose:
             utils.header("Booting %(hostname)s" % locals())
@@ -117,6 +142,8 @@ class boot_node(Test):
         bootcmd = bootcmd + " -m %(ramsize)s" % locals()
         # uniprocessor only
         bootcmd = bootcmd + " -smp 1"
+	# XX network bridge
+	#bootcmd = bootcmd + " -net nic -net tap,script=%s/qemu-ifup" % self.config.qemu_scripts_path
         # no graphics support -> assume we are booting via serial console
         bootcmd = bootcmd + " -nographic"
         # boot from the supplied cdrom iso file
@@ -124,10 +151,12 @@ class boot_node(Test):
         bootcmd = bootcmd + " -cdrom %(bootimage_path)s" % locals()
         # hard disk image to use for the node
         bootcmd = bootcmd + " %(diskimage_path)s" % locals()
-        # launch qemu
-	(self.stdin, self.stdout, self.stderr) = os.popen3(bootcmd)
 
-        # wait for qemu to start up
+        # launch qemu
+	utils.header(bootcmd)
+	(self.stdin, self.stdout, self.stderr) = node.popen3(bootcmd)
+        
+	# wait for qemu to start up
         time.sleep(3)
         
         # get qemu's pid from its pidfile (crappy approach)
@@ -141,6 +170,7 @@ class boot_node(Test):
         # occured, or we've reached our totaltime out
         def catch(sig, frame):
             self.totaltime = self.totaltime -1
+	    utils.header("beep %d\n" %self.totaltime)
             total = self.totaltime
             if (total == 0) or \
                    (((total % 60)==0) and self.state_nanny()):
@@ -159,6 +189,7 @@ class boot_node(Test):
                 try:
                     self.console_nanny(console_states)
                 except: # need a better way to catch exceptions
+                    traceback.print_exc()
                     pass
 
             signal.alarm(0)
