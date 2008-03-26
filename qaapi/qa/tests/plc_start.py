@@ -14,12 +14,7 @@ class plc_start(Test):
     def call(self, plc_name = None):
 
 	# Get plc configuration from config
-	plc = PLC(self.config)
-	plcs = getattr(self.config, 'plcs', [])
-	for p in plcs:
-	    if p['name'] in [plc_name]:
-		plc.update(p)	
-	 	
+	plc = self.config.get_plc(plc_name)
 	command = "/sbin/service plc start "
 	if self.config.verbose:
 	    utils.header(command)	
