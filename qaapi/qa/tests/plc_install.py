@@ -14,13 +14,7 @@ class plc_install(Test):
     def call(self, plc_name, url=None):
 	
 	# Get plc qa config
-	plc = PLC(self.config)
-	plcs = getattr(self.config, 'plcs', [])  
-	for p in plcs:
-	    if p['name'] in [plc_name]:
-		plc.update(p) 
-      
-	
+	plc = self.config.get_plc(plc_name)	
 	url_path = self.config.path
 
 	# Determine url
