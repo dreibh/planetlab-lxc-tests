@@ -13,12 +13,7 @@ class plc_uninstall(Test):
     def call(self, plc_name = None, remove_all = False):
 
 	# Get plc configuration from config
-        plc = PLC(self.config)
-        plcs = getattr(self.config, 'plcs', [])
-        for p in plcs:
-            if p['name'] in [plc_name]:
-                plc.update(p)
-	
+	plc = self.config.get_plc(plc_name)	
 	command = "/sbin/service plc safestop && rpm -e myplc " 
 	if remove_all:
 	    command += " && rm -rf /plc/data" 
