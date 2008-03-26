@@ -18,9 +18,13 @@ class sync_person_key(Test):
         command = "ssh-keygen -f %(key_path)s -t rsa -N ''"  % locals()
         (stdout, stderr) = utils.popen(command)
 
-    def call(self, email):
-	api = self.config.api
-	auth = self.config.auth
+    def call(self, email, plc_name = None):
+	
+	# Determine which plc to talk to 
+	plc = self.config.get_plc(plc_name)
+	api = plc.config.api
+	auth = plc.config.auth 
+
 	email_parts = email.split("@")
 	keys_filename = email_parts[0]
 	keys_path = self.config.KEYS_PATH 
