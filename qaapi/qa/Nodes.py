@@ -14,7 +14,7 @@ class Node(dict, Remote):
 	'type': 'virtual', 		# type of node
 	'nodenetworks': [], 		# node networks
 	'homedir': '/var/VirtualMachines/',
-	'rootkey': '/home/tmack/.ssh/plc-root' # path to root ssh key
+	'rootkey': None			 # path to root ssh key
 	}
 
     def __init__(self, config, fields = {}):
@@ -26,27 +26,6 @@ class Node(dict, Remote):
 	self.update(fields)
 	self.config = config	
     
-    def create_boot_image(self):
-
-	command = ""
-	if self['host'] and self['host'] not in ['localhost']:
-	    command += "ssh -i %s root@%s " % (self['rootkey'], self['host'])
-	
-    def create_disk_image(self, size = '10G'):
-	diskimg_path = self['homedir'] + os.sep + self['hostname'] + os.sep + \
-		  	'hda.img'
-	command = ""
-	command += " qemu-img create -f qcow2 %(diskimg_path)s %(size)s " % locals()
-
-	#utils.header(command)
-	(status, output) = self.commands(command, True)
-
-    def boot(self):
-	pass
-
-    def scp(self):
-	pass 
-
 class Nodes(list, Table):
 
     def __init__(self, config, nodes):
