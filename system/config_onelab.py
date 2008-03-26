@@ -25,22 +25,22 @@ def nodes():
                                  'mac' : '00:0b:cd:62:50:95',
                                  },
              },
-            {'node_fields': {'hostname': 'pluton.inria.fr',
-                             'model':'qemu/minhw', } ,
-             'host_box': 'testbox1.one-lab.org',
-             'owner' : 'pi',
-             'network_fields': { 'method':'static',
-                                 'type':'ipv4',
-                                 'ip':'138.96.250.151',
-                                 'gateway':'138.96.248.250',
-                                 'network':'138.96.0.0',
-                                 'broadcast':'138.96.255.255',
-                                 'netmask':'255.255.0.0',
-                                 'dns1': '138.96.0.10',
-                                 'dns2': '138.96.0.11',
-                                 'mac' : '00:08:02:33:4d:9e',
-                                 },
-             },
+            #{'node_fields': {'hostname': 'pluton.inria.fr',
+            #                 'model':'qemu/minhw', } ,
+            # 'host_box': 'testbox1.one-lab.org',
+            # 'owner' : 'pi',
+            # 'network_fields': { 'method':'static',
+            #                     'type':'ipv4',
+            #                     'ip':'138.96.250.151',
+            #                     'gateway':'138.96.248.250',
+            #                     'network':'138.96.0.0',
+            #                     'broadcast':'138.96.255.255',
+            #                     'netmask':'255.255.0.0',
+            #                     'dns1': '138.96.0.10',
+            #                     'dns2': '138.96.0.11',
+            #                     'mac' : '00:08:02:33:4d:9e',
+            #                     },
+            #},
             ]
     return nodes
 
@@ -181,23 +181,23 @@ def slices ():
 def all_slicenames ():
     return [ slice['slice_fields']['name'] for slice in slices()]
 
-def tcp_param():
-    param = [{ 'tcp_fields' :  {'peer_name' : 'server',
-                                'slice_name' :all_slicenames()[0],
-                                'server_name': all_nodenames()[0]
-                                },
-               
-               },
-             { 'tcp_fields':{'peer_name' : 'client',
-                             'slice_name' :all_slicenames()[1],
-                             'client_name': all_nodenames()[1],
-                             'peer_server' :  all_nodenames()[0],
-                             'server_port' : 22
-                             },
-               },
-             
-             ]
-    return param
+#def tcp_param():
+#    param = [{ 'tcp_fields' :  {'peer_name' : 'server',
+#                                'slice_name' :all_slicenames()[0],
+#                                'server_name': all_nodenames()[0]
+#                                },
+#               
+#               },
+#             { 'tcp_fields':{'peer_name' : 'client',
+#                             'slice_name' :all_slicenames()[1],
+#                             'client_name': all_nodenames()[1],
+#                             'peer_server' :  all_nodenames()[0],
+#                             'server_port' : 22
+#                             },
+#               },
+#             
+#             ]
+#    return param
 
 def plc () :
     return { 
@@ -223,7 +223,7 @@ def plc () :
         'keys' : keys(),
         'initscripts': initscripts(),
         'slices' : slices(),
-        'tcp_param' : tcp_param(),
+        #'tcp_param' : tcp_param(),
     }
 
 def config (plc_specs,options):
