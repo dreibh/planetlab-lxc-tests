@@ -226,23 +226,23 @@ steps refer to a method in TestPlc or to a step_* module
                     try:
                         force_msg=""
                         if force: force_msg=" (forced)"
-                        utils.header("Running step %s%s on plc %s"%(stepname,force_msg,plcname))
+                        utils.header("********** RUNNING step %s%s on plc %s"%(stepname,force_msg,plcname))
                         step_result = method(obj,self.options)
                         if step_result:
                             utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
                         else:
                             overall_result = False
                             spec['disabled'] = True
-                            utils.header('********** Step %s on %s FAILED - discarding that plc from further steps'%(stepname,plcname))
+                            utils.header('********** FAILED Step %s on %s - discarding that plc from further steps'%(stepname,plcname))
                     except:
                         overall_result=False
                         spec['disabled'] = True
                         traceback.print_exc()
-                        utils.header ('********** Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(stepname,plcname))
+                        utils.header ('********** FAILED (exception) Step %s on plc %s - discarding this plc from further steps'%(stepname,plcname))
 
                 # do not run, just display it's skipped
                 else:
-                    utils.header("Plc %s is disabled - skipping step %s"%(plcname,stepname))
+                    utils.header("********** IGNORED Plc %s is disabled - skipping step %s"%(plcname,stepname))
 
         return overall_result
 
