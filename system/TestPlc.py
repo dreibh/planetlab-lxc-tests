@@ -169,7 +169,7 @@ class TestPlc:
     def list_all_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # this is the brute force version, kill all qemus on that host box
-            TestBox(box,options.buildname).run_in_buildname("qemu-%s/kill-qemu-node -l %s"%(node.name(),node.name()))
+            TestBox(box,options.buildname).list_all_qemus()
         return True
 
     # kill only the right qemus

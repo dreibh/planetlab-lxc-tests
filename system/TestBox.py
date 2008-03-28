@@ -41,6 +41,10 @@ class TestBox:
         return self.test_ssh.mkdir(direname)
 
     def kill_all_qemus(self):
-        self.run_in_buildname("killall qemu")
+        self.run_in_buildname("template-qemu/kill-qemu-node")
+        return True
+
+    def list_all_qemus(self):
+        self.run_in_buildname("template-qemu/kill-qemu-node -l")
         return True
 

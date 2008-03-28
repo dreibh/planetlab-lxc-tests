@@ -44,8 +44,5 @@ echo "New $HDA is created..."
 #Command for running the Qemu Emulator
 ARGS="-boot d -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM}  -net nic,macaddr=${MACADDR} -net $TAP -nographic -pidfile qemu.pid"
 echo $$ > shell.pid
-echo "Running qemu $ARGS"
-$QEMU $ARGS
-
-
-exit
+echo "Running $QEMU $ARGS < /dev/null"
+exec $QEMU $ARGS < /dev/null

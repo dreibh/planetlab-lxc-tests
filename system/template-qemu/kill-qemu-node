@@ -51,7 +51,7 @@ function kill_pids () {
 function show_pids () {
     pids=$(list_pids "$@")
     if [ -n "$pids" ] ; then
-	ps $pids
+	ps $pids | grep -v $COMMAND || echo Nothing to show
     else
 	echo Nothing to show
     fi
