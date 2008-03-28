@@ -485,7 +485,7 @@ class TestPlc:
         while tocheck:
             for hostname in tocheck:
                 # try to ssh in nodes
-                access=self.run_in_guest('ssh -i /etc/planetlab/root_ssh_key.rsa root@%s date'%hostname )
+                access=self.run_in_guest('ssh -o StrictHostKeyChecking=no -o BatchMode=yes -i /etc/planetlab/root_ssh_key.rsa root@%s date'%hostname )
                 if (not access):
                     utils.header('The node %s is sshable -->'%hostname)
                     # refresh tocheck

@@ -62,7 +62,7 @@ class TestSsh:
     def run_in_buildname (self,command):
         if self.is_local():
             return utils.system(command)
-        ssh_command="ssh "
+        ssh_command="ssh -o StrictHostKeyChecking=no -o BatchMode=yes "
         if self.key:
             ssh_command += "-i %s.rsa "%(self.key)
         ssh_command += "%s %s/%s"%(self.hostname,self.buildname,TestSsh.backslash_shell_specials(command))
