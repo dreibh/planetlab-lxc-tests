@@ -22,8 +22,8 @@ class TestMain:
                      'sites', 'nodes', 'slices', 
                      'bootcd', 'nodegroups', 
                      'kill_all_qemus', 'start_nodes', 
-                     'standby_10', 'nodes_booted',
-                     'standby_6','nodes_ssh', 'check_slices','check_initscripts',
+                     'standby_20', 
+                     'nodes_booted', 'nodes_ssh', 'check_slices','check_initscripts',
                      'force_kill_qemus', ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'stop','check_tcp', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
