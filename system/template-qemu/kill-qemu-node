@@ -1,0 +1,79 @@
+#!/bin/sh
+# $Id$
+COMMAND=$(basename $0)
+cd $(dirname $0)
+cd ..
+
+function usage () {
+    echo "Usage: $COMMAND -l"
+    echo "  lists current qemu processes"
+    echo "usage: $COMMAND hostname"
+    echo "  kill qemu instance for that node"
+    exit 1
+}
+
+function list_pids () {
+    hostnames="$@"
+    if [[ -n "$hostnames" ]] ; then
+	for hostname in $hostnames; do
+	    nodedir=qemu-$hostname
+	    cat $nodedir/qemu.pid $nodedir/shell.pid 2> /dev/null
+	done
+    else
+	pgrep qemu
+    fi
+}
+
+function kill_from_file () {
+    file=$1; shift
+    if [ -f $file ] ; then
+	pid=$(cat $file)
+	echo Killing $pid
+	kill $pid
+	mv $file $file.killed
+    fi
+}    
+
+function kill_pids () {
+    hostnames="$@"
+    if [[ -n "$hostnames" ]] ; then
+	for hostname in $hostnames; do
+	    nodedir=qemu-$hostname
+	    kill_from_file $nodedir/qemu.pid
+	    kill_from_file $nodedir/shell.pid
+	done
+    else
+	echo Killing all processes mathing qemu
+	pkill qemu
+    fi
+}
+
+function show_pids () {
+    pids=$(list_pids "$@")
+    if [ -n "$pids" ] ; then
+	ps $pids
+    else
+	echo Nothing to show
+    fi
+}
+
+function main () { 
+    while getopts "lk" opt; do
+	case $opt in
+	    l) OPT_LIST=true ;;
+	    k) OPT_GREP=true ;;
+	    *) usage ;;
+	esac
+    done
+    shift $(($OPTIND -1))
+
+    # listing
+    if [ -n "$OPT_LIST" ] ; then
+	show_pids "$@"
+	exit 0
+    fi
+
+    kill_pids "$@"
+}
+
+main "$@"    

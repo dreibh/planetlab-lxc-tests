@@ -13,7 +13,9 @@ fi
 
 #default Value
 SCRIPT=./qemu-ifup
-HDA=hda_5.raw
+HDA=hda_10.raw
+# make sure to check qemu_kill.sh if you change this
+QEMU=qemu-system-x86_64
 
 # qemu parameters
 RAM=520;
@@ -36,9 +38,10 @@ fi
 echo "New $HDA is created..."
 
 #Command for running the Qemu Emulator
-ARGS="-boot d -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM}  -net nic,macaddr=${MACADDR} -net $TAP -nographic "
-echo "Running qemu $ARGS";
-qemu-system-x86_64 $ARGS
+ARGS="-boot d -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM}  -net nic,macaddr=${MACADDR} -net $TAP -nographic -pidfile qemu.pid"
+echo $$ > shell.pid
+echo "Running qemu $ARGS"
+$QEMU $ARGS
 
 
 exit

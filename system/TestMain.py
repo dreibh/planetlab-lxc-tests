@@ -27,7 +27,7 @@ class TestMain:
                      'force_kill_qemus', ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'stop','check_tcp', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
-                    'list_all_qemus', 'kill_qemus', 'stop_nodes' ,  
+                    'list_all_qemus', 'list_qemus', 'stop_nodes' ,  
                     'db_dump' , 'db_restore',
                     'standby_1 through 20',
                     ]
@@ -86,6 +86,8 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Specify the set of IP addresses to use in vserver mode (disable scanning)")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
+        parser.add_option("-q","--quiet", action="store_true", dest="quiet", default=False, 
+                          help="Run in quiet mode")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
         parser.add_option("-f","--forcenm", action="store_true", dest="forcenm", default=False, 
@@ -135,7 +137,8 @@ steps refer to a method in TestPlc or to a step_* module
                         print "Cannot determine",recname
                         print "Run %s --help for help"%sys.argv[0]                        
                         sys.exit(1)
-            utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
+            if not self.options.quiet:
+                utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
 
             # save for next run
             fsave=open(path,"w")
@@ -171,11 +174,11 @@ steps refer to a method in TestPlc or to a step_* module
                 print 'Cannot load config %s -- ignored'%modulename
                 raise
         # show config
-        utils.show_test_spec("Test specifications",all_plc_specs)
+        if not self.options.quiet:
+            utils.show_test_spec("Test specifications",all_plc_specs)
         # build a TestPlc object from the result
         for spec in all_plc_specs:
             spec['disabled'] = False
-            spec['forced']= True
         all_plcs = [ (x, TestPlc(x)) for x in all_plc_specs]
         # expose to the various objects
         for (spec,obj) in all_plcs:
@@ -185,9 +188,14 @@ steps refer to a method in TestPlc or to a step_* module
         testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
         all_step_infos=[]
         for step in self.options.steps:
+            force=False
+            # is it a forcedstep
+            if step.find("force_") == 0:
+                step=step.replace("force_","")
+                force=True
             # try and locate a method in TestPlc
             if testplc_method_dict.has_key(step):
-                all_step_infos += [ (step, testplc_method_dict[step] )]
+                all_step_infos += [ (step, testplc_method_dict[step] , force)]
             # otherwise search for the 'run' method in the step_<x> module
             else:
                 modulename='step_'+step
@@ -198,7 +206,7 @@ steps refer to a method in TestPlc or to a step_* module
                     if not names:
                         raise Exception,"No run* method in module %s"%modulename
                     names.sort()
-                    all_step_infos += [ ("%s.%s"%(step,name),module_dict[name]) for name in names ]
+                    all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force) for name in names ]
                 except :
                     print 'Step %s -- ignored'%(step)
                     traceback.print_exc()
@@ -209,24 +217,16 @@ steps refer to a method in TestPlc or to a step_* module
             return 0
             
         # do all steps on all plcs
-        for (stepname,method) in all_step_infos:
+        for (stepname,method,force) in all_step_infos:
             for (spec,obj) in all_plcs:
                 plcname=spec['name']
-                if spec['disabled']:
-                    utils.header("Plc %s is disabled - skipping step %s"%(plcname,stepname))
-                    if (stepname.find("force")==0 and spec['forced']) :
-                        utils.header("Plc %s is disabled but running step %s anyway"
-                                     %(plcname,stepname))
-                        step_result = method(obj,self.options)
-                        if step_result:
-                            utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
-                        else:
-                            overall_result = False
-                            spec['forced'] = False
-                            utils.header('********** Step %s on %s FAILED - discarding that plc from further steps'%(stepname,plcname))
-                else:
+
+                # run the step
+                if not spec['disabled'] or force:
                     try:
-                        utils.header("Running step %s on plc %s"%(stepname,plcname))
+                        force_msg=""
+                        if force: force_msg=" (forced)"
+                        utils.header("Running step %s%s on plc %s"%(stepname,force_msg,plcname))
                         step_result = method(obj,self.options)
                         if step_result:
                             utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
@@ -237,8 +237,13 @@ steps refer to a method in TestPlc or to a step_* module
                     except:
                         overall_result=False
                         spec['disabled'] = True
-                        utils.header ('********** Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(stepname,plcname))
                         traceback.print_exc()
+                        utils.header ('********** Step %s on plc %s FAILED (exception) - discarding this plc from further steps'%(stepname,plcname))
+
+                # do not run, just display it's skipped
+                else:
+                    utils.header("Plc %s is disabled - skipping step %s"%(plcname,stepname))
+
         return overall_result
 
     # wrapper to run, returns a shell-compatible result

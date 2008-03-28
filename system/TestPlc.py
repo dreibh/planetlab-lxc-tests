@@ -45,7 +45,7 @@ class TestPlc:
         except:
             self.vserver=False
             self.url="https://%s:443/PLCAPI/"%plc_spec['hostname']
-        utils.header('Using API url %s'%self.url)
+#        utils.header('Using API url %s'%self.url)
 	self.server=xmlrpclib.Server(self.url,allow_none=True)
         
     def name(self):
@@ -168,17 +168,21 @@ class TestPlc:
     # make this a valid step
     def list_all_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
-	    # push the script
-	    TestBox(box,options.buildname).copy("qemu_kill.sh")	
             # this is the brute force version, kill all qemus on that host box
-            TestBox(box,options.buildname).run_in_buildname("qemu_kill.sh -l")
+            TestBox(box,options.buildname).run_in_buildname("qemu-%s/kill-qemu-node -l %s"%(node.name(),node.name()))
         return True
 
     # kill only the right qemus
-    def force_kill_qemus(self,options):
+    def list_qemus(self,options):
         for (box,nodes) in self.gather_hostBoxes().iteritems():
-	    # push the script
-	    TestBox(box,options.buildname).copy("qemu_kill.sh")	
+            # the fine-grain version
+            for node in nodes:
+                node.list_qemu()
+        return True
+
+    # kill only the right qemus
+    def kill_qemus(self,options):
+        for (box,nodes) in self.gather_hostBoxes().iteritems():
             # the fine-grain version
             for node in nodes:
                 node.kill_qemu()

@@ -158,6 +158,12 @@ class TestNode:
         test_box.run_in_buildname("qemu-%s/env-qemu start >> nodeslogs/%s.log"%(self.name(),self.name()))
         test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> nodeslogs/%s.log &"%(self.name(),self.name()))
 
+    def list_qemu (self):
+        utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
+        command="qemu-%s/kill-qemu-node -l %s"%(self.name(),self.name())
+        self.test_box().run_in_buildname(command)
+        return True
+
     def kill_qemu (self):
         #Prepare the log file before killing the nodes
         test_box = self.test_box()
@@ -165,6 +171,6 @@ class TestNode:
             utils.header("Failed to get the nodes log files")
         # kill the right processes 
         utils.header("Stopping qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
-        command="qemu_kill.sh %s"%self.name()
+        command="qemu-%s/kill-qemu-node %s"%(self.name(),self.name())
         self.test_box().run_in_buildname(command)
         return True

@@ -27,7 +27,9 @@ class TestBox:
         return False
     
     def run_in_buildname (self,command):
+        utils.header("Running command %s on testbox %s"%(command,self.hostname()))
         return self.test_ssh.run_in_buildname (command)
+
     # should use rsync instead
     def copy (self,local_file,recursive=False):
         return self.test_ssh.copy (local_file,recursive)
@@ -37,8 +39,8 @@ class TestBox:
 
     def mkdir (self,direname):
         return self.test_ssh.mkdir(direname)
- 
 
     def kill_all_qemus(self):
-        utils.system(self.test_ssh.to_host("killall qemu"))
+        self.run_in_buildname("killall qemu")
+        return True
 
