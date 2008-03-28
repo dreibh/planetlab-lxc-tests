@@ -12,27 +12,31 @@ fi
 . $CONFIG
 
 #default Value
-SCRIPT=./qemu-ifup
-HDA=hda_10.raw
-# make sure to check qemu_kill.sh if you change this
 QEMU=qemu-system-x86_64
-
-# qemu parameters
+HDA=hda_10.raw
 RAM=520;
+
+SCRIPT=./qemu-ifup
 TAP="tap,script=$SCRIPT";
-#check for the creation of new HDA
-if [ -e "$HDA" ]; then
-    echo "Disk already existing removing  it..."
-    rm -rf $HDA
-fi
 
-#Creating new HDA
-echo "Creating hard disk for Qemu install under $HDA"
 
-img=$(qemu-img create $HDA 10G)
-if [ -z "$img" ];then
+##check for the creation of new HDA
+#if [ -e "$HDA" ]; then
+#    echo "Disk already existing removing  it..."
+#    rm -rf $HDA
+#fi
+#
+
+#Creating new HDA if needed only
+if [ -f $HDA ] ; then
+    echo "Using $HDA"
+else
+    echo "Creating hard disk for Qemu install under $HDA"
+    img=$(qemu-img create $HDA 10G)
+    if [ -z "$img" ];then
 	echo "Can't Create disk image..."
 	exit 1
+    fi
 fi
 
 echo "New $HDA is created..."
