@@ -458,7 +458,7 @@ class TestPlc:
         return True
 
     def nodes_booted(self,options):
-        return self.do_nodes_booted(minutes=5)
+        return self.do_nodes_booted(minutes=0)
     
     #to scan and store the nodes's public keys and avoid to ask for confirmation when  ssh 
     def scan_publicKeys(self,hostnames):
