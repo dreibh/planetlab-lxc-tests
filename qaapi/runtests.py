@@ -19,9 +19,9 @@ def main(args):
         config = Config(args[0])
     else:
         config = Config()
-    config.load("qa/config.py")
+    config.load("qa/qa_config.py")
 
-    plc_configure(config)("testPLC")
+    plc_configure(config)("TestPLC")
     plc_start(config)()
 
     # Add test site, node, person and slice data

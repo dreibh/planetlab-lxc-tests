@@ -37,15 +37,20 @@ VSERVER_PATH = VSERVER_HOME +os.sep+ TEST_VSERVER
 MAILTO = 'tmack@cs.princeton.edu'
 PLCNAME = 'TestPLC'
 
+# Specify a range of available ports to use. These ports must be 
+# allowed by the firewall
+HTTP_PORT_MIN = 51000
+HTTP_PORT_MAX = 51200
 
 # Setup configuration 
 config = Config()
-config.load("qa/config.py")	
+config.load("qa/qa_config.py")	
 config.plcs[PLCNAME]['vserver'] = TEST_VSERVER
 config.plcs[PLCNAME]['ip'] = config.ip
 config.plcs[PLCNAME]['api_path'] = ""
-config.plcs[PLCNAME]['port'] = str(randint(49152, 65535))
+config.plcs[PLCNAME]['port'] = str(randint(HTTP_PORT_MIN, HTTP_PORT_MAX))
 config.plcs[PLCNAME].config.update_api(config.plcs[PLCNAME])
+
 
 # create a vserer for this system test
 vserver_create(config)(TEST_VSERVER, FCDISTRO, MAILTO)
