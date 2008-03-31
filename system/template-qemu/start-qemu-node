@@ -6,33 +6,27 @@ cd $(dirname $0)
 #Getting the env. as passed by the test framework - mostly MACADDR and NODE_ISO
 CONFIG=start-qemu.conf
 if [ ! -e ${CONFIG} ];then
-    echo "File for MAC Address not found"
+    echo "File for node_iso version not found"
     exit 1
 fi
 . $CONFIG
 
 #default Value
+#always use the 64 bit version of qemu, as this will work on both 32 & 64 bit host kernels
 QEMU=qemu-system-x86_64
-HDA=hda_10.raw
+HDA=hda_10.img
 RAM=520;
 
 SCRIPT=./qemu-ifup
 TAP="tap,script=$SCRIPT";
 
-
-##check for the creation of new HDA
-#if [ -e "$HDA" ]; then
-#    echo "Disk already existing removing  it..."
-#    rm -rf $HDA
-#fi
-#
-
 #Creating new HDA if needed only
+#using qcow2 disk image format which is essential to support VM snapshots
 if [ -f $HDA ] ; then
     echo "Using $HDA"
 else
     echo "Creating hard disk for Qemu install under $HDA"
-    img=$(qemu-img create $HDA 10G)
+    img=$(qemu-img create -f qcow2 $HDA 5G)
     if [ -z "$img" ];then
 	echo "Can't Create disk image..."
 	exit 1
@@ -44,7 +38,7 @@ echo "New $HDA is created..."
 rm -f qemu.pid
 
 #Command for running the Qemu Emulator
-ARGS="-boot d -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM}  -net nic,macaddr=${MACADDR} -net $TAP -nographic -pidfile qemu.pid"
+ARGS="-boot d  -net nic -net $TAP -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM} -nographic -pidfile qemu.pid"
 echo $$ > shell.pid
 echo "Running $QEMU $ARGS < /dev/null"
 exec $QEMU $ARGS < /dev/null
