@@ -8,7 +8,7 @@ class Remote:
 	    command = " chroot %s %s" % (self['chroot'], command)
 	if 'vserver' in self and self['vserver']:
             command = " vserver %s exec %s " % (self['vserver'], command)
-        if 'host' in self and self['host'] not in ['localhost', self.confg.hostname]:
+        if 'host' in self and self['host'] not in ['localhost', self.config.hostname]:
             options = ""
             if 'rootkey' in self and self['rootkey']:
                 options = "-i %s " % self['rootkey']
