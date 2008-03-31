@@ -14,7 +14,7 @@ fi
 #default Value
 #always use the 64 bit version of qemu, as this will work on both 32 & 64 bit host kernels
 QEMU=qemu-system-x86_64
-HDA=hda_10.img
+HDA=hda_5.img
 RAM=520;
 
 SCRIPT=./qemu-ifup
