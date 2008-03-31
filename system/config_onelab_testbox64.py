@@ -5,9 +5,9 @@ from TestMapper import TestMapper
 
 def config (plcs, options):
 
-    mapper = {'plc': [ ('*' , {'hostname':'testbox2.inria.fr',
+    mapper = {'plc': [ ('*' , {'hostname':'testbox64.one-lab.org',
                                'name':'%s2' } ) ],
-              'node': [ ('*' , {'host_box':'testbox2.inria.fr'} ) ],
+              'node': [ ('*' , {'host_box':'testbox64.one-lab.org'} ) ],
               }
     
     return TestMapper(plcs,mapper,options).map()
