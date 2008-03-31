@@ -24,8 +24,11 @@ def config (plcs, options):
     for nodename in all_nodenames:
         (hostname,ip,mac) = test_pool.next_free()
         node_dict= {'node_fields:hostname':hostname,
-                    'network_fields:ip':ip,
-                    'network_fields:mac':mac}        
+                    'network_fields:ip':ip, 
+                    # xxx do not et mac as for some reason the qeu nodes don't know about their mac any more
+                    #'network_fields:mac':mac,
+                    }
+    
         node_dict.update(site_dict)
         maps.append ( ( nodename, node_dict) )
 

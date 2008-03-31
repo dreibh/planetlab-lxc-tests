@@ -50,7 +50,7 @@ class TestSite:
         
     def locate_node (self,nodename):
         for node in self.site_spec['nodes']:
-            if node['node_fields']['hostname'] == nodename:
+            if node['name'] == nodename:
                 return node
         raise Exception,"Cannot locate node %s"%nodename
         

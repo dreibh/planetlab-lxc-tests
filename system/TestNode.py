@@ -13,7 +13,7 @@ class TestNode:
 	self.node_spec=node_spec
         
     def name(self):
-        return self.node_spec['name']
+        return self.node_spec['node_fields']['hostname']
     
     @staticmethod
     def is_qemu_model (model):
