@@ -5,47 +5,52 @@
 #     (**) TestMain options field
 # (*) and that returns the new set of plc_specs
 
-onelab="one-lab.org"
+# values like 'hostname', 'ip' and the like my be rewritten later with a TestPool object
 
-# host_box is taken as 'localhost' if omitted (should be a direct field in the node spec)
-def nodes():
-    nodes= [{'node_fields': {'hostname': 'vnode01.inria.fr',
+def nodes(options):
+    nodes= [{'name':'node1',
+             'node_fields': {'hostname': 'deferred01',
                              'model':'qemu/minhw', } ,
              'host_box': 'testbox1.one-lab.org',
              'owner' : 'pi',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
-                                 'ip':'138.96.250.221',
-                                 'gateway':'138.96.248.250',
-                                 'network':'138.96.0.0',
-                                 'broadcast':'138.96.255.255',
-                                 'netmask':'255.255.0.0',
-                                 'dns1': '138.96.0.10',
-                                 'dns2': '138.96.0.11',
+                                 'ip':'xx-deferred-xxx',
+                                 'gateway':'xx-deferred-xxx',
+                                 'network':'xx-deferred-xxx',
+                                 'broadcast':'xx-deferred-xxx',
+                                 'netmask':'xx-deferred-xxx',
+                                 'dns1': 'xx-deferred-xxx',
+                                 'dns2': 'xx-deferred-xxx',
                                  },
              },
-            #{'node_fields': {'hostname': 'vnode02.inria.fr',
-            #                 'model':'qemu/minhw', } ,
-            # 'host_box': 'testbox1.one-lab.org',
-            # 'owner' : 'pi',
-            # 'network_fields': { 'method':'static',
-            #                     'type':'ipv4',
-            #                     'ip':'138.96.250.222',
-            #                     'gateway':'138.96.248.250',
-            #                     'network':'138.96.0.0',
-            #                     'broadcast':'138.96.255.255',
-            #                     'netmask':'255.255.0.0',
-            #                     'dns1': '138.96.0.10',
-            #                     'dns2': '138.96.0.11',
-            #                     },
-            # },
+            {'name':'node2',
+             'node_fields': {'hostname': 'deferred02',
+                             'model':'qemu/minhw', } ,
+             'host_box': 'testbox1.one-lab.org',
+             'owner' : 'pi',
+             'network_fields': { 'method':'static',
+                                 'type':'ipv4',
+                                 'ip':'xx-deferred-xxx',
+                                 'gateway':'xx-deferred-xxx',
+                                 'network':'xx-deferred-xxx',
+                                 'broadcast':'xx-deferred-xxx',
+                                 'netmask':'xx-deferred-xxx',
+                                 'dns1': 'xx-deferred-xxx',
+                                 'dns2': 'xx-deferred-xxx',
+                                 },
+             },
             ]
-    return nodes
+    if options.small_test:
+        return [nodes[0]]
+    else:
+        return nodes
 
-def all_nodenames ():
-    return [ node['node_fields']['hostname'] for node in nodes()]
+def all_nodenames (options):
+    return [ node['name'] for node in nodes(options)]
 
-def users (domain=onelab) :
+def users (options) :
+    domain="one-lab.org"
     return [ {'name' : 'pi', 'keynames' : [ 'key1' ],
               'user_fields' : {'first_name':'PI', 'last_name':'PI',
                                'enabled':'True',
@@ -79,10 +84,10 @@ def users (domain=onelab) :
               'roles':['pi','tech']},
              ]
 
-def all_usernames ():
-    return [ user['name'] for user in users()]
+def all_usernames (options):
+    return [ user['name'] for user in users(options)]
 
-def sites ():
+def sites (options):
     return [ {'site_fields' : {'name':'mainsite',
                                'login_base':'main',
                                'abbreviated_name':'PLanettest',
@@ -95,8 +100,8 @@ def sites ():
                                   'postalcode':'06600',
                                   'country':'france',
                                   },
-              'users' : users(),
-              'nodes': nodes(),
+              'users' : users(options),
+              'nodes': nodes(options),
             }]
 
 ##########
@@ -131,25 +136,29 @@ BO+VyPNWF+kDNI8mSUwi7jLW6liMdhNOmDaSX0+0X8CHtK898xM=
 -----END RSA PRIVATE KEY-----
 """
 
-def keys ():
+def keys (options):
     return [ {'name': 'key1',
               'private' : private_key,
               'key_fields' : {'key_type':'ssh',
                               'key': public_key}}
              ]
 
-def initscripts(): 
-    return [ { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'script1',
-                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/initscript1.log \n ',
-                                       }},
-             { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'script2',
-                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/initscript2.log \n ',
-                                       }},
-             ]
+def initscripts(options): 
+    initscripts= [ { 'initscript_fields' : { 'enabled' : True,
+                                             'name':'script1',
+                                             'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/initscript1.log \n ',
+                                             }},
+                   { 'initscript_fields' : { 'enabled' : True,
+                                             'name':'script2',
+                                             'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/initscript2.log \n ',
+                                             }},
+                   ]
+    if options.small_test:
+        return [initscripts[0]]
+    else:
+        return initscripts
 
-def slices ():
+def slices (options):
     both = [ { 'slice_fields': {'name':'main_slicetest1',
                                 'instantiation':'plc-instantiated',
                                 'url':'http://foo@ffo.com',
@@ -157,7 +166,7 @@ def slices ():
                                 'max_nodes':2
                                 },
                'usernames' : [ 'pi','tech','techuser' ],
-               'nodenames' : all_nodenames(),
+               'nodenames' : all_nodenames(options),
                'initscriptname' : 'script1',
                'sitename' : 'main',
                'owner' : 'pi',
@@ -169,39 +178,45 @@ def slices ():
                                 'max_nodes':100
                                 },
                'usernames' : [ 'user', 'pitech' ],
-               'nodenames' : all_nodenames(),
+               'nodenames' : all_nodenames(options),
                'initscriptname' : 'script2',
                'sitename' : 'main',
                'owner' : 'pi',
                }]
-    return both
+    if options.small_test:
+        return [both[0]]
+    else:
+        return both
 
-def all_slicenames ():
-    return [ slice['slice_fields']['name'] for slice in slices()]
 
-#def tcp_param():
-#    param = [{ 'tcp_fields' :  {'peer_name' : 'server',
-#                                'slice_name' :all_slicenames()[0],
-#                                'server_name': all_nodenames()[0]
-#                                },
-#               
-#               },
-#             { 'tcp_fields':{'peer_name' : 'client',
-#                             'slice_name' :all_slicenames()[1],
-#                             'client_name': all_nodenames()[1],
-#                             'peer_server' :  all_nodenames()[0],
-#                             'server_port' : 22
-#                             },
-#               },
-#             
-#             ]
-#    return param
+def all_slicenames (options):
+    return [ slice['slice_fields']['name'] for slice in slices(options)]
 
-def plc () :
+def tcp_param (options):
+    try:
+        return [{ 'tcp_fields' :  {'peer_name' : 'server',
+                                   'slice_name' :all_slicenames(options)[0],
+                                   'server_name': all_nodenames()[0]
+                                   },
+                  
+                  },
+                { 'tcp_fields':{'peer_name' : 'client',
+                                'slice_name' :all_slicenames()[1],
+                                'client_name': all_nodenames()[1],
+                                'peer_server' :  all_nodenames()[0],
+                                'server_port' : 22
+                                },
+                  },
+                
+                ]
+    except:
+        return None
+
+def plc (options) :
     return { 
-        'name' : 'onelabtest',
+        'name' : 'onetest',
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'testbox1.one-lab.org',
+        'hostname' : 'xx-deferred-xxx',
         # set these two items to run within a vserver
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
@@ -215,14 +230,14 @@ def plc () :
         'PLC_API_HOST' : 'test.one-lab.org',
         'PLC_WWW_HOST' : 'test.one-lab.org',
         'PLC_BOOT_HOST' : 'test.one-lab.org',
-        'PLC_NET_DNS1' : '138.96.0.10',
-        'PLC_NET_DNS2' : '138.96.0.11',
-        'sites' : sites(),
-        'keys' : keys(),
-        'initscripts': initscripts(),
-        'slices' : slices(),
-        #'tcp_param' : tcp_param(),
+        'PLC_NET_DNS1' : 'xx-deferred-xxx',
+        'PLC_NET_DNS2' : 'xx-deferred-xxx',
+        'sites' : sites(options),
+        'keys' : keys(options),
+        'initscripts': initscripts(options),
+        'slices' : slices(options),
+        'tcp_param' : tcp_param(options),
     }
 
 def config (plc_specs,options):
-    return plc_specs + [ plc() ]
+    return plc_specs + [ plc(options) ]

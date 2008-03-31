@@ -122,7 +122,7 @@ class TestPlc:
     def locate_node (self,nodename):
         for site in self.plc_spec['sites']:
             for node in site['nodes']:
-                if node['node_fields']['hostname'] == nodename:
+                if node['name'] == nodename:
                     return (site,node)
         raise Exception,"Cannot locate node %s"%nodename
         

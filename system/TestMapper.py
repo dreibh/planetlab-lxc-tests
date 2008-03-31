@@ -13,9 +13,8 @@ import utils
 
 class TestMapper:
 
-    def __init__ (self,plcs,mapper,options):
+    def __init__ (self,plcs,options):
         self.plcs=plcs
-        self.mapper=mapper
         self.options=options
 
     @staticmethod
@@ -42,17 +41,16 @@ class TestMapper:
                     o=obj
                     for step in path[:-1]:
                         if not o.has_key(step):
-                            utils.header ("WARNING : cannot apply step %s in path %s on %s %s"%(
+                            o[step]={}
+                            utils.header ("WARNING : created step %s in path %s on %s %s"%(
                                     step,path,type,name))
-                            return
-                        o=obj[step]
+                        o=o[step]
                     # last step is the one for side-effect
                     step=path[-1]
                     if not o.has_key(step):
-                        utils.header ("WARNING : cannot apply step %s in path %s on %s %s"%(
+                        utils.header ("WARNING : inserting key %s for path %s on %s %s"%(
                                 step,path,type,name))
-                        return
-                    # apply formatting if found
+                    # apply formatting if '%s' found in the value
                     if v.find('%s')>=0:
                         v=v%obj[k]
                     if self.options.verbose:
@@ -61,15 +59,28 @@ class TestMapper:
                 # only apply first rule
                 return
 
-    def map (self):
+    def node_names (self):
+        result=[]
+        for plc in self.plcs:
+            for site in plc['sites']:
+                for node in site['nodes']:
+                    result.append(node['node_fields']['hostname'])
+        return result
 
-        plc_maps = self.mapper['plc']
+    def map (self,mapper):
+
+        try:
+            plc_maps = mapper['plc']
+        except:
+            plc_maps = []
+        try:
+            node_maps = mapper['node']
+        except:
+            node_maps = []
 
         for plc in self.plcs:
             name=TestMapper.plc_name(plc)
             self.apply_first_map ('plc',name,plc,plc_maps)
-
-            node_maps = self.mapper['node']
 
             for site in plc['sites']:
                 for node in site['nodes']:
@@ -77,5 +88,3 @@ class TestMapper:
                     self.apply_first_map('node',nodename,node,node_maps)
 
         return self.plcs
-                                               
-                                              

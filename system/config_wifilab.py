@@ -9,7 +9,8 @@ onelab="one-lab.org"
 
 # use a model that contains "vmware" to get the node actually started
 def nodes():
-    node02 = {'node_fields': {'hostname': 'wlab02.inria.fr', 'model':'Dell Latitude 830'},
+    node02 = {'name':'wlab02',
+              'node_fields': {'hostname': 'wlab02.inria.fr', 'model':'Dell Latitude 830'},
               'owner' : 'pi',
               'nodegroups' : 'wifi',
               'network_fields': { 'method':'dhcp', 'type' : 'ipv4', 'ip':'138.96.250.162',},
@@ -22,7 +23,8 @@ def nodes():
                                        },
                                      ],
               }
-    node05 = {'node_fields': {'hostname': 'wlab05.inria.fr', 'model':'Dell Latitude 830'},
+    node05 = {'name':'wlab05',
+              'node_fields': {'hostname': 'wlab05.inria.fr', 'model':'Dell Latitude 830'},
               'owner' : 'pi',
               'nodegroups' : 'wifi',
               'network_fields': { 'method':'dhcp', 'type' : 'ipv4', 'ip':'138.96.250.165',},
@@ -49,7 +51,8 @@ def nodes():
                                        },
                                      ],
               }
-    node17 = {'node_fields': {'hostname': 'wlab17.inria.fr', 'model':'Dell Latitude 830'},
+    node17 = {'name':'wlab17',
+              'node_fields': {'hostname': 'wlab17.inria.fr', 'model':'Dell Latitude 830'},
               'owner' : 'pi',
               'nodegroups' : ['wifi','x86_64'] ,
               'network_fields': { 'method':'dhcp', 'type' : 'ipv4', 'ip':'138.96.250.177',},
@@ -66,7 +69,7 @@ def nodes():
     return [ node02 , node05 , node17 ]
 
 def all_nodenames ():
-    return [ node['node_fields']['hostname'] for node in nodes()]
+    return [ node['name'] for node in nodes()]
 
 def users (domain=onelab) :
     return [ {'name' : 'pi', 'keynames' : [ 'key1' ],

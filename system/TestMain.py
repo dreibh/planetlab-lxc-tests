@@ -77,13 +77,13 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
                           help="List known steps")
-        parser.add_option("-s","--state",action="store",dest="dbname",default=None,
-                           help="Used by db_dump and db_restore")
-        parser.add_option("-d","--display", action="store", dest="display", default='bellami.inria.fr:0.0',
-                          help="Set DISPLAY for vmplayer")
         parser.add_option("-i","--ip",action="callback", callback=TestMain.optparse_list, dest="ips",
                           nargs=1,type="string",
                           help="Specify the set of IP addresses to use in vserver mode (disable scanning)")
+        parser.add_option("-s","--small",action="store_true",dest="small_test",default=False,
+                          help="run a small test -- typically only one node")
+        parser.add_option("-d","--dbname",action="store",dest="dbname",default=None,
+                           help="Used by db_dump and db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
         parser.add_option("-q","--quiet", action="store_true", dest="quiet", default=False, 
