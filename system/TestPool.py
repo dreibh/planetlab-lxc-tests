@@ -27,9 +27,12 @@ class TestPool:
         self.options=options
         self.busy=[]
 
-    def locate (self, hostname_or_ip):
+    # let's be flexible
+    def locate (self, hostname_or_ip, busy=False):
         for (h,i,u) in self.pool:
-            if h==hostname_or_ip or i==hostname_or_ip:
+            if h.find(hostname_or_ip)>=0  or i.find(hostname_or_ip)>=0 :
+                if busy:
+                    self.busy.append(h)
                 return (h,i,u)
         return None
 

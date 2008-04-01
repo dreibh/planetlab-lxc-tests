@@ -6,13 +6,6 @@ from TestPool import TestPool
 onelab_plcs_pool = [ 
     ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, 'ab:cd:ef:00:00:%02d'%i) for i in range(1,10) ]
 
-# let's be flexible
-def locate (user_provided):
-    global available
-    for (hostname,ip,mac) in available:
-        if hostname.find(user_provided) >=0 or ip.find(user_provided) >=0:
-            return (hostname,ip)
-
 def config (plcs,options):
     
     utils.header ("Turning configuration into a vserver-based one for onelab")
@@ -27,9 +20,15 @@ def config (plcs,options):
     for plc in plcs:
         try:
             if len (options.ips != 0):
-                (hostname,ip,mac)=test_pool.locate(options.ips.pop())
+                ip=options.ips[0]
+                options.ips=options.ips[1:]
+                (hostname,ip,mac)=test_pool.locate(ip)
+                utils.header("Using user-provided %s %s for plc %s"%(
+                        hostname,ip,plc['name']))
             else:
                 (hostname,ip,mac)=test_pool.next_free()
+                utils.header("Using auto-allocated %s %s for plc %s"%(
+                        hostname,ip,plc['name']))
 
             ### rewrite fields in plc
             # compute a helpful vserver name - remove domain in hostname

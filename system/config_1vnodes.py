@@ -22,7 +22,12 @@ def config (plcs, options):
     all_nodenames = test_mapper.node_names()
     maps = []
     for nodename in all_nodenames:
-        (hostname,ip,mac) = test_pool.next_free()
+        if len(options.ips) != 0:
+            ip=options.ips[0]
+            options.ips=options.ips[1:]
+            (hostname,ip,mac)=test_pool.locate(ip)
+        else:
+            (hostname,ip,mac) = test_pool.next_free()
         node_dict= {'node_fields:hostname':hostname,
                     'network_fields:ip':ip, 
                     # xxx do not et mac as for some reason the qeu nodes don't know about their mac any more
