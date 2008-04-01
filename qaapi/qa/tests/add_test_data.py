@@ -22,11 +22,11 @@ class add_test_data(Test):
 				  'plc' in object and object['plc'] == plc['name'] or \
 				  object['plc'] == None   
      
-	sitelist = filter(this_plc, self.config.sites)  	
-	nodelist = filter(this_plc, self.config.nodes)
-	slicelist = filter(this_plc, self.config.slices)
-	personlist = filter(this_plc, self.config.persons) 
-	
+	sitelist = filter(this_plc, self.config.sites.values())  	
+	nodelist = filter(this_plc, self.config.nodes.values())
+	slicelist = filter(this_plc, self.config.slices.values())
+	personlist = filter(this_plc, self.config.persons.values()) 
+
 	# Add Test site
 	for site in sitelist:
 	    sites = api.GetSites(auth, [site['login_base']])
