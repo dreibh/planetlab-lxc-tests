@@ -3,6 +3,8 @@ from TestMapper import TestMapper
 
 # using mapper to do the reallocation job
 
+target = 'testbox64.one-lab.org'
+
 def config (plcs, options):
 
     mapper = {'plc': [ ('*' , {'hostname':target,

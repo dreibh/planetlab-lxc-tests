@@ -126,6 +126,13 @@ class TestPlc:
                     return (site,node)
         raise Exception,"Cannot locate node %s"%nodename
         
+    def locate_hostname (self,hostname):
+        for site in self.plc_spec['sites']:
+            for node in site['nodes']:
+                if node['node_fields']['hostname'] == hostname:
+                    return (site,node)
+        raise Exception,"Cannot locate hostname %s"%hostname
+        
     def locate_key (self,keyname):
         for key in self.plc_spec['keys']:
             if key['name'] == keyname:
@@ -435,7 +442,7 @@ class TestPlc:
                     utils.header ("%s has reached the 'boot' state"%hostname)
                 else:
                     # if it's a real node, never mind
-                    (site_spec,node_spec)=self.locate_node(hostname)
+                    (site_spec,node_spec)=self.locate_hostname(hostname)
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header("WARNING - Real node %s in %s - ignored"%(hostname,boot_state))
                         # let's cheat
@@ -491,7 +498,7 @@ class TestPlc:
                     # refresh tocheck
                     tocheck.remove(hostname)
                 else:
-                    (site_spec,node_spec)=self.locate_node(hostname)
+                    (site_spec,node_spec)=self.locate_hostname(hostname)
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header ("WARNING : check ssh access into real node %s - skipped"%hostname)
 			tocheck.remove(hostname)
