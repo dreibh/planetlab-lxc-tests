@@ -92,8 +92,9 @@ class TestSlice:
         start_time = datetime.datetime.now()
         dead_time=start_time + datetime.timedelta(minutes=15)
         slice_spec = self.slice_spec
-        for hostname in slice_spec['nodenames']:
-            (site_spec,node_spec) = self.test_plc.locate_node(hostname)
+        for nodename in slice_spec['nodenames']:
+            (site_spec,node_spec) = self.test_plc.locate_node(nodename)
+            hostname=node_spec['node_fields']['hostname']
             if TestNode.is_real_model(node_spec['node_fields']['model']):
                 utils.header("WARNING : Checking slice %s on real node %s skipped"%(self.name(),hostname))
                 continue
