@@ -4,7 +4,7 @@
 cd $(dirname $0)
 
 #Getting the env. as passed by the test framework - mostly MACADDR and NODE_ISO
-CONFIG=start-qemu.conf
+CONFIG=qemu.conf
 if [ ! -e ${CONFIG} ];then
     echo "File for node_iso version not found"
     exit 1
