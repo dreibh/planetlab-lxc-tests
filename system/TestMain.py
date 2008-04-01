@@ -179,10 +179,7 @@ steps refer to a method in TestPlc or to a step_* module
         # build a TestPlc object from the result
         for spec in all_plc_specs:
             spec['disabled'] = False
-        all_plcs = [ (x, TestPlc(x)) for x in all_plc_specs]
-        # expose to the various objects
-        for (spec,obj) in all_plcs:
-            obj.options=self.options
+        all_plcs = [ (x, TestPlc(x,self.options)) for x in all_plc_specs]
 
         overall_result = True
         testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__

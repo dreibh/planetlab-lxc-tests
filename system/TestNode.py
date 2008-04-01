@@ -30,7 +30,7 @@ class TestNode:
     def buildname(self):
         return self.test_plc.options.buildname
         
-    def areaname (self):
+    def nodedir (self):
         if self.is_qemu():
             return "qemu-%s"%self.name()
         else:
@@ -103,12 +103,12 @@ class TestNode:
 
     # Do most of the stuff locally - will be pushed on host_box - *not* the plc - later if needed
     def prepare_area(self):
-        utils.system("rm -rf %s"%self.areaname())
-        utils.system("mkdir %s"%self.areaname())
+        utils.system("rm -rf %s"%self.nodedir())
+        utils.system("mkdir %s"%self.nodedir())
         #create the tar log file
         utils.system("rm -rf nodeslogs && mkdir nodeslogs")
         if self.is_qemu():
-            utils.system("rsync -v -a --exclude .svn template-qemu/ %s/"%self.areaname())
+            utils.system("rsync -v -a --exclude .svn template-qemu/ %s/"%self.nodedir())
 
     def create_boot_cd(self):
         utils.header("Calling GetBootMedium for %s"%self.name())
@@ -119,7 +119,7 @@ class TestNode:
         if (encoded == ''):
             raise Exception, 'GetBootmedium failed'
 
-        filename="%s/%s.iso"%(self.areaname(),self.name())
+        filename="%s/%s.iso"%(self.nodedir(),self.name())
         utils.header('Storing boot medium into %s'%filename)
         file(filename,'w').write(base64.b64decode(encoded))
     
@@ -128,7 +128,7 @@ class TestNode:
             return
         mac=self.node_spec['network_fields']['mac']
         hostname=self.node_spec['node_fields']['hostname']
-        conf_filename="%s/qemu.conf"%(self.areaname())
+        conf_filename="%s/qemu.conf"%(self.nodedir())
         utils.header('Storing qemu config for %s in %s'%(self.name(),conf_filename))
         file=open(conf_filename,'w')
         file.write('MACADDR=%s\n'%mac)
@@ -139,10 +139,9 @@ class TestNode:
         # if relevant, push the qemu area onto the host box
         if ( not self.test_box().is_local()):
             utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
-            self.test_box().clean_dir(self.buildname())
-            self.test_box().mkdir(self.buildname())
+#            self.test_box().clean_dir(self.buildname())
             self.test_box().mkdir("nodeslogs")
-            self.test_box().copy(self.areaname(),recursive=True)
+            self.test_box().copy(self.nodedir(),recursive=True)
 
             
     def start_node (self,options):

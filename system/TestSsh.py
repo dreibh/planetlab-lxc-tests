@@ -38,44 +38,69 @@ class TestSsh:
         self.buildname=buildname
         self.key=key
 
-
     def is_local(self):
         return TestSsh.is_local_hostname(self.hostname)
      
+    std_options="-o StrictHostKeyChecking=no -o BatchMode=yes "
+    
+    def key_part (self):
+        if not self.key:
+            return ""
+        return "-i %s.rsa "%self.key
+    
     # command gets run on the right box
-    def to_host(self,command):
+    def actual_command (self, command):
         if self.is_local():
             return command
-        else:
-            return "ssh %s %s"%(self.hostname,TestSsh.backslash_shell_specials(command))
+        ssh_command = "ssh "
+        ssh_command += TestSsh.std_options
+        ssh_command += self.key_part()
+        ssh_command += "%s %s" %(self.hostname,TestSsh.backslash_shell_specials(command))
+        return ssh_command
+
+    def run(self, command):
+        return utils.system(self.actual_command(command))
 
     def clean_dir (self,dirname):
         if self.is_local():
             return 0
-        return utils.system(self.to_host("rm -rf %s"%dirname))
+        return self.run("rm -rf %s"%dirname)
 
-    def mkdir (self,dirname):
+    def mkdir (self,dirname=None):
         if self.is_local():
+            if dirname:
+                return os.path.mkdir(dirname)
             return 0
-        return utils.system(self.to_host("mkdir %s"%dirname))
+        if dirname:
+            dirname="%s/%s"%(self.buildname,dirname)
+        else:
+            dirname=self.buildname
+        return self.run("mkdir %s"%dirname)
+
+    def create_buildname_once (self):
+        if self.is_local():
+            return
+        # create remote buildname on demand
+        try:
+            self.buildname_created
+        except:
+            self.mkdir()
+            self.buildname_created=True
 
     def run_in_buildname (self,command):
         if self.is_local():
             return utils.system(command)
-        ssh_command="ssh -o StrictHostKeyChecking=no -o BatchMode=yes "
-        if self.key:
-            ssh_command += "-i %s.rsa "%(self.key)
-        ssh_command += "%s %s/%s"%(self.hostname,self.buildname,TestSsh.backslash_shell_specials(command))
-        return utils.system(ssh_command)
+        self.create_buildname_once()
+        return self.run("cd %s ; %s"%(self.buildname,command))
 
     def copy (self,local_file,recursive=False):
         if self.is_local():
             return 0
-        command="scp "
-        if recursive: command += "-r "
-        if self.key:
-            command += "-i %s.rsa "
-        command +="%s %s:%s/%s"%(local_file,self.hostname,self.buildname,
-                                 os.path.basename(local_file) or ".")
-        return utils.system(command)
+        self.create_buildname_once()
+        scp_command="scp "
+        if recursive: scp_command += "-r "
+        scp_command += self.key_part()
+        scp_command += "%s %s:%s/%s"%(local_file,self.hostname,self.buildname,
+                                      os.path.basename(local_file) or ".")
+        return utils.system(scp_command)
         

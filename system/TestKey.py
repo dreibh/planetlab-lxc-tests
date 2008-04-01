@@ -23,11 +23,11 @@ class TestKey:
         priv=self.privatepath()
         utils.header("Storing key %s in %s into %s "%(self.name(),pub,hostname))
         dir=os.path.dirname(pub)
-        utils.system(self.test_ssh.to_host("mkdir %s"%dir))
-        utils.system(self.test_ssh.to_host("cat %s >> %s"%(self.key_spec['key_fields']['key'],pub)))
-        utils.system(self.test_ssh.to_host("cat %s >> %s"%(self.key_spec['private'],priv)))
-        utils.system(self.test_ssh.to_host("chmod %s 0400"%priv))
-        utils.system(self.test_ssh.to_host("chmod %s 0444"%pub))
+        self.test_ssh.run("mkdir %s"%dir)
+        self.test_ssh.run("cat %s >> %s"%(self.key_spec['key_fields']['key'],pub))
+        self.test_ssh.run("cat %s >> %s"%(self.key_spec['private'],priv))
+        self.test_ssh.run("chmod %s 0400"%priv)
+        self.test_ssh.run("chmod %s 0444"%pub)
             
     def store_key(self):
         pub=self.publicpath()

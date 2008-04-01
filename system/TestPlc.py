@@ -21,9 +21,9 @@ from TestSsh import TestSsh
 # step methods must take (self, options) and return a boolean
 
 def standby(minutes):
-        utils.header('Entering StandBy for %d mn'%minutes)
-        time.sleep(60*minutes)
-        return True
+    utils.header('Entering StandBy for %d mn'%minutes)
+    time.sleep(60*minutes)
+    return True
 
 def standby_generic (func):
     def actual(self,options):
@@ -33,10 +33,10 @@ def standby_generic (func):
 
 class TestPlc:
 
-    def __init__ (self,plc_spec):
+    def __init__ (self,plc_spec,options):
 	self.plc_spec=plc_spec
-	self.path=os.path.dirname(sys.argv[0])
-	self.test_ssh=TestSsh(self.plc_spec['hostname'],self.path)
+        self.options=options
+	self.test_ssh=TestSsh(self.plc_spec['hostname'],self.options.buildname)
         try:
             self.vserverip=plc_spec['vserverip']
             self.vservername=plc_spec['vservername']
@@ -66,14 +66,11 @@ class TestPlc:
     def connect (self):
 	pass
 
-    def full_command(self,command):
-        return self.test_ssh.to_host(self.host_to_guest(command))
-
     def run_in_guest (self,command):
-        return utils.system(self.full_command(command))
+        return self.test_ssh.run(self.host_to_guest(command))
     
     def run_in_host (self,command):
-        return utils.system(self.test_ssh.to_host(command))
+        return self.test_ssh.run_in_buildname(command)
 
     #command gets run in the chroot/vserver
     def host_to_guest(self,command):
@@ -102,8 +99,7 @@ class TestPlc:
 
         # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
-        return utils.system(local+" | "+self.full_command(remote))
-	
+        return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote)))
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
@@ -215,7 +211,7 @@ class TestPlc:
         ##### Clean up the /plc directory
         self.run_in_host('rm -rf  /plc/data')
         ##### stop any running vservers
-        self.run_in_host('for vserver in $(ls /vservers/* | sed -e s,/vservers/,,) ; do vserver $vserver stop ; done')
+        self.run_in_host('for vserver in $(ls -d /vservers/* | sed -e s,/vservers/,,) ; do case $vserver in vtest*) echo Shutting down vserver $vserver ; vserver $vserver stop ;; esac ; done')
         return True
 
     def uninstall_vserver(self,options):
@@ -242,7 +238,7 @@ class TestPlc:
         # we need build dir for vtest-init-vserver
         if self.is_local():
             # a full path for the local calls
-            build_dir=self.path+"/build"
+            build_dir=os.path(sys.argv[0])+"/build"
         else:
             # use a standard name - will be relative to HOME 
             build_dir="options.buildname"
@@ -268,19 +264,16 @@ class TestPlc:
             return self.install_chroot(options)
     
     ### install_rpm
-    def cache_rpm(self,url):
-        self.run_in_host('rm -rf *.rpm')
-	utils.header('Curling rpm from %s'%url)
-	id= self.run_in_host('curl -O '+url)
+    def cache_rpm(self,url,rpm):
+        cache_fetch="pwd;if [ -f %(rpm)s ] ; then echo Using cached rpm %(rpm)s ; else echo Fetching %(url)s ; curl -O %(url)s; fi"%locals()
+	id = self.run_in_host(cache_fetch)
 	if (id != 0):
-		raise Exception,"Could not get rpm from  %s"%url
-	        return False
-	return True
+            raise Exception,"Could not get rpm from  %s"%url
 
     def install_rpm_chroot(self,options):
-        rpm = os.path.basename(options.myplc_url)
-	if (not os.path.isfile(rpm)):
-		self.cache_rpm(options.myplc_url)
+        url = self.options.myplc_url
+        rpm = os.path.basename(url)
+	self.cache_rpm(url,rpm)
 	utils.header('Installing the :  %s'%rpm)
         self.run_in_host('rpm -Uvh '+rpm)
         self.run_in_host('service plc mount')
@@ -342,7 +335,7 @@ class TestPlc:
         return True
 
     def clean_keys(self, options):
-        utils.system("rm -rf %s/keys/"%self.path)
+        utils.system("rm -rf %s/keys/"%os.path(sys.argv[0]))
 
     def sites (self,options):
         return self.do_sites(options)
@@ -526,7 +519,7 @@ class TestPlc:
 		test_node.configure_qemu()
         return True
 
-    def do_check_intiscripts(self):
+    def do_check_initscripts(self):
 	for site_spec in self.plc_spec['sites']:
 		test_site = TestSite (self,site_spec)
 		test_node = TestNode (self,test_site,site_spec['nodes'])
@@ -539,7 +532,7 @@ class TestPlc:
 		return init_status
 	    
     def check_initscripts(self, options):
-	    return self.do_check_intiscripts()
+	    return self.do_check_initscripts()
 	            
     def initscripts (self, options):
         for initscript in self.plc_spec['initscripts']:
@@ -588,13 +581,13 @@ class TestPlc:
         return True
 
     def check_tcp (self, options):
-	    #we just need to create a sliver object nothing else
-	    test_sliver=TestSliver(self,
-				   TestNode(self, TestSite(self,self.plc_spec['sites'][0]),
-					    self.plc_spec['sites'][0]['nodes'][0]),
-				   TestSlice(self,TestSite(self,self.plc_spec['sites'][0]),
-					     self.plc_spec['slices']))
-	    return test_sliver.do_check_tcp(self.plc_spec['tcp_param'],options)
+        # we just need to create a sliver object nothing else
+        test_sliver=TestSliver(self,
+                               TestNode(self, TestSite(self,self.plc_spec['sites'][0]),
+                                        self.plc_spec['sites'][0]['nodes'][0]),
+                               TestSlice(self,TestSite(self,self.plc_spec['sites'][0]),
+                                         self.plc_spec['slices']))
+        return test_sliver.do_check_tcp(self.plc_spec['tcp_param'],options)
 
     # returns the filename to use for sql dump/restore, using options.dbname if set
     def dbfile (self, database, options):
