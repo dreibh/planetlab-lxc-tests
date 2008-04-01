@@ -24,8 +24,8 @@ class TestMain:
                      'kill_all_qemus', 'start_nodes', 
                      'standby_20', 
                      'nodes_booted', 'nodes_ssh', 'check_slices','check_initscripts',
-                     'force_kill_qemus', ]
-    other_steps = [ 'stop_all_vservers','fresh_install', 'stop','check_tcp', 
+                     'check_tcp','force_kill_qemus', ]
+    other_steps = [ 'stop_all_vservers','fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
                     'list_all_qemus', 'list_qemus', 'stop_nodes' ,  
                     'db_dump' , 'db_restore',
