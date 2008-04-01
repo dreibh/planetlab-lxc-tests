@@ -4,7 +4,7 @@ from TestMapper import TestMapper
 from TestPool import TestPool
 
 onelab_plcs_pool = [ 
-    ( 'vnode%02d.inria.fr'%i, '138.96.250.22%d'%i, 'ab:cd:ef:00:01:%02d'%i) for i in range(1,10) ]
+    ( 'vnode%02d.inria.fr'%i, '138.96.250.22%d'%i, '02:08:74:4C:7F:%02d'%i) for i in range(1,10) ]
 site_dict = {
     'network_fields:gateway':'138.96.248.250',
     'network_fields:network':'138.96.0.0',
@@ -30,8 +30,7 @@ def config (plcs, options):
             (hostname,ip,mac) = test_pool.next_free()
         node_dict= {'node_fields:hostname':hostname,
                     'network_fields:ip':ip, 
-                    # xxx do not et mac as for some reason the qeu nodes don't know about their mac any more
-                    #'network_fields:mac':mac,
+                    'network_fields:mac':mac,
                     }
     
         node_dict.update(site_dict)
