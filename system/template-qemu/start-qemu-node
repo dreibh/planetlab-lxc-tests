@@ -13,12 +13,12 @@ fi
 
 #default Value
 #always use the 64 bit version of qemu, as this will work on both 32 & 64 bit host kernels
-QEMU=qemu-system-x86_64
+QEMU=qemu
 HDA=hda_5.img
-RAM=520;
+RAM=1024
 
-SCRIPT=./qemu-ifup
-TAP="tap,script=$SCRIPT";
+SCRIPT=qemu-ifup
+TAP="tap,script=$SCRIPT"
 
 #Creating new HDA if needed only
 #using qcow2 disk image format which is essential to support VM snapshots
@@ -38,7 +38,7 @@ echo "New $HDA is created..."
 rm -f qemu.pid
 
 #Command for running the Qemu Emulator
-ARGS="-boot d  -net nic -net $TAP -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM} -nographic -pidfile qemu.pid"
+ARGS="-boot d  -net nic,macaddr=${MACADDR} -net $TAP, -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM} -nographic  -pidfile qemu.pid"
 echo $$ > shell.pid
 echo "Running $QEMU $ARGS < /dev/null"
 exec $QEMU $ARGS < /dev/null
