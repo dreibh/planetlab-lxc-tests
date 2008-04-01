@@ -126,10 +126,14 @@ class TestNode:
     def configure_qemu(self):
         if not self.is_qemu():
             return
-        conf_filename="%s/start-qemu.conf"%(self.areaname())
+        mac=self.node_spec['network_fields']['mac']
+        hostname=self.node_spec['node_fields']['hostname']
+        conf_filename="%s/qemu.conf"%(self.areaname())
         utils.header('Storing qemu config for %s in %s'%(self.name(),conf_filename))
         file=open(conf_filename,'w')
+        file.write('MACADDR=%s\n'%mac)
         file.write('NODE_ISO=%s.iso\n'%self.name())
+        file.write('HOSTNAME=%s\n'%hostname)
         file.close()
 
         # if relevant, push the qemu area onto the host box
