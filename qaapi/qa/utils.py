@@ -10,8 +10,9 @@ def header(message):
     print output
     print >> logfile, output	
 
-
-def popen(command, fatal=True):
+def popen(command, fatal=True, verbose = False):
+    if verbose:
+	header(command)	
     (stdin, stdout, stderr) = os.popen3(command)
     output = stdout.readlines()
     print >> logfile, "+ "+command
@@ -24,12 +25,16 @@ def popen(command, fatal=True):
 	raise Exception, "".join(errors)	
     return (output, errors)    
 
-def popen3(command):
+def popen3(command, verbose = False):
+    if verbose:
+	header(command)
     (stdin, stdout, stderr) = os.popen3(command)
     print >> logfile, "+ "+command
     return (stdin, stdout, stderr)	 	 	
     
-def commands(command, fatal = True):
+def commands(command, fatal = True, verbose = False):
+    if verbose:
+	header(command)	
     (status, output) = getstatusoutput(command)
     print >> logfile, "+ "+command
     print >> logfile, output.strip() 		
