@@ -12,9 +12,9 @@ plcs = [
          'port': '443'
         },
 	{'name': 'ParisPLC',
-	 'host': 'localhost',
-	 'ip': '127.0.0.1',
-	 'url': 'https://localhost.localdomain/',
+	 'host': 'paris.cs.princeton.edu',
+	 'ip': '128.112.95.151',
+	 'url': 'https://paris.cs.princeton.edu/',
 	 'port': '443',
 	 'chroot': '/plc/root/'
 	}
@@ -37,7 +37,8 @@ nodes = [
 	 'site': 'ts',
 	 'hostname': 'vm1.paris.cs.princeton.edu',
 	 'host': 'localhost',
-	 'type': 'virtual',
+	 'redir_port': '51101',
+	 'type': 'vm',
 	 'nodenetworks' : [{'type': 'ipv4',
 			   'method': 'static',
 			   'ip': '10.0.2.16',
