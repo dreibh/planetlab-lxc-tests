@@ -94,6 +94,10 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Force the NM to restart in check_slices step")
         (self.options, self.args) = parser.parse_args()
 
+        # tmp : force small test 
+        utils.header("XXX WARNING : forcing small tests")
+        self.options.small_test = True
+
         if len(self.args) == 0:
             if self.options.all_steps:
                 self.options.steps=TestMain.default_steps
