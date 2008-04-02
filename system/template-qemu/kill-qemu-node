@@ -17,7 +17,7 @@ function list_pids () {
     if [[ -n "$hostnames" ]] ; then
 	for hostname in $hostnames; do
 	    nodedir=qemu-$hostname
-	    cat $nodedir/qemu.pid $nodedir/shell.pid 2> /dev/null
+	    cat $nodedir/qemu.pid 2> /dev/null
 	done
     else
 	pgrep qemu
@@ -40,7 +40,6 @@ function kill_pids () {
 	for hostname in $hostnames; do
 	    nodedir=qemu-$hostname
 	    kill_from_file $nodedir/qemu.pid
-	    kill_from_file $nodedir/shell.pid
 	done
     else
 	echo Killing all processes mathing qemu

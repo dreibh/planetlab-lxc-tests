@@ -5,6 +5,7 @@ import os.path
 import utils
 from TestSsh import TestSsh
 
+# xxx this should probably inherit TestSsh
 class TestBox:
 
     def __init__(self,hostname,buildname,key=None):
@@ -26,9 +27,9 @@ class TestBox:
             return True
         return False
     
-    def run_in_buildname (self,command):
+    def run_in_buildname (self,command,background=False):
         utils.header("Running command %s on testbox %s"%(command,self.hostname()))
-        return self.test_ssh.run_in_buildname (command)
+        return self.test_ssh.run_in_buildname (command,background)
 
     # should use rsync instead
     def copy (self,local_file,recursive=False):
@@ -37,8 +38,8 @@ class TestBox:
     def clean_dir (self,dirname):
         return self.test_ssh.clean_dir(dirname)
 
-    def mkdir (self,direname):
-        return self.test_ssh.mkdir(direname)
+    def mkdir (self,dirname):
+        return self.test_ssh.mkdir(dirname)
 
     def kill_all_qemus(self):
         self.run_in_buildname("template-qemu/kill-qemu-node")

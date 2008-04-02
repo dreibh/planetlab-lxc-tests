@@ -58,8 +58,11 @@ class TestSsh:
         ssh_command += "%s %s" %(self.hostname,TestSsh.backslash_shell_specials(command))
         return ssh_command
 
-    def run(self, command):
-        return utils.system(self.actual_command(command))
+    def run(self, command,background=False):
+        local_command = self.actual_command(command)
+        if background:
+            local_command += " &"
+        return utils.system(local_command)
 
     def clean_dir (self,dirname):
         if self.is_local():
@@ -87,11 +90,11 @@ class TestSsh:
             self.mkdir()
             self.buildname_created=True
 
-    def run_in_buildname (self,command):
+    def run_in_buildname (self,command, background=False):
         if self.is_local():
             return utils.system(command)
         self.create_buildname_once()
-        return self.run("cd %s ; %s"%(self.buildname,command))
+        return self.run("cd %s ; %s"%(self.buildname,command),background)
 
     def copy (self,local_file,recursive=False):
         if self.is_local():

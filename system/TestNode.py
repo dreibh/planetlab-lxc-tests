@@ -157,7 +157,8 @@ class TestNode:
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 
         test_box.run_in_buildname("qemu-%s/env-qemu start >> nodeslogs/%s.log"%(self.name(),self.name()))
-        test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> nodeslogs/%s.log &"%(self.name(),self.name()))
+        # kick it off in background, as it would otherwise hang
+        test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> nodeslogs/%s.log &"%(self.name(),self.name()),True)
 
     def list_qemu (self):
         utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))

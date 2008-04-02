@@ -39,6 +39,5 @@ rm -f qemu.pid
 
 #Command for running the Qemu Emulator
 ARGS="-boot d  -net nic,macaddr=${MACADDR} -net $TAP, -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM} -nographic  -pidfile qemu.pid"
-echo $$ > shell.pid
 echo "Running $QEMU $ARGS < /dev/null"
 exec $QEMU $ARGS < /dev/null
