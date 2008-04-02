@@ -10,8 +10,9 @@ class Node(dict, Remote):
 	'plc': None,
 	'hostname': None, 		# Node Hostname
 	'host': 'localhost',		# host where node lives
+	'redir_port': None,		# Port on host where ssh is redirected to virtual node
 	'vserver': None,		# vserver where this node lives
-	'type': 'virtual', 		# type of node
+	'type': 'vm', 			# type of node
 	'nodenetworks': [], 		# node networks
 	'homedir': '/var/VirtualMachines/',
 	'rootkey': None			 # path to root ssh key
