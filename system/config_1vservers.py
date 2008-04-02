@@ -4,7 +4,7 @@ from TestPool import TestPool
 
 # the pool of IP addresses available - from 01 to 09
 onelab_plcs_pool = [ 
-    ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, 'ab:cd:ef:00:00:%02d'%i) for i in range(1,10) ]
+    ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, '02:34:56:00:ee:%02d'%i) for i in range(1,10) ]
 
 def config (plcs,options):
     

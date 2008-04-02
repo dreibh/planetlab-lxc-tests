@@ -4,7 +4,7 @@ from TestMapper import TestMapper
 from TestPool import TestPool
 
 onelab_plcs_pool = [ 
-    ( 'vnode%02d.inria.fr'%i, '138.96.250.22%d'%i, '02:08:74:4C:7F:%02d'%i) for i in range(1,10) ]
+    ( 'vnode%02d.inria.fr'%i, '138.96.250.22%d'%i, '02:34:56:00:00:%02d'%i) for i in range(1,10) ]
 site_dict = {
     'network_fields:gateway':'138.96.248.250',
     'network_fields:network':'138.96.0.0',
