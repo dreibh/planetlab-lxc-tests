@@ -112,12 +112,12 @@ class boot_node(Test):
 	fp.close()
 
 	# Move the boot image to the nodes home directory
-	node.commands("mkdir -p %(homedir)s" % locals())
+	node.host_commands("mkdir -p %(homedir)s" % locals())
 	node.scp(bootimage_tmppath, "%(remote_bootimage_path)s" % locals())
 	
 	# Create a temporary disk image
 	qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage_path)s %(disk_size)s" % locals()
-	node.commands(qemu_img_cmd)
+	node.host_commands(qemu_img_cmd)
 
 	if self.config.verbose:
             utils.header("Booting %(hostname)s" % locals())
@@ -155,7 +155,7 @@ class boot_node(Test):
 
         # launch qemu
 	utils.header(bootcmd)
-	(self.stdin, self.stdout, self.stderr) = node.popen3(bootcmd)
+	(self.stdin, self.stdout, self.stderr) = node.host_popen3(bootcmd)
         
 	# wait for qemu to start up
         time.sleep(3)
