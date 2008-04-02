@@ -24,7 +24,7 @@ class delete_test_data(Test):
                                   'plc' in object and object['plc'] == plc['name'] or \
                                   object['plc'] == None
 
-	sitelist = filter(this_plc, self.config.sites)
+	sitelist = filter(this_plc, self.config.sites.values())
 		
 	# Deleting the site should delete everything associated with it
 	# including nodes, persons
