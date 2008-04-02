@@ -18,15 +18,16 @@ class Config:
     node_tests_path = tests_path + os.sep + 'node' + os.sep
     slice_tests_path = tests_path + os.sep + 'slice' + os.sep				
     vserver_scripts_path = path + os.sep + 'vserver' + os.sep
-    qemu_scripts_path = path + os.sep + 'qemu' + os.sep	
 
     def update_api(self, plc = None):
 	# Set up API acccess
 	# If plc is specified, find its configuration
 	# and use its API
         if plc is not None:
-	    host, path, port  = plc['host'], plc['api_path'], plc['port']
-	    api_server = "https://%(host)s:%(port)s/%(path)s" % locals()
+	    protocol, host, path, port  = 'http', plc['host'], plc['api_path'], plc['port']
+	    if port in ['443']:
+		protocol = 'https'
+	    api_server = "%(protocol)s://%(host)s:%(port)s/%(path)s" % locals()
 	    self.api = xmlrpclib.Server(api_server, allow_none = 1)
 	    self.api_type = 'xmlrpc'	
 	else:
@@ -84,6 +85,7 @@ class Config:
 	plc = PLC(self)
 	if hasattr(self, 'plcs')  and plc_name in self.plcs.keys():
 	    plc.update(self.plcs[plc_name])
+	    plc.config.update_api(plc)
 	return plc
 
     def get_node(self, hostname):
@@ -106,7 +108,7 @@ class Config:
 	    if loadable in confdata and loadable in ['plcs']:
 	        setattr(self, loadable, PLCs(config, confdata[loadable]).dict('name'))
 	    elif loadable in confdata and loadable in ['nodes']:
-		setattr(self, loadable, Nodes(config, confdata[loadable]).dict('hostname')) 		
+		setattr(self, loadable, Nodes(config, confdata[loadable]).dict('hostname'))	
 	    elif loadable in confdata and loadable in ['sites']:
 		setattr(self, loadable, Sites(confdata[loadable]).dict('login_base'))
 	    elif loadable in confdata and loadable in ['slices']:
