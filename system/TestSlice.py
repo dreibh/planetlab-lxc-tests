@@ -59,11 +59,14 @@ class TestSlice:
         
     def clear_known_hosts (self):
         utils.header("Messing with known_hosts for slice %s"%self.name())
+        hostnames=[]
         # scan nodenames
         for nodename in self.slice_spec['nodenames']:
-            self.test_plc.run_in_guest("sed -i -e /^%s/d /root/.ssh/known_hosts"%nodename)
+            (site_spec,node_spec) = self.test_plc.locate_node(nodename)
+            hostnames.append(node_spec['node_fields']['hostname'])
+            self.test_plc.run_in_guest("sed -i -e /^%s/d /root/.ssh/known_hosts"%node_spec['node_fields']['hostname'])
         #scan public key and update the known_host file in the root image
-        self.test_plc.scan_publicKeys(self.slice_spec['nodenames'])
+        self.test_plc.scan_publicKeys(hostnames)
         
     def locate_key(self,slice_spec):
         # locate the first avail. key
