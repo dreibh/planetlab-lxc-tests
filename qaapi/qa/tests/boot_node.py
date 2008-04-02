@@ -79,7 +79,6 @@ class boot_node(Test):
 	node = self.config.get_node(hostname)
 	# Which plc does this node talk to 
 	plc = self.config.get_plc(node['plc'])
-	print node
         api = plc.config.api
         auth = plc.config.auth
 	host = node['host']
@@ -142,8 +141,10 @@ class boot_node(Test):
         bootcmd = bootcmd + " -m %(ramsize)s" % locals()
         # uniprocessor only
         bootcmd = bootcmd + " -smp 1"
-	# XX network bridge
-	#bootcmd = bootcmd + " -net nic -net tap,script=%s/qemu-ifup" % self.config.qemu_scripts_path
+	# redirect incomming tcp connections on specified port to guest node
+	if 'redir_port' in node and node['redir_port']:
+	    port = node['redir_port']
+	    bootcmd = bootcmd + " -redir tcp:%(port)s::22" % locals() 
         # no graphics support -> assume we are booting via serial console
         bootcmd = bootcmd + " -nographic"
         # boot from the supplied cdrom iso file
