@@ -39,19 +39,29 @@ class TestSliver:
             
         return True
     
+    def run_tcp_server (self,port):
+        print ("XXX run_tcp_server not implemented")
+        return True
+    def run_tcp_client (self,hostname,port):
+        print ("XXX run_tcp_client not implemented")
+        return True
+
     def run_tcpcheck(self,peer_spec,remote_privatekey):
         if peer_spec['peer_name']=="server":
-            tcp_command="ssh -i %s %s@%s ./tcptest.py server -t 10"%(remote_privatekey, peer_spec['slice_name'],
-                                                                   peer_spec['server_name'])
-            return self.test_plc.run_in_guest(tcp_command)
+            slice_ssh = TestSsh (peer_spec['server_name'],
+                                 key=remote_privatekey,
+                                 username=peer_spec['slice_name'])
+            remote_server_command=slice_ssh.actual_command("./tcptest.py server -t 10")
+            return self.test_plc.run_in_guest(remote_server_command)
         
         else:
-            tcp_command="ssh -i %s %s@%s ./tcptest.py client -a %s -p %d"%(remote_privatekey, peer_spec['slice_name'],
-                                                                           peer_spec['client_name'],peer_spec['peer_server'],
-                                                                           peer_spec['server_port'])
-            return self.test_plc.run_in_guest(tcp_command)
-
-
+            slice_ssh = TestSsh (peer_spec['client_name'],
+                                 key=remote_privatekey,
+                                 username=peer_spec['slice_name'])
+            client_command="/tcptest.py client -a %s -p %d"%(peer_spec['peer_server'],
+                                                             peer_spec['server_port'])
+            remote_client_command=slice_ssh.actual_command(client_command)
+            return self.test_plc.run_in_guest(remote_client_command)
 
     def do_check_tcp(self,tcp_param,options):
         for tcp_spec in tcp_param:

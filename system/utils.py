@@ -1,6 +1,7 @@
 # $Id$
 import time
 import os
+import re
 from pprint import PrettyPrinter
 
 # how could this accept a list again ?
@@ -90,10 +91,16 @@ def show_test_spec_pass (plc_spec,passno):
             if key not in ['sites','initscripts','slices','keys']:
                 print '\t',key,':',val
 
-def system(command):
+def system(command,background=False):
     now=time.strftime("%H:%M:%S", time.localtime())
+    if background: command += " &"
     print "+",now,':',command
     return os.system("set -x; " + command)
 
-
+def match (string, pattern):
+    # tmp - there's probably much simpler
+    # rewrite * into .*, ? into .
+    pattern=pattern.replace("*",".*")
+    pattern=pattern.replace("?",".")
+    return re.compile(pattern).match(string)
     

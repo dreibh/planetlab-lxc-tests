@@ -8,7 +8,6 @@
 # see an example in config_onelab_testbox32.py
 # 
 
-import re
 import utils
 
 class TestMapper:
@@ -16,11 +15,6 @@ class TestMapper:
     def __init__ (self,plcs,options):
         self.plcs=plcs
         self.options=options
-
-    @staticmethod
-    def match (name,key):
-        key=key.replace("*",".*")
-        return re.compile(key).match(name)
 
     @staticmethod
     def plc_name (plc):
@@ -32,8 +26,8 @@ class TestMapper:
 
     def apply_first_map (self, type, name, obj, maplist):
         for (map_pattern,rename_dict) in maplist:
-            if TestMapper.match (name,map_pattern):
-                utils.header("TestMapper/%s : applying match key %s on plc %s"%(type,map_pattern,name))
+            if utils.match (name,map_pattern):
+                utils.header("TestMapper/%s : applying rules '%s' on %s"%(type,map_pattern,name))
                 for (k,v) in rename_dict.iteritems():
                     # apply : separator
                     path=k.split(':')
@@ -53,8 +47,7 @@ class TestMapper:
                     # apply formatting if '%s' found in the value
                     if v.find('%s')>=0:
                         v=v%obj[k]
-                    if self.options.verbose:
-                        utils.header("mapping %s->%s towards %s"%(name,k,v))
+                    utils.header("TestMapper, rewriting %s: %s into %s"%(name,k,v))
                     o[step]=v
                 # only apply first rule
                 return

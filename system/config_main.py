@@ -192,26 +192,28 @@ def slices (options):
 def all_slicenames (options):
     return [ slice['slice_fields']['name'] for slice in slices(options)]
 
-def tcp_param (options):
-    try:
-        return [{ 'tcp_fields' :  {'peer_name' : 'server',
-                                   'slice_name' :all_slicenames(options)[0],
-                                   'server_name': all_nodenames()[0]
-                                   },
-                  
-                  },
-                { 'tcp_fields':{'peer_name' : 'client',
-                                'slice_name' :all_slicenames()[1],
-                                'client_name': all_nodenames()[1],
-                                'peer_server' :  all_nodenames()[0],
-                                'server_port' : 22
-                                },
-                  },
-                
-                ]
-    except:
-        return None
-
+def tcp_tests (options):
+    all_tests = [ 
+        # local test
+        { 'server_node': 'node1',
+          'server_slice' : 'main_slicetest1',
+          'client_node' : 'node1',
+          'client_slice' : 'main_slicetest1',
+          'port' : 2000,
+          },
+        # remote test
+        { 'server_node': 'node1',
+          'server_slice' : 'main_slicetest1',
+          'client_node' : 'node2',
+          'client_slice' : 'main_slicetest1',
+          'port' : 4000,
+          },
+        ]
+    if options.small_test:
+        return [all_tests[0]]
+    else:
+        return all_tests
+             
 def plc (options) :
     return { 
         'name' : 'onetest',
@@ -236,7 +238,7 @@ def plc (options) :
         'keys' : keys(options),
         'initscripts': initscripts(options),
         'slices' : slices(options),
-        'tcp_param' : tcp_param(options),
+        'tcp_test' : tcp_tests(options),
     }
 
 def config (plc_specs,options):

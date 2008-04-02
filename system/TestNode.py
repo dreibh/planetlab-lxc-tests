@@ -176,3 +176,10 @@ class TestNode:
         command="qemu-%s/kill-qemu-node %s"%(self.name(),self.name())
         self.test_box().run_in_buildname(command)
         return True
+
+    def gather_qemu_logs (self):
+        utils.header("WARNING - Incomplete logs gathering TestNodes.gather_qemu_logs")
+
+    def gather_var_logs (self):
+        utils.header("WARNING - Incomplete logs gathering TestNodes.gather_var_logs")
+

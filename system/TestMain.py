@@ -14,11 +14,11 @@ class TestMain:
 
     subversion_id = "$Id$"
 
-    default_config = [ 'onelab' ]
+    default_config = [ 'main' , '1vnodes' , '1testbox64' ]
 
     default_steps = ['uninstall','install','install_rpm',
                      'configure', 'start', 
-                     'clear_ssh_config','store_keys', 'initscripts', 
+                     'store_keys', 'initscripts', 
                      'sites', 'nodes', 'slices', 
                      'bootcd', 'nodegroups', 
                      'kill_all_qemus', 'start_nodes', 
@@ -27,7 +27,7 @@ class TestMain:
                      'check_tcp','force_kill_qemus', ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'stop', 
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
-                    'list_all_qemus', 'list_qemus', 'stop_nodes' ,  
+                    'show_boxes', 'list_all_qemus', 'list_qemus', 
                     'db_dump' , 'db_restore',
                     'standby_1 through 20',
                     ]
@@ -73,6 +73,9 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
                           help="Config module - can be set multiple times, or use quotes")
+        parser.add_option("-x","--exclude",action="callback", callback=TestMain.optparse_list, dest="exclude",
+                          nargs=1,type="string",default=[],
+                          help="steps to exclude - can be set multiple times, or use quotes")
         parser.add_option("-a","--all",action="store_true",dest="all_steps", default=False,
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
@@ -160,6 +163,17 @@ steps refer to a method in TestPlc or to a step_* module
             #self.options.steps=['dump','clean','install','populate']
             self.options.steps=TestMain.default_steps
 
+        # exclude
+        selected=[]
+        for step in self.options.steps:
+            keep=True
+            for exclude in self.options.exclude:
+                if utils.match(step,exclude):
+                    keep=False
+                    break
+            if keep: selected.append(step)
+        self.options.steps=selected
+
         # this is useful when propagating on host boxes, to avoid conflicts
         self.options.buildname = os.path.basename (os.path.abspath (self.path))
 
@@ -228,7 +242,7 @@ steps refer to a method in TestPlc or to a step_* module
                         force_msg=""
                         if force: force_msg=" (forced)"
                         utils.header("********** RUNNING step %s%s on plc %s"%(stepname,force_msg,plcname))
-                        step_result = method(obj,self.options)
+                        step_result = method(obj)
                         if step_result:
                             utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
                         else:
