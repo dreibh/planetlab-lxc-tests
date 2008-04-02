@@ -25,8 +25,20 @@ class Node(dict, Remote):
 	
 	# Merge defined fields with defaults
 	self.update(fields)
-	self.config = config	
-    
+	self.config = config
+
+    def host_popen(self, command, fatal = True):
+        command = self.get_host_command(command)
+        return utils.popen(command, fatal, self.config.verbose)
+
+    def host_popen3(self, command):
+        command = self.get_host_command(command)
+        return utils.popen3(command, self.config.verbose)
+
+    def host_commands(self, command, fatal = True):
+        command = self.get_host_command(command)
+        return utils.commands(command, fatal, self.config.verbose)    
+	 
 class Nodes(list, Table):
 
     def __init__(self, config, nodes):
