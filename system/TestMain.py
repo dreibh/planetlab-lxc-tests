@@ -27,12 +27,12 @@ class TestMain:
                      'standby_20', SEP,
                      'nodes_booted', 'nodes_ssh', 'check_slices',
                      'check_initscripts', 'check_tcp',SEP,
-                     'force_kill_qemus', 'force_gather_logs' ]
+                     'force_gather_logs', 'force_kill_qemus', ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', SEP,
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
                     'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
                     'db_dump' , 'db_restore',
-                    'standby_1 through 20', SEP,
+                    'standby_1 through 20'
                     ]
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
 

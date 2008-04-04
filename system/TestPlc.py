@@ -647,7 +647,7 @@ class TestPlc:
         return True
 
     def gather_var_logs (self):
-        to_plc = self.actual_command_in_guest("tar -cf - /var/log")        
+        to_plc = self.actual_command_in_guest("tar -C /var/log/ -cf - .")        
         command = to_plc + "| tar -C logs/%s-var-log -xf -"%self.name()
         utils.system("mkdir -p logs/%s-var-log"%self.name())
         utils.system(command)
