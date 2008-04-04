@@ -1,0 +1,4 @@
+#!/bin/bash
+mkdir logs
+logfile=logs/runtest-$(date +%H-%M).log
+exec TestMain.py "$@" | tee logfile
