@@ -2,4 +2,4 @@
 cd $(dirname $0)
 mkdir -p logs
 logfile=logs/runtest-$(date +%H-%M).log
-exec python -u TestMain.py "$@" | tee logfile
+exec python -u TestMain.py "$@" | tee $logfile

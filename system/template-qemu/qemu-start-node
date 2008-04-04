@@ -23,10 +23,10 @@ fi
 # the launcher, depending on local/target archs
 archs="$(uname -i)+$TARGET_ARCH"
 case $archs in
-    i386+i386)		QEMU= qemu;;
-    i386+x86_64)	QEMU= qemu-system-x86_64;;
-    x86_64+i386)	QEMU= qemu;;
-    x86_64+x86_64)	QEMU= qemu-system-x86_64;;
+    i386+i386)		QEMU=qemu;;
+    i386+x86_64)	QEMU=qemu-system-x86_64;;
+    x86_64+i386)	QEMU=qemu;;
+    x86_64+x86_64)	QEMU=qemu-system-x86_64;;
 esac
 
 #Creating new HDA if needed only
