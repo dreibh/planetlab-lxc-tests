@@ -37,7 +37,7 @@ class TestMain:
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
 
     def __init__ (self):
-	self.path=os.path.dirname(sys.argv[0])
+	self.path=os.path.dirname(sys.argv[0]) or "."
         os.chdir(self.path)
 
     @staticmethod
