@@ -607,7 +607,7 @@ class TestPlc:
 
             # idem for the client side
             c_test_sliver = self.locate_sliver_obj(spec['server_node'],spec['server_slice'])
-            if not c_test_sliver.run_tcp_client(s_test_node.name(),port):
+            if not c_test_sliver.run_tcp_client(s_test_sliver.test_node.name(),port):
                 overall=False
         return overall
     

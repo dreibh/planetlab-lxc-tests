@@ -137,7 +137,7 @@ class TestNode:
         conf_filename="%s/qemu.conf"%(self.nodedir())
         if self.test_plc.options.dry_run:
             print "dry_run: skipped actual storage of qemu.conf"
-            return
+            return True
         utils.header('Storing qemu config for %s in %s'%(self.name(),conf_filename))
         file=open(conf_filename,'w')
         file.write('MACADDR=%s\n'%mac)
@@ -177,8 +177,6 @@ class TestNode:
     def kill_qemu (self):
         #Prepare the log file before killing the nodes
         test_box = self.test_box()
-        if(not test_box.tar_logs()):
-            utils.header("Failed to get the nodes log files")
         # kill the right processes 
         utils.header("Stopping qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
         command="qemu-%s/qemu-kill-node %s"%(self.name(),self.name())
