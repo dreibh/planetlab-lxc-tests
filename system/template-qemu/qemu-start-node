@@ -3,7 +3,15 @@
 # cd in this command's directory
 cd $(dirname $0)
 
-#Getting the env. as passed by the test framework
+########## globals
+HDA=hard_drive.img
+RAM=1024
+qemu-img create -f qcow2 $HDA 10G
+
+SCRIPT=qemu-ifup
+TAP="tap,script=$SCRIPT"
+
+########## from the test environment
 # expected vars are MACADDR, NODE_ISO, HOSTNAME and TARGET_ARCH
 CONFIG=qemu.conf
 if [ ! -e ${CONFIG} ];then
@@ -13,7 +21,7 @@ fi
 . $CONFIG
 
 # the launcher, depending on local/target archs
-archs="$(uname-i)+$(TARGET_ARCH)"
+archs="$(uname -i)+$TARGET_ARCH"
 case $archs in
     i386+i386)		QEMU= qemu;;
     i386+x86_64)	QEMU= qemu-system-x86_64;;
@@ -21,27 +29,19 @@ case $archs in
     x86_64+x86_64)	QEMU= qemu-system-x86_64;;
 esac
 
-QEMU=qemu
-HDA=hard_drive.img
-RAM=1024
-
-SCRIPT=qemu-ifup
-TAP="tap,script=$SCRIPT"
-
 #Creating new HDA if needed only
 #using qcow2 disk image format which is essential to support VM snapshots
 if [ -f $HDA ] ; then
     echo "Using $HDA"
 else
     echo "Creating hard disk (10G) for Qemu install under $HDA"
-    img=$(qemu-img create -f qcow2 $HDA 10G)
+    img=$($QEMU_CREATE_IMAGE)
     if [ -z "$img" ];then
 	echo "Can't Create disk image..."
 	exit 1
     fi
+    echo "New image $HDA created"
 fi
-
-echo "New $HDA is created..."
 
 rm -f qemu.pid
 
