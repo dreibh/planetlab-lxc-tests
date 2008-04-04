@@ -19,9 +19,9 @@ class TestSite:
 
     def create_site (self):
         print self.test_plc.auth_root()
-        self.test_plc.server.AddSite(self.test_plc.auth_root(),
+        self.test_plc.apiserver.AddSite(self.test_plc.auth_root(),
                                                     self.site_spec['site_fields'])
-        self.test_plc.server.AddSiteAddress(self.test_plc.auth_root(),self.name(),
+        self.test_plc.apiserver.AddSiteAddress(self.test_plc.auth_root(),self.name(),
                                             self.site_spec['address_fields'])
             
     def create_users (self):
@@ -32,7 +32,7 @@ class TestSite:
 
     def delete_site (self):
         print self.test_plc.auth_root()
-        self.test_plc.server.DeleteSite(self.test_plc.auth_root(),self.name())
+        self.test_plc.apiserver.DeleteSite(self.test_plc.auth_root(),self.name())
         return True
             
     def delete_users(self):

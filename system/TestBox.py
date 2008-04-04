@@ -20,18 +20,11 @@ class TestBox:
     def is_local(self):
         return self.test_ssh.is_local()
     
-    def tar_logs(self):
-        if os.path.isdir("nodeslogs"):
-            tar_command="tar cvf nodeslogs.tar nodeslogs/"
-            self.run_in_buildname (tar_command)
-            return True
-        return False
-    
     def run_in_buildname (self,command,background=False):
         utils.header("Running command %s on testbox %s"%(command,self.hostname()))
         return self.test_ssh.run_in_buildname (command,background)
 
-    # should use rsync instead
+    # xxx could/should use rsync instead
     def copy (self,local_file,recursive=False):
         return self.test_ssh.copy (local_file,recursive)
 
@@ -42,10 +35,10 @@ class TestBox:
         return self.test_ssh.mkdir(dirname)
 
     def kill_all_qemus(self):
-        self.run_in_buildname("template-qemu/kill-qemu-node")
+        self.run_in_buildname("template-qemu/qemu-kill-node")
         return True
 
     def list_all_qemus(self):
-        self.run_in_buildname("template-qemu/kill-qemu-node -l")
+        self.run_in_buildname("template-qemu/qemu-kill-node -l")
         return True
 

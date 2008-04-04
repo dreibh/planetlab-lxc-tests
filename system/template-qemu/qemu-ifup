@@ -1,19 +1,5 @@
 #!/bin/bash
 
-# Mise en place d'un environnement d'exécution d'une machine
-# virtuelle sous QEMU pour partage de la connexion réseau
-# avec une une machine hôte sous FC6.
+# use the bridge as set up by qemu-bridge-init start
 
-INTERFACE_LAN=eth0
-INTERFACE_BRIDGE=br0
-
-echo "Configure $1 interface..."
-echo "Activating link for $1..."
-/sbin/ip link set $1 up
-sleep 1
-echo "Configure $INTERFACE_BRIDGE bridge..."
-/usr/sbin/brctl addif $INTERFACE_BRIDGE $1
-echo "Activating promiscuous mode on $1 ..."
-/sbin/ifconfig $1 0.0.0.0 promisc up
-sleep 1
-echo "Done."
+qemu-bridge-init add $1

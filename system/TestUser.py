@@ -26,24 +26,24 @@ class TestUser:
         fields=user_spec['user_fields']
         auth=self.test_plc.auth_root()
         utils.header('Adding user %s - roles %r'%(fields['email'],user_spec['roles']))
-        self.test_plc.server.AddPerson(auth,fields)
-        self.test_plc.server.UpdatePerson(auth,fields['email'],{'enabled': True})
+        self.test_plc.apiserver.AddPerson(auth,fields)
+        self.test_plc.apiserver.UpdatePerson(auth,fields['email'],{'enabled': True})
         for role in user_spec['roles']:
-            self.test_plc.server.AddRoleToPerson(auth,role,fields['email'])
-        self.test_plc.server.AddPersonToSite(auth,
+            self.test_plc.apiserver.AddRoleToPerson(auth,role,fields['email'])
+        self.test_plc.apiserver.AddPersonToSite(auth,
                                              self.name(),
                                              self.test_site.name())
 
     def delete_user(self):
         auth=self.test_plc.auth_root()
-        self.test_plc.server.DeletePerson(auth,self.name())
+        self.test_plc.apiserver.DeletePerson(auth,self.name())
 
     def add_keys (self):
         user_spec=self.user_spec
         for keyname in user_spec['keynames']:
             key=self.test_plc.locate_key(keyname)
             auth=self.auth()
-            self.test_plc.server.AddPersonKey(auth,self.name(), key['key_fields'])
+            self.test_plc.apiserver.AddPersonKey(auth,self.name(), key['key_fields'])
             
 
         

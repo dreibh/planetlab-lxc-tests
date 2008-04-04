@@ -15,13 +15,13 @@ def nodes(options):
              'owner' : 'pi',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
-                                 'ip':'xx-deferred-xxx',
-                                 'gateway':'xx-deferred-xxx',
-                                 'network':'xx-deferred-xxx',
-                                 'broadcast':'xx-deferred-xxx',
-                                 'netmask':'xx-deferred-xxx',
-                                 'dns1': 'xx-deferred-xxx',
-                                 'dns2': 'xx-deferred-xxx',
+                                 'ip':'xxx-deferred-xxx',
+                                 'gateway':'xxx-deferred-xxx',
+                                 'network':'xxx-deferred-xxx',
+                                 'broadcast':'xxx-deferred-xxx',
+                                 'netmask':'xxx-deferred-xxx',
+                                 'dns1': 'xxx-deferred-xxx',
+                                 'dns2': 'xxx-deferred-xxx',
                                  },
              },
             {'name':'node2',
@@ -31,13 +31,13 @@ def nodes(options):
              'owner' : 'pi',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
-                                 'ip':'xx-deferred-xxx',
-                                 'gateway':'xx-deferred-xxx',
-                                 'network':'xx-deferred-xxx',
-                                 'broadcast':'xx-deferred-xxx',
-                                 'netmask':'xx-deferred-xxx',
-                                 'dns1': 'xx-deferred-xxx',
-                                 'dns2': 'xx-deferred-xxx',
+                                 'ip':'xxx-deferred-xxx',
+                                 'gateway':'xxx-deferred-xxx',
+                                 'network':'xxx-deferred-xxx',
+                                 'broadcast':'xxx-deferred-xxx',
+                                 'netmask':'xxx-deferred-xxx',
+                                 'dns1': 'xxx-deferred-xxx',
+                                 'dns2': 'xxx-deferred-xxx',
                                  },
              },
             ]
@@ -144,14 +144,16 @@ def keys (options):
              ]
 
 def initscripts(options): 
-    initscripts= [ { 'initscript_fields' : { 'enabled' : True,
-                                             'name':'script1',
-                                             'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/initscript1.log \n ',
-                                             }},
-                   { 'initscript_fields' : { 'enabled' : True,
-                                             'name':'script2',
-                                             'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/initscript2.log \n ',
-                                             }},
+    initscripts= [ { 'initscript_fields' : 
+                     { 'enabled' : True,
+                       'name':'script1',
+                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/script1.stamp \n ',
+                       }},
+                   { 'initscript_fields' : 
+                     { 'enabled' : True,
+                       'name':'script2',
+                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/script2.stamp \n ',
+                       }},
                    ]
     if options.small_test:
         return [initscripts[0]]
@@ -218,7 +220,7 @@ def plc (options) :
     return { 
         'name' : 'onetest',
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'xx-deferred-xxx',
+        'hostname' : 'xxx-deferred-xxx',
         # set these two items to run within a vserver
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
@@ -232,8 +234,8 @@ def plc (options) :
         'PLC_API_HOST' : 'test.one-lab.org',
         'PLC_WWW_HOST' : 'test.one-lab.org',
         'PLC_BOOT_HOST' : 'test.one-lab.org',
-        'PLC_NET_DNS1' : 'xx-deferred-xxx',
-        'PLC_NET_DNS2' : 'xx-deferred-xxx',
+        'PLC_NET_DNS1' : 'xxx-deferred-xxx',
+        'PLC_NET_DNS2' : 'xxx-deferred-xxx',
         'sites' : sites(options),
         'keys' : keys(options),
         'initscripts': initscripts(options),

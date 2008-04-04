@@ -3,7 +3,8 @@
 # cd in this command's directory
 cd $(dirname $0)
 
-#Getting the env. as passed by the test framework - mostly MACADDR and NODE_ISO
+#Getting the env. as passed by the test framework
+# expected vars are MACADDR, NODE_ISO, HOSTNAME and TARGET_ARCH
 CONFIG=qemu.conf
 if [ ! -e ${CONFIG} ];then
     echo "File for node_iso version not found"
@@ -11,10 +12,17 @@ if [ ! -e ${CONFIG} ];then
 fi
 . $CONFIG
 
-#default Value
-#always use the 64 bit version of qemu, as this will work on both 32 & 64 bit host kernels
+# the launcher, depending on local/target archs
+archs="$(uname-i)+$(TARGET_ARCH)"
+case $archs in
+    i386+i386)		QEMU= qemu;;
+    i386+x86_64)	QEMU= qemu-system-x86_64;;
+    x86_64+i386)	QEMU= qemu;;
+    x86_64+x86_64)	QEMU= qemu-system-x86_64;;
+esac
+
 QEMU=qemu
-HDA=hda_5.img
+HDA=hard_drive.img
 RAM=1024
 
 SCRIPT=qemu-ifup
@@ -25,8 +33,8 @@ TAP="tap,script=$SCRIPT"
 if [ -f $HDA ] ; then
     echo "Using $HDA"
 else
-    echo "Creating hard disk for Qemu install under $HDA"
-    img=$(qemu-img create -f qcow2 $HDA 5G)
+    echo "Creating hard disk (10G) for Qemu install under $HDA"
+    img=$(qemu-img create -f qcow2 $HDA 10G)
     if [ -z "$img" ];then
 	echo "Can't Create disk image..."
 	exit 1

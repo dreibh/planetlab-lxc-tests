@@ -3,7 +3,6 @@ import os, os.path
 import datetime
 import time
 import sys
-import xmlrpclib
 import datetime
 import traceback
 from types import StringTypes
@@ -17,18 +16,34 @@ from TestSlice import TestSlice
 from TestSliver import TestSliver
 from TestBox import TestBox
 from TestSsh import TestSsh
+from TestApiserver import TestApiserver
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
-def standby(minutes):
+def standby(minutes,dry_run):
     utils.header('Entering StandBy for %d mn'%minutes)
-    time.sleep(60*minutes)
+    if dry_run:
+        print 'dry_run'
+    else:
+        time.sleep(60*minutes)
     return True
 
 def standby_generic (func):
     def actual(self):
         minutes=int(func.__name__.split("_")[1])
-        return standby(minutes)
+        return standby(minutes,self.options.dry_run)
+    return actual
+
+def node_mapper (method):
+    def actual(self):
+        overall=True
+        for site_spec in self.plc_spec['sites']:
+            test_site = TestSite (self,site_spec)
+            for node_spec in site_spec['nodes']:
+                test_node = TestNode (self,test_site,node_spec)
+                node_method = TestNode.__dict__[method.__name__]
+                if not node_method(test_node): overall=False
+        return overall
     return actual
 
 class TestPlc:
@@ -46,14 +61,14 @@ class TestPlc:
             self.vserver=False
             self.url="https://%s:443/PLCAPI/"%plc_spec['hostname']
 #        utils.header('Using API url %s'%self.url)
-	self.server=xmlrpclib.Server(self.url,allow_none=True)
+	self.apiserver=TestApiserver(self.url,options.dry_run)
         
     def name(self):
         name=self.plc_spec['name']
         if self.vserver:
-            return name+"[%s]"%self.vservername
+            return name+".vserver.%s"%self.vservername
         else:
-            return name+"[chroot]"
+            return name+".chroot"
 
     def hostname(self):
         return self.plc_spec['hostname']
@@ -66,8 +81,11 @@ class TestPlc:
     def connect (self):
 	pass
 
+    def actual_command_in_guest (self,command):
+        return self.test_ssh.actual_command(self.host_to_guest(command))
+    
     def run_in_guest (self,command):
-        return self.test_ssh.run(self.host_to_guest(command))
+        return utils.system(self.actual_command_in_guest(command))
     
     def run_in_host (self,command):
         return self.test_ssh.run_in_buildname(command)
@@ -97,7 +115,7 @@ class TestPlc:
                 utils.system("scp %s %s@/vservers/%s/%s"%(localfile,self.hostname(),self.vservername,remotefile))
 
 
-        # xxx quick n dirty
+    # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
         return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote)))
 
@@ -240,7 +258,7 @@ class TestPlc:
 	# run checkout in any case - would do an update if already exists
         build_checkout = "svn checkout %s %s"%(self.options.build_url,build_dir)
         if self.run_in_host(build_checkout) != 0:
-            raise Exception,"Cannot checkout build dir"
+            return False
         # the repo url is taken from myplc-url 
         # with the last two steps (i386/myplc...) removed
         repo_url = self.options.myplc_url
@@ -248,9 +266,7 @@ class TestPlc:
 	    repo_url = os.path.dirname(repo_url)
         create_vserver="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
             (build_dir,self.vservername,repo_url,self.vserverip)
-        if self.run_in_host(create_vserver) != 0:
-            raise Exception,"Could not create vserver for %s"%self.vservername
-        return True
+        return self.run_in_host(create_vserver) == 0
 
     def install(self):
         if self.vserver:
@@ -258,25 +274,23 @@ class TestPlc:
         else:
             return self.install_chroot()
     
-    ### install_rpm
-    def cache_rpm(self,url,rpm):
+    ### install_rpm - make this an optional step
+    def cache_rpm(self):
+        url = self.options.myplc_url
+        rpm = os.path.basename(url)
         cache_fetch="pwd;if [ -f %(rpm)s ] ; then echo Using cached rpm %(rpm)s ; else echo Fetching %(url)s ; curl -O %(url)s; fi"%locals()
-	id = self.run_in_host(cache_fetch)
-	if (id != 0):
-            raise Exception,"Could not get rpm from  %s"%url
+	return self.run_in_host(cache_fetch)==0
 
     def install_rpm_chroot(self):
         url = self.options.myplc_url
         rpm = os.path.basename(url)
-	self.cache_rpm(url,rpm)
+	if not self.cache_rpm():
+            return False
 	utils.header('Installing the :  %s'%rpm)
-        self.run_in_host('rpm -Uvh '+rpm)
-        self.run_in_host('service plc mount')
-        return True
+        return self.run_in_host('rpm -Uvh '+rpm)==0 and self.run_in_host('service plc mount')==0
 
     def install_rpm_vserver(self):
-        self.run_in_guest("yum -y install myplc-native")
-        return True
+        return self.run_in_guest("yum -y install myplc-native")==0
 
     def install_rpm(self):
         if self.vserver:
@@ -395,11 +409,11 @@ class TestPlc:
         auth=self.auth_root()
         for (nodegroupname,group_nodes) in groups_dict.iteritems():
             try:
-                self.server.GetNodeGroups(auth,{'name':nodegroupname})[0]
+                self.apiserver.GetNodeGroups(auth,{'name':nodegroupname})[0]
             except:
-                self.server.AddNodeGroup(auth,{'name':nodegroupname})
+                self.apiserver.AddNodeGroup(auth,{'name':nodegroupname})
             for node in group_nodes:
-                self.server.AddNodeToNodeGroup(auth,node,nodegroupname)
+                self.apiserver.AddNodeToNodeGroup(auth,node,nodegroupname)
         return True
 
     def all_hostnames (self) :
@@ -411,6 +425,9 @@ class TestPlc:
 
     # gracetime : during the first <gracetime> minutes nothing gets printed
     def do_nodes_booted (self, minutes, gracetime=2):
+        if self.options.dry_run:
+            print 'dry_run'
+            return True
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
@@ -421,7 +438,7 @@ class TestPlc:
         status = dict ( [ (hostname,'undef') for hostname in tocheck ] )
         while tocheck:
             # get their status
-            tocheck_status=self.server.GetNodes(self.auth_root(), tocheck, ['hostname','boot_state' ] )
+            tocheck_status=self.apiserver.GetNodes(self.auth_root(), tocheck, ['hostname','boot_state' ] )
             # update status
             for array in tocheck_status:
                 hostname=array['hostname']
@@ -455,23 +472,8 @@ class TestPlc:
     def nodes_booted(self):
         return self.do_nodes_booted(minutes=0)
     
-#    #to scan and store the nodes's public keys and avoid to ask for confirmation when  ssh 
-#    def scan_publicKeys(self,hostnames):
-#        try:
-#            temp_knownhosts="/root/known_hosts"
-#            remote_knownhosts="/root/.ssh/known_hosts"
-#            self.run_in_host("touch %s"%temp_knownhosts )
-#            for hostname in hostnames:
-#                utils.header("Scan Public %s key and store it in the known_host file(under the root image) "%hostname)
-#                scan=self.run_in_host('ssh-keyscan -t rsa %s >> %s '%(hostname,temp_knownhosts))
-#            #Store the public keys in the right root image
-#            self.copy_in_guest(temp_knownhosts,remote_knownhosts,True)
-#            #clean the temp keys file used
-#            self.run_in_host('rm -f  %s '%temp_knownhosts )
-#        except Exception, err:
-#            print err
-            
-    def do_check_nodesSsh(self,minutes):
+
+    def do_nodes_ssh(self,minutes):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         tocheck = self.all_hostnames()
@@ -480,7 +482,7 @@ class TestPlc:
         while tocheck:
             for hostname in tocheck:
                 # try to ssh in nodes
-                node_test_ssh = TestSsh (hostname)
+                node_test_ssh = TestSsh (hostname,key="/etc/planetlab/root_ssh_key.rsa")
                 access=self.run_in_guest(node_test_ssh.actual_command("date"))
                 if not access:
                     utils.header('The node %s is sshable -->'%hostname)
@@ -504,29 +506,31 @@ class TestPlc:
         return True
         
     def nodes_ssh(self):
-        return  self.do_check_nodesSsh(minutes=2)
+        return self.do_nodes_ssh(minutes=2)
     
-    def bootcd (self):
-        for site_spec in self.plc_spec['sites']:
-            test_site = TestSite (self,site_spec)
-            for node_spec in site_spec['nodes']:
-                test_node=TestNode (self,test_site,node_spec)
-                test_node.prepare_area()
-                test_node.create_boot_cd()
-		test_node.configure_qemu()
-        return True
-
+    @node_mapper
+    def init_node (self): pass
+    @node_mapper
+    def bootcd (self): pass
+    @node_mapper
+    def configure_qemu (self): pass
+        
     def do_check_initscripts(self):
-	for site_spec in self.plc_spec['sites']:
-		test_site = TestSite (self,site_spec)
-		test_node = TestNode (self,test_site,site_spec['nodes'])
-		for slice_spec in self.plc_spec['slices']:
-			test_slice=TestSlice (self,test_site,slice_spec)
-			test_sliver=TestSliver(self,test_node,test_slice)
-			init_status=test_sliver.get_initscript(slice_spec)
-			if (not init_status):
-				return False
-		return init_status
+        overall = True
+        for slice_spec in self.plc_spec['slices']:
+            if not slice_spec.has_key('initscriptname'):
+                continue
+            initscript=slice_spec['initscriptname']
+            for nodename in slice_spec['nodenames']:
+                (site,node) = self.locate_node (nodename)
+                # xxx - passing the wrong site - probably harmless
+                test_site = TestSite (self,site)
+                test_slice = TestSlice (self,test_site,slice_spec)
+                test_node = TestNode (self,test_site,node)
+                test_sliver = TestSliver (self, test_node, test_slice)
+                if not test_sliver.check_initscript(initscript):
+                    overall = False
+        return overall
 	    
     def check_initscripts(self):
 	    return self.do_check_initscripts()
@@ -534,7 +538,7 @@ class TestPlc:
     def initscripts (self):
         for initscript in self.plc_spec['initscripts']:
             utils.pprint('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
-            self.server.AddInitScript(self.auth_root(),initscript['initscript_fields'])
+            self.apiserver.AddInitScript(self.auth_root(),initscript['initscript_fields'])
         return True
 
     def slices (self):
@@ -573,59 +577,93 @@ class TestPlc:
             TestSite(self,site_spec).start_nodes (self.options)
         return True
 
-    def gather_all_logs (self):
-        # (1) get the plc's /var/log and store it locally in logs/<plcname>-var-log/*
-        # (2) get all the nodes qemu log and store it as logs/<node>-qemu.log
-        # (3) get the nodes /var/log and store is as logs/<node>-var-log/*
-        # (4) as far as possible get the slice's /var/log as logs/<slice>-<node>-var-log/*
-        # (1)
-        self.gather_logs ()
-        # (2) and (3)
-        for site_spec in self.plc_spec['sites']:
-            test_site = TestSite (self,site_spec)
-            for node_spec in site_spec['nodes']:
-                TestNode(self,test_site,node_spec).gather_qemu_logs()
-                TestNode(self,test_site,node_spec).gather_var_logs()
-        return True
 
-    def gather_logs (self):
-        utils.header("WARNING - Incomplete logs gathering TestPlc.gather_logs")
+    def locate_first_sliver (self):
+        slice_spec = self.plc_spec['slices'][0]
+        slicename = slice_spec['slice_fields']['name']
+        nodename = slice_spec['nodenames'][0]
+        return self.locate_sliver_obj(nodename,slicename)
 
+    def locate_sliver_obj (self,nodename,slicename):
+        (site,node) = self.locate_node(nodename)
+        slice = self.locate_slice (slicename)
+        # build objects
+        test_site = TestSite (self, site)
+        test_node = TestNode (self, test_site,node)
+        # xxx the slice site is assumed to be the node site - mhh - probably harmless
+        test_slice = TestSlice (self, test_site, slice)
+        return TestSliver (self, test_node, test_slice)
 
     def check_tcp (self):
         specs = self.plc_spec['tcp_test']
         overall=True
         for spec in specs:
-            utils.header ("WARNING : xxx check_tcp is underway, spec=%r"%spec)
             port = spec['port']
-            # locate specs
-            (s_site,s_node) = self.locate_node(spec['server_node'])
-            s_slice = self.locate_slice (spec['server_slice'])
-            # build objects
-            s_test_site = TestSite (self, s_site)
-            s_test_node = TestNode (self, s_test_site,s_node)
-            # xxx the slice site is assumed to be the node site - mhh
-            s_test_slice = TestSlice (self, s_test_site, s_slice)
-            s_test_sliver = TestSliver (self, s_test_node, s_test_slice)
-            if not s_test_sliver.run_tcp_server(port):
+            # server side
+            s_test_sliver = self.locate_sliver_obj (spec['server_node'],spec['server_slice'])
+            if not s_test_sliver.run_tcp_server(port,timeout=10):
                 overall=False
                 break
 
             # idem for the client side
-            (c_site,c_node) = self.locate_node(spec['server_node'])
-            c_slice = self.locate_slice (spec['server_slice'])
-            # build objects
-            c_test_site = TestSite (self, c_site)
-            c_test_node = TestNode (self, c_test_site,c_node)
-            # xxx the slice site is assumed to be the node site - mhh
-            c_test_slice = TestSlice (self, c_test_site, c_slice)
-            c_test_sliver = TestSliver (self, c_test_node, c_test_slice)
+            c_test_sliver = self.locate_sliver_obj(spec['server_node'],spec['server_slice'])
             if not c_test_sliver.run_tcp_client(s_test_node.name(),port):
                 overall=False
-
         return overall
-
     
+
+    def gather_logs (self):
+        # (1) get the plc's /var/log and store it locally in logs/<plcname>-var-log/*
+        # (2) get all the nodes qemu log and store it as logs/<node>-qemu.log
+        # (3) get the nodes /var/log and store is as logs/<node>-var-log/*
+        # (4) as far as possible get the slice's /var/log as logs/<slice>-<node>-var-log/*
+        # (1)
+        print "-------------------- TestPlc.gather_logs : PLC's /var/log"
+        self.gather_var_logs ()
+        # (2) 
+        print "-------------------- TestPlc.gather_logs : nodes's QEMU logs"
+        for site_spec in self.plc_spec['sites']:
+            test_site = TestSite (self,site_spec)
+            for node_spec in site_spec['nodes']:
+                test_node=TestNode(self,test_site,node_spec)
+                test_node.gather_qemu_logs()
+        # (3)
+        print "-------------------- TestPlc.gather_logs : nodes's /var/log"
+        self.gather_nodes_var_logs()
+        # (4)
+        print "-------------------- TestPlc.gather_logs : sample sliver's /var/log"
+        self.gather_first_sliver_logs()
+        return True
+
+    def gather_first_sliver_logs(self):
+        try:
+            test_sliver = self.locate_first_sliver()
+            remote = test_sliver.tar_var_logs()
+            utils.system("mkdir -p logs/%s-var-log"%test_sliver.name())
+            command = remote + " | tar -C logs/%s-var-log -xf -"%test_sliver.name()
+            utils.system(command)
+        except Exception,e:
+            print 'Cannot locate first sliver - giving up',e
+        return True
+
+    def gather_var_logs (self):
+        to_plc = self.actual_command_in_guest("tar -cf - /var/log")        
+        command = to_plc + "| tar -C logs/%s-var-log -xf -"%self.name()
+        utils.system("mkdir -p logs/%s-var-log"%self.name())
+        utils.system(command)
+
+    def gather_nodes_var_logs (self):
+        for site_spec in self.plc_spec['sites']:
+            test_site = TestSite (self,site_spec)
+            for node_spec in site_spec['nodes']:
+                test_node=TestNode(self,test_site,node_spec)
+                test_ssh = TestSsh (test_node.name(),key="/etc/planetlab/root_ssh_key.rsa")
+                to_plc = self.actual_command_in_guest ( test_ssh.actual_command("tar -C /var/log -cf - ."))
+                command = to_plc + "| tar -C logs/%s-var-log -xf -"%test_node.name()
+                utils.system("mkdir -p logs/%s-var-log"%test_node.name())
+                utils.system(command)
+
+
     # returns the filename to use for sql dump/restore, using options.dbname if set
     def dbfile (self, database):
         # uses options.dbname if it is found

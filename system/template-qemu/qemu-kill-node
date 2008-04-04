@@ -31,6 +31,8 @@ function kill_from_file () {
 	echo Killing $pid
 	kill $pid
 	mv $file $file.killed
+    else
+	echo "Could not find file $file - that qemu was killed already"
     fi
 }    
 

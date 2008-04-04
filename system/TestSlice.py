@@ -29,7 +29,7 @@ class TestSlice:
         auth = TestUser(self,self.test_site,owner_spec).auth()
         slice_fields = self.slice_spec['slice_fields']
         slice_name = slice_fields['name']
-        self.test_plc.server.DeleteSlice(auth,slice_fields['name'])
+        self.test_plc.apiserver.DeleteSlice(auth,slice_fields['name'])
         utils.header("Deleted slice %s"%slice_fields['name'])
 
     
@@ -39,11 +39,11 @@ class TestSlice:
         slice_fields = self.slice_spec['slice_fields']
         slice_name = slice_fields['name']
 
-        self.test_plc.server.AddSlice(auth,slice_fields)
+        self.test_plc.apiserver.AddSlice(auth,slice_fields)
         for username in self.slice_spec['usernames']:
                 user_spec=self.test_site.locate_user(username)
                 test_user=TestUser(self,self.test_site,user_spec)
-                self.test_plc.server.AddPersonToSlice(auth, test_user.name(), slice_name)
+                self.test_plc.apiserver.AddPersonToSlice(auth, test_user.name(), slice_name)
 
         hostnames=[]
         for nodename in self.slice_spec['nodenames']:
@@ -51,11 +51,11 @@ class TestSlice:
             test_node=TestNode(self,self.test_site,node_spec)
             hostnames += [test_node.name()]
         utils.header("Adding %r in %s"%(hostnames,slice_name))
-        self.test_plc.server.AddSliceToNodes(auth, slice_name, hostnames)
+        self.test_plc.apiserver.AddSliceToNodes(auth, slice_name, hostnames)
         if self.slice_spec.has_key('initscriptname'):
             isname=self.slice_spec['initscriptname']
             utils.header("Adding initscript %s in %s"%(isname,slice_name))
-            self.test_plc.server.AddSliceAttribute(self.test_plc.auth_root(), slice_name,'initscript',isname)
+            self.test_plc.apiserver.AddSliceAttribute(self.test_plc.auth_root(), slice_name,'initscript',isname)
         
 #    def clear_known_hosts (self):
 #        utils.header("Messing with known_hosts for slice %s"%self.name())
@@ -68,10 +68,10 @@ class TestSlice:
 #        #scan public key and update the known_host file in the root image
 #        self.test_plc.scan_publicKeys(hostnames)
         
-    def locate_key(self,slice_spec):
+    def locate_key(self):
         # locate the first avail. key
         found=False
-        for username in slice_spec['usernames']:
+        for username in self.slice_spec['usernames']:
             user_spec=self.test_site.locate_user(username)
             for keyname in user_spec['keynames']:
                 key_spec=self.test_plc.locate_key(keyname)
@@ -81,26 +81,20 @@ class TestSlice:
                 keyname=test_key.name()
                 if os.path.isfile(publickey) and os.path.isfile(privatekey):
                     found=True
-        #create dir in plc root image
-        remote_privatekey="/root/keys/%s.rsa"%keyname
-        if not os.path.isfile(remote_privatekey):
-            self.test_plc.run_in_guest("mkdir -p /root/keys" )
-            self.test_plc.copy_in_guest(privatekey,remote_privatekey,True)
+        return (found,privatekey)
 
-        return (found,remote_privatekey)
-
-    def do_check_slice(self,minutes,options):
+    def do_check_slice(self,options,minutes=3):
 #        self.clear_known_hosts()
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
 
         # locate a key
-        slice_spec = self.slice_spec
-        (found,remote_privatekey)=self.locate_key(slice_spec)
+        (found,remote_privatekey)=self.locate_key()
         if not found :
             utils.header("WARNING: Cannot find a valid key for slice %s"%self.name())
             return False
 
         # convert nodenames to real hostnames
+        slice_spec = self.slice_spec
         restarted=[]
         tocheck=[]
         for nodename in slice_spec['nodenames']:
@@ -109,13 +103,13 @@ class TestSlice:
 
         while tocheck:
             for hostname in tocheck:
-                (site_spec,node_spec) = self.test_plc.locate_host(hostname)
+                (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
                 # this can be ran locally as we have the key
                 utils.header('Trying to enter into slice %s@%s'%(self.name(),hostname))
                 date = date_test_ssh.run("date")
                 if not date:
-                    utils.header("Successfuly entered slice %s on %s"%self.name(),hostname)
+                    utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
                     tocheck.remove(hostname)
                 else:
                     # real nodes will have been checked once in case they're up - skip if not

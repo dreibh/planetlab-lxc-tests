@@ -62,7 +62,7 @@ class TestNode:
         userauth = test_user.auth()
         utils.header("node %s created by user %s"%(self.name(),test_user.name()))
         rootauth=self.test_plc.auth_root()
-        server = self.test_plc.server
+        server = self.test_plc.apiserver
         server.AddNode(userauth,
                        self.test_site.site_spec['site_fields']['login_base'],
                        self.node_spec['node_fields'])
@@ -99,50 +99,58 @@ class TestNode:
             auth = test_user.auth()
         except:
             auth=self.test_plc.auth_root()
-        self.test_plc.server.DeleteNode(auth,self.name())
+        self.test_plc.apiserver.DeleteNode(auth,self.name())
 
     # Do most of the stuff locally - will be pushed on host_box - *not* the plc - later if needed
-    def prepare_area(self):
+    def init_node(self):
         utils.system("rm -rf %s"%self.nodedir())
         utils.system("mkdir %s"%self.nodedir())
-        #create the tar log file
-        utils.system("rm -rf nodeslogs && mkdir nodeslogs")
-        if self.is_qemu():
-            utils.system("rsync -v -a --exclude .svn template-qemu/ %s/"%self.nodedir())
+        if not self.is_qemu():
+            return True
+        return utils.system("rsync -v -a --exclude .svn template-qemu/ %s/"%self.nodedir())==0
 
-    def create_boot_cd(self):
+    def bootcd(self):
         utils.header("Calling GetBootMedium for %s"%self.name())
         options = []
         if self.is_qemu():
             options=['serial']
-        encoded=self.test_plc.server.GetBootMedium(self.test_plc.auth_root(), self.name(), 'node-iso', '', options)
+        encoded=self.test_plc.apiserver.GetBootMedium(self.test_plc.auth_root(), self.name(), 'node-iso', '', options)
         if (encoded == ''):
             raise Exception, 'GetBootmedium failed'
 
         filename="%s/%s.iso"%(self.nodedir(),self.name())
         utils.header('Storing boot medium into %s'%filename)
-        file(filename,'w').write(base64.b64decode(encoded))
+        if self.test_plc.options.dry_run:
+            print "Dry_run: skipped writing of iso image"
+            return True
+        else:
+            file(filename,'w').write(base64.b64decode(encoded))
+            return True
     
     def configure_qemu(self):
         if not self.is_qemu():
             return
         mac=self.node_spec['network_fields']['mac']
         hostname=self.node_spec['node_fields']['hostname']
+        auth=self.test_plc.auth_root()
+        target_arch=self.test_plc.apiserver.GetPlcRelease(auth)['build']['target-arch']
         conf_filename="%s/qemu.conf"%(self.nodedir())
+        if self.test_plc.options.dry_run:
+            print "dry_run: skipped actual storage of qemu.conf"
+            return
         utils.header('Storing qemu config for %s in %s'%(self.name(),conf_filename))
         file=open(conf_filename,'w')
         file.write('MACADDR=%s\n'%mac)
         file.write('NODE_ISO=%s.iso\n'%self.name())
         file.write('HOSTNAME=%s\n'%hostname)
+        file.write('TARGET_ARCH=%s\n'%target_arch)
         file.close()
 
         # if relevant, push the qemu area onto the host box
-        if ( not self.test_box().is_local()):
-            utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
-#            self.test_box().clean_dir(self.buildname())
-            self.test_box().mkdir("nodeslogs")
-            self.test_box().copy(self.nodedir(),recursive=True)
-
+        if self.test_box().is_local():
+            return True
+        utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
+        return self.test_box().copy(self.nodedir(),recursive=True)==0
             
     def start_node (self,options):
         model=self.node_spec['node_fields']['model']
@@ -156,13 +164,13 @@ class TestNode:
         test_box = self.test_box()
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 
-        test_box.run_in_buildname("qemu-%s/env-qemu start >> nodeslogs/%s.log"%(self.name(),self.name()))
+        test_box.run_in_buildname("%s/qemu-bridge-init start >> %s/qemu.log"%(self.nodedir(),self.nodedir()))
         # kick it off in background, as it would otherwise hang
-        test_box.run_in_buildname("qemu-%s/start-qemu-node 2>&1 >> nodeslogs/%s.log &"%(self.name(),self.name()),True)
+        test_box.run_in_buildname("%s/qemu-start-node 2>&1 >> %s/qemu.log"%(self.nodedir(),self.nodedir()),True)
 
     def list_qemu (self):
         utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
-        command="qemu-%s/kill-qemu-node -l %s"%(self.name(),self.name())
+        command="qemu-%s/qemu-kill-node -l %s"%(self.name(),self.name())
         self.test_box().run_in_buildname(command)
         return True
 
@@ -173,13 +181,13 @@ class TestNode:
             utils.header("Failed to get the nodes log files")
         # kill the right processes 
         utils.header("Stopping qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
-        command="qemu-%s/kill-qemu-node %s"%(self.name(),self.name())
+        command="qemu-%s/qemu-kill-node %s"%(self.name(),self.name())
         self.test_box().run_in_buildname(command)
         return True
 
     def gather_qemu_logs (self):
-        utils.header("WARNING - Incomplete logs gathering TestNodes.gather_qemu_logs")
-
-    def gather_var_logs (self):
-        utils.header("WARNING - Incomplete logs gathering TestNodes.gather_var_logs")
-
+        if not self.is_qemu():
+            return True
+        remote_log="%s/qemu.log"%self.nodedir()
+        local_log="logs/%s-qemu.log"%self.name()
+        self.test_box().test_ssh.fetch(remote_log,local_log)

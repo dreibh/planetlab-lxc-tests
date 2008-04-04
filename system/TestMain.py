@@ -10,26 +10,29 @@ from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
 
+SEP='<sep>'
+
 class TestMain:
 
     subversion_id = "$Id$"
 
     default_config = [ 'main' , '1vnodes' , '1testbox64' ]
 
-    default_steps = ['uninstall','install','install_rpm',
-                     'configure', 'start', 
+    default_steps = ['uninstall','install','install_rpm', 
+                     'configure', 'start', SEP,
                      'store_keys', 'initscripts', 
-                     'sites', 'nodes', 'slices', 
-                     'bootcd', 'nodegroups', 
-                     'kill_all_qemus', 'start_nodes', 
-                     'standby_20', 
-                     'nodes_booted', 'nodes_ssh', 'check_slices','check_initscripts',
-                     'check_tcp','force_kill_qemus', ]
-    other_steps = [ 'stop_all_vservers','fresh_install', 'stop', 
-                    'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys',
-                    'show_boxes', 'list_all_qemus', 'list_qemus', 
+                     'sites', 'nodes', 'slices', 'nodegroups', SEP,
+                     'init_node','bootcd', 'configure_qemu', SEP,
+                     'kill_all_qemus', 'start_nodes', SEP,
+                     'standby_20', SEP,
+                     'nodes_booted', 'nodes_ssh', 'check_slices',
+                     'check_initscripts', 'check_tcp',SEP,
+                     'force_kill_qemus', 'force_gather_logs' ]
+    other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', SEP,
+                    'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
+                    'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
                     'db_dump' , 'db_restore',
-                    'standby_1 through 20',
+                    'standby_1 through 20', SEP,
                     ]
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
 
@@ -40,7 +43,7 @@ class TestMain:
     @staticmethod
     def show_env (options, message):
         utils.header (message)
-        utils.pprint("main options",options)
+        utils.show_options("main options",options)
 
     @staticmethod
     def optparse_list (option, opt, value, parser):
@@ -49,9 +52,13 @@ class TestMain:
         except:
             setattr(parser.values,option.dest,value.split())
 
+    @staticmethod
+    def printable_steps (list):
+        return " ".join(list).replace(" "+SEP+" ","\n")
+
     def run (self):
-        steps_message="Defaut steps are\n\t%s"%(" ".join(TestMain.default_steps))
-        steps_message += "\nOther useful steps are\n\t %s"%(" ".join(TestMain.other_steps))
+        steps_message=20*'x'+" Defaut steps are\n"+TestMain.printable_steps(TestMain.default_steps)
+        steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestMain.printable_steps(TestMain.other_steps)
         usage = """usage: %%prog [options] steps
 myplc-url defaults to the last value used, as stored in arg-myplc-url,
    no default
@@ -194,10 +201,13 @@ steps refer to a method in TestPlc or to a step_* module
         # show config
         if not self.options.quiet:
             utils.show_test_spec("Test specifications",all_plc_specs)
-        # build a TestPlc object from the result
+        # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
             spec['disabled'] = False
         all_plcs = [ (x, TestPlc(x,self.options)) for x in all_plc_specs]
+
+        # pass options to utils as well
+        utils.init_options(self.options)
 
         overall_result = True
         testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
@@ -229,7 +239,6 @@ steps refer to a method in TestPlc or to a step_* module
             
         if self.options.dry_run:
             self.show_env(self.options,"Dry run")
-            return 0
             
         # do all steps on all plcs
         for (stepname,method,force) in all_step_infos:

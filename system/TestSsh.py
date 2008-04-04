@@ -126,4 +126,15 @@ class TestSsh:
         scp_command += "%s %s:%s/%s"%(local_file,self.hostname_part(),
                                       self.buildname,os.path.basename(local_file) or ".")
         return utils.system(scp_command)
-        
+
+    def fetch (self, remote_file, local_file, recursive=False):
+        if self.is_local():
+            command="cp "
+            if recursive: command += "-r "
+            command += "%s %s"%(remote_file,local_file)
+        else:
+            command="scp "
+            if recursive: command += "-r "
+            command += self.key_part()
+            command += "%s:%s/%s %s"%(self.hostname_part(),self.buildname,remote_file,local_file)
+        utils.system(command)
