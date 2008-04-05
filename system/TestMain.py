@@ -235,7 +235,7 @@ steps refer to a method in TestPlc or to a step_* module
                     names.sort()
                     all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force) for name in names ]
                 except :
-                    print 'Step %s -- ignored'%(step)
+                    print '********** step %s NOT FOUND -- ignored'%(step)
                     traceback.print_exc()
                     overall_result = False
             

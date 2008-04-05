@@ -2,4 +2,13 @@
 cd $(dirname $0)
 mkdir -p logs
 logfile=logs/runtest-$(date +%H-%M).log
-exec python -u TestMain.py "$@" | tee $logfile
+
+# figure if TestMain succeeds, as the retcod gets lost in the pipe
+rm -f logs/success
+(python -u TestMain.py "$@" && touch logs/success) | tee $logfile
+
+if [ -f logs/success ] ; then
+    exit 0
+else
+    exit 1
+fi
