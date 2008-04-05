@@ -82,8 +82,8 @@ start () {
 
     # xxx this is *wrong*
     # wipe the host firewall otherwise the guest qemu can't access the LAN
-    echo "Wiping the firewall..." 
-    iptables -F
+    # echo "Wiping the firewall..." 
+    # iptables -F
     
 }
 
@@ -96,13 +96,8 @@ add () {
     echo "Activating link for $INTERFACE_LAN..."
     /sbin/ip link set $INTERFACE_LAN up
     sleep 1
-    echo "Adding $INTERFACE_BRIDGE to $INTERFACE_BRIDGE"
+    echo "Adding $INTERFACE_LAN to $INTERFACE_BRIDGE"
     brctl addif $INTERFACE_BRIDGE $INTERFACE_LAN
-    # putting a virtual interface in promisc mode seems like an odd thing to do
-    # echo "Activating promiscuous mode on $INTERFACE_LAN ..."
-    # /sbin/ifconfig $INTERFACE_LAN 0.0.0.0 promisc up
-    # sleep 1
-    echo "Done."
 
 }
 
