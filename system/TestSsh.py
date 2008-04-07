@@ -121,7 +121,7 @@ class TestSsh:
             return 0
         self.create_buildname_once()
         scp_command="scp "
-        scp_command += TestSh.std_options
+        scp_command += TestSsh.std_options
         if recursive: scp_command += "-r "
         scp_command += self.key_part()
         scp_command += "%s %s:%s/%s"%(local_file,self.hostname_part(),
@@ -135,7 +135,7 @@ class TestSsh:
             command += "%s %s"%(remote_file,local_file)
         else:
             command="scp "
-            command += TestSh.std_options
+            command += TestSsh.std_options
             if recursive: command += "-r "
             command += self.key_part()
             command += "%s:%s/%s %s"%(self.hostname_part(),self.buildname,remote_file,local_file)

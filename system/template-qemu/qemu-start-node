@@ -4,9 +4,10 @@
 cd $(dirname $0)
 
 ########## globals
-HDA=hard_drive.img
 RAM=1024
-qemu-img create -f qcow2 $HDA 10G
+DISK_SIZE=10G
+HDA=hdd-cow2-${DISK_SIZE}.img
+QEMU_CREATE_IMAGE="qemu-img create -f qcow2 $HDA ${DISK_SIZE}"
 
 SCRIPT=qemu-ifup
 TAP="tap,script=$SCRIPT"
@@ -32,20 +33,20 @@ esac
 #Creating new HDA if needed only
 #using qcow2 disk image format which is essential to support VM snapshots
 if [ -f $HDA ] ; then
-    echo "Using $HDA"
+    echo "Using existing $HDA"
 else
-    echo "Creating hard disk (10G) for Qemu install under $HDA"
+    echo -n "Creating hard disk image (${DISK_SIZE}) as $HDA .. "
     img=$($QEMU_CREATE_IMAGE)
     if [ -z "$img" ];then
-	echo "Can't Create disk image..."
+	echo "Failed"
 	exit 1
     fi
-    echo "New image $HDA created"
+    echo "Done"
 fi
 
 rm -f qemu.pid
 
 #Command for running the Qemu Emulator
-ARGS="-boot d  -net nic,macaddr=${MACADDR} -net $TAP, -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM} -nographic  -pidfile qemu.pid"
+ARGS="-boot d  -net nic,macaddr=${MACADDR} -net $TAP, -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM} -nographic -pidfile qemu.pid"
 echo "Running $QEMU $ARGS < /dev/null"
 exec $QEMU $ARGS < /dev/null
