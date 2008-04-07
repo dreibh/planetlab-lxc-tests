@@ -140,3 +140,13 @@ class TestSsh:
             command += self.key_part()
             command += "%s:%s/%s %s"%(self.hostname_part(),self.buildname,remote_file,local_file)
         utils.system(command)
+
+    # this is only to avoid harmless message when host cannot be identified
+    # convenience only
+    # the only place where this is needed is when tring to reach a slice in a node,
+    # which is done from the test master box
+    def clear_known_hosts (self):
+        known_hosts = "%s/.ssh/known_hosts"%os.getenv("HOME")
+        utils.header("Clearing entry for %s in %s"%(self.hostname,known_hosts))
+        utils.system("sed -i -e /^%s/d %s"%(self.hostname,known_hosts))
+        

@@ -20,7 +20,7 @@ class TestMain:
 
     default_steps = ['uninstall','install','install_rpm', 
                      'configure', 'start', SEP,
-                     'store_keys', 'initscripts', 
+                     'store_keys', 'clear_known_hosts', 'initscripts', SEP,
                      'sites', 'nodes', 'slices', 'nodegroups', SEP,
                      'init_node','bootcd', 'configure_qemu', SEP,
                      'kill_all_qemus', 'start_nodes', SEP,

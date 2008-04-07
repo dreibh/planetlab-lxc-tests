@@ -4,6 +4,7 @@ import xmlrpclib
 import utils
 from TestUser import TestUser
 from TestBox import TestBox
+from TestSsh import TestSsh
 
 class TestNode:
 
@@ -189,3 +190,7 @@ class TestNode:
         remote_log="%s/qemu.log"%self.nodedir()
         local_log="logs/%s-qemu.log"%self.name()
         self.test_box().test_ssh.fetch(remote_log,local_log)
+
+    def clear_known_hosts (self):
+        TestSsh(self.name()).clear_known_hosts()
+        return True

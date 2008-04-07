@@ -57,17 +57,6 @@ class TestSlice:
             utils.header("Adding initscript %s in %s"%(isname,slice_name))
             self.test_plc.apiserver.AddSliceAttribute(self.test_plc.auth_root(), slice_name,'initscript',isname)
         
-#    def clear_known_hosts (self):
-#        utils.header("Messing with known_hosts for slice %s"%self.name())
-#        hostnames=[]
-#        # scan nodenames
-#        for nodename in self.slice_spec['nodenames']:
-#            (site_spec,node_spec) = self.test_plc.locate_node(nodename)
-#            hostnames.append(node_spec['node_fields']['hostname'])
-#            self.test_plc.run_in_guest("sed -i -e /^%s/d /root/.ssh/known_hosts"%node_spec['node_fields']['hostname'])
-#        #scan public key and update the known_host file in the root image
-#        self.test_plc.scan_publicKeys(hostnames)
-        
     def locate_key(self):
         # locate the first avail. key
         found=False
@@ -83,8 +72,7 @@ class TestSlice:
                     found=True
         return (found,privatekey)
 
-    def do_check_slice(self,options,minutes=3):
-#        self.clear_known_hosts()
+    def check_slice(self,options,minutes=3):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
 
         # locate a key

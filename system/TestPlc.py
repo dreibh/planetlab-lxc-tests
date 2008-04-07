@@ -37,12 +37,24 @@ def standby_generic (func):
 def node_mapper (method):
     def actual(self):
         overall=True
+        node_method = TestNode.__dict__[method.__name__]
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite (self,site_spec)
             for node_spec in site_spec['nodes']:
                 test_node = TestNode (self,test_site,node_spec)
-                node_method = TestNode.__dict__[method.__name__]
                 if not node_method(test_node): overall=False
+        return overall
+    return actual
+
+def slice_mapper_options (method):
+    def actual(self):
+        overall=True
+        slice_method = TestSlice.__dict__[method.__name__]
+        for slice_spec in self.plc_spec['slices']:
+            site_spec = self.locate_site (slice_spec['sitename'])
+            test_site = TestSite(self,site_spec)
+            test_slice=TestSlice(self,test_site,slice_spec)
+            if not slice_method(test_slice,self.options): overall=False
         return overall
     return actual
 
@@ -561,22 +573,17 @@ class TestPlc:
                 utils.header('Created Slice %s'%slice['slice_fields']['name'])
         return True
         
-    def check_slices(self):
-        for slice_spec in self.plc_spec['slices']:
-            site_spec = self.locate_site (slice_spec['sitename'])
-            test_site = TestSite(self,site_spec)
-            test_slice=TestSlice(self,test_site,slice_spec)
-            status=test_slice.do_check_slice(self.options)
-            if (not status):
-                return False
-        return status
+    @slice_mapper_options
+    def check_slice(self): pass
+
+    @node_mapper
+    def clear_known_hosts (self): pass
     
     def start_nodes (self):
         utils.header("Starting  nodes")
         for site_spec in self.plc_spec['sites']:
             TestSite(self,site_spec).start_nodes (self.options)
         return True
-
 
     def locate_first_sliver (self):
         slice_spec = self.plc_spec['slices'][0]
