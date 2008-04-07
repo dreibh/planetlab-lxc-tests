@@ -22,6 +22,7 @@ fi
 . $CONFIG
 
 # the launcher, depending on local/target archs
+# make sure to check qemu-kill-node for consistency
 archs="$(uname -i)+$TARGET_ARCH"
 case $archs in
     i386+i386)		QEMU=qemu;;

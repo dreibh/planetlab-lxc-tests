@@ -4,11 +4,16 @@ COMMAND=$(basename $0)
 cd $(dirname $0)
 cd ..
 
+# somehow qemu-system-x86_64 show up in pgrep as qemu-system-x86
+COMMANDS_TO_KILL="qemu qemu-system-x86_64 qemu-system-x86"
+
 function usage () {
     echo "Usage: $COMMAND -l"
     echo "  lists current qemu processes"
     echo "usage: $COMMAND hostname"
     echo "  kill qemu instance for that node"
+    echo "usage: $COMMAND"
+    echo "  kill all instances of [$COMMANDS_TO_KILL]"
     exit 1
 }
 
@@ -20,7 +25,9 @@ function list_pids () {
 	    cat $nodedir/qemu.pid 2> /dev/null
 	done
     else
-	pgrep qemu
+	for command in $COMMANDS_TO_KILL; do
+	    pgrep -x $command
+	done
     fi
 }
 
@@ -44,8 +51,10 @@ function kill_pids () {
 	    kill_from_file $nodedir/qemu.pid
 	done
     else
-	echo Killing all processes mathing qemu
-	pkill qemu
+	echo "Killing all processes mathing $COMMANDS_TO_KILL"
+	for command in $COMMANDS_TO_KILL ; do
+	    pkill -x $command
+	done
     fi
 }
 

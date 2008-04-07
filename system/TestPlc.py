@@ -181,7 +181,7 @@ class TestPlc:
                 test_node = TestNode (self, test_site, node_spec)
                 if not test_node.is_real():
                     tuples.append( (test_node.host_box(),test_node) )
-        # transform into a dict { 'host_box' -> [ hostnames .. ] }
+        # transform into a dict { 'host_box' -> [ test_node .. ] }
         result = {}
         for (box,node) in tuples:
             if not result.has_key(box):
@@ -198,9 +198,11 @@ class TestPlc:
 
     # make this a valid step
     def kill_all_qemus(self):
+        # this is the brute force version, kill all qemus on that host box
         for (box,nodes) in self.gather_hostBoxes().iteritems():
-            # this is the brute force version, kill all qemus on that host box
-            TestBox(box,self.options.buildname).kill_all_qemus()
+            # pass the first nodename, as we don't push template-qemu on testboxes
+            nodename=nodes[0].name()
+            TestBox(box,self.options.buildname).kill_all_qemus(nodename)
         return True
 
     # make this a valid step
