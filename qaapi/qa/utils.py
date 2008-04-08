@@ -4,15 +4,17 @@ import os
 from commands import getstatusoutput
 from logger import logfile
 
-def header(message):
+def header(message, log = True):
     now=time.strftime("%H:%M:%S", time.localtime())
     output = "*"+now+'--'+message	
     print output
-    print >> logfile, output	
+    if log:	
+        print >> logfile, output	
 
 def popen(command, fatal=True, verbose = False):
+    header(command)	
     if verbose:
-	header(command)	
+	header(command, False)	
     (stdin, stdout, stderr) = os.popen3(command)
     output = stdout.readlines()
     print >> logfile, "+ "+command
@@ -27,14 +29,14 @@ def popen(command, fatal=True, verbose = False):
 
 def popen3(command, verbose = False):
     if verbose:
-	header(command)
+	header(command, False)
     (stdin, stdout, stderr) = os.popen3(command)
     print >> logfile, "+ "+command
     return (stdin, stdout, stderr)	 	 	
     
 def commands(command, fatal = True, verbose = False):
     if verbose:
-	header(command)	
+	header(command, False)	
     (status, output) = getstatusoutput(command)
     print >> logfile, "+ "+command
     print >> logfile, output.strip() 		
