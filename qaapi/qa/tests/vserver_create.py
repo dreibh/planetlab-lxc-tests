@@ -11,6 +11,9 @@ class vserver_create(Test):
 
     def call(self, name, fcdistro, mailto):
  	
+
+	if self.config.verbose:
+	    utils.header("Creating vserver: %(name)s" % locals()) 
 	# Create vserver
 	vcreate_script = self.config.vserver_scripts_path + 'vtest-nightly.sh'
 	command = "%(vcreate_script)s -b %(name)s -f %(fcdistro)s -m %(mailto)s -w /tmp/" % locals()
