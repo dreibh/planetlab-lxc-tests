@@ -51,10 +51,16 @@ function kill_pids () {
 	    kill_from_file $nodedir/qemu.pid
 	done
     else
-	echo "Killing all processes mathing $COMMANDS_TO_KILL"
-	for command in $COMMANDS_TO_KILL ; do
-	    pkill -x $command
-	done
+	pids=$(list_pids)
+	if [ -n "$pids" ] ; then
+	    echo "Killing all processes matching $COMMANDS_TO_KILL"
+	    for pid in $pids; do
+		echo Killing $pid
+		kill $pid
+	    done
+	else
+	    echo "No process found that match $COMMANDS_TO_KILL"
+	fi
     fi
 }
 

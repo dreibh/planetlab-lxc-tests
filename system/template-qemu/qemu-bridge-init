@@ -8,6 +8,7 @@
 #
 
 COMMAND=$(basename $0)
+cd $(dirname $0)
 
 # constant
 INTERFACE_BRIDGE=br0
@@ -80,11 +81,6 @@ start () {
     echo "Configuring  the IP  Gateway @:" $gateway
     route add default gw $gateway
 
-    # xxx this is *wrong*
-    # wipe the host firewall otherwise the guest qemu can't access the LAN
-    # echo "Wiping the firewall..." 
-    # iptables -F
-    
 }
 
 #Adding a new interface to the bridge: this is used by qemu-ifup 
@@ -99,6 +95,19 @@ add () {
     echo "Adding $INTERFACE_LAN to $INTERFACE_BRIDGE"
     brctl addif $INTERFACE_BRIDGE $INTERFACE_LAN
 
+    # turn off filtering on this interface
+    ########## from the test environment
+    # expected vars are MACADDR, NODE_ISO, HOSTNAME, IP and TARGET_ARCH
+    CONFIG=qemu.conf
+    [ -f "$CONFIG" ] || { echo "Config file for qemu $CONFIG not found in $(pwd)" ; exit 1 ; }
+    . $CONFIG
+
+    echo "Tweaking iptables"
+    iptables-save > iptables.pre
+    # rewrite a new config - quick and dirty
+    ./iptables.py iptables.pre iptables.post $IP
+    iptables-restore < iptables.post
+    
 }
 
 #Stop the bridge and restore the original setting
@@ -117,6 +126,7 @@ stop () {
     /sbin/ifconfig $INTERFACE_BRIDGE down
     brctl delbr $INTERFACE_BRIDGE
     /sbin/service network restart
+    /sbin/service iptables restart
 }
 
 # 

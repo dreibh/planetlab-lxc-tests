@@ -115,7 +115,8 @@ class TestNode:
         options = []
         if self.is_qemu():
             options=['serial']
-        encoded=self.test_plc.apiserver.GetBootMedium(self.test_plc.auth_root(), self.name(), 'node-iso', '', options)
+        encoded=self.test_plc.apiserver.GetBootMedium(self.test_plc.auth_root(), 
+                                                      self.name(), 'node-iso', '', options)
         if (encoded == ''):
             raise Exception, 'GetBootmedium failed'
 
@@ -127,12 +128,18 @@ class TestNode:
         else:
             file(filename,'w').write(base64.b64decode(encoded))
             return True
+
+    def reinstall_node (self):
+        self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
+                                           self.name(),{'boot_state':'rins'})
+        return True
     
     def configure_qemu(self):
         if not self.is_qemu():
             return
         mac=self.node_spec['network_fields']['mac']
         hostname=self.node_spec['node_fields']['hostname']
+        ip=self.node_spec['network_fields']['ip']
         auth=self.test_plc.auth_root()
         target_arch=self.test_plc.apiserver.GetPlcRelease(auth)['build']['target-arch']
         conf_filename="%s/qemu.conf"%(self.nodedir())
@@ -144,6 +151,7 @@ class TestNode:
         file.write('MACADDR=%s\n'%mac)
         file.write('NODE_ISO=%s.iso\n'%self.name())
         file.write('HOSTNAME=%s\n'%hostname)
+        file.write('IP=%s\n'%ip)
         file.write('TARGET_ARCH=%s\n'%target_arch)
         file.close()
 
@@ -153,15 +161,16 @@ class TestNode:
         utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
         return self.test_box().copy(self.nodedir(),recursive=True)==0
             
-    def start_node (self,options):
+    def start_node (self):
         model=self.node_spec['node_fields']['model']
         #starting the Qemu nodes before 
         if self.is_qemu():
-            self.start_qemu(options)
+            self.start_qemu()
         else:
             utils.header("TestNode.start_node : %s model %s taken as real node"%(self.name(),model))
 
-    def start_qemu (self, options):
+    def start_qemu (self):
+        options = self.test_plc.options
         test_box = self.test_box()
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 

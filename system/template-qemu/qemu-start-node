@@ -13,12 +13,9 @@ SCRIPT=qemu-ifup
 TAP="tap,script=$SCRIPT"
 
 ########## from the test environment
-# expected vars are MACADDR, NODE_ISO, HOSTNAME and TARGET_ARCH
+# expected vars are MACADDR, NODE_ISO, HOSTNAME, IP and TARGET_ARCH
 CONFIG=qemu.conf
-if [ ! -e ${CONFIG} ];then
-    echo "File for node_iso version not found"
-    exit 1
-fi
+[ -f "$CONFIG" ] || { echo "Config file for qemu $CONFIG not found in $(pwd)" ; exit 1 ; }
 . $CONFIG
 
 # the launcher, depending on local/target archs

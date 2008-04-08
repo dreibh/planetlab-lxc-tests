@@ -528,6 +528,8 @@ class TestPlc:
     def bootcd (self): pass
     @node_mapper
     def configure_qemu (self): pass
+    @node_mapper
+    def reinstall_node (self): pass
         
     def do_check_initscripts(self):
         overall = True
@@ -581,11 +583,8 @@ class TestPlc:
     @node_mapper
     def clear_known_hosts (self): pass
     
-    def start_nodes (self):
-        utils.header("Starting  nodes")
-        for site_spec in self.plc_spec['sites']:
-            TestSite(self,site_spec).start_nodes (self.options)
-        return True
+    @node_mapper
+    def start_node (self) : pass
 
     def locate_first_sliver (self):
         slice_spec = self.plc_spec['slices'][0]

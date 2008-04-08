@@ -2,4 +2,5 @@
 
 # use the bridge as set up by qemu-bridge-init start
 
-qemu-bridge-init add $1
+cd $(dirname $0)
+./qemu-bridge-init add $1

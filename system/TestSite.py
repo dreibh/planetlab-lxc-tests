@@ -54,9 +54,5 @@ class TestSite:
                 return node
         raise Exception,"Cannot locate node %s"%nodename
         
-    def start_nodes (self,options):
-        for node_spec in self.site_spec['nodes']:
-            TestNode(self.test_plc, self, node_spec).start_node(options)
-        return True
            
     

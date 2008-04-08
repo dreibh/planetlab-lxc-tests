@@ -80,9 +80,7 @@ class TestSsh:
 
     def run(self, command,background=False):
         local_command = self.actual_command(command)
-        if background:
-            local_command += " &"
-        return utils.system(local_command)
+        return utils.system(local_command,background)
 
     def clean_dir (self,dirname):
         if self.is_local():
