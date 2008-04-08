@@ -3,8 +3,22 @@ import os
 
 class Remote:
 
+    def get_path(self):
+	path = ""
+	if 'host' in self and self['host']:
+	    if self['host'] not in ['localhost', self.config.hostname, None]:  
+	        path += "root@host:" 
+	if 'vserver' in self and self['vserver']:
+	    path += '/vservers/%s/' % self['vserver'] 
+	if 'chroot' in self and self['chroot']:
+	    path += self['chroot'] + os.sep
+	if 'homedir' in self and self['homedir']:
+	    path += self['homedir'] + os.sep
+	
+	return path  
+
     def get_command(self, command):
-	options = ""
+	options = " -o StrictHostKeyChecking=no "
 	# Chroot if necessary 
         if 'chroot' in self and self['chroot']:
             command = " chroot %s %s" % (self['chroot'], command)
