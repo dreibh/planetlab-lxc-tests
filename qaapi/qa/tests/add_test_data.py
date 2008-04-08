@@ -8,7 +8,7 @@ class add_test_data(Test):
     """
     Adds the test data found in config to the plc db
     """   
-    def call(self,  plc_name = None):
+    def call(self, plc_name = None):
 
 	# Determine which plc to talk to 
 	plc = self.config.get_plc(plc_name)
@@ -18,15 +18,15 @@ class add_test_data(Test):
 	# Search config for objects that belong to this plc
 	# Any object with 'plc' defined as this plc's name or with 
 	# no 'plc' defined will be added
-	this_plc = lambda object: 'plc' not in object or \
-				  'plc' in object and object['plc'] == plc['name'] or \
-				  object['plc'] == None   
+	this_plc = lambda object: 'plcs' not in object or \
+				  'plcs' in object and plc['name'] in object['plcs'] or \
+				  object['plcs'] == None   
      
 	sitelist = filter(this_plc, self.config.sites.values())  	
 	nodelist = filter(this_plc, self.config.nodes.values())
 	slicelist = filter(this_plc, self.config.slices.values())
 	personlist = filter(this_plc, self.config.persons.values()) 
-
+	
 	# Add Test site
 	for site in sitelist:
 	    sites = api.GetSites(auth, [site['login_base']])
