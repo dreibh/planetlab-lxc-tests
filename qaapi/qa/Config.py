@@ -5,11 +5,14 @@ import re
 import socket
 import utils
 import copy
+from logger import logfile
 from PLCs import PLC, PLCs
 from Sites import Site, Sites	
 from Nodes import Node, Nodes
 from Slices import Slice, Slices
 from Persons import Person, Persons	
+
+path = os.path.dirname(os.path.abspath(__file__))
 
 class Config:
 
@@ -18,6 +21,7 @@ class Config:
     node_tests_path = tests_path + os.sep + 'node' + os.sep
     slice_tests_path = tests_path + os.sep + 'slice' + os.sep				
     vserver_scripts_path = path + os.sep + 'vserver' + os.sep
+    log_filename = logfile.filename
 
     def update_api(self, plc = None):
 	# Set up API acccess
@@ -63,10 +67,9 @@ class Config:
 	# try setting hostname and ip
         self.hostname = socket.gethostname()
         try:
-	    (stdout, stderr) = utils.popen("/sbin/ifconfig eth0 | grep 'inet addr'")
-            inet_addr = re.findall('inet addr:[0-9\.^\w]*', stdout[0])[0]
-            parts = inet_addr.split(":")
-            self.ip = parts[1]
+            command = "/sbin/ifconfig eth0 | grep -v inet6 | grep inet | awk '{print$2;}'"
+            (status, output) = utils.commands(command)            
+	    self.ip = re.findall(r'[0-9\.]+', output)[0]
 	except:
 	    self.ip = '127.0.0.1'
 	
@@ -85,7 +88,7 @@ class Config:
 	plc = PLC(self)
 	if hasattr(self, 'plcs')  and plc_name in self.plcs.keys():
 	    plc.update(self.plcs[plc_name])
-	    plc.config.update_api(plc)
+	    plc.update_api()
 	return plc
 
     def get_node(self, hostname):
