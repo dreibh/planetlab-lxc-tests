@@ -154,10 +154,14 @@ class TestNode:
         file.write('IP=%s\n'%ip)
         file.write('TARGET_ARCH=%s\n'%target_arch)
         file.close()
+        return True
 
+    def export_qemu (self):
         # if relevant, push the qemu area onto the host box
         if self.test_box().is_local():
             return True
+        utils.header ("Cleaning any former sequel of %s on %s"%(self.name(),self.host_box()))
+        self.test_box().run_in_buildname("rm -rf %s"%self.nodedir())
         utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
         return self.test_box().copy(self.nodedir(),recursive=True)==0
             
@@ -181,7 +185,7 @@ class TestNode:
 
     def list_qemu (self):
         utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
-        command="qemu-%s/qemu-kill-node -l %s"%(self.name(),self.name())
+        command="%s/qemu-kill-node -l %s"%(self.nodedir(),self.name())
         self.test_box().run_in_buildname(command)
         return True
 
@@ -190,7 +194,7 @@ class TestNode:
         test_box = self.test_box()
         # kill the right processes 
         utils.header("Stopping qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
-        command="qemu-%s/qemu-kill-node %s"%(self.name(),self.name())
+        command="%s/qemu-kill-node %s"%(self.nodedir(),self.name())
         self.test_box().run_in_buildname(command)
         return True
 

@@ -66,7 +66,7 @@ class TestPlc:
                      'configure', 'start', SEP,
                      'store_keys', 'clear_known_hosts', 'initscripts', SEP,
                      'sites', 'nodes', 'slices', 'nodegroups', SEP,
-                     'init_node','bootcd', 'configure_qemu', 
+                     'init_node','bootcd', 'configure_qemu', 'export_qemu',
                      'kill_all_qemus', 'reinstall_node','start_node', SEP,
                      'standby_20', SEP,
                      'nodes_booted', 'nodes_ssh', 'check_slice',
@@ -227,8 +227,8 @@ class TestPlc:
         # this is the brute force version, kill all qemus on that host box
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # pass the first nodename, as we don't push template-qemu on testboxes
-            nodename=nodes[0].name()
-            TestBox(box,self.options.buildname).kill_all_qemus(nodename)
+            nodedir=nodes[0].nodedir()
+            TestBox(box,self.options.buildname).kill_all_qemus(nodedir)
         return True
 
     # make this a valid step
@@ -556,6 +556,8 @@ class TestPlc:
     def configure_qemu (self): pass
     @node_mapper
     def reinstall_node (self): pass
+    @node_mapper
+    def export_qemu (self): pass
         
     def do_check_initscripts(self):
         overall = True

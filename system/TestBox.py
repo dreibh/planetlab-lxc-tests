@@ -37,8 +37,8 @@ class TestBox:
         return self.test_ssh.mkdir(dirname)
 
     # we need at least one nodename, as template-qemu is not synced on remote testboxes
-    def kill_all_qemus(self,nodename):
-        self.run_in_buildname("qemu-%s/qemu-kill-node"%nodename)
+    def kill_all_qemus(self,nodedir):
+        self.run_in_buildname("%s/qemu-kill-node"%nodedir)
         return True
 
     def list_all_qemus(self):
