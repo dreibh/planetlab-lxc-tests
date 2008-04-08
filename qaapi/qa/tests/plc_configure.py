@@ -11,7 +11,7 @@ class plc_configure(Test):
     Configure the myplc from config options in config file
     """
 
-    def call(self, plc_name, plc_config_option=None, plc_config_value=None):
+    def call(self, plc_name, plc_config_options = None):
 	
 	# Get plc configuration from config
 	plc = self.config.get_plc(plc_name)
@@ -23,16 +23,15 @@ class plc_configure(Test):
 	if self.config.verbose: utils.header(command)
         (status, output) = plc.commands(command)
 
-	# mount plc (need to do this optionally, as we do not want this for myplc-native)
+	# mount plc 
 	command = "/sbin/service plc mount"
 	if self.config.verbose: utils.header(command)
         (status, output) = plc.commands(command)
 
 	# Get plc configuration variables
-	if plc_config_option is not None and \
-	   plc_config_value  is not None:
-	    # Set option passed in from user
-	    plc_options.append((plc_config_option, plc_config_value))
+	if plc_config_options is not None:
+	    for (option, value) in plc_config_options.items():
+	        plc_options.append((option, value))
 	else:
 	    # Use hostname and ip of host we are running on
 	    for service in services:
