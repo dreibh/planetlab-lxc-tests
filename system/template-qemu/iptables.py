@@ -10,14 +10,15 @@ def main ():
     
     found=False
     lo_matcher=re.compile("\A(?P<left>.+)\s+-i\s+lo\s+-j\s+ACCEPT")
-    ip_matcher=re.compile("--(source|destination) %s"%ip)
+    # what comes out of iptables-save has short-options syntax
+    ip_matcher=re.compile("-(s|d) %s"%ip)
     for line in fin.readlines():
         attempt=lo_matcher.match(line)
         if attempt:
             fou.write(line)
             # open-up for this IP
-            fou.write("%s --source %s -j ACCEPT\n"%(attempt.group('left'),ip))
-            fou.write("%s --destination %s -j ACCEPT\n"%(attempt.group('left'),ip))
+            fou.write("%s -s %s -j ACCEPT\n"%(attempt.group('left'),ip))
+            fou.write("%s -d %s -j ACCEPT\n"%(attempt.group('left'),ip))
             found=True
         else:
             attempt = ip_matcher.match(line)

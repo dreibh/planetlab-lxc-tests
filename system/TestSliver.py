@@ -38,12 +38,14 @@ class TestSliver:
         return self.test_ssh.run("ls -l /tmp/%s.stamp"%initscript)==0
     
     def run_tcp_server (self,port,timeout=10):
-        server_command = "tcptest.py server -p %d -t %d"%(port,timeout)
-        return self.test_ssh.copy("tcptest.py")==0 and self.test_ssh.run(server_command)==0
+        server_command = "./tcptest.py server -p %d -t %d"%(port,timeout)
+        return self.test_ssh.copy("tcptest.py")==0 and \
+            self.test_ssh.run(server_command,background=True)==0
 
     def run_tcp_client (self,servername,port):
-        client_command="tcptest.py client -a %s -p %d"%(servername,port)
-        return self.test_ssh.copy("tcptest.py")==0 and self.test_ssh.run(client_command)==0
+        client_command="./tcptest.py client -a %s -p %d"%(servername,port)
+        return self.test_ssh.copy("tcptest.py")==0 and \
+            self.test_ssh.run(client_command,background=True)==0
 
     def tar_var_logs (self):
         return self.test_ssh.actual_command("sudo tar -C /var/log -cf - .")

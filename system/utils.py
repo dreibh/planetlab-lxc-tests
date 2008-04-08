@@ -32,59 +32,59 @@ def show_options (message,options):
         print "    ",k,":",getattr(options,k)
 
 def show_site_spec (site):
-    print '======== site',site['site_fields']['name']
+    print '* ======== site',site['site_fields']['name']
     for (k,v) in site.iteritems():
         if k=='nodes':
             if v: 
-                print '\t\t','nodes : ',
+                print '* \t\t','nodes : ',
                 for node in v:  
                     print node['node_fields']['hostname'],'',
                 print ''
         elif k=='users':
             if v: 
-                print '\t\tusers : ',
+                print '* \t\tusers : ',
                 for user in v:  
                     print user['name'],'',
                 print ''
         elif k == 'site_fields':
-            print '\t\tlogin_base',':',v['login_base']
+            print '* \t\tlogin_base',':',v['login_base']
         elif k == 'address_fields':
             pass
         else:
-            print '\t\t',k,
+            print '* \t\t',k,
             PrettyPrinter(indent=8,depth=2).pprint(v)
         
 def show_initscript_spec (initscript):
-    print '======== initscript',initscript['initscript_fields']['name']
+    print '* ======== initscript',initscript['initscript_fields']['name']
 
 def show_key_spec (key):
-    print '======== key',key['name']
+    print '* ======== key',key['name']
 
 def show_slice_spec (slice):
-    print '======== slice',slice['slice_fields']['name']
+    print '* ======== slice',slice['slice_fields']['name']
     for (k,v) in slice.iteritems():
         if k=='nodenames':
             if v: 
-                print '\t\tnodes : ',
+                print '* \t\tnodes : ',
                 for nodename in v:  
                     print nodename,'',
                 print ''
         elif k=='usernames':
             if v: 
-                print '\t\tusers : ',
+                print '* \t\tusers : ',
                 for username in v:  
                     print username,'',
                 print ''
         elif k=='slice_fields':
-            print '\t\tfields',':',
+            print '* \t\tfields',':',
             print 'max_nodes=',v['max_nodes'],
             print ''
         else:
-            print '\t\t',k,v
+            print '* \t\t',k,v
 
 def show_test_spec (message,all_plc_specs):
     now=time.strftime("%H:%M:%S", time.localtime())
-    print ">",now,"--",message
+    print "*",now,"--",message
     for plc_spec in all_plc_specs:
         show_test_spec_pass (plc_spec,1)
         show_test_spec_pass (plc_spec,2)
@@ -106,7 +106,7 @@ def show_test_spec_pass (plc_spec,passno):
                     show_key_spec (key)
         elif passno == 1:
             if key not in ['sites','initscripts','slices','keys']:
-                print '\t',key,':',val
+                print '* \t',key,':',val
 
 def system(command,background=False):
     now=time.strftime("%H:%M:%S", time.localtime())

@@ -47,7 +47,7 @@ class TestMapper:
                     # apply formatting if '%s' found in the value
                     if v.find('%s')>=0:
                         v=v%obj[k]
-                    utils.header("TestMapper, rewriting %s: %s into %s"%(name,k,v))
+                    print("TestMapper, rewriting %s: %s into %s"%(name,k,v))
                     o[step]=v
                 # only apply first rule
                 return

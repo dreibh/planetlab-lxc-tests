@@ -107,6 +107,9 @@ add () {
     # rewrite a new config - quick and dirty
     ./iptables.py iptables.pre iptables.post $IP
     iptables-restore < iptables.post
+
+    echo "Installed iptables"
+    iptables-save
     
 }
 
