@@ -1,6 +1,7 @@
 import os
-import copy
-import utils	
+import re
+import utils
+import xmlrpclib	
 from Remote import Remote
 from Table import Table
 
@@ -26,19 +27,29 @@ class PLC(dict, Remote):
 	
 	# init config
 	self.config = config
-	self.config.update_api(self)
 
-    def start_xmlrpc_server(self):
-	"""
-	PLCAPI comes with a SimpleServer script that allows you to run a 
-	standalone http server that listens on the specified port.
-	This is useful for running multiple api servers on the same machine.
-	"""
-	if 'port' in self and not self['port'] in ['443', None]:
-	    server_script = "/usr/share/plc_api/Server.py" 
-	    self.popen3("%s -p %s &" % (server_script, self['port']))    
-	    if self.config.verbose:
-		utils.header("Starting api server at %s on listening on port %s" % (self['host'], self['port']))     
+
+    def update_ip(self):
+	try: 	
+	    command = "/sbin/ifconfig eth0 | grep -v inet6 | grep inet | awk '{print$2;}'"
+	    (status, output) = self.commands(command)
+	    ip = re.findall(r'[0-9\.]+', output)[0]  	
+	except:
+	    ip = "127.0.0.1"
+	self['ip'] = ip.strip() 
+	
+
+    def update_api(self):
+	# Set up API acccess
+        # If plc is specified, find its configuration
+        # and use its API
+	self.update_ip()
+	name, ip, port, path = self['name'], self['ip'], self['port'], self['api_path']
+	if self.config.verbose:
+	    utils.header("Updating %(name)s's api to https://%(ip)s:%(port)s/%(path)s" % locals())   
+	api_server = "https://%(ip)s:%(port)s/%(path)s" % locals()
+	self.config.api = xmlrpclib.Server(api_server, allow_none = 1)
+        self.config.api_type = 'xmlrpc'	
 
 class PLCs(list, Table):
 
