@@ -1,6 +1,7 @@
 import os
 import traceback
 import time
+import sys
 
 class Logfile:
     """
@@ -21,9 +22,8 @@ class Logfile:
             sys.stderr.write(data)
             sys.stderr.flush()
 
-
-
-logfile = Logfile('qaapi.log')
+log_filename = '/var/log/qaapi.log'
+logfile = Logfile(log_filename)
 
 def log(method, method_name = None, \
 	log_filename = 'system.log', errorlog_filename = 'system_error.log'):
