@@ -21,7 +21,9 @@ class TestBox:
         return self.test_ssh.is_local()
     
     def run_in_buildname (self,command,background=False):
-        utils.header("Running command %s on testbox %s"%(command,self.hostname()))
+        message="On %s: running %s"%(self.hostname(),command)
+        if background: message += " &"
+        utils.header(message)
         return self.test_ssh.run_in_buildname (command,background)
 
     # xxx could/should use rsync instead

@@ -168,6 +168,7 @@ class TestNode:
             self.start_qemu()
         else:
             utils.header("TestNode.start_node : %s model %s taken as real node"%(self.name(),model))
+        return True
 
     def start_qemu (self):
         options = self.test_plc.options
