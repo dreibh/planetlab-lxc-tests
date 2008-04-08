@@ -23,12 +23,6 @@ class plc_start(Test):
 	if self.config.verbose:
 	    utils.header(output)
 
-	# Some plcs may fail when trying to start the http/xmlrpc server 
-	# because the port is already in use. We must start a server on 
-	# another port.
-	plc.start_xmlrpc_server()  
-  
-	
 	return 1
 
 if __name__ == '__main__':
