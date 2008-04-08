@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # cd in this command's directory
+COMMAND=$(basename $0)
 cd $(dirname $0)
 
 ########## globals
@@ -27,6 +28,9 @@ case $archs in
     x86_64+i386)	QEMU=qemu;;
     x86_64+x86_64)	QEMU=qemu-system-x86_64;;
 esac
+
+echo "Running $COMMAND in $(pwd)"
+echo "Starting at $(date)"
 
 #Creating new HDA if needed only
 #using qcow2 disk image format which is essential to support VM snapshots

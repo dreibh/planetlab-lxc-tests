@@ -69,10 +69,12 @@ class TestSsh:
             return "%s@%s"%(self.username,self.hostname)
     
     # command gets run on the right box
-    def actual_command (self, command):
+    def actual_command (self, command,keep_stdin=False):
         if self.is_local():
             return command
         ssh_command = "ssh "
+        if not keep_stdin:
+            ssh_command += "-n "
         ssh_command += TestSsh.std_options
         ssh_command += self.key_part()
         ssh_command += "%s %s" %(self.hostname_part(),TestSsh.backslash_shell_specials(command))

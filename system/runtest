@@ -5,7 +5,8 @@ logfile=logs/runtest-$(date +%H-%M).log
 
 # figure if TestMain succeeds, as the retcod gets lost in the pipe
 rm -f logs/success
-(python -u TestMain.py "$@" && touch logs/success) | tee $logfile
+python -u TestMain.py "$@" &> $logfile && touch logs/success
+cat $logfile
 
 if [ -f logs/success ] ; then
     exit 0

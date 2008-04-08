@@ -155,7 +155,7 @@ class TestPlc:
 
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
-        return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote)))
+        return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote),keep_stdin=True))
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
