@@ -202,7 +202,7 @@ class TestNode:
         if not self.is_qemu():
             return True
         remote_log="%s/qemu.log"%self.nodedir()
-        local_log="logs/%s-qemu.log"%self.name()
+        local_log="logs/node.qemu.%s.log"%self.name()
         self.test_box().test_ssh.fetch(remote_log,local_log)
 
     def clear_known_hosts (self):

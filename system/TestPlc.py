@@ -614,11 +614,13 @@ class TestPlc:
     @node_mapper
     def start_node (self) : pass
 
-    def locate_first_sliver (self):
-        slice_spec = self.plc_spec['slices'][0]
-        slicename = slice_spec['slice_fields']['name']
-        nodename = slice_spec['nodenames'][0]
-        return self.locate_sliver_obj(nodename,slicename)
+    def all_sliver_objs (self):
+        result=[]
+        for slice_spec in self.plc_spec['slices']:
+            slicename = slice_spec['slice_fields']['name']
+            for nodename in slice_spec['nodenames']:
+                result.append(self.locate_sliver_obj (nodename,slicename))
+        return result
 
     def locate_sliver_obj (self,nodename,slicename):
         (site,node) = self.locate_node(nodename)
@@ -649,10 +651,10 @@ class TestPlc:
     
 
     def gather_logs (self):
-        # (1) get the plc's /var/log and store it locally in logs/<plcname>-var-log/*
-        # (2) get all the nodes qemu log and store it as logs/<node>-qemu.log
-        # (3) get the nodes /var/log and store is as logs/<node>-var-log/*
-        # (4) as far as possible get the slice's /var/log as logs/<slice>-<node>-var-log/*
+        # (1) get the plc's /var/log and store it locally in logs/myplc.var-log.<plcname>/*
+        # (2) get all the nodes qemu log and store it as logs/node.qemu.<node>.log
+        # (3) get the nodes /var/log and store is as logs/node.var-log.<node>/*
+        # (4) as far as possible get the slice's /var/log as logs/sliver.var-log.<sliver>/*
         # (1)
         print "-------------------- TestPlc.gather_logs : PLC's /var/log"
         self.gather_var_logs ()
@@ -668,24 +670,21 @@ class TestPlc:
         self.gather_nodes_var_logs()
         # (4)
         print "-------------------- TestPlc.gather_logs : sample sliver's /var/log"
-        self.gather_first_sliver_logs()
+        self.gather_slivers_var_logs()
         return True
 
-    def gather_first_sliver_logs(self):
-        try:
-            test_sliver = self.locate_first_sliver()
+    def gather_slivers_var_logs(self):
+        for test_sliver in self.all_sliver_objs():
             remote = test_sliver.tar_var_logs()
-            utils.system("mkdir -p logs/%s-var-log"%test_sliver.name())
-            command = remote + " | tar -C logs/%s-var-log -xf -"%test_sliver.name()
+            utils.system("mkdir -p logs/sliver.var-log.%s"%test_sliver.name())
+            command = remote + " | tar -C logs/sliver.var-log.%s -xf -"%test_sliver.name()
             utils.system(command)
-        except Exception,e:
-            print 'Cannot locate first sliver - giving up',e
         return True
 
     def gather_var_logs (self):
         to_plc = self.actual_command_in_guest("tar -C /var/log/ -cf - .")        
-        command = to_plc + "| tar -C logs/%s-var-log -xf -"%self.name()
-        utils.system("mkdir -p logs/%s-var-log"%self.name())
+        command = to_plc + "| tar -C logs/myplc.var-log.%s -xf -"%self.name()
+        utils.system("mkdir -p logs/myplc.var-log.%s"%self.name())
         utils.system(command)
 
     def gather_nodes_var_logs (self):
@@ -695,8 +694,8 @@ class TestPlc:
                 test_node=TestNode(self,test_site,node_spec)
                 test_ssh = TestSsh (test_node.name(),key="/etc/planetlab/root_ssh_key.rsa")
                 to_plc = self.actual_command_in_guest ( test_ssh.actual_command("tar -C /var/log -cf - ."))
-                command = to_plc + "| tar -C logs/%s-var-log -xf -"%test_node.name()
-                utils.system("mkdir -p logs/%s-var-log"%test_node.name())
+                command = to_plc + "| tar -C logs/node.var-log.%s -xf -"%test_node.name()
+                utils.system("mkdir -p logs/node.var-log.%s"%test_node.name())
                 utils.system(command)
 
 
