@@ -32,16 +32,16 @@ class boot_node(Test):
         node = nodes[0]
         boot_state = node['boot_state']
         if True or self.config.verbose:
-            utils.header("%(hostname)s boot_state is %(boot_state)s" % locals()) 
+            utils.header("%(hostname)s boot_state is %(boot_state)s" % locals(), False) 
             
-        if boot_state in ['boot', 'debug']:
+        if boot_state in ['boot']:
             self.exit = True
 
 	if self.config.verbose:
 	    if boot_state in ['boot']:
-		utils.header("%(hostname)s correctly installed and booted" % locals())
+		utils.header("%(hostname)s correctly installed and booted" % locals(), False)
 	    else:
-		utils.header("%(hostname)s not fully booted" % locals())
+		utils.header("%(hostname)s not fully booted" % locals(), False)
         self.boot_state = boot_state
         return self.exit
         
@@ -73,21 +73,27 @@ class boot_node(Test):
 
         return output
 
-    def call(self, hostname, image_type = 'node-iso', disk_size="4G", wait = 30):
+    def call(self, plc_name, hostname, image_type = 'node-iso', disk_size="10G", wait = 30):
+
         
 	# Get this nodes configuration 
 	node = self.config.get_node(hostname)
 	# Which plc does this node talk to 
-	plc = self.config.get_plc(node['plc'])
+	plc = self.config.get_plc(plc_name)
         api = plc.config.api
         auth = plc.config.auth
+	path = node.get_path()
 	host = node['host']
-	bootimage_filename = '%(hostname)s-bootcd.iso' % locals()
-	tmpdir = '/usr/tmp/'
 	homedir = node['homedir']
-	diskimage_path = "/%(homedir)s/%(hostname)s-hda.img" % locals() 
+	tmpdir = '/usr/tmp/'
+	bootimage_filename = "%(hostname)s-bootcd.iso" % locals()
+	diskimage_filename = "%(hostname)s-hda.img" % locals() 
+	bootimage = "%(homedir)s/%(bootimage_filename)s" % locals()
+	diskimage = "%(homedir)s/%(diskimage_filename)s" % locals() 
+	diskimage_path = "/%(path)s/%(diskimage_filename)s" % locals() 
         bootimage_tmppath = "%(tmpdir)s/%(bootimage_filename)s" % locals()
-	bootimage_path = "%(homedir)s/%(bootimage_filename)s" % locals()
+	bootimage_path = "%(path)s/%(bootimage_filename)s" % locals()
+	
 	if host in ['localhost', None]:
 	    remote_bootimage_path = bootimage_path
 	else:
@@ -105,10 +111,10 @@ class boot_node(Test):
 	
 	# Create boot image
 	if self.config.verbose:
-            utils.header("Creating bootcd for %(hostname)s at %(host)s:%(bootimage_path)s" % locals())	
-	bootimage = api.GetBootMedium(auth, hostname, image_type, '', ['serial'])
+            utils.header("Creating bootcd for %(hostname)s at %(bootimage_path)s" % locals())	
+	nodeimage = api.GetBootMedium(auth, hostname, image_type, '', ['serial'])
 	fp = open(bootimage_tmppath, 'w')
-	fp.write(base64.b64decode(bootimage))
+	fp.write(base64.b64decode(nodeimage))
 	fp.close()
 
 	# Move the boot image to the nodes home directory
@@ -116,7 +122,7 @@ class boot_node(Test):
 	node.scp(bootimage_tmppath, "%(remote_bootimage_path)s" % locals())
 	
 	# Create a temporary disk image
-	qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage_path)s %(disk_size)s" % locals()
+	qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage)s %(disk_size)s" % locals()
 	node.host_commands(qemu_img_cmd)
 
 	if self.config.verbose:
@@ -128,10 +134,10 @@ class boot_node(Test):
         tmp = tempfile.mkstemp(".pid","qemu_")
         pidfile=tmp[1]
         os.unlink(pidfile)
-        os.close(tmp[0])
-
+        
+	os.close(tmp[0])
         # boot node with ramsize memory
-        ramsize=400
+        ramsize=1024
 
         # always use the 64 bit version of qemu, as this will work on both 32 & 64 bit host kernels
         bootcmd = "qemu-system-x86_64" 
@@ -142,36 +148,48 @@ class boot_node(Test):
         # uniprocessor only
         bootcmd = bootcmd + " -smp 1"
 	# redirect incomming tcp connections on specified port to guest node
-	if 'redir_port' in node and node['redir_port']:
-	    port = node['redir_port']
-	    bootcmd = bootcmd + " -redir tcp:%(port)s::22" % locals() 
+	if 'redir_ssh_port' in node and node['redir_ssh_port']:
+	    port = node['redir_ssh_port']
+	    ip = node['nodenetworks'][0]['ip']
+	    bootcmd = bootcmd + " -redir tcp:%(port)s:%(ip)s:22" % locals() 
         # no graphics support -> assume we are booting via serial console
         bootcmd = bootcmd + " -nographic"
         # boot from the supplied cdrom iso file
         bootcmd = bootcmd + " -boot d"
-        bootcmd = bootcmd + " -cdrom %(bootimage_path)s" % locals()
+        bootcmd = bootcmd + " -cdrom %(bootimage)s" % locals()
         # hard disk image to use for the node
-        bootcmd = bootcmd + " %(diskimage_path)s" % locals()
-
-        # launch qemu
-	utils.header(bootcmd)
+        bootcmd = bootcmd + " %(diskimage)s" % locals()
+	# redirect stdout, stderr to logfile
+	bootcmd = bootcmd + " 2>&1 >> %s " % (self.config.log_filename)
+        
+	# kill any old qemu processes for this node
+	pid_cmd = "ps -elfy | grep qemu | grep %(hostname)s | awk '{print$3}'" % locals()
+	(status, output) = node.host_commands(pid_cmd)
+	pids = " ".join(output.split("\n")).strip() 
+	if pids:
+	    kill_cmd = "kill %(pids)s" % locals()  
+	    (status, output) = node.host_commands(kill_cmd)
+	
+	# launch qemu
 	(self.stdin, self.stdout, self.stderr) = node.host_popen3(bootcmd)
         
 	# wait for qemu to start up
         time.sleep(3)
-        
         # get qemu's pid from its pidfile (crappy approach)
-        fp = file(pidfile)
-        buf=fp.read()
-        self.pid=int(buf)
-        fp.close()
-        os.unlink(pidfile)
-
-        # loop until the node is either fully booted, some error
+	pid_cmd = "cat %(pidfile)s" % locals()
+	(staus, output)  = node.host_commands(pid_cmd)
+	self.pid = output.strip()   
+        #fp = file(pidfile)
+        #buf=fp.read()
+        #self.pid=int(buf)
+        #fp.close()
+        #os.unlink(pidfile)
+        
+	# loop until the node is either fully booted, some error
         # occured, or we've reached our totaltime out
         def catch(sig, frame):
             self.totaltime = self.totaltime -1
-	    utils.header("beep %d\n" %self.totaltime)
+	    utils.header("beep %d\n" %self.totaltime, False)
             total = self.totaltime
             if (total == 0) or \
                    (((total % 60)==0) and self.state_nanny()):
@@ -185,13 +203,14 @@ class boot_node(Test):
             signal.alarm(1)
             self.exit = False
 
-            console_states = {"login:":1}
+            #console_states = {"login:":1}
             while not self.exit:
-                try:
-                    self.console_nanny(console_states)
-                except: # need a better way to catch exceptions
-                    traceback.print_exc()
-                    pass
+		pass
+                #try:
+                #    self.console_nanny(console_states)
+                #except: # need a better way to catch exceptions
+                #    traceback.print_exc()
+                #    pass
 
             signal.alarm(0)
         except:
