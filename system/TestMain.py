@@ -18,22 +18,6 @@ class TestMain:
 
     default_config = [ 'main' , '1vnodes' , '1testbox64' ]
 
-    default_steps = ['uninstall','install','install_rpm', 
-                     'configure', 'start', SEP,
-                     'store_keys', 'clear_known_hosts', 'initscripts', SEP,
-                     'sites', 'nodes', 'slices', 'nodegroups', SEP,
-                     'init_node','bootcd', 'configure_qemu', 
-                     'kill_all_qemus', 'reinstall_node','start_node', SEP,
-                     'standby_20', SEP,
-                     'nodes_booted', 'nodes_ssh', 'check_slices',
-                     'check_initscripts', 'check_tcp',SEP,
-                     'force_gather_logs', 'force_kill_qemus', ]
-    other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', SEP,
-                    'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
-                    'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
-                    'db_dump' , 'db_restore',
-                    'standby_1 through 20'
-                    ]
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
 
     def __init__ (self):
@@ -57,8 +41,8 @@ class TestMain:
         return " ".join(list).replace(" "+SEP+" ","\n")
 
     def run (self):
-        steps_message=20*'x'+" Defaut steps are\n"+TestMain.printable_steps(TestMain.default_steps)
-        steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestMain.printable_steps(TestMain.other_steps)
+        steps_message=20*'x'+" Defaut steps are\n"+TestMain.printable_steps(TestPlc.default_steps)
+        steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestMain.printable_steps(TestPlc.other_steps)
         usage = """usage: %%prog [options] steps
 myplc-url defaults to the last value used, as stored in arg-myplc-url,
    no default
@@ -110,9 +94,9 @@ steps refer to a method in TestPlc or to a step_* module
 
         if len(self.args) == 0:
             if self.options.all_steps:
-                self.options.steps=TestMain.default_steps
+                self.options.steps=TestPlc.default_steps
             elif self.options.dry_run:
-                self.options.steps=TestMain.default_steps
+                self.options.steps=TestPlc.default_steps
             elif self.options.list_steps:
                 print steps_message
                 sys.exit(1)
@@ -168,7 +152,7 @@ steps refer to a method in TestPlc or to a step_* module
         if not self.options.steps:
             #default (all) steps
             #self.options.steps=['dump','clean','install','populate']
-            self.options.steps=TestMain.default_steps
+            self.options.steps=TestPlc.default_steps
 
         # exclude
         selected=[]

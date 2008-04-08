@@ -60,6 +60,22 @@ def slice_mapper_options (method):
 
 class TestPlc:
 
+    default_steps = ['uninstall','install','install_rpm', 
+                     'configure', 'start', SEP,
+                     'store_keys', 'clear_known_hosts', 'initscripts', SEP,
+                     'sites', 'nodes', 'slices', 'nodegroups', SEP,
+                     'init_node','bootcd', 'configure_qemu', 
+                     'kill_all_qemus', 'reinstall_node','start_node', SEP,
+                     'standby_20', SEP,
+                     'nodes_booted', 'nodes_ssh', 'check_slice',
+                     'check_initscripts', 'check_tcp',SEP,
+                     'force_gather_logs', 'force_kill_qemus', ]
+    other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', SEP,
+                    'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
+                    'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
+                    'db_dump' , 'db_restore',
+                    'standby_1 through 20'
+                    ]
     def __init__ (self,plc_spec,options):
 	self.plc_spec=plc_spec
         self.options=options
