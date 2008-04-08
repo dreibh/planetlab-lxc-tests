@@ -82,6 +82,9 @@ class TestPlc:
     @staticmethod
     def printable_steps (list):
         return " ".join(list).replace(" "+SEP+" ","\n")
+    @staticmethod
+    def valid_step (step):
+        return step != SEP
 
     def __init__ (self,plc_spec,options):
 	self.plc_spec=plc_spec

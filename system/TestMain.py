@@ -191,7 +191,7 @@ steps refer to a method in TestPlc or to a step_* module
         testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
         all_step_infos=[]
         for step in self.options.steps:
-            if step == SEP:
+            if not TestPlc.valid_step(step):
                 continue
             force=False
             # is it a forcedstep
