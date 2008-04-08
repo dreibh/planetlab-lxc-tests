@@ -1,10 +1,11 @@
 import os
+from Remote import Remote
 from Table import Table
 
-class Slice(dict):
+class Slice(dict, Remote):
 
      fields = {
-	'plc': None,
+	'plcs': ['TestPLC'],
 	'name': None,
 	'instantiation': 'plc-instantiated',
 	'max_nodes': 1000,

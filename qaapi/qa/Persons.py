@@ -4,7 +4,7 @@ from Table import Table
 class Person(dict):
 
      fields = {
-	'plc': None,
+	'plcs': ['TestPLC'],
 	'first_name': None,
 	'last_name': None,
 	'password': None,

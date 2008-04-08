@@ -7,12 +7,13 @@ from Table import Table
 class Node(dict, Remote):
 
     fields = {
-	'plc': None,
+	'plcs': ['TestPLC'],
 	'hostname': None, 		# Node Hostname
 	'host': 'localhost',		# host where node lives
 	'redir_port': None,		# Port on host where ssh is redirected to virtual node
 	'vserver': None,		# vserver where this node lives
 	'type': 'vm', 			# type of node
+	'model': '/minhw',
 	'nodenetworks': [], 		# node networks
 	'homedir': '/var/VirtualMachines/',
 	'rootkey': None			 # path to root ssh key

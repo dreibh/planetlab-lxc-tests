@@ -4,7 +4,7 @@ from Table import Table
 class Site(dict):
 
      fields = {
-	'plc': 'TestPLC',
+	'plcs': ['TestPLC'],
 	'name': None,
 	'login_base': None,
 	'enabled': True,
