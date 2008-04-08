@@ -10,8 +10,6 @@ from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
 
-SEP='<sep>'
-
 class TestMain:
 
     subversion_id = "$Id$"
@@ -36,13 +34,9 @@ class TestMain:
         except:
             setattr(parser.values,option.dest,value.split())
 
-    @staticmethod
-    def printable_steps (list):
-        return " ".join(list).replace(" "+SEP+" ","\n")
-
     def run (self):
-        steps_message=20*'x'+" Defaut steps are\n"+TestMain.printable_steps(TestPlc.default_steps)
-        steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestMain.printable_steps(TestPlc.other_steps)
+        steps_message=20*'x'+" Defaut steps are\n"+TestPlc.printable_steps(TestPlc.default_steps)
+        steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestPlc.printable_steps(TestPlc.other_steps)
         usage = """usage: %%prog [options] steps
 myplc-url defaults to the last value used, as stored in arg-myplc-url,
    no default

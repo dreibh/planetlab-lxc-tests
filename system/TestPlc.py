@@ -58,6 +58,8 @@ def slice_mapper_options (method):
         return overall
     return actual
 
+SEP='<sep>'
+
 class TestPlc:
 
     default_steps = ['uninstall','install','install_rpm', 
@@ -76,6 +78,11 @@ class TestPlc:
                     'db_dump' , 'db_restore',
                     'standby_1 through 20'
                     ]
+
+    @staticmethod
+    def printable_steps (list):
+        return " ".join(list).replace(" "+SEP+" ","\n")
+
     def __init__ (self,plc_spec,options):
 	self.plc_spec=plc_spec
         self.options=options
