@@ -21,7 +21,7 @@ plcs = [
 	]
 
 sites = [
-	{'plc': 'ParisPLC',
+	{'plcs': ['TestPLC', 'ParisPLC'],
 	 'name': 'TestSite1',
 	 'login_base': 'ts',
 	 'enabled': True,
@@ -33,27 +33,30 @@ sites = [
 	]
 
 nodes = [
-	{'plc': 'ParisPLC',   	
+	{'plcs': ['TestPLC', 'ParisPLC'],   	
 	 'site': 'ts',
 	 'hostname': 'vm1.paris.cs.princeton.edu',
 	 'host': 'localhost',
-	 'redir_port': '51101',
+	 'redir_ssh_port': '51101',
 	 'type': 'vm',
+	 'model' : 'qemu/minhw',
+	 'boot_state': 'rins', 
 	 'nodenetworks' : [{'type': 'ipv4',
 			   'method': 'static',
 			   'ip': '10.0.2.16',
 			   'gateway': '10.0.2.2',
-			   'dns1': '10.0.2.2',
+			   'dns1': '10.0.2.3',
 			   'network': '10.0.2.0',
 			   'netmask': '255.255.255.0',
-			   'broadcast': '10.0.2.255'
+			   'broadcast': '10.0.2.255',
+			   'mac': u'52:54:00:12:34:56'
 			   }]
 	}
 	
 	]
 
 slices = [
-	{'plc': 'ParisPLC',   
+	{'plcs': ['TestPLC','ParisPLC'],   
 	 'name': 'ts_slice1',
 	 'instantiation': 'plc-instantiated',
 	 'max_nodes': 1000,
@@ -64,7 +67,7 @@ slices = [
 	]
 
 persons = [
-	{'plc': 'ParisPLC',
+	{'plc': ['TestPLC', 'ParisPLC'],
 	 'first_name': 'fname',
 	 'last_name': 'lname',
 	 'password': 'password',
