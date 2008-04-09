@@ -10,7 +10,8 @@ class Slice(dict, Remote):
 	'instantiation': 'plc-instantiated',
 	'max_nodes': 1000,
 	'description': 'blank',
-	'url': None
+	'url': None,
+	'key': None
 	}
 
      def __init__(self, fields = {}):
