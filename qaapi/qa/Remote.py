@@ -18,7 +18,6 @@ class Remote:
 	return path  
 
     def get_command(self, command):
-	options = " -o StrictHostKeyChecking=no "
 	# Chroot if necessary 
         if 'chroot' in self and self['chroot']:
             command = " chroot %s %s" % (self['chroot'], command)
@@ -27,29 +26,16 @@ class Remote:
         if 'vserver' in self and self['vserver']:
             command = " vserver %s exec %s " % (self['vserver'], command)
 	
-	# Use root key if necessary	
-	if 'host' in self and self['host'] not in ['localhost', self.config.hostname]:
-            if 'rootkey' in self and self['rootkey']:
-                options +=  " -i %s " % self['rootkey']
-
-	return (command, options)
-
-    def get_host_command(self, command):
-        (command, options) = self.get_command(command)
-        if 'host' in self and self['host'] not in ['localhost', self.config.hostname]:
-            command = "ssh %s root@%s \"%s\" " % (options, self['host'], command)
 	return command
 
     def get_remote_command(self, command):
-	(command, options) = self.get_command(command)
-	if 'type' in self and self['type'] in ['vm']:
-            if 'redir_port' in self and self['redir_port']:
-                options += " -p %s " % self['redir_port']	
-	
-	# attempt ssh self['host'] is not the machine we are running on or
-	# if this is a virtual node 
-	if 'host' in self and self['host'] not in ['localhost', self.config.hostname] or \
-	   'type' in self and self['type'] in ['vm']:
+	(command) = self.get_command(command)
+
+	if 'host' in self and self['host'] not in ['localhost', self.config.hostname, self.config.ip]:
+	    options = " -q "
+            options += " -o StrictHostKeyChecking=no "
+	    if 'host_rootkey' in self and self['host_rootkey']:
+                options +=  " -i %s " % self['host_rootkey']
             command = "ssh %s root@%s \"%s\" " % (options, self['host'], command)
 	return command 
 
