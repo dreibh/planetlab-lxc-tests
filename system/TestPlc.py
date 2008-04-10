@@ -3,7 +3,6 @@ import os, os.path
 import datetime
 import time
 import sys
-import datetime
 import traceback
 from types import StringTypes
 
@@ -68,7 +67,6 @@ class TestPlc:
                      'sites', 'nodes', 'slices', 'nodegroups', SEP,
                      'init_node','bootcd', 'configure_qemu', 'export_qemu',
                      'kill_all_qemus', 'reinstall_node','start_node', SEP,
-                     'standby_20', SEP,
                      'nodes_booted', 'nodes_ssh', 'check_slice',
                      'check_initscripts', 'check_tcp',SEP,
                      'force_gather_logs', 'force_kill_qemus', ]
@@ -464,7 +462,7 @@ class TestPlc:
         return hostnames
 
     # gracetime : during the first <gracetime> minutes nothing gets printed
-    def do_nodes_booted (self, minutes, gracetime=2):
+    def do_nodes_booted (self, minutes, gracetime,period=30):
         if self.options.dry_run:
             print 'dry_run'
             return True
@@ -505,13 +503,12 @@ class TestPlc:
                     utils.header("FAILURE due to %s in '%s' state"%(hostname,status[hostname]))
                 return False
             # otherwise, sleep for a while
-            time.sleep(15)
+            time.sleep(period)
         # only useful in empty plcs
         return True
 
     def nodes_booted(self):
-        return self.do_nodes_booted(minutes=0)
-    
+        return self.do_nodes_booted(minutes=20,gracetime=15)
 
     def do_nodes_ssh(self,minutes):
         # compute timeout
@@ -523,7 +520,7 @@ class TestPlc:
             for hostname in tocheck:
                 # try to ssh in nodes
                 node_test_ssh = TestSsh (hostname,key="/etc/planetlab/root_ssh_key.rsa")
-                access=self.run_in_guest(node_test_ssh.actual_command("date"))
+                access=self.run_in_guest(node_test_ssh.actual_command("hostname"))
                 if not access:
                     utils.header('The node %s is sshable -->'%hostname)
                     # refresh tocheck

@@ -11,7 +11,7 @@ def main ():
     found=False
     lo_matcher=re.compile("\A(?P<left>.+)\s+-i\s+lo\s+-j\s+ACCEPT")
     # what comes out of iptables-save has short-options syntax
-    ip_matcher=re.compile("-(s|d) %s"%ip)
+    ip_matcher=re.compile(".*-(s|d) %s"%ip)
     for line in fin.readlines():
         attempt=lo_matcher.match(line)
         if attempt:

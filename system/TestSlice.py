@@ -95,7 +95,7 @@ class TestSlice:
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
                 # this can be ran locally as we have the key
                 utils.header('Trying to enter into slice %s@%s'%(self.name(),hostname))
-                date = date_test_ssh.run("date")
+                date = date_test_ssh.run("id;hostname")
                 if not date:
                     utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
                     tocheck.remove(hostname)
