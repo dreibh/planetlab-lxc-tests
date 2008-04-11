@@ -490,7 +490,7 @@ class TestPlc:
                         utils.header("WARNING - Real node %s in %s - ignored"%(hostname,boot_state))
                         # let's cheat
                         boot_state = 'boot'
-                    if datetime.datetime.now() > graceout:
+                    elif datetime.datetime.now() > graceout:
                         utils.header ("%s still in '%s' state"%(hostname,boot_state))
                         graceout=datetime.datetime.now()+datetime.timedelta(1)
                 status[hostname] = boot_state
@@ -510,9 +510,10 @@ class TestPlc:
     def nodes_booted(self):
         return self.do_nodes_booted(minutes=20,gracetime=15)
 
-    def do_nodes_ssh(self,minutes):
+    def do_nodes_ssh(self,minutes,gracetime,period=30):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
+        graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
         tocheck = self.all_hostnames()
 #        self.scan_publicKeys(tocheck)
         utils.header("checking Connectivity on nodes %r"%tocheck)
@@ -520,8 +521,8 @@ class TestPlc:
             for hostname in tocheck:
                 # try to ssh in nodes
                 node_test_ssh = TestSsh (hostname,key="/etc/planetlab/root_ssh_key.rsa")
-                access=self.run_in_guest(node_test_ssh.actual_command("hostname"))
-                if not access:
+                success=self.run_in_guest(node_test_ssh.actual_command("hostname"))==0
+                if success:
                     utils.header('The node %s is sshable -->'%hostname)
                     # refresh tocheck
                     tocheck.remove(hostname)
@@ -531,6 +532,8 @@ class TestPlc:
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header ("WARNING : check ssh access into real node %s - skipped"%hostname)
 			tocheck.remove(hostname)
+                    elif datetime.datetime.now() > graceout:
+                        utils.header("Could not ssh-enter root context on %s"%hostname)
             if  not tocheck:
                 return True
             if datetime.datetime.now() > timeout:
@@ -538,12 +541,12 @@ class TestPlc:
                     utils.header("FAILURE to ssh into %s"%hostname)
                 return False
             # otherwise, sleep for a while
-            time.sleep(15)
+            time.sleep(period)
         # only useful in empty plcs
         return True
         
     def nodes_ssh(self):
-        return self.do_nodes_ssh(minutes=2)
+        return self.do_nodes_ssh(minutes=6,gracetime=4)
     
     @node_mapper
     def init_node (self): pass
