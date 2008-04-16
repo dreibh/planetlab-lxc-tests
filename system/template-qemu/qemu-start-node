@@ -6,7 +6,7 @@ cd $(dirname $0)
 
 ########## globals
 RAM=1024
-DISK_SIZE=10G
+DISK_SIZE=18G
 HDA=hdd-cow2-${DISK_SIZE}.img
 QEMU_CREATE_IMAGE="qemu-img create -f qcow2 $HDA ${DISK_SIZE}"
 
