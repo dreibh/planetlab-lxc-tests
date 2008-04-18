@@ -54,7 +54,7 @@ class Node(dict, Remote):
     def get_remote_command(self, command, user = 'root', key = None):
 	if key is None and 'rootkey' in self:
 	    key = self['rootkey']
-	options = " -q "
+	options = ""
 	options += " -o StrictHostKeyChecking=no "
 	if key:
 	    options += " -i %(key)s" % locals()
@@ -68,7 +68,7 @@ class Node(dict, Remote):
  
     def get_scp_command(self, localfile, remotefile, direction, recursive = False, user = 'root', key = None):
 	# scp options
-	options = " -q "
+	options = ""
 	options += " -o StrictHostKeyChecking=no "
 	if recursive:
 	    options += " -r " 	
@@ -159,22 +159,59 @@ class Node(dict, Remote):
             command = self.get_scp_command(localfile, remotefile, 'from', recursive, user, key) 
             return utils.commands(command)	
 
-    def is_ready(self, timeout=8):
-	# Node is considered ready when vuseradd processes have stopped 
+    def is_ready(self, timeout=10):
+	# Node is considered ready when Node Manager has started avuseradd processes have stopped 
+	class test:
+	    def __init__(self, name, description, system, cmd, check, inverse = False):
+	        self.system = system
+		self.cmd = cmd
+		self.check = check
+		self.name = name
+		self.description = description
+		self.inverse = inverse
+ 
+	    def run(self, verbose = True):
+		if verbose:
+		    utils.header(self.description)	
+	        (status, output) = self.system(self.cmd)
+		if self.inverse and output.find(self.check) == -1:
+		    if verbose: utils.header("%s Passed Test" % self.name)
+		    return True
+		elif not self.inverse and output and output.find(self.check)  -1:		
+		    if verbose: utils.header("%s Passed Test" % self.name)
+		    return True
+		
+		if verbose: utils.header("%s Failed Test" % self.name)
+	        return False
+
 	ready = False
 	start_time = time.time()
 	end_time = start_time + 60 * timeout
+	vcheck_cmd = "ps -elfy | grep vuseradd | grep -v grep"  
+        grep_cmd = "grep 'Starting Node Manager' %s" % self.logfile.filename
+	tests = {
+	'1':  test("NodeManager", "Checking if NodeManager has started", utils.commands, grep_cmd, "OK"),
+	'2':  test("vuseradd", "Checking if vuseradd is done", self.commands, vcheck_cmd, "vuseradd", True)      
+	}
+	
 	while time.time() < end_time and ready == False:
-	    command = "ps -elfy | grep vuseradd | grep -v grep"	
-	    (output, errors) = self.popen(command, False) 
-	    if output and output.find('vuseradd') or errors:
-		if self.config.verbose:
-                    utils.header('%s is not ready. waiting 30 seconds' %  self['hostname'])
-                sleep(20)
-	    else:
+	    # Run tests in order
+	    steps = tests.keys()
+	    steps.sort()
+	    results = {}
+	    for step in steps:
+		test = tests[step]
+		results[step] = result = test.run(self.config.verbose)
+		if not result: break
+		        	   	 	
+	    # Check results. We are ready if all passed 		
+	    if not set(results.values()).intersection([False, None]):
 		ready = True
+	    else:
 		if self.config.verbose:
-		    utils.header('%s is ready' % self['hostname'])
+		    utils.header("%s not ready. Waiting 30 seconds. %s seconds left" % \
+				 (self['hostname'], int(end_time - time.time())) )
+		time.sleep(30)   			
 
 	return ready  
 	 
