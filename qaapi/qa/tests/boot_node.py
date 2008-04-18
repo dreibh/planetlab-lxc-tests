@@ -130,6 +130,7 @@ class boot_node(Test):
 	    qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage)s %(disk_size)s" % locals()
 	    node.host_commands(qemu_img_cmd)
 
+	
 	if self.config.verbose:
             utils.header("Booting %(hostname)s" % locals())
 
@@ -176,6 +177,9 @@ class boot_node(Test):
 	    (status, output) = node.host_commands(kill_cmd)
 	
 	time.sleep(2)
+	# Rotate node's logfile
+	node.rotate_logfile()
+	
 	# launch qemu
 	(self.stdin, self.stdout, self.stderr) = node.host_popen3(bootcmd)
         
