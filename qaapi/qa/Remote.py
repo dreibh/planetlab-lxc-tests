@@ -3,17 +3,17 @@ import os
 
 class Remote:
 
-    def get_path(self):
+    def get_path(self, user = 'root'):
 	path = ""
 	if 'host' in self and self['host']:
 	    if self['host'] not in ['localhost', self.config.hostname, None]:  
-	        path += "root@host:" 
+	        path += "%s@%s:" % (user, self['host']) 
 	if 'vserver' in self and self['vserver']:
 	    path += '/vservers/%s/' % self['vserver'] 
 	if 'chroot' in self and self['chroot']:
 	    path += self['chroot'] + os.sep
-	if 'homedir' in self and self['homedir']:
-	    path += self['homedir'] + os.sep
+	#if 'homedir' in self and self['homedir']:
+	#    path += self['homedir'] + os.sep
 	
 	return path  
 
@@ -87,3 +87,29 @@ class Remote:
 	    utils.header(command)
 	return utils.commands(command)	    
 
+    def get_scp_command(self, localfile, remotefile, direction, recursive = False, user = 'root'):
+	options = " -q "
+	options += " -o StrictHostKeyChecking=no "
+	path = ""
+	host = self['host']
+	if 'host_rootkey' in self and self['host_rootkey']: 
+	    options += ' -i %s ' % self['host_rootkey']
+	if recursive:
+	    options += ' -r '
+ 
+	path = self.get_path(user)
+	if direction in ['to']:
+	    command = "scp %(options)s %(localfile)s %(path)s/%(remotefile)s" % locals()
+	elif direction in ['from']:
+	    command = "scp %(options)s %(path)s/%(remotefile)s %(localfile)s" % locals()
+	else:
+	    raise Error, "Invalid direction, must be 'to' or 'from'."  
+ 	return command
+ 
+    def scp_to(self, localfile, remotefile, recursive = False):
+	command = self.get_scp_command(localfile, remotefile, 'to', recursive)
+	return utils.commands(command)
+
+    def scp_from(self, localfile, remotefile, recursive = False):
+	command  = self.get_scp_command(localfile, remotefile, 'from', recursive)
+	return utils.commands(command)
