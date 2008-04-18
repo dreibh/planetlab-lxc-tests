@@ -42,6 +42,19 @@ class Node(dict, Remote):
 	    filename = '/var/log/%s.log' % self['hostname']
 	self.logfile = Logfile(filename)
 
+    def rotate_logfile(self):
+	if os.path.isfile(self.logfile.filename):
+	    (status, output) = utils.commands("ls %s*" % self.logfile.filename)
+	    files = output.split("\n")
+	    files.sort()
+	    lastfile = files[-1:][0]
+	    index = lastfile.split(self.logfile.filename)[1].replace(".", "")		  			
+	    if not index:
+		index = "1"
+	    else:
+		index = str(int(index) + 1)
+	    utils.commands("mv %s %s.%s" % (self.logfile.filename, self.logfile.filename, index))
+		
     def get_host_ip(self):
 	self.__init_logfile__()
 
