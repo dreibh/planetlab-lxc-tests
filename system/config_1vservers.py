@@ -19,7 +19,7 @@ def config (plcs,options):
     plc_counter=0
     for plc in plcs:
         try:
-            if len (options.ips != 0):
+            if len(options.ips) != 0:
                 ip=options.ips[0]
                 options.ips=options.ips[1:]
                 (hostname,ip,mac)=test_pool.locate(ip)
