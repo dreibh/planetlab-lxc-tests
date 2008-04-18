@@ -16,7 +16,7 @@ from qa.tests.plc_start import plc_start
 from qa.tests.add_test_data import add_test_data
 from qa.tests.sync_person_key import sync_person_key
 from qa.tests.boot_node import boot_node
-from qa.tests.access_slice import access_slice
+from qa.tests.node_run_tests import node_run_tests
 
 def run_system_tests(config, vserver_name, plc_name):
     # configure the plc in this vserver
@@ -43,12 +43,15 @@ def run_system_tests(config, vserver_name, plc_name):
 
     # Boot test node and confirm boot state
     nodelist = ['vm1.paris.cs.princeton.edu']
+    slice = config.slices['ts_slice1']	
     for node in nodelist:
         if not node in config.nodes.keys():
             continue
         node = config.nodes[node]
         node['vserver'] = config.plcs[plc_name]['vserver']
         boot_node(config)(plc_name, node['hostname'])
+	if node.is_ready():
+	    node_run_tests(config)(node['hostname'], plc_name)	
 
 def create_vserver(vserver_name, vserver_home, mailto):
     # create vserver for this system test if it doesnt already exist
@@ -58,7 +61,7 @@ def create_vserver(vserver_name, vserver_home, mailto):
 def cleanup_vservers(max_vservers, vserver_home, vserver_basename):
     # only keep the newest MAX_VSERVERS 
     vservers = os.listdir("%(vserver_home)s" % locals())
-    valid_vservers = lambda vserver: vserver.startswith(vserver_basename)
+    valid_vservers = lambda vserver: vserver.startswith(vserver_basename) and os.path.isdir(vserver)
     vservers = filter(valid_vservers, vservers)
     vservers.sort()
     vservers.reverse()
