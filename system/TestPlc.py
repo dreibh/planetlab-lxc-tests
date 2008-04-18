@@ -289,7 +289,7 @@ class TestPlc:
         # we need build dir for vtest-init-vserver
         if self.is_local():
             # a full path for the local calls
-            build_dir=os.path(sys.argv[0])+"/build"
+            build_dir=os.path.dirname(sys.argv[0])+"/build"
         else:
             # use a standard name - will be relative to HOME 
             build_dir="options.buildname"
