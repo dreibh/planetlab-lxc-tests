@@ -12,7 +12,7 @@ class PLC(dict, Remote):
 	'ip':	'127.0.0.1',				# IP
 	'chroot': None,					# Path to the chroot
 	'vserver': None, 				# Vserver where this PLC lives
-	'rootkey': None,			 	# Root Key
+	'host_rootkey': None,			 	# Root Key
 	'api_path': '/PLCAPI/', 			# PLCAPI path 
 	'port': '443' 					# PLCAPI port
 	
@@ -37,7 +37,7 @@ class PLC(dict, Remote):
 	except:
 	    ip = "127.0.0.1"
 	self['ip'] = ip.strip() 
-	
+	return self['ip']	
 
     def update_api(self):
 	# Set up API acccess
