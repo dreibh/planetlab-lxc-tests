@@ -73,7 +73,7 @@ class boot_node(Test):
 
         return output
 
-    def call(self, plc_name, hostname, image_type = 'node-iso', disk_size="10G", wait = 30):
+    def call(self, plc_name, hostname, image_type = 'node-iso', disk_size="17G", wait = 30):
 
         
 	# Get this nodes configuration 
@@ -93,21 +93,23 @@ class boot_node(Test):
 	diskimage_path = "/%(path)s/%(diskimage_filename)s" % locals() 
         bootimage_tmppath = "%(tmpdir)s/%(bootimage_filename)s" % locals()
 	bootimage_path = "%(path)s/%(bootimage_filename)s" % locals()
-	
-	if host in ['localhost', None]:
-	    remote_bootimage_path = bootimage_path
-	else:
-	    remote_bootimage_path = "%(host)s:%(bootimage_path)s" % locals()	
+	remote_bootimage_path = "%(homedir)s/%(bootimage_filename)s" % locals()	
 	 
 	# wait up to 30 minutes for a node to boot and install itself correctly
         self.hostname = hostname
         self.totaltime = 60*60*wait
 
 	# validate hostname
-	nodes = api.GetNodes(auth, [hostname], ['hostname'])
+	nodes = api.GetNodes(auth, [hostname], ['hostname', 'boot_state'])
 	if not nodes:
 	    raise Exception, "%s not found at plc  %s" % (hostname, plc['name'])
 	node.update(nodes[0])
+
+	# try reinstalling the node if it is in debug state
+	if node['boot_state'] in ['dbg']:
+	    if self.config.verbose:
+		utils.header("%(hostname)s is in debug state. Attempting a re-install" % locals())
+	    api.UpdateNode(auth, node['node_id'], {'boot_state': 'rins'}) 
 	
 	# Create boot image
 	if self.config.verbose:
@@ -119,11 +121,14 @@ class boot_node(Test):
 
 	# Move the boot image to the nodes home directory
 	node.host_commands("mkdir -p %(homedir)s" % locals())
-	node.scp(bootimage_tmppath, "%(remote_bootimage_path)s" % locals())
+	node.scp_to_host(bootimage_tmppath, "%(remote_bootimage_path)s" % locals())
 	
-	# Create a temporary disk image
-	qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage)s %(disk_size)s" % locals()
-	node.host_commands(qemu_img_cmd)
+	# Create a temporary disk image if it doesnt already exist or we are reinstalling
+	img_check_cmd =  "ls -ld %(diskimage)s" % locals()
+	(status, output) = node.host_commands(img_check_cmd, False)
+	if status != 0 or node['boot_state'] in ['rins', 'inst']:
+	    qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage)s %(disk_size)s" % locals()
+	    node.host_commands(qemu_img_cmd)
 
 	if self.config.verbose:
             utils.header("Booting %(hostname)s" % locals())
@@ -160,7 +165,7 @@ class boot_node(Test):
         # hard disk image to use for the node
         bootcmd = bootcmd + " %(diskimage)s" % locals()
 	# redirect stdout, stderr to logfile
-	bootcmd = bootcmd + " 2>&1 >> %s " % (self.config.log_filename)
+	bootcmd = bootcmd + " 2>&1 >> %s " % (node.logfile.filename)
         
 	# kill any old qemu processes for this node
 	pid_cmd = "ps -elfy | grep qemu | grep %(hostname)s | awk '{print$3}'" % locals()
@@ -170,11 +175,12 @@ class boot_node(Test):
 	    kill_cmd = "kill %(pids)s" % locals()  
 	    (status, output) = node.host_commands(kill_cmd)
 	
+	time.sleep(2)
 	# launch qemu
 	(self.stdin, self.stdout, self.stderr) = node.host_popen3(bootcmd)
         
 	# wait for qemu to start up
-        time.sleep(3)
+        time.sleep(5)
         # get qemu's pid from its pidfile (crappy approach)
 	pid_cmd = "cat %(pidfile)s" % locals()
 	(staus, output)  = node.host_commands(pid_cmd)
