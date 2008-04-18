@@ -22,7 +22,7 @@ class Config:
     slice_tests_path = tests_path + os.sep + 'slice' + os.sep				
     vserver_scripts_path = path + os.sep + 'vserver' + os.sep
     log_filename = logfile.filename
-
+    
     def update_api(self, plc = None):
 	# Set up API acccess
 	# If plc is specified, find its configuration
@@ -57,7 +57,8 @@ class Config:
             execfile(config_file, self.__dict__)
         except:
             raise "Could not find system config in %s" % config_file
-
+	
+ 	self.logfile = logfile
 	self.auth = {}
 	self.auth['Username'] = self.PLC_ROOT_USER
 	self.auth['AuthString'] = self.PLC_ROOT_PASSWORD
@@ -95,6 +96,7 @@ class Config:
 	node = Node(self)
 	if hasattr(self, 'nodes') and hostname in self.nodes.keys():
 	    node.update(self.nodes[hostname])
+	    node.__init_logfile__()
 	return node			
 
     def load(self, conffile):
