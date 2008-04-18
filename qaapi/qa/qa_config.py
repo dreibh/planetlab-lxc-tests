@@ -37,7 +37,7 @@ nodes = [
 	 'site': 'ts',
 	 'hostname': 'vm1.paris.cs.princeton.edu',
 	 'host': 'localhost',
-	 'redir_ssh_port': '51101',
+	 'redir_ssh_port': '51022',
 	 'type': 'vm',
 	 'model' : 'qemu/minhw',
 	 'boot_state': 'rins', 
