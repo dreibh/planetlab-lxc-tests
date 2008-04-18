@@ -10,7 +10,13 @@ class Logfile:
  	logfile = Logfile('filename')
         print >> logfile, data	 	
     """		
-    def __init__(self, filename):
+    def __init__(self, filename, date_in_filename = True):
+	if date_in_filename:
+	    if filename.find(".log") > -1:
+		filename = filename.split(".log")[0] 
+	    localtime = time.localtime()
+	    (year, month, day) = localtime[:3]
+	    filename = "%(filename)s-%(year)s.%(month)s.%(day)s.log" % locals()   
         self.filename = filename
 
     def write(self, data):
