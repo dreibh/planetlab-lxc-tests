@@ -302,8 +302,12 @@ class TestPlc:
         repo_url = self.options.myplc_url
         for level in [ 'rpmname','arch' ]:
 	    repo_url = os.path.dirname(repo_url)
-        create_vserver="%s/vtest-init-vserver.sh %s %s -- --interface eth0:%s"%\
-            (build_dir,self.vservername,repo_url,self.vserverip)
+        if self.options.arch == "i386":
+            personality="-p linux32"
+        else:
+            personality="-p linux64"
+        create_vserver="%s/vtest-init-vserver.sh %s %s %s -- --interface eth0:%s"%\
+            (build_dir,personality,self.vservername,repo_url,self.vserverip)
         return self.run_in_host(create_vserver) == 0
 
     def install(self):

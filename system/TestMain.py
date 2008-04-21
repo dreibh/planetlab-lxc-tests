@@ -14,7 +14,7 @@ class TestMain:
 
     subversion_id = "$Id$"
 
-    default_config = [ 'main' , '1vnodes' , '1testbox64' ]
+    default_config = [ 'default' ] 
 
     default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
 
@@ -68,7 +68,9 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-i","--ip",action="callback", callback=TestMain.optparse_list, dest="ips",
                           nargs=1,type="string",
                           help="Specify the set of IP addresses to use in vserver mode (disable scanning)")
-        parser.add_option("-s","--small",action="store_true",dest="small_test",default=False,
+        parser.add_option("-s","--vserver",action="store_true",dest="native",default=False,
+                          help="deploy myplc-native rather than former chroot-based package")
+        parser.add_option("-1","--small",action="store_true",dest="small_test",default=False,
                           help="run a small test -- typically only one node")
         parser.add_option("-d","--dbname",action="store",dest="dbname",default=None,
                            help="Used by db_dump and db_restore")
@@ -82,9 +84,9 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Force the NM to restart in check_slices step")
         (self.options, self.args) = parser.parse_args()
 
-        # tmp : force small test 
-        utils.header("XXX WARNING : forcing small tests")
-        self.options.small_test = True
+# tmp : force small test 
+#        utils.header("XXX WARNING : forcing small tests")
+#        self.options.small_test = True
 
         if len(self.args) == 0:
             if self.options.all_steps:
@@ -142,6 +144,9 @@ steps refer to a method in TestPlc or to a step_* module
             fsave.close()
 #            utils.header('Saved %s into %s'%(recname,filename))
 
+        self.options.arch = "i386"
+        if self.options.myplc_url.find("x86_64") >= 0:
+            self.options.arch="x86_64"
         # steps
         if not self.options.steps:
             #default (all) steps
