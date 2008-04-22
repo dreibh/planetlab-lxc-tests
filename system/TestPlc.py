@@ -291,8 +291,8 @@ class TestPlc:
             # a full path for the local calls
             build_dir=os.path.dirname(sys.argv[0])+"/build"
         else:
-            # use a standard name - will be relative to HOME 
-            build_dir="options.buildname"
+            # use a standard name - will be relative to remote buildname
+            build_dir="build"
 	# run checkout in any case - would do an update if already exists
         build_checkout = "svn checkout %s %s"%(self.options.build_url,build_dir)
         if self.run_in_host(build_checkout) != 0:

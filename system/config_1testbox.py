@@ -19,7 +19,7 @@ def config (plcs, options):
                                'PLC_API_HOST':target,
                                'PLC_BOOT_HOST':target,
                                'PLC_WWW_HOST':target,
-                               'name':'%s'+options.arch } ) ],
+                               'name':'%s-'+options.arch } ) ],
               'node': [ ('*' , {'host_box': target } ) ],
               }
     
