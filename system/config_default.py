@@ -1,4 +1,5 @@
 # the defaults
+import utils
 
 def config (plc_specs, options):
 
