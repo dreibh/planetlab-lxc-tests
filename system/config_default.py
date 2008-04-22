@@ -5,10 +5,10 @@ def config (plc_specs, options):
 
 # tmp : force small test 
     utils.header("XXX WARNING : forcing small tests in config_default")
-    self.options.small_test = True
+    options.small_test = True
 # tmp : force vserver tests
     utils.header("XXX WARNING : forcing native tests in config_default")
-    self.options.native = True
+    options.native = True
 
     import config_main
     plcs = config_main.config([],options)
