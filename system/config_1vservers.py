@@ -34,10 +34,7 @@ def config (plcs,options):
             # compute a helpful vserver name - remove domain in hostname
             simplehostname=hostname.split('.')[0]
             # myplc rpm basename, without .rpm
-            vservername = os.path.basename(options.myplc_url)
-            vservername = vservername.replace(".rpm","")
-            # vservername
-            vservername = vservername.replace("myplc","vtest")
+            vservername = options.buildname
             if len(plcs) == 1 :
                 vservername = "%s-%s" % (vservername,simplehostname)
             else:

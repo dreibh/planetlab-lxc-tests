@@ -102,9 +102,9 @@ class TestPlc:
     def name(self):
         name=self.plc_spec['name']
         if self.vserver:
-            return name+".vserver.%s"%self.vservername
+            return "%s.%s"%(name,self.vservername)
         else:
-            return name+".chroot"
+            return "%s.chroot"%name
 
     def hostname(self):
         return self.plc_spec['hostname']
