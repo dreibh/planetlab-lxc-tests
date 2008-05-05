@@ -69,11 +69,11 @@ class TestPlc:
                      'kill_all_qemus', 'reinstall_node','start_node', SEP,
                      'nodes_booted', 'nodes_ssh', 'check_slice',
                      'check_initscripts', 'check_tcp',SEP,
-                     'force_gather_logs', 'force_kill_qemus', ]
+                     'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', SEP,
                     'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
                     'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
-                    'db_dump' , 'db_restore',
+                    'db_dump' , 'db_restore', ' cleanup_tracker',
                     'standby_1 through 20'
                     ]
 
@@ -251,6 +251,57 @@ class TestPlc:
             for node in nodes:
                 node.kill_qemu()
         return True
+
+
+    ### utility methods for handling the pool of IP addresses allocated to plcs
+    # Logic
+    # (*) running plcs are recorded in the file named ~/running-test-plcs
+    # (*) this file contains a line for each running plc, older first
+    # (*) each line contains the vserver name + the hostname of the (vserver) testbox where it sits
+    # (*) the free_tracker method performs a vserver stop on the oldest entry
+    # (*) the record_tracker method adds an entry at the bottom of the file
+    # (*) the cleanup_tracker method stops all known vservers and removes the tracker file
+
+    TRACKER_FILE="~/running-test-plcs"
+
+    def record_tracker (self):
+        if not self.vserver:
+            print 'record_tracker active on vserver plcs only - ignored'
+            return True
+        command="echo %s %s >> %s"%(self.vservername,self.test_ssh.hostname,TestPlc.TRACKER_FILE)
+        (code,output) = utils.output_of (self.test_ssh.actual_command(command))
+        if code != 0:
+            print "WARNING : COULD NOT record_tracker %s as a running plc on %s"%(self.vservername,self.test_ssh.hostname)
+            return False
+        print "Recorded %s in running plcs on host %s"%(self.vservername,self.test_ssh.hostname)
+        return True
+
+    def free_tracker (self):
+        if not self.vserver:
+            print 'free_tracker active on vserver plcs only - ignored'
+            return True
+        command="head -1 %s"%TestPlc.TRACKER_FILE
+        (code,line) = utils.output_of(self.test_ssh.actual_command(command))
+        if code != 0:
+            print "No entry found in %s on %s"%(TestPlc.TRACKER_FILE,self.test_ssh.hostname)
+            return False
+        try:
+            [vserver_to_stop,hostname] = line.split()
+        except:
+            print "WARNING: free_tracker: Could not parse %s - skipped"%TestPlc.TRACKER_FILE
+            return False
+        stop_command = "vserver --silent %s stop"%vserver_to_stop
+        utils.system(self.test_ssh.actual_command(stop_command))
+        x=TestPlc.TRACKER_FILE
+        flush_command = "tail --lines=+2 %s > %s.tmp ; mv %s.tmp %s"%(x,x,x,x)
+        utils.system(self.test_ssh.actual_command(flush_command))
+        return True
+
+    def cleanup_tracker (self):
+        stop_all = "cd /vservers ; for i in * ; do vserver --silent $i stop ; done"
+        utils.system(self.test_ssh.actual_command(stop_all))
+        clean_tracker = "rm -f %s"%TestPlc.TRACKER_FILE
+        utils.system(self.test_ssh.actual_command(clean_tracker))
 
     #################### step methods
 

@@ -109,7 +109,6 @@ def show_test_spec_pass (plc_spec,passno):
                 print '* \t',key,':',val
 
 def system(command,background=False):
-    now=time.strftime("%H:%M:%S", time.localtime())
     if background: command += " &"
     if options.dry_run:
         print 'dry_run:',command
@@ -117,6 +116,17 @@ def system(command,background=False):
     else:
         return os.system("set -x; " + command)
 
+### WARNING : this ALWAYS does its job, even in dry_run mode
+def output_of (command):
+    import commands
+#    if options.dry_run:
+#        print 'dry_run',command
+#        return (0,'[[dry-run - fake output]]')
+#    else:
+    (code,string) = commands.getstatusoutput(command)
+    return (code,string)
+
+# convenience: translating shell-like pattern into regexp
 def match (string, pattern):
     # tmp - there's probably much simpler
     # rewrite * into .*, ? into .
