@@ -1,11 +1,13 @@
 #!/bin/bash
 cd $(dirname $0)
 mkdir -p logs
-logfile=logs/runtest-$(date +%H-%M).log
+time=$(date +%H-%M)
+logfile=logs/runtest-${time}.log
+tracefile=logs/trace-${time}.txt
 
 # figure if TestMain succeeds, as the retcod gets lost in the pipe
 rm -f logs/success
-python -u TestMain.py "$@" &> $logfile && touch logs/success
+python -u TestMain.py -t $tracefile "$@" &> $logfile && touch logs/success
 cat $logfile
 
 if [ -f logs/success ] ; then

@@ -4,6 +4,7 @@
 import sys, os, os.path
 from optparse import OptionParser
 import traceback
+from time import strftime
 
 import utils
 from TestPlc import TestPlc
@@ -82,6 +83,9 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Show environment and exits")
         parser.add_option("-f","--forcenm", action="store_true", dest="forcenm", default=False, 
                           help="Force the NM to restart in check_slices step")
+        parser.add_option("-t","--trace", action="store", dest="trace_file", default=None,
+                          #default="logs/trace-@TIME@.txt",
+                          help="Trace file location")
         (self.options, self.args) = parser.parse_args()
 
         if len(self.args) == 0:
@@ -220,13 +224,29 @@ steps refer to a method in TestPlc or to a step_* module
             
         if self.options.dry_run:
             self.show_env(self.options,"Dry run")
-            
+        
+        # init & open trace file if provided
+        if self.options.trace_file and not self.options.dry_run:
+            time=strftime("%H-%M")
+            date=strftime("%Y-%m-%d")
+            trace_file=self.options.trace_file
+            trace_file=trace_file.replace("@TIME@",time)
+            trace_file=trace_file.replace("@DATE@",date)
+            self.options.trace_file=trace_file
+            # create dir if needed
+            trace_dir=os.path.dirname(trace_file)
+            if trace_dir and not os.path.isdir(trace_dir):
+                os.makedirs(trace_dir)
+            trace=open(trace_file,"w")
+
         # do all steps on all plcs
+        TRACE_FORMAT="TRACE: time=%(time)s plc=%(plcname)s step=%(stepname)s status=%(status)s force=%(force)s\n"
         for (stepname,method,force) in all_step_infos:
             for (spec,obj) in all_plcs:
                 plcname=spec['name']
 
                 # run the step
+                time=strftime("%Y-%m-%d-%H-%M")
                 if not spec['disabled'] or force:
                     try:
                         force_msg=""
@@ -235,19 +255,32 @@ steps refer to a method in TestPlc or to a step_* module
                         step_result = method(obj)
                         if step_result:
                             utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
+                            status="OK"
                         else:
                             overall_result = False
                             spec['disabled'] = True
                             utils.header('********** FAILED Step %s on %s - discarding that plc from further steps'%(stepname,plcname))
+                            status="KO"
                     except:
                         overall_result=False
                         spec['disabled'] = True
                         traceback.print_exc()
                         utils.header ('********** FAILED (exception) Step %s on plc %s - discarding this plc from further steps'%(stepname,plcname))
+                        status="KO"
 
                 # do not run, just display it's skipped
                 else:
                     utils.header("********** IGNORED Plc %s is disabled - skipping step %s"%(plcname,stepname))
+                    status="UNDEF"
+                if not self.options.dry_run:
+                    # alwas do this on stdout
+                    print TRACE_FORMAT%locals()
+                    # duplicate on trace_file if provided
+                    if self.options.trace_file:
+                        trace.write(TRACE_FORMAT%locals())
+
+        if self.options.trace_file and not self.options.dry_run:
+            trace.close()
 
         return overall_result
 

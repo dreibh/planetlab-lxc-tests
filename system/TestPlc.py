@@ -79,7 +79,7 @@ class TestPlc:
 
     @staticmethod
     def printable_steps (list):
-        return " ".join(list).replace(" "+SEP+" ","\n")
+        return " ".join(list).replace(" "+SEP+" "," \\\n")
     @staticmethod
     def valid_step (step):
         return step != SEP
