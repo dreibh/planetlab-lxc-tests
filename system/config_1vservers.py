@@ -33,7 +33,6 @@ def config (plcs,options):
             ### rewrite fields in plc
             # compute a helpful vserver name - remove domain in hostname
             simplehostname=hostname.split('.')[0]
-            # myplc rpm basename, without .rpm
             vservername = options.buildname
             if len(plcs) == 1 :
                 vservername = "%s-%s" % (vservername,simplehostname)

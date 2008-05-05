@@ -94,17 +94,12 @@ class TestPlc:
             self.url="https://%s:443/PLCAPI/"%plc_spec['vserverip']
             self.vserver=True
         except:
-            self.vserver=False
-            self.url="https://%s:443/PLCAPI/"%plc_spec['hostname']
-#        utils.header('Using API url %s'%self.url)
+            raise Exception,'chroot-based myplc testing is deprecated'
 	self.apiserver=TestApiserver(self.url,options.dry_run)
         
     def name(self):
         name=self.plc_spec['name']
-        if self.vserver:
-            return "%s.%s"%(name,self.vservername)
-        else:
-            return "%s.chroot"%name
+        return "%s.%s"%(name,self.vservername)
 
     def hostname(self):
         return self.plc_spec['hostname']
@@ -126,31 +121,10 @@ class TestPlc:
     def run_in_host (self,command):
         return self.test_ssh.run_in_buildname(command)
 
-    #command gets run in the chroot/vserver
+    #command gets run in the vserver
     def host_to_guest(self,command):
-        if self.vserver:
-            return "vserver %s exec %s"%(self.vservername,command)
-        else:
-            return "chroot /plc/root %s"%TestSsh.backslash_shell_specials(command)
+        return "vserver %s exec %s"%(self.vservername,command)
     
-    # copy a file to the myplc root image - pass in_data=True if the file must go in /plc/data
-    def copy_in_guest (self, localfile, remotefile, in_data=False):
-        if in_data:
-            chroot_dest="/plc/data"
-        else:
-            chroot_dest="/plc/root"
-        if self.is_local():
-            if not self.vserver:
-                utils.system("cp %s %s/%s"%(localfile,chroot_dest,remotefile))
-            else:
-                utils.system("cp %s /vservers/%s/%s"%(localfile,self.vservername,remotefile))
-        else:
-            if not self.vserver:
-                utils.system("scp %s %s:%s/%s"%(localfile,self.hostname(),chroot_dest,remotefile))
-            else:
-                utils.system("scp %s %s@/vservers/%s/%s"%(localfile,self.hostname(),self.vservername,remotefile))
-
-
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
         return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote),keep_stdin=True))
@@ -265,9 +239,6 @@ class TestPlc:
     TRACKER_FILE="~/running-test-plcs"
 
     def record_tracker (self):
-        if not self.vserver:
-            print 'record_tracker active on vserver plcs only - ignored'
-            return True
         command="echo %s %s >> %s"%(self.vservername,self.test_ssh.hostname,TestPlc.TRACKER_FILE)
         (code,output) = utils.output_of (self.test_ssh.actual_command(command))
         if code != 0:
@@ -277,9 +248,6 @@ class TestPlc:
         return True
 
     def free_tracker (self):
-        if not self.vserver:
-            print 'free_tracker active on vserver plcs only - ignored'
-            return True
         command="head -1 %s"%TestPlc.TRACKER_FILE
         (code,line) = utils.output_of(self.test_ssh.actual_command(command))
         if code != 0:
@@ -297,46 +265,19 @@ class TestPlc:
         utils.system(self.test_ssh.actual_command(flush_command))
         return True
 
+    # this should/could stop only the ones in TRACKER_FILE if that turns out to be reliable
     def cleanup_tracker (self):
         stop_all = "cd /vservers ; for i in * ; do vserver --silent $i stop ; done"
         utils.system(self.test_ssh.actual_command(stop_all))
         clean_tracker = "rm -f %s"%TestPlc.TRACKER_FILE
         utils.system(self.test_ssh.actual_command(clean_tracker))
 
-    #################### step methods
-
-    ### uninstall
-    def uninstall_chroot(self):
-        self.run_in_host('service plc safestop')
-        #####detecting the last myplc version installed and remove it
-        self.run_in_host('rpm -e myplc')
-        ##### Clean up the /plc directory
-        self.run_in_host('rm -rf /plc/data')
-        ##### stop any running vservers
-        self.run_in_host('for vserver in $(ls -d /vservers/* | sed -e s,/vservers/,,) ; do case $vserver in vtest*) echo Shutting down vserver $vserver ; vserver $vserver stop ;; esac ; done')
-        return True
-
-    def uninstall_vserver(self):
+    def uninstall(self):
         self.run_in_host("vserver --silent %s delete"%self.vservername)
         return True
 
-    def uninstall(self):
-        # if there's a chroot-based myplc running, and then a native-based myplc is being deployed
-        # it sounds safer to have the former uninstalled too
-        # now the vserver method cannot be invoked for chroot instances as vservername is required
-        if self.vserver:
-            self.uninstall_vserver()
-            self.uninstall_chroot()
-        else:
-            self.uninstall_chroot()
-        return True
-
     ### install
-    def install_chroot(self):
-        # nothing to do
-        return True
-
-    def install_vserver(self):
+    def install(self):
         # we need build dir for vtest-init-vserver
         if self.is_local():
             # a full path for the local calls
@@ -348,10 +289,10 @@ class TestPlc:
         build_checkout = "svn checkout %s %s"%(self.options.build_url,build_dir)
         if self.run_in_host(build_checkout) != 0:
             return False
-        # the repo url is taken from myplc-url 
-        # with the last two steps (i386/myplc...) removed
-        repo_url = self.options.myplc_url
-        for level in [ 'rpmname','arch' ]:
+        # the repo url is taken from arch-rpms-url 
+        # with the last step (i386.) removed
+        repo_url = self.options.arch_rpms_url
+        for level in [ 'arch' ]:
 	    repo_url = os.path.dirname(repo_url)
         if self.options.arch == "i386":
             personality="-p linux32"
@@ -361,35 +302,9 @@ class TestPlc:
             (build_dir,personality,self.vservername,repo_url,self.vserverip)
         return self.run_in_host(create_vserver) == 0
 
-    def install(self):
-        if self.vserver:
-            return self.install_vserver()
-        else:
-            return self.install_chroot()
-    
-    ### install_rpm - make this an optional step
-    def cache_rpm(self):
-        url = self.options.myplc_url
-        rpm = os.path.basename(url)
-        cache_fetch="pwd;if [ -f %(rpm)s ] ; then echo Using cached rpm %(rpm)s ; else echo Fetching %(url)s ; curl -O %(url)s; fi"%locals()
-	return self.run_in_host(cache_fetch)==0
-
-    def install_rpm_chroot(self):
-        url = self.options.myplc_url
-        rpm = os.path.basename(url)
-	if not self.cache_rpm():
-            return False
-	utils.header('Installing the :  %s'%rpm)
-        return self.run_in_host('rpm -Uvh '+rpm)==0 and self.run_in_host('service plc mount')==0
-
-    def install_rpm_vserver(self):
-        return self.run_in_guest("yum -y install myplc-native")==0
-
+    ### install_rpm 
     def install_rpm(self):
-        if self.vserver:
-            return self.install_rpm_vserver()
-        else:
-            return self.install_rpm_chroot()
+        return self.run_in_guest("yum -y install myplc-native")==0
 
     ### 
     def configure(self):
@@ -415,19 +330,12 @@ class TestPlc:
         utils.system('rm %s'%tmpname)
         return True
 
-    # the chroot install is slightly different to this respect
     def start(self):
-        if self.vserver:
-            self.run_in_guest('service plc start')
-        else:
-            self.run_in_host('service plc start')
+        self.run_in_guest('service plc start')
         return True
         
     def stop(self):
-        if self.vserver:
-            self.run_in_guest('service plc stop')
-        else:
-            self.run_in_host('service plc stop')
+        self.run_in_guest('service plc stop')
         return True
         
     # could use a TestKey class

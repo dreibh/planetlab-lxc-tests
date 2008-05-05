@@ -39,7 +39,7 @@ class TestMain:
         steps_message=20*'x'+" Defaut steps are\n"+TestPlc.printable_steps(TestPlc.default_steps)
         steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestPlc.printable_steps(TestPlc.other_steps)
         usage = """usage: %%prog [options] steps
-myplc-url defaults to the last value used, as stored in arg-myplc-url,
+arch-rpms-url defaults to the last value used, as stored in arg-arch-rpms-url,
    no default
 build-url defaults to the last value used, as stored in arg-build-url, 
    or %s
@@ -52,10 +52,10 @@ steps refer to a method in TestPlc or to a step_* module
 """%(TestMain.default_build_url,TestMain.default_config)
         usage += steps_message
         parser=OptionParser(usage=usage,version=self.subversion_id)
-        parser.add_option("-u","--url",action="store", dest="myplc_url", 
-                          help="myplc URL - for locating build output")
+        parser.add_option("-u","--url",action="store", dest="arch_rpms_url", 
+                          help="URL of the arch-dependent RPMS area - for locating what to test")
         parser.add_option("-b","--build",action="store", dest="build_url", 
-                          help="Build URL - for using vtest-init-vserver.sh in native mode")
+                          help="Build URL - for locating vtest-init-vserver.sh")
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
                           help="Config module - can be set multiple times, or use quotes")
@@ -69,8 +69,6 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-i","--ip",action="callback", callback=TestMain.optparse_list, dest="ips",
                           nargs=1,type="string",
                           help="Specify the set of IP addresses to use in vserver mode (disable scanning)")
-        parser.add_option("-s","--vserver",action="store_true",dest="native",default=False,
-                          help="deploy myplc-native rather than former chroot-based package")
         parser.add_option("-1","--small",action="store_true",dest="small_test",default=False,
                           help="run a small test -- typically only one node")
         parser.add_option("-d","--dbname",action="store",dest="dbname",default=None,
@@ -108,7 +106,7 @@ steps refer to a method in TestPlc or to a step_* module
             ('build_url','arg-build-url',TestMain.default_build_url) ,
             ('ips','arg-ips',[]) , 
             ('config','arg-config',TestMain.default_config) , 
-            ('myplc_url','arg-myplc-url',"") , 
+            ('arch_rpms_url','arg-arch-rpms-url',"") , 
             ) :
 #            print 'handling',recname
             path=filename
@@ -145,7 +143,7 @@ steps refer to a method in TestPlc or to a step_* module
 #            utils.header('Saved %s into %s'%(recname,filename))
 
         self.options.arch = "i386"
-        if self.options.myplc_url.find("x86_64") >= 0:
+        if self.options.arch_rpms_url.find("x86_64") >= 0:
             self.options.arch="x86_64"
         # steps
         if not self.options.steps:
