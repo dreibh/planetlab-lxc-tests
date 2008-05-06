@@ -56,6 +56,9 @@ class TestSlice:
             isname=self.slice_spec['initscriptname']
             utils.header("Adding initscript %s in %s"%(isname,slice_name))
             self.test_plc.apiserver.AddSliceAttribute(self.test_plc.auth_root(), slice_name,'initscript',isname)
+        if self.slice_spec.has_key ('vref'):
+            vref_value=self.slice_spec['vref']
+            self.test_plc.apiserver.AddSliceAttribute(self.test_plc.auth_root(), slice_name,'vref',vref_value)
         
     def locate_key(self):
         # locate the first avail. key

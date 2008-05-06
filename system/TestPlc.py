@@ -5,6 +5,7 @@ import time
 import sys
 import traceback
 from types import StringTypes
+import socket
 
 import utils
 from TestSite import TestSite
@@ -295,11 +296,18 @@ class TestPlc:
         for level in [ 'arch' ]:
 	    repo_url = os.path.dirname(repo_url)
         if self.options.arch == "i386":
-            personality="-p linux32"
+            personality_option="-p linux32"
         else:
-            personality="-p linux64"
-        create_vserver="%s/vtest-init-vserver.sh %s %s %s -- --interface eth0:%s"%\
-            (build_dir,personality,self.vservername,repo_url,self.vserverip)
+            personality_option="-p linux64"
+        script="vtest-init-vserver.sh"
+        vserver_name = self.vservername
+        vserver_options="--netdev eth0 --interface %s"%self.vserverip
+        try:
+            vserver_hostname=socket.gethostbyaddr(self.vserverip)[0]
+            vserver_options += " --hostname %s"%vserver_hostname
+        except:
+            pass
+        create_vserver="%(build_dir)s/%(script)s %(personality_option)s %(vserver_name)s %(repo_url)s -- %(vserver_options)s"%locals()
         return self.run_in_host(create_vserver) == 0
 
     ### install_rpm 

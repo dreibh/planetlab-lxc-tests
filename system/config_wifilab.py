@@ -5,9 +5,34 @@
 #     (**) TestMain options field
 # (*) and that returns the new set of plc_specs
 
+# archs & vrefs :
+# current focus is to
+########## myplc
+# (*) run a 32bits myplc
+########## multi-arch
+# (*) run wlab02 as a plain 32bits node
+# (*) try and run 64bits in wlab17 (i.e. bootcd & bootstrapfs)
+#     which should be achieved by simply adding this node in the 'x86_64' nodegroup
+# (*) investigate what it takes to have the slivers on wlab17 run 32bits as well
+########## multi-vref
+# (*) define slice 'plain' without secific tuning, that should result in f8-based slivers
+# (*) define slice 'centos' with its vref set to centos5
+########## manual stuff
+# all this would require to
+# (*) install bootcd            f8-x86_64
+# (*) install bootstrapfs       f8-x86_64
+# (*) install noderepo          f8-x86_64 
+# (*) install noderepo          centos5-i386
+# (*) install noderepo          centos5-x86_64
+# (*) install vserver           centos5-i386
+# (*) and add that to yumgroups.xml
+########## unclear stuff
+# I'm pretty sure that yum.conf.php still needs hacking, at least for centos5
+########## unclear stuff
+
 onelab="one-lab.org"
 
-# use a model that contains "vmware" to get the node actually started
+# these are real nodes, they dont get started by the framework
 def nodes():
     node02 = {'name':'wlab02',
               'node_fields': {'hostname': 'wlab02.inria.fr', 'model':'Dell Latitude 830'},
@@ -20,6 +45,20 @@ def nodes():
                                                             'ip' : '138.96.250.192', },
                                        'settings' : { 'essid' : 'guest-inria-sophia',
                                                       'ifname' : 'wlan0', },
+                                       },
+                                     ],
+              }
+    node17 = {'name':'wlab17',
+              'node_fields': {'hostname': 'wlab17.inria.fr', 'model':'Dell Latitude 830'},
+              'owner' : 'pi',
+              'nodegroups' : ['wifi','x86_64'] ,
+              'network_fields': { 'method':'dhcp', 'type' : 'ipv4', 'ip':'138.96.250.177',},
+              'extra_interfaces' : [ { 'network_fields' : { 'method' : 'dhcp',
+                                                            'type' : 'ipv4',
+                                                            'mac' : '00:1c:bf:51:3c:19',
+                                                            'ip' : '138.96.250.207',},
+                                       'settings' : { 'essid' : 'guest-inria-sophia',
+                                                      'ifname' : 'wlan0',},
                                        },
                                      ],
               }
@@ -51,22 +90,10 @@ def nodes():
                                        },
                                      ],
               }
-    node17 = {'name':'wlab17',
-              'node_fields': {'hostname': 'wlab17.inria.fr', 'model':'Dell Latitude 830'},
-              'owner' : 'pi',
-              'nodegroups' : ['wifi','x86_64'] ,
-              'network_fields': { 'method':'dhcp', 'type' : 'ipv4', 'ip':'138.96.250.177',},
-              'extra_interfaces' : [ { 'network_fields' : { 'method' : 'dhcp',
-                                                            'type' : 'ipv4',
-                                                            'mac' : '00:1c:bf:51:3c:19',
-                                                            'ip' : '138.96.250.207',},
-                                       'settings' : { 'essid' : 'guest-inria-sophia',
-                                                      'ifname' : 'wlan0',},
-                                       },
-                                     ],
-              }
 
-    return [ node02 , node05 , node17 ]
+
+    # wlab05 not avail. for now
+    return [ node02 , node17 ]
 
 def all_nodenames ():
     return [ node['name'] for node in nodes()]
@@ -166,28 +193,41 @@ def keys ():
 
 def initscripts(): 
     return [ { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'script1',
-                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/initscript1.log \n ',
+                                       'name':'script_plain',
+                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/initscript_plain.log \n ',
                                        }},
              { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'script2',
-                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/initscript2.log \n ',
+                                       'name':'script_centos',
+                                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/initscript_centos.log \n ',
                                        }},
              ]
 
 def slices ():
-    return [ { 'slice_fields': {'name':'wifi_slice1',
+    plain= { 'slice_fields': {'name':'wifi_plain',
                                 'instantiation':'plc-instantiated',
                                 'url':'http://foo@foo.com',
-                                'description':'test slice',
-                                'max_nodes':2
+                                'description':'plain slice',
+                                'max_nodes':10,
                                 },
                'usernames' : [ 'pi','tech','techuser' ],
                'nodenames' : all_nodenames(),
-               'initscriptname' : 'script1',
+               'initscriptname' : 'script_plain',
                'sitename' : 'wifi',
                'owner' : 'pi',
-               },
+               }
+    centos= { 'slice_fields': {'name':'wifi_centos',
+                                'instantiation':'plc-instantiated',
+                                'url':'http://foo@foo.com',
+                                'description':'centos slice',
+                                'max_nodes':10,
+                                },
+               'usernames' : [ 'pi','tech','techuser' ],
+               'nodenames' : all_nodenames(),
+               'initscriptname' : 'script_centos',
+               'sitename' : 'wifi',
+               'owner' : 'pi',
+              'vref' : 'centos5',
+               }
              ]
 
 def plc () :
