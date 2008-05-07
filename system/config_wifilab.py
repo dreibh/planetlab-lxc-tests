@@ -250,6 +250,7 @@ def plc () :
         'PLC_BOOT_HOST' : 'wlab24.inria.fr',
         'PLC_NET_DNS1' : '138.96.0.10',
         'PLC_NET_DNS2' : '138.96.0.11',
+        'PLC_DNS_ENABLED' : 'false',
         'sites' : sites(),
         'keys' : keys(),
         'initscripts': initscripts(),
