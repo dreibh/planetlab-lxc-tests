@@ -31,7 +31,7 @@ class Test:
 	return True
 
     def __init__(self, config = None):
-        if config is None: config = Config()
+        if not config: config = Config()
 	self.name = self.__class__.__name__
 	self.path=os.path.abspath(os.path.dirname(sys.argv[0]))
 	self.config = config
