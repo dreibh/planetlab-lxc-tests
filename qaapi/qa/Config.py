@@ -5,12 +5,14 @@ import re
 import socket
 import utils
 import copy
-from logger import logfile
+from logger import logfile, Logfile
+from Table import Table
 from PLCs import PLC, PLCs
 from Sites import Site, Sites	
 from Nodes import Node, Nodes
 from Slices import Slice, Slices
 from Persons import Person, Persons	
+from TestScripts import TestScript
 
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,9 +21,8 @@ class Config:
     path = os.path.dirname(os.path.abspath(__file__))
     tests_path = path + os.sep + 'tests' + os.sep
     node_tests_path = tests_path + os.sep + 'node' + os.sep
-    slice_tests_path = tests_path + os.sep + 'slice' + os.sep				
+    slice_tests_path = tests_path + os.sep + 'slice' + os.sep	
     vserver_scripts_path = path + os.sep + 'vserver' + os.sep
-    log_filename = logfile.filename
     
     def update_api(self, plc = None):
 	# Set up API acccess
@@ -51,25 +52,31 @@ class Config:
 	        self.api = xmlrpclib.Server('https://%s/PLCAPI/' % self.PLC_API_HOST, allow_none = 1)
 	        self.api_type = 'xmlrpc'
 
-    def __init__(self, config_file = path+os.sep+'qa_config'):
+    def __init__(self, config_file = path+os.sep+'qa_config', logdir = "/var/log"):
 	# Load config file
 	try:
             execfile(config_file, self.__dict__)
         except:
             raise "Could not find system config in %s" % config_file
 	
- 	self.logfile = logfile
+	self.logdir = logdir	
+	log_filename = logdir + os.sep + "qaapi.log"
+ 	self.update_logfile(log_filename)
 	self.auth = {}
 	self.auth['Username'] = self.PLC_ROOT_USER
 	self.auth['AuthString'] = self.PLC_ROOT_PASSWORD
 	self.auth['AuthMethod'] = 'password'
-	self.verbose = self.VERBOSE	
+	self.verbose = self.VERBOSE
+
+	attributes = ['plcs', 'sites', 'slices', 'nodes', 'persons', 'nodegroups']
+	for attribute in attributes:
+	    setattr(self, attribute, [])	
 	
 	# try setting hostname and ip
         self.hostname = socket.gethostname()
         try:
             command = "/sbin/ifconfig eth0 | grep -v inet6 | grep inet | awk '{print$2;}'"
-            (status, output) = utils.commands(command)            
+            (status, output) = utils.commands(command, logfile = self.logfile)            
 	    self.ip = re.findall(r'[0-9\.]+', output)[0]
 	except:
 	    self.ip = '127.0.0.1'
@@ -85,6 +92,11 @@ class Config:
 	node_test_files = os.listdir(self.node_tests_path)
 	self.node_test_files = filter(valid_node_test_files, node_test_files) 
 
+    def update_logfile(self, filename):
+	self.logfile = Logfile(filename)
+	filename_parts = self.logfile.filename.split(os.sep)
+	self.logdir = os.sep + os.sep.join(filename_parts[:-1]) + os.sep
+
     def get_plc(self, plc_name):
 	plc = PLC(self)
 	if hasattr(self, 'plcs')  and plc_name in self.plcs.keys():
@@ -99,6 +111,19 @@ class Config:
 	    node.__init_logfile__()
 	return node			
 
+    def get_node_test(self, testscript):
+	script = TestScript({'name': testscript})
+	if hasattr(self, 'node_tests') and testscript in self.node_tests.keys():
+	    script.update(self.node_tests[testscript])
+	return script
+
+    def get_slice_test(self, testscript):
+	script = TestScript()
+	if hasattr(self, 'slice_tests') and testscript in self.slice_tests.keys():
+	    script.update(self.slice_tests[testscript])
+	return script  
+	 
+    
     def load(self, conffile):
 	
 	confdata = {}
@@ -107,18 +132,46 @@ class Config:
 
 	from Nodes import Nodes
 	from PLCs import PLCs	
-	loadables = ['plcs', 'sites', 'nodes', 'slices', 'persons']
-	config = Config()
-	for loadable in loadables:
-	    if loadable in confdata and loadable in ['plcs']:
-	        setattr(self, loadable, PLCs(config, confdata[loadable]).dict('name'))
-	    elif loadable in confdata and loadable in ['nodes']:
-		setattr(self, loadable, Nodes(config, confdata[loadable]).dict('hostname'))	
-	    elif loadable in confdata and loadable in ['sites']:
-		setattr(self, loadable, Sites(confdata[loadable]).dict('login_base'))
-	    elif loadable in confdata and loadable in ['slices']:
-		setattr(self, loadable, Slices(confdata[loadable]).dict('name'))
-	    elif loadable in confdata and loadable in ['persons']:
-		setattr(self, loadable, Persons(confdata[loadable]).dict('email')) 
-	    
-	
+	loadables = ['plcs', 'sites', 'nodes', 'nodegroups', 'slices', 'persons']
+	config = Config(logdir = self.logdir)
+	for element in confdata.keys():
+	    if element in ['plcs']:
+	        setattr(self, element, PLCs(config, confdata[element]).dict('name'))
+	    elif element in ['nodes']:
+		setattr(self, element, Nodes(config, confdata[element]).dict('hostname'))
+	    elif element in ['nodegroups']:
+			setattr(self, element, Table(confdata[element]).dict('name'))	
+	    elif element in ['sites']:
+		setattr(self, element, Sites(confdata[element]).dict('login_base'))
+	    elif element in ['slices']:
+		setattr(self, element, Slices(confdata[element]).dict('name'))
+	    elif element in ['persons']:
+		setattr(self, element, Persons(confdata[element]).dict('email'))
+	    elif element in ['node_tests']:
+		setattr(self, element, TestScripts(confdata[element]).dict('name')) 
+	    elif element in ['slice_tests']:
+	 	setattr(self, element, TestScript(confdata[element]).dict('name'))
+
+    def archive_scripts(self, prefix):
+	valid_prefix = ['slice', 'node'] 
+	if prefix not in valid_prefix:
+	    raise "Error. Invalid prefix %s. Must be in %s" %  (prefix, valid_prefix)
+
+	scripts_dir = self.path + os.sep + 'tests' +os.sep + prefix + os.sep
+	workdir = '/tmp' + os.sep	
+	archive_path = workdir + os.sep + prefix + os.sep
+	archive_filename = prefix + ".tar.gz"
+  
+	if self.verbose:
+	    utils.header("Creating/Updating %s archive %s" % (prefix, archive_path + archive_filename), logfile = self.logfile)
+	utils.commands("mkdir -p %(archive_path)s" % locals(), logfile = self.logfile) 	
+	utils.commands("cp -Rf %(scripts_dir)s* %(archive_path)s" % locals(), logfile = self.logfile)
+	tar_cmd = "cd %(workdir)s && tar -czf %(workdir)s/%(archive_filename)s %(prefix)s" % locals() 
+	utils.commands(tar_cmd, logfile = self.logfile)
+	return (archive_filename, workdir+archive_filename) 
+
+    def archive_slice_tests(self): 
+	return self.archive_scripts('slice')
+    
+    def archive_node_tests(self):
+	return self.archive_scripts('node')		
