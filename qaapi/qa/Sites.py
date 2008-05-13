@@ -20,7 +20,7 @@ class Site(dict):
 	
 	self.update(fields)
 
-class Sites(list, Table):
+class Sites(Table):
     def __init__(self, sites):
 	sitelist = [Site(site) for site in sites]
-	list.__init__(self, sitelist)				 	  			 	 	
+	Table.__init__(self, sitelist)				 	  			 	 	
