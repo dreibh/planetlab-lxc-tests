@@ -9,8 +9,8 @@ class vserver_delete(Test):
     """
 
     def call(self, name):
-        (status, output) = utils.commands("vserver %(name)s stop" % locals(), False)
-        (status, output) = utils.commands("vserver %(name)s delete" % locals())
+        (status, output) = utils.commands("vserver %(name)s stop" % locals(), False, logfile = self.config.logfile)
+        (status, output) = utils.commands("vserver %(name)s delete" % locals(), logfile = self.config.logfile)
 
         return 1
 

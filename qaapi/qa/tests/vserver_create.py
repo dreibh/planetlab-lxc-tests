@@ -13,14 +13,14 @@ class vserver_create(Test):
  	
 
 	if self.config.verbose:
-	    utils.header("Creating vserver: %(name)s" % locals()) 
+	    utils.header("Creating vserver: %(name)s" % locals(), logfile = self.config.logfile) 
 	# Create vserver
 	vcreate_script = self.config.vserver_scripts_path + 'vtest-nightly.sh'
 	command = "%(vcreate_script)s -b %(name)s -f %(fcdistro)s -m %(mailto)s -w /tmp/" % locals()
-	(status, output) = utils.commands(command)
+	(status, output) = utils.commands(command, logfile = self.config.logfile)
 
 	# Start vserver
 	command = "vserver %(name)s start" % locals()
-	(status, output) = utils.commands(command)	
+	(status, output) = utils.commands(command, logfile = self.config.logfile)	
 
 	return 1 
