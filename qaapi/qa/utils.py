@@ -2,16 +2,18 @@
 import time
 import os
 from commands import getstatusoutput
-from logger import logfile
+from logger import Logfile
 
-def header(message, log = True):
+def header(message, log = True, logfile = Logfile('/var/log/qaapi')):
     now=time.strftime("%H:%M:%S", time.localtime())
+    if isinstance(message, list):
+	message = "".join(message)   
     output = "*"+now+'--'+message	
     print output
-    if log:	
+    if log:
         print >> logfile, output	
 
-def popen(command, fatal=True, verbose = False):
+def popen(command, fatal=True, verbose = False, logfile = Logfile('/var/log/qaapi.log')):
     header(command)	
     if verbose:
 	header(command, False)	
@@ -28,20 +30,20 @@ def popen(command, fatal=True, verbose = False):
 	raise Exception, "".join(errors)	
     return (output, errors)    
 
-def popen3(command, verbose = False):
+def popen3(command, verbose = False, logfile = Logfile('/var/log/qaapi.log')):
     if verbose:
 	header(command, False)
     (stdin, stdout, stderr) = os.popen3(command)
     print >> logfile, "+ "+command
     return (stdin, stdout, stderr)	 	 	
     
-def commands(command, fatal = True, verbose = False):
+def commands(command, fatal = True, verbose = False, logfile = Logfile('/var/log/qaapi.log')):
     if verbose:
 	header(command, False)	
     (status, output) = getstatusoutput(command)
     print >> logfile, "+ "+command
     print >> logfile, output.strip() 		
-    if fatal and not status == 0:
-	raise Exception, "%(command)s Failed:\n%(output)s" % locals()
+    if fatal and status == 0 and status == 256 and output:
+        raise Exception, "%(command)s Failed:\n%(output)s" % locals()
     return (status, output)	   		 
 
