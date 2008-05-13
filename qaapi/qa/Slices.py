@@ -5,13 +5,16 @@ from Table import Table
 class Slice(dict, Remote):
 
      fields = {
-	'plcs': ['TestPLC'],
+	'plcs': ['TestPLC'],		     # which plc does this slice belong to	
 	'name': None,
 	'instantiation': 'plc-instantiated',
 	'max_nodes': 1000,
 	'description': 'blank',
 	'url': None,
-	'key': None
+	'key': None,			     # any valid ssh key
+	'nodes': [],			     # nodes where this slice runs
+	'tests_path': '/usr/share/tests/',   	
+	'tests': []                          # which test to run. None or empty list means run all
 	}
 
      def __init__(self, fields = {}):
@@ -20,7 +23,7 @@ class Slice(dict, Remote):
 	
 	self.update(fields)
 
-class Slices(list, Table):
+class Slices(Table):
     def __init__(self, slices):
 	slicelist = [Slice(slice) for slice in slices]
-	list.__init__(self, slicelist)				 	  			 	 	
+	Table.__init__(self, slicelist)				 	  			 	 	
