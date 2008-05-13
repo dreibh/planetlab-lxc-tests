@@ -2,6 +2,7 @@
 import commands
 import os
 import sys
+import traceback
 from optparse import OptionParser
 from random import Random
 from time import localtime
@@ -14,6 +15,7 @@ from qa.tests.plc_configure import plc_configure
 from qa.tests.plc_stop import plc_stop
 from qa.tests.plc_start import plc_start
 from qa.tests.add_test_data import add_test_data
+from qa.tests.api_unit_test import api_unit_test
 from qa.tests.sync_person_key import sync_person_key
 from qa.tests.boot_node import boot_node
 from qa.tests.node_run_tests import node_run_tests
@@ -36,23 +38,28 @@ def run_system_tests(config, vserver_name, plc_name):
     # Add test site, node, person and slice data
     # Adds slice to node and person to slice 
     add_test_data(config)(plc_name)
-    plc_stop(config)(plc_name)
     plc_start(config)(plc_name)
     person_email = config.persons.values()[0]['email']
     sync_person_key(config)(person_email)
 
+    # Api unit test
+    try: api_unit_test(config)(plc_name)
+    except: utils.header("Error: %s" % traceback.format_exc(), logfile = config.logfile)
+	 
     # Boot test node and confirm boot state
-    nodelist = ['vm1.paris.cs.princeton.edu']
+    nodelist = ['vm1.paris.cs.princeton.edu', 'vm41.test.org']
     slice = config.slices['ts_slice1']	
     for node in nodelist:
         if not node in config.nodes.keys():
             continue
         node = config.nodes[node]
         node['vserver'] = config.plcs[plc_name]['vserver']
-        boot_node(config)(plc_name, node['hostname'])
-	if node.is_ready():
-	    node_run_tests(config)(node['hostname'], plc_name)	
-
+	try:
+            boot_node(config)(plc_name, node['hostname'])
+	    if node.is_ready():
+	    	node_run_tests(config)(node['hostname'], plc_name)	
+	except:
+	    utils.header("Error: %s" % traceback.format_exc(), logfile = config.logfile)  	     	    
 def create_vserver(vserver_name, vserver_home, mailto):
     # create vserver for this system test if it doesnt already exist
     if not os.path.isdir('%(vserver_home)s/%(vserver_name)s' % locals()):
@@ -65,9 +72,9 @@ def cleanup_vservers(max_vservers, vserver_home, vserver_basename):
     vservers = filter(valid_vservers, vservers)
     vservers.sort()
     vservers.reverse()
-    expired_vservers = vservers[5:]
+    expired_vservers = vservers[max_vservers:]
     for vserver in expired_vservers:
-        utils.header("Deleting vserver: %(vserver)s" % locals())
+        utils.header("Deleting vserver: %(vserver)s" % locals(), logfile = config.logfile)
         #vserver_delete()(vserver)
 
 usage="""
@@ -79,49 +86,53 @@ parser.add_option("-d", "--distro", help = "Fedora distro to use")
 parser.add_option("-p", "--plcname", help = "Which plc do we use (from config file)")
 parser.add_option("-m", "--mailto", help = "Vserver build mailto address")
 
-(options, args) = parser.parse_args()
+# Define globals
+# Determine vserver name, distribution and mailto
+# The distribution and current date will be part of of the vserver name  
+MAX_VSERVERS =  3
+VSERVER_HOME = '/vservers/'
+VSERVER_BASENAME = 'plc'
+distro = 'f8' 
+# use todays date and defaults to determine which vservers to run tests in 
+year, month, day = localtime()[:3]
+YEAR, MONTH, DAY = [str(x) for x in [year,month,day]]
+DATE = ".".join([YEAR, MONTH, DAY])
+vserver_name = "%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals()
 
+(options, args) = parser.parse_args()
 # choose which distros to use 
 if options.distro is not None:  distros = [options.distro]
-else: distros = ['f7']
+else: distros = ['f8']
+
 # did the user specify a vserver or plc
-vserver_name = options.vserver
+if options.vserver is not None: vserver_name = options.vserver
+
 if options.plcname is not None: plc_name = options.plcname
 else: plc_name = 'TestPLC' 
+
 # who gets emailed
 if options.mailto is not None: mailto = options.mailto
 else: mailto = 'tmack@cs.princeton.edu'     
 
-# Define globals
-# Determine vserver name, distribution and mailto
-# The distribution and current date will be part of of the vserver name  
-MAX_VSERVERS =  5
-VSERVER_HOME = '/vservers/'
-VSERVER_BASENAME = 'plc'
-
 # Setup configuration 
-config = Config()
+logfile_dir = "/var/log/qaapi/%(vserver_name)s" % locals()
+config = Config(logdir = logfile_dir)
 config.load("qa/qa_config.py")	
 
-if vserver_name:
+if options.vserver:
     # run tests in vserver specified by user
     create_vserver(vserver_name, VSERVER_HOME, mailto)	
     run_system_tests(config, vserver_name, plc_name)
 else:
-    
-    # use todays date and defaults to determine which vservers to run tests in 
-    year, month, day = localtime()[:3]
-    YEAR, MONTH, DAY = [str(x) for x in [year,month,day]]
-    DATE = ".".join([YEAR, MONTH, DAY])
     for distro in distros:
-        vserver_name = "%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals()
-	create_vserver(vserver_name, VSERVER_HOME, mailto)	
         try: 	
-	    run_system_tests(config, vserver_name, plc_name)
+            vserver_name = "%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals()
+            create_vserver(vserver_name, VSERVER_HOME, mailto)	
+            run_system_tests(config, vserver_name, plc_name)
         except:
-	    utils.header("ERROR %(vserver_name)s tests failed" % locals())	
-            raise
-	
+            utils.header("ERROR %(vserver_name)s tests failed" % locals(), logfile = config.logfile)	
+            utils.header("%s" % traceback.format_exc(), logfile = config.logfile)
+
 # remove old vsevers
 cleanup_vservers(MAX_VSERVERS, VSERVER_HOME, VSERVER_BASENAME)
 
