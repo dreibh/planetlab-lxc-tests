@@ -3,12 +3,12 @@ import os
 import re
 import time
 from time import sleep
-from Remote import Remote
+from Remote import Remote, VRemote
 from Table import Table
 from logger import Logfile
 
 
-class Node(dict, Remote):
+class Node(dict, VRemote):
 
     fields = {
 	'plcs': ['TestPLC'],
@@ -18,10 +18,13 @@ class Node(dict, Remote):
 	'vserver': None,			      # vserver where this node lives
 	'type': 'vm', 				      # type of node
 	'model': '/minhw',
+	'nodegroups': [],
 	'nodenetworks': [], 			      # node networks
 	'homedir': '/var/VirtualMachines/',
 	'rootkey': '/etc/planetlab/root_ssh_key.rsa', # path to root ssh key
-	'host_rootkey': None
+	'host_rootkey': None,			      # path to host root ssh key
+	'tests_dir': '/usr/share/tests/',
+	'tests': []				      # which test to run. None or empty list means run all   		
 	}
 
     def __init__(self, config, fields = {}):
@@ -39,7 +42,7 @@ class Node(dict, Remote):
 
     def __init_logfile__(self, filename = None):
 	if not filename:
-	    filename = '/var/log/%s.log' % self['hostname']
+	    filename = '%s/%s.log' % (self.config.logdir, self['hostname'])
 	self.logfile = Logfile(filename)
 
     def rotate_logfile(self):
@@ -64,137 +67,31 @@ class Node(dict, Remote):
  	ip = re.findall(r'[0-9\.]+', output)[0]	
 	return ip
 
-    def get_remote_command(self, command, user = 'root', key = None):
-	if key is None and 'rootkey' in self:
-	    key = self['rootkey']
-	options = ""
-	options += " -o StrictHostKeyChecking=no "
-	if key:
-	    options += " -i %(key)s" % locals()
-	host = self['hostname']
-	if 'type' in self and self['type'] in ['vm']:
-	    if 'redir_ssh_port' in self and self['redir_ssh_port']:
-		options += " -p %s " % self['redir_ssh_port']
-	    host = self.get_host_ip() 
-	command = "ssh %(options)s %(user)s@%(host)s \'%(command)s\'" % locals()
-        return self.get_host_command(command)
- 
-    def get_scp_command(self, localfile, remotefile, direction, recursive = False, user = 'root', key = None):
-	# scp options
-	options = ""
-	options += " -o StrictHostKeyChecking=no "
-	if recursive:
-	    options += " -r " 	
-	if key:
-	    options += " -i %(key)s "% locals()
-	elif self['rootkey']:
-	    options += " -i %s " % self['rootkey']
-	
-	# Are we copying to a real node or a virtual node hosted
-	# at another machine 
-	host = self['hostname']
-	if 'type' in self and self['type'] in ['vm']:
-	    if 'redir_ssh_port' in self and self['redir_ssh_port']:
-		options += " -p %s " % self['redir_ssh_port']
-	    host = self.get_host_ip()
-
-	if direction in ['to']:
-	    command = "scp %(options)s %(localfile)s %(user)s@%(host)s:/%(remotefile)s" % locals()
-	elif direction in ['from']:
-	    command = "scp %(options)s %(user)s$%(host)s:/%(remotefile)s %(localfile)s" % locals() 
-        else:
-	    raise Error, "Invalid direction, must be 'to' or 'from'."
-	return command	    
-
-    # Host remote commands
-    def host_popen(self, command, fatal = True):
-        command = self.get_host_command(command)
-        return utils.popen(command, fatal, self.config.verbose)
-
-    def host_popen3(self, command):
-        command = self.get_host_command(command)
-        return utils.popen3(command, self.config.verbose)
-
-    def host_commands(self, command, fatal = True):
-        command = self.get_host_command(command)
-        return utils.commands(command, fatal, self.config.verbose)    
-
-    # Slice remote commands
-    def slice_popen(self, command, user = 'root', key = None, fatal = True):
-	command = self.get_remote_command(command, user, key)
-	return utils.popen(command, fatal)
-
-    def slice_popen3(self, command, user = 'root', key = None, fatal = True):
-	command = self.get_remote_command(command, user, key)
-	return utils.popen3(command, fatal)
-
-    def slice_commands(self, command, user = 'root', key = None, fatal = True):
-	command = self.get_remote_command(command, user, key)
-	return utils.commands(command, fatal)
-
-    # Host scp 
-    def scp_to_host(self, localfile, remotefile, recursive = False):
-	command = self.get_host_scp_command(localfile, remotefile, 'to', recursive)
-	return utils.commands(command)
-
-    def scp_from_host(self, localfile, remotefile, recursive = False):
-        command = self.get_host_scp_command(localfile, remotefile, 'from', recursive)
-	return utils.commands(command)
-
-    # Node scp
-    def scp_to(self, localfile, remotefile, recursive = False, user = 'root', key = None):
-	# if node is vm, we must scp file(s) to host machine first
-	# then run scp from there
-	if 'type' in self and self['type'] in ['vm']:
-	    fileparts = localfile.split(os.sep)
-	    filename = fileparts[-1:][0]
-	    tempfile = '/tmp/%(filename)s' % locals()
-	    self.scp_to_host(localfile, tempfile, recursive)
-	    command = self.get_scp_command(tempfile, remotefile, 'to', recursive, user, key) 
-	    return self.host_commands(command)
-	else:
-	    	
-	    command = self.get_scp_command(localfile, remotefile, 'to', recursive, user, key) 
-	    return utils.commands(command)	
-
-    def scp_from(self, localfile, remotefile, recursive = False, user = 'root', key = None):
-	# if node is vm, we must scp file(s) onto host machine first
-        # then run scp from there
-        if 'type' in self and self['type'] in ['vm']:
-            fileparts = remotefile.split(os.sep)
-            filename = fileparts[-1:]
-            tempfile = '/tmp/%(filename)s' % locals()
-            self.scp_from_host(remotefile, tempfile, recursive)
-            command = self.get_scp_command(localfile, tempfile, 'from', recursive, user, key)  
-            return self.host_commands(command)
-        else:
-
-            command = self.get_scp_command(localfile, remotefile, 'from', recursive, user, key) 
-            return utils.commands(command)	
-
-    def is_ready(self, timeout=10):
-	# Node is considered ready when Node Manager has started avuseradd processes have stopped 
+    def is_ready(self, timeout=30):
+	# Node is considered ready when Node Manager has started avuseradd processes have stopped
+	log = self.config.logfile 
 	class test:
-	    def __init__(self, name, description, system, cmd, check, inverse = False):
+	    def __init__(self, name, description, system, cmd, check, inverse = False, logfile = log):
 	        self.system = system
 		self.cmd = cmd
 		self.check = check
 		self.name = name
 		self.description = description
 		self.inverse = inverse
+		self.logfile = logfile
  
-	    def run(self, verbose = True):
+	    def run(self, logfile, verbose = True):
 		if verbose:
-		    utils.header(self.description)	
+		    utils.header(self.description, logfile =  self.logfile)	
 	        (status, output) = self.system(self.cmd)
 		if self.inverse and output.find(self.check) == -1:
-		    if verbose: utils.header("%s Passed Test" % self.name)
+		    if verbose: utils.header("%s Passed Test" % self.name, logfile = self.logfile)
 		    return True
 		elif not self.inverse and output and output.find(self.check)  -1:		
-		    if verbose: utils.header("%s Passed Test" % self.name)
+		    if verbose: utils.header("%s Passed Test" % self.name, logfile = self.logfile)
 		    return True
 		
-		if verbose: utils.header("%s Failed Test" % self.name)
+		if verbose: utils.header("%s Failed Test" % self.name, logfile = self.logfile)
 	        return False
 
 	ready = False
@@ -203,8 +100,8 @@ class Node(dict, Remote):
 	vcheck_cmd = "ps -elfy | grep vuseradd | grep -v grep"  
         grep_cmd = "grep 'Starting Node Manager' %s" % self.logfile.filename
 	tests = {
-	'1':  test("NodeManager", "Checking if NodeManager has started", utils.commands, grep_cmd, "OK"),
-	'2':  test("vuseradd", "Checking if vuseradd is done", self.commands, vcheck_cmd, "vuseradd", True)      
+	'1':  test("NodeManager", "Checking if NodeManager has started", utils.commands, grep_cmd, "OK", logfile = self.config.logfile),
+	'2':  test("vuseradd", "Checking if vuseradd is done", self.commands, vcheck_cmd, "vuseradd", True, logfile = self.config.logfile)      
 	}
 	
 	while time.time() < end_time and ready == False:
@@ -228,10 +125,10 @@ class Node(dict, Remote):
 
 	return ready  
 	 
-class Nodes(list, Table):
+class Nodes(Table):
 
     def __init__(self, config, nodes):
     	nodelist = [Node(config, node) for node in nodes]
-	list.__init__(self, nodelist)
+	Table.__init__(self, nodelist)
 	self.config = config
 	
