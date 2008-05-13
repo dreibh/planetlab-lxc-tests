@@ -4,6 +4,7 @@ import utils
 import xmlrpclib	
 from Remote import Remote
 from Table import Table
+from logger import Logfile
 
 class PLC(dict, Remote):
     fields = {
@@ -27,7 +28,12 @@ class PLC(dict, Remote):
 	
 	# init config
 	self.config = config
+	self.__init_logfile__()
 
+    def __init_logfile__(self, filename = None):
+        if not filename:
+            filename = '%s/qaapi.log' % (self.config.logdir)
+        self.logfile = Logfile(filename)
 
     def update_ip(self):
 	try: 	
@@ -46,13 +52,18 @@ class PLC(dict, Remote):
 	self.update_ip()
 	name, ip, port, path = self['name'], self['ip'], self['port'], self['api_path']
 	if self.config.verbose:
-	    utils.header("Updating %(name)s's api to https://%(ip)s:%(port)s/%(path)s" % locals())   
+	    utils.header("Updating %(name)s's api to https://%(ip)s:%(port)s/%(path)s" % locals(), logfile = self.config.logfile)   
 	api_server = "https://%(ip)s:%(port)s/%(path)s" % locals()
 	self.config.api = xmlrpclib.Server(api_server, allow_none = 1)
         self.config.api_type = 'xmlrpc'	
 
-class PLCs(list, Table):
+    def scp_to_webroot(self, localfiles, recursive = False):
+	if self.config.verbose:
+	    utils.header("Copying %s to %s webroot" % (localfiles, self['name']), logfile = self.config.logfile)
+	self.scp_to("%(localfiles)s" % locals(), "/var/www/html/")
+    
+class PLCs(Table):
 
     def __init__(self, config, plcs):
 	plclist = [PLC(config, plc) for plc in plcs]
-	list.__init__(self, plclist)
+	Table.__init__(self, plclist)
