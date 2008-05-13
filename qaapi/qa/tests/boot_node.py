@@ -32,16 +32,16 @@ class boot_node(Test):
         node = nodes[0]
         boot_state = node['boot_state']
         if True or self.config.verbose:
-            utils.header("%(hostname)s boot_state is %(boot_state)s" % locals(), False) 
+            utils.header("%(hostname)s boot_state is %(boot_state)s" % locals(), False, self.config.logfile) 
             
         if boot_state in ['boot']:
             self.exit = True
 
 	if self.config.verbose:
 	    if boot_state in ['boot']:
-		utils.header("%(hostname)s correctly installed and booted" % locals(), False)
+		utils.header("%(hostname)s correctly installed and booted" % locals(), False, self.config.logfile)
 	    else:
-		utils.header("%(hostname)s not fully booted" % locals(), False)
+		utils.header("%(hostname)s not fully booted" % locals(), False, self.config.logfile)
         self.boot_state = boot_state
         return self.exit
         
@@ -67,7 +67,7 @@ class boot_node(Test):
             # for now just print it out
 	    for line in lines:
                 print line
-            	utils.header(line) 
+            	utils.header(line, logfile = self.config.logfile) 
             # should be parsing for special strings that indicate whether
             # we've reached a particular state within the boot sequence
 
@@ -108,12 +108,12 @@ class boot_node(Test):
 	# try reinstalling the node if it is in debug state
 	if node['boot_state'] in ['dbg']:
 	    if self.config.verbose:
-		utils.header("%(hostname)s is in debug state. Attempting a re-install" % locals())
+		utils.header("%(hostname)s is in debug state. Attempting a re-install" % locals(), logfile = self.config.logfiile)
 	    api.UpdateNode(auth, node['node_id'], {'boot_state': 'rins'}) 
 	
 	# Create boot image
 	if self.config.verbose:
-            utils.header("Creating bootcd for %(hostname)s at %(bootimage_path)s" % locals())	
+            utils.header("Creating bootcd for %(hostname)s at %(bootimage_path)s" % locals(), logfile = self.config.logfile)	
 	nodeimage = api.GetBootMedium(auth, hostname, image_type, '', ['serial'])
 	fp = open(bootimage_tmppath, 'w')
 	fp.write(base64.b64decode(nodeimage))
@@ -122,6 +122,10 @@ class boot_node(Test):
 	# Move the boot image to the nodes home directory
 	node.host_commands("mkdir -p %(homedir)s" % locals())
 	node.scp_to_host(bootimage_tmppath, "%(remote_bootimage_path)s" % locals())
+
+	# If node is vm (qemu) try installing kqemu
+	node.host_commands("yum -y install kqemu", False)
+	node.host_commands("modprobe kqemu")
 	
 	# Create a temporary disk image if it doesnt already exist or we are reinstalling
 	img_check_cmd =  "ls -ld %(diskimage)s" % locals()
@@ -132,7 +136,7 @@ class boot_node(Test):
 
 	
 	if self.config.verbose:
-            utils.header("Booting %(hostname)s" % locals())
+            utils.header("Booting %(hostname)s" % locals(), logfile = self.config.logfile)
 
 	# Attempt to boot this node image
 
@@ -199,7 +203,7 @@ class boot_node(Test):
         # occured, or we've reached our totaltime out
         def catch(sig, frame):
             self.totaltime = self.totaltime -1
-	    utils.header("beep %d\n" %self.totaltime, False)
+	    utils.header("beep %d\n" %self.totaltime, False, logfile = self.config.logfile )
             total = self.totaltime
             if (total == 0) or \
                    (((total % 60)==0) and self.state_nanny()):

@@ -31,14 +31,14 @@ class plc_install(Test):
 	     	
 	# Save url
 	if self.config.verbose:
-	    utils.header('Saving current myplc url into %s/URL' % url_path)
+	    utils.header('Saving current myplc url into %s/URL' % url_path, logfile = self.config.logfile)
 	fsave=open('%s/URL' % url_path, "w")
  	fsave.write(url+'\n')
 	fsave.close()
 	
 	# Instal myplc from url    	 
 	if self.config.verbose:
-	    utils.header('Downloading myplc from url %s' % url)
+	    utils.header('Downloading myplc from url %s' % url, logfile = self.config.logfile )
 
 	# build commands
 	url_parts = url.split(os.sep)
@@ -48,12 +48,12 @@ class plc_install(Test):
 	yum_install = "yum -y localinstall /tmp/%(rpm_file)s" % locals()
 
 	if self.config.verbose:
-	    utils.header("Trying: %(rpm_install)s" % locals())
+	    utils.header("Trying: %(rpm_install)s" % locals(), logfile = self.config.logfile)
         try: 
    	    (status, output) = plc.commands(rpm_install)
 	except:
 	    if self.config.verbose:
-		utils.header("Trying %(yum_install)s" % locals())
+		utils.header("Trying %(yum_install)s" % locals(), logfile = self.config.logfile)
 	    (status, output) = plc.commands(download_cmd) 
 	    (status, output) = plc.commands(yum_install)
 

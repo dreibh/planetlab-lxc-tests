@@ -17,12 +17,12 @@ class plc_stop(Test):
 	plc = self.config.get_plc(plc_name)
  	command = " /sbin/service plc stop "
 	if self.config.verbose:
-	    utils.header(command)
+	    utils.header(command, logfile = self.config.logfile)
 	
 	(status, output) = plc.commands(command)
 
 	if self.config.verbose:
-	    utils.header(output)
+	    utils.header(output, logfile = self.config.logfile)
 
 	return 1
 

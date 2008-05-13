@@ -19,8 +19,8 @@ class plc_uninstall(Test):
 	    command += " && rm -rf /plc/data" 
 
 	if self.config.verbose:
-            utils.header("Removing myplc")
-	    utils.header("\n".join(command))
+            utils.header("Removing myplc", logfile = self.config.logfile)
+	    utils.header("\n".join(command), logfile = self.config.logfile)
 	
 	(status, output) = plc.commands(command)
 		

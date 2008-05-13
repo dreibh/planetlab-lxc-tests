@@ -20,12 +20,12 @@ class plc_configure(Test):
         
 	# Turn off plc (for good measure)
 	command = "/sbin/service plc stop"
-	if self.config.verbose: utils.header(command)
+	if self.config.verbose: utils.header(command, logfile = self.config.logfile)
         (status, output) = plc.commands(command)
 
 	# mount plc 
 	command = "/sbin/service plc mount"
-	if self.config.verbose: utils.header(command)
+	if self.config.verbose: utils.header(command, logfile = self.config.logfile)
         (status, output) = plc.commands(command)
 
 	# Get plc configuration variables
@@ -49,7 +49,7 @@ class plc_configure(Test):
         tmpfconf, tmpfname = tempfile.mkstemp(".config","plc-config-tty", '/usr/tmp/')
 	tmpfname_parts = tmpfname.split(os.sep)
 	if self.config.verbose:
-            utils.header("generating temporary config file %(tmpfname)s"%locals())
+            utils.header("generating temporary config file %(tmpfname)s"%locals(), logfile = self.config.logfile)
 	for (option, value) in plc_options:
             os.write(tmpfconf, 'e %s\n%s\n' % (option, value))
         os.write(tmpfconf,'w\nq\n')
@@ -58,17 +58,17 @@ class plc_configure(Test):
 
         # configure plc
 	command = "plc-config-tty < %(tmpfname)s" % locals()
-	if self.config.verbose: utils.header(command)
+	if self.config.verbose: utils.header(command, logfile = self.config.logfile)
         (status, output) = plc.commands(command)
 
 	# clean up temporary conf file
 	# XX use plc instance to copy file
-	if self.config.verbose: utils.header("removing %(tmpfname)s"%locals())
+	if self.config.verbose: utils.header("removing %(tmpfname)s"%locals(), logfile = self.config.logfile)
         os.unlink(tmpfname)
 
 	# umount plc (need to do this optionally, as we do not want this for myplc-native)
 	command = "/sbin/service plc umount"
-	if self.config.verbose: utils.header(command)
+	if self.config.verbose: utils.header(command, logfile = self.config.logfile)
         (status, output) = plc.commands(command)
 
 	return 1

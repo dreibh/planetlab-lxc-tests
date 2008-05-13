@@ -25,6 +25,7 @@ class delete_test_data(Test):
                                   object['plc'] == None
 
 	sitelist = filter(this_plc, self.config.sites.values())
+	nodegrouplist = filter(this_plc, self.config.nodegroups.values())
 		
 	# Deleting the site should delete everything associated with it
 	# including nodes, persons
@@ -32,10 +33,19 @@ class delete_test_data(Test):
 	    try:
 	        api.DeleteSite(auth, site['login_base'])
 	        if self.config.verbose:
-	            utils.header("Test data deleted")
+	            utils.header("Test data deleted", logfile = self.config.logfile)
 	    except:
 		if self.config.verbose:
-		    utils.header("Error	deleting %s" % site['login_base'])		
+		    utils.header("Error	deleting %s" % site['login_base'], logfile = self.config.logfile)		
+	# Delete nodegroups
+	for nodegroup in nodegrouplist:
+	    try:
+		api.DeleteNodeGroup(auth, nodegroup['name'])
+		if self.config.verbose:
+		    utils.header("NodeGroups deleted", logfile = self.config.logfile)
+	    except:
+		if self.config.verbose:
+		    utils.header("Error deleting %s" % nodegroup['name'], logfile = self.config.logfile)	
 	return 1 
 	
 if __name__ == '__main__':
