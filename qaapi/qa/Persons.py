@@ -17,7 +17,7 @@ class Person(dict):
 	
 	self.update(fields)
 
-class Persons(list, Table):
+class Persons(Table):
     def __init__(self, persons):
 	personlist = [Person(person) for person in persons]
-	list.__init__(self, personlist)				 	  			 	 	
+	Table.__init__(self, personlist)				 	  			 	 	
