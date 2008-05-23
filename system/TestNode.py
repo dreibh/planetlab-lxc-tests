@@ -81,7 +81,7 @@ class TestNode:
                     for (attribute,value) in interface['settings'].iteritems():
                         # locate node network
                         nn = server.GetInterfaces(userauth,{'ip':interface['network_fields']['ip']})[0]
-                        nnid=nn['nodenetwork_id']
+                        nnid=nn['interface_id']
                         # locate or create node network attribute type
                         try:
                             nnst = server.GetInterfaceSettingTypes(userauth,{'name':attribute})[0]
