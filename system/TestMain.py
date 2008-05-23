@@ -45,7 +45,7 @@ build-url defaults to the last value used, as stored in arg-build-url,
    or %s
 config defaults to the last value used, as stored in arg-config,
    or %r
-ips defaults to the last value used, as stored in arg-ips,
+node-ips and plc-ips defaults to the last value used, as stored in arg-node-ips and arg-plc-ips,
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
 ===
@@ -66,9 +66,12 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
                           help="List known steps")
-        parser.add_option("-i","--ip",action="callback", callback=TestMain.optparse_list, dest="ips",
+        parser.add_option("-N","--nodes",action="callback", callback=TestMain.optparse_list, dest="node_ips",
                           nargs=1,type="string",
-                          help="Specify the set of IP addresses to use in vserver mode (disable scanning)")
+                          help="Specify the set of IP addresses to use for nodes (scanning disabled)")
+        parser.add_option("-P","--plcs",action="callback", callback=TestMain.optparse_list, dest="plc_ips",
+                          nargs=1,type="string",
+                          help="Specify the set of IP addresses to use for plcs (scanning disabled)")
         parser.add_option("-1","--small",action="store_true",dest="small_test",default=False,
                           help="run a small test -- typically only one node")
         parser.add_option("-d","--dbname",action="store",dest="dbname",default=None,
@@ -104,7 +107,8 @@ steps refer to a method in TestPlc or to a step_* module
         # handle defaults and option persistence
         for (recname,filename,default) in (
             ('build_url','arg-build-url',TestMain.default_build_url) ,
-            ('ips','arg-ips',[]) , 
+            ('node_ips','arg-node-ips',[]) , 
+            ('plc_ips','arg-plc-ips',[]) , 
             ('config','arg-config',TestMain.default_config) , 
             ('arch_rpms_url','arg-arch-rpms-url',"") , 
             ) :

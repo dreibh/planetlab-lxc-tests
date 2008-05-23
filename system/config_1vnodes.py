@@ -22,9 +22,9 @@ def config (plcs, options):
     all_nodenames = test_mapper.node_names()
     maps = []
     for nodename in all_nodenames:
-        if len(options.ips) != 0:
-            ip=options.ips[0]
-            options.ips=options.ips[1:]
+        if len(options.node_ips) != 0:
+            ip=options.node_ips[0]
+            options.node_ips=options.node_ips[1:]
             (hostname,ip,mac)=test_pool.locate(ip)
         else:
             (hostname,ip,mac) = test_pool.next_free()

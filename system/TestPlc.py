@@ -72,7 +72,8 @@ class TestPlc:
                      'check_initscripts', 'check_tcp',SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', SEP,
-                    'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
+                    'clean_initscripts', 'clean_sites', 'clean_nodes', 
+                    'clean_slices', 'clean_keys', SEP,
                     'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
                     'db_dump' , 'db_restore', ' cleanup_tracker',
                     'standby_1 through 20'
@@ -554,6 +555,17 @@ class TestPlc:
         for initscript in self.plc_spec['initscripts']:
             utils.pprint('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
             self.apiserver.AddInitScript(self.auth_root(),initscript['initscript_fields'])
+        return True
+
+    def clean_initscripts (self):
+        for initscript in self.plc_spec['initscripts']:
+            initscript_name = initscript['initscript_fields']['name']
+            print('Attempting to delete %s in plc %s'%(initscript_name,self.plc_spec['name']))
+            try:
+                self.apiserver.DeleteInitScript(self.auth_root(),initscript_name)
+                print initscript_name,'deleted'
+            except:
+                print 'deletion went wrong - probably did not exist'
         return True
 
     def slices (self):
