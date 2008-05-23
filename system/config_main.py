@@ -13,6 +13,7 @@ def nodes(options):
                              'model':'qemu/minhw', } ,
              'host_box': 'testbox1.one-lab.org',
              'owner' : 'pi',
+             'nodegroups' : 'mynodegroup',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
                                  'ip':'xxx-deferred-xxx',

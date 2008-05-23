@@ -418,12 +418,40 @@ class TestPlc:
                         groups_dict[nodegroupname].append(test_node.name())
         auth=self.auth_root()
         for (nodegroupname,group_nodes) in groups_dict.iteritems():
-            try:
-                self.apiserver.GetNodeGroups(auth,{'name':nodegroupname})[0]
-            except:
-                self.apiserver.AddNodeGroup(auth,{'name':nodegroupname})
-            for node in group_nodes:
-                self.apiserver.AddNodeToNodeGroup(auth,node,nodegroupname)
+            print 'nodegroups:','dealing with nodegroup',nodegroupname,'on nodes',group_nodes
+            # first, check if the nodetagtype is here
+            tag_types = self.apiserver.GetNodeTagTypes(auth,{'name':nodegroupname})
+            if tag_types:
+                tag_type_id = tag_types[0]['node_tag_type_id']
+                print 'node-tag-type',nodegroupname,'already exists'
+            else:
+                tag_type_id = self.apiserver.AddNodeTagType(auth,
+                                                            {'name':nodegroupname,
+                                                             'description':
+                                                                 'for nodegroup %s'%nodegroupname,
+                                                             'category':'test',
+                                                             'min_role_id':10})
+            # create nodegroup
+            nodegroups = self.apiserver.GetNodeGroups (auth, {'groupname':nodegroupname})
+            if nodegroups:
+                print 'nodegroup',nodegroupname,'already exists'
+            else:
+                self.apiserver.AddNodeGroup(auth,
+                                            {'groupname': nodegroupname,
+                                             'node_tag_type_id': tag_type_id,
+                                             'value': 'yes'})
+            # set node tag on all nodes, value='yes'
+            for nodename in group_nodes:
+                # check if already set
+                # xxx need node_id - need improvement in the API
+                node_id = self.apiserver.GetNodes(auth,nodename)[0]['node_id']
+                node_tag = self.apiserver.GetNodeTags(auth,
+                                                      {'node_id':node_id,
+                                                       'node_tag_type_id':tag_type_id})
+                if node_tag:
+                    print 'node',nodename,'already has tag',nodegroupname
+                else:
+                    self.apiserver.AddNodeTag(auth, node_id, nodegroupname,"yes")
         return True
 
     def all_hostnames (self) :

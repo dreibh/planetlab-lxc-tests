@@ -70,26 +70,26 @@ class TestNode:
         # create as reinstall to avoid user confirmation
         server.UpdateNode(userauth, self.name(), {'boot_state':'rins'})
         # populate network interfaces - primary
-        server.AddNodeNetwork(userauth,self.name(),
+        server.AddInterface(userauth,self.name(),
                                             self.node_spec['network_fields'])
         # populate network interfaces - others
         if self.node_spec.has_key('extra_interfaces'):
             for interface in self.node_spec['extra_interfaces']:
-                server.AddNodeNetwork(userauth,self.name(),
+                server.AddInterface(userauth,self.name(),
                                                     interface['network_fields'])
                 if interface.has_key('settings'):
                     for (attribute,value) in interface['settings'].iteritems():
                         # locate node network
-                        nn = server.GetNodeNetworks(userauth,{'ip':interface['network_fields']['ip']})[0]
+                        nn = server.GetInterfaces(userauth,{'ip':interface['network_fields']['ip']})[0]
                         nnid=nn['nodenetwork_id']
                         # locate or create node network attribute type
                         try:
-                            nnst = server.GetNodeNetworkSettingTypes(userauth,{'name':attribute})[0]
+                            nnst = server.GetInterfaceSettingTypes(userauth,{'name':attribute})[0]
                         except:
-                            nnst = server.AddNodeNetworkSettingType(rootauth,{'category':'test',
+                            nnst = server.AddInterfaceSettingType(rootauth,{'category':'test',
                                                                               'name':attribute})
                         # attach value
-                        server.AddNodeNetworkSetting(userauth,nnid,attribute,value)
+                        server.AddInterfaceSetting(userauth,nnid,attribute,value)
 
     def delete_node (self):
         # uses the right auth as far as poss.
