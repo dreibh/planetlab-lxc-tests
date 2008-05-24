@@ -280,10 +280,12 @@ class TestPlc:
 
     ### install
     def install(self):
-        # we need build dir for vtest-init-vserver
         if self.is_local():
             # a full path for the local calls
-            build_dir=os.path.dirname(sys.argv[0])+"/build"
+            build_dir=os.path.dirname(sys.argv[0])
+            # sometimes this is empty - set to "." in such a case
+            if not build_dir: build_dir="."
+            build_dir += "/build"
         else:
             # use a standard name - will be relative to remote buildname
             build_dir="build"
