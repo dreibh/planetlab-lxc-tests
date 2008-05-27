@@ -71,7 +71,7 @@ class TestPlc:
                      'nodes_booted', 'nodes_ssh', 'check_slice',
                      'check_initscripts', 'check_tcp',SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
-    other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', SEP,
+    other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
                     'clean_initscripts', 'clean_sites', 'clean_nodes', 
                     'clean_slices', 'clean_keys', SEP,
                     'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
@@ -117,6 +117,9 @@ class TestPlc:
     def actual_command_in_guest (self,command):
         return self.test_ssh.actual_command(self.host_to_guest(command))
     
+    def start_guest (self):
+      return utils.system(self.test_ssh.actual_command(self.start_guest_in_host()))
+    
     def run_in_guest (self,command):
         return utils.system(self.actual_command_in_guest(command))
     
@@ -126,6 +129,10 @@ class TestPlc:
     #command gets run in the vserver
     def host_to_guest(self,command):
         return "vserver %s exec %s"%(self.vservername,command)
+    
+    #command gets run in the vserver
+    def start_guest_in_host(self):
+        return "vserver %s start"%(self.vservername)
     
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
@@ -344,11 +351,15 @@ class TestPlc:
     def start(self):
         self.run_in_guest('service plc start')
         return True
-        
+
     def stop(self):
         self.run_in_guest('service plc stop')
         return True
         
+    def vs_start (self):
+        self.start_guest()
+        return True
+
     # could use a TestKey class
     def store_keys(self):
         for key_spec in self.plc_spec['keys']:
