@@ -10,6 +10,9 @@
 COMMAND=$(basename $0)
 cd $(dirname $0)
 
+# turn on verbosity
+set -x
+
 # constant
 INTERFACE_BRIDGE=br0
 # Default Value
@@ -48,12 +51,12 @@ start () {
     #Restarting udev
     echo "Starting udev ..."
     /sbin/udevd restart
-    if modprobe kqemu ; then
+    if modprobe kqemu &> /dev/null ; then
 	echo "kqemu loadded"
     else
 	echo "WARNING : Could not modprobe kqemu"
     fi
-    #Loding the tun/tap model
+    #Loading the tun/tap model
     if modprobe tun ; then
 	echo "tun loaded"
         # Giving read/write access
@@ -132,16 +135,20 @@ stop () {
     /sbin/service iptables restart
 }
 
-# 
-case "$1" in
-    start)
-	shift; start "$@" ;;
-    stop)
-	shift; stop "$@" ;;
-    add)
-        shift; add "$@" ;;
-    *)
-        echo $"Usage: env-qemu {start|add|stop} [interface]" ; exit 1 ;;
-esac
+function main () {
 
-exit 0
+    case "$1" in
+	start)
+	    shift; start "$@" ;;
+	stop)
+	    shift; stop "$@" ;;
+	add)
+            shift; add "$@" ;;
+	*)
+            echo $"Usage: env-qemu {start|add|stop} [interface]" ; exit 1 ;;
+    esac
+    exit 0
+}
+
+# redirect stderr as well
+main "$@" 2>&1
