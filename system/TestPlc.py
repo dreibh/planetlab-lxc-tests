@@ -72,7 +72,8 @@ class TestPlc:
                      'check_initscripts', 'check_tcp',SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
-                    'clean_initscripts', 'clean_sites', 'clean_nodes', 
+                    'clean_initscripts', 'clean_all_sites',
+                    'clean_sites', 'clean_nodes', 
                     'clean_slices', 'clean_keys', SEP,
                     'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
                     'db_dump' , 'db_restore', ' cleanup_tracker',
@@ -389,6 +390,13 @@ class TestPlc:
                 test_site.create_site()
                 test_site.create_users()
         return True
+
+    def clean_all_sites (self):
+        print 'auth_root',self.auth_root()
+        site_ids = [s['site_id'] for s in self.apiserver.GetSites(self.auth_root(), {}, ['site_id'])]
+        for site_id in site_ids:
+            print 'Deleting site_id',site_id
+            self.apiserver.DeleteSite(self.auth_root(),site_id)
 
     def nodes (self):
         return self.do_nodes()

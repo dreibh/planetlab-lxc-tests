@@ -37,6 +37,7 @@ server_methods = [ ('GetNodes' ,  []),
                    ('DeletePerson' , True),
                    ('AddPersonKey' , True),
                    ('GetPlcRelease', {'build': {'target-arch':'i386'}}),
+                   ('GetSites', []),
                    ]
 
 class TestApiserver:
