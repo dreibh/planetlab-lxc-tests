@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env plcsh
 #
 # Test script utility class
 #
@@ -135,11 +135,12 @@ def random_key(key_types):
         'key': randkey()
         }
 
+nodegroups_tagname='deployment'
 def random_nodegroup():
-    return {
-        'groupname': randstr(50),
-#        'description': randstr(200),
-        }
+    return (randstr(50), # groupname
+            nodegroups_tagname,      # tagname
+            randstr(8),  # tagvalue
+            )
 
 def random_node(boot_states):
     return {
@@ -232,7 +233,8 @@ class Test:
         'addresses_per_site': 2,
         'persons_per_site': 10,
         'keys_per_person': 2,
-        'nodegroups': 10,
+        # we're using a single tag so a given node can only be in a single nodegroup
+        'nodegroups': 1,
         'nodes_per_site': 2,
         'interfaces_per_node': 1,
         'pcus_per_site': 1,
@@ -273,11 +275,9 @@ class Test:
         test.Run(sites = 123, slices_per_site = 4) # Defaults with overrides
         """
 
-        try:
-            self.Add(**kwds)
-            self.Update()
-        finally:
-            self.Delete()
+        self.Add(**kwds)
+        self.Update()
+        self.Delete()
 
     def Add(self, **kwds):
         """
@@ -769,6 +769,7 @@ class Test:
 
         self.key_ids = []
 
+    # this assumes the default node tag types in db-config are visible
     def AddNodeGroups(self, n = 10):
         """
         Add a number of random node groups.
@@ -776,8 +777,8 @@ class Test:
 
         for i in range(n):
             # Add node group
-            nodegroup_fields = random_nodegroup()
-            nodegroup_id = self.api.AddNodeGroup(nodegroup_fields)
+            (groupname, tagname, tagvalue) = random_nodegroup()
+            nodegroup_id = self.api.AddNodeGroup(groupname, tagname, tagvalue)
 
             # Should return a unique nodegroup_id
             assert nodegroup_id not in self.nodegroup_ids
@@ -799,7 +800,10 @@ class Test:
 
         for nodegroup_id in self.nodegroup_ids:
             # Update nodegroup
-            nodegroup_fields = random_nodegroup()
+            (groupname, tagname, tagvalue) = random_nodegroup()
+            # cannot change tagname
+            nodegroup_fields = {'groupname':groupname,
+                                'tagvalue':tagvalue}
             self.api.UpdateNodeGroup(nodegroup_id, nodegroup_fields)
 
             if self.check:
@@ -852,9 +856,11 @@ class Test:
                 self.node_ids.append(node_id)
 
                 # Add to a random set of node groups
-                nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
+#                nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
+                nodegroup_ids = random.sample(self.nodegroup_ids, len(self.nodegroup_ids))
                 for nodegroup_id in nodegroup_ids:
-                    self.api.AddNodeToNodeGroup(node_id, nodegroup_id)
+                    tagvalue = self.api.GetNodeGroups([nodegroup_id])[0]['tagvalue']
+                    self.api.AddNodeTag( node_id, nodegroups_tagname, tagvalue )
 
                 if self.check:
                     # Check node
@@ -883,10 +889,14 @@ class Test:
 
             # Add to a random set of node groups
             nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
-            for nodegroup_id in (set(nodegroup_ids) - set(node['nodegroup_ids'])):
-                self.api.AddNodeToNodeGroup(node_id, nodegroup_id)
-            for nodegroup_id in (set(node['nodegroup_ids']) - set(nodegroup_ids)):
-                self.api.DeleteNodeFromNodeGroup(node_id, nodegroup_id)
+            for nodegroup_id in nodegroup_ids:
+                tagvalue = self.api.GetNodeGroups([nodegroup_id])[0]['tagvalue']
+                # with low lvl API, the tag is expected to already exist, so we need to *update* it
+                print 'DBG node_id',node_id,'nodegroups_tagname',nodegroups_tagname
+                node_tag = self.api.GetNodeTags( {'node_id':node_id, 'tagname':nodegroups_tagname } )[0]
+                self.api.UpdateNodeTag(node_tag['node_tag_id'],tagvalue)
+                print 'DBG node_tag_id',node_tag['node_tag_id']
+
 
             if self.check:
                 # Check node
@@ -907,8 +917,8 @@ class Test:
         for node_id in self.node_ids:
             # Remove from node groups
             node = self.api.GetNodes([node_id])[0]
-            for nodegroup_id in node['nodegroup_ids']:
-                self.api.DeleteNodeFromNodeGroup(node_id, nodegroup_id)
+            node_tag = GetNodeTags ( {'node_id': node_id, 'tagname': nodegroups_tagname } )[0]
+            self.api.UpdateNodeTag(node_tag['node_tag_id'],'')
 
             if self.check:
                 node = self.api.GetNodes([node_id])[0]
@@ -1440,9 +1450,12 @@ class Test:
 
 def main():
     parser = OptionParser()
-    parser.add_option("-c", "--check", action = "store_true", default = False, help = "Check most actions (default: %default)")
-    parser.add_option("-q", "--quiet", action = "store_true", default = False, help = "Be quiet (default: %default)")
-    parser.add_option("-t", "--tiny", action = "store_true", default = False, help = "Run a tiny test (default: %default)")
+    parser.add_option("-c", "--check", action = "store_true", default = False, 
+                      help = "Check most actions (default: %default)")
+    parser.add_option("-q", "--quiet", action = "store_true", default = False, 
+                      help = "Be quiet (default: %default)")
+    parser.add_option("-t", "--tiny", action = "store_true", default = False, 
+                      help = "Run a tiny test (default: %default)")
     (options, args) = parser.parse_args()
 
     test = Test(api = Shell(),
