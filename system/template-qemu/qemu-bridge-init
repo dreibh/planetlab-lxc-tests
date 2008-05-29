@@ -38,10 +38,10 @@ start () {
     }
 
     #Getting host IP/masklen
-    address=$(/sbin/ip addr show $INTERFACE_LAN | grep -v inet6 | grep inet | awk '{print $2;}')
+    address=$(/sbin/ip addr show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $2;}')
     [ -z "$address" ] && { echo "ERROR: Could not determine IP address for $INTERFACE_LAN" ; exit 1 ; }
     
-    broadcast=$(/sbin/ip addr show $INTERFACE_LAN | grep -v inet6 | grep inet | awk '{print $4;}')
+    broadcast=$(/sbin/ip addr show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $4;}')
     [ -z "$broadcast" ] && echo "WARNING: Could not determine broadcast address for $INTERFACE_LAN"
 
     gateway=$(netstat -rn | grep '^0.0.0.0' | awk '{print $2;}')
@@ -68,20 +68,20 @@ start () {
     fi
 
     # creating the bridge
-    echo "Creating bridge $INTERFACE_BRIDGE"
+    echo "Creating bridge INTERFACE_BRIDGE=$INTERFACE_BRIDGE"
     brctl addbr $INTERFACE_BRIDGE
     #brctl stp $INTERFACE_BRIDGE yes
     brctl addif $INTERFACE_BRIDGE $INTERFACE_LAN
-    echo "Activating promiscuous mode  $INTERFACE_LAN..."
+    echo "Activating promiscuous mode INTERFACE_LAN=$INTERFACE_LAN"
     /sbin/ifconfig $INTERFACE_LAN 0.0.0.0 promisc up
     sleep 2
-    echo "Setting bridge $address $broadcast"
+    echo "Setting bridge address=$address broadcast=$broadcast"
     # static
     /sbin/ifconfig $INTERFACE_BRIDGE $address broadcast $broadcast up
     sleep 1
 	
     #Reconfigure the routing table
-    echo "Configuring  the IP  Gateway @:" $gateway
+    echo "Configuring gateway=$gateway"
     route add default gw $gateway
 
 }
