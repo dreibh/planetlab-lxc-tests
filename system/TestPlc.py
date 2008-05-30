@@ -456,10 +456,7 @@ class TestPlc:
             if nodegroups:
                 print 'nodegroup',nodegroupname,'already exists'
             else:
-                self.apiserver.AddNodeGroup(auth,
-                                            {'groupname': nodegroupname,
-                                             'node_tag_type_id': tag_type_id,
-                                             'tagvalue': 'yes'})
+                self.apiserver.AddNodeGroup(auth, nodegroupname, tag_type_id, 'yes')
             # set node tag on all nodes, value='yes'
             overall = True
             for nodename in group_nodes:
