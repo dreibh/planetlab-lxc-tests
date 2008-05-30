@@ -69,7 +69,7 @@ class TestPlc:
                      'init_node','bootcd', 'configure_qemu', 'export_qemu',
                      'kill_all_qemus', 'reinstall_node','start_node', SEP,
                      'nodes_booted', 'nodes_ssh', 'check_slice',
-                     'check_initscripts', 'check_tcp',SEP,
+                     'check_initscripts', 'check_tcp', 'plcsh_stress_test', SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
                     'clean_initscripts', 'clean_all_sites',
@@ -444,7 +444,6 @@ class TestPlc:
             tag_types = self.apiserver.GetNodeTagTypes(auth,{'tagname':nodegroupname})
             if tag_types:
                 tag_type_id = tag_types[0]['node_tag_type_id']
-                print 'node-tag-type',nodegroupname,'already exists'
             else:
                 tag_type_id = self.apiserver.AddNodeTagType(auth,
                                                             {'tagname':nodegroupname,
@@ -453,9 +452,7 @@ class TestPlc:
                                                              'min_role_id':10})
             # create nodegroup
             nodegroups = self.apiserver.GetNodeGroups (auth, {'groupname':nodegroupname})
-            if nodegroups:
-                print 'nodegroup',nodegroupname,'already exists'
-            else:
+            if not nodegroups:
                 self.apiserver.AddNodeGroup(auth, nodegroupname, tag_type_id, 'yes')
             # set node tag on all nodes, value='yes'
             overall = True
@@ -475,8 +472,9 @@ class TestPlc:
                         print 'Mismatch node tag on node',nodename,'got',expect_yes
                         overall=False
                 except:
-                    print 'Cannot find tag',nodegroupname,'on node',nodename
-                    overall = False
+                    if not self.options.dry_run:
+                        print 'Cannot find tag',nodegroupname,'on node',nodename
+                        overall = False
         return overall
 
     def all_hostnames (self) :
@@ -684,7 +682,17 @@ class TestPlc:
             if not c_test_sliver.run_tcp_client(s_test_sliver.test_node.name(),port):
                 overall=False
         return overall
-    
+
+    def plcsh_stress_test (self):
+        # install the stress-test in the plc image
+        location = "/usr/share/plc_api/plcsh-stress-test.py"
+        remote="/vservers/%s/%s"%(self.vservername,location)
+        self.test_ssh.copy_abs("plcsh-stress-test.py",remote)
+        if self.options.small_test:
+            command=location + " -- --tiny"
+        else:
+            command=location
+        return ( self.run_in_guest(command) == 0)
 
     def gather_logs (self):
         # (1) get the plc's /var/log and store it locally in logs/myplc.var-log.<plcname>/*

@@ -128,6 +128,18 @@ class TestSsh:
                                       self.buildname,os.path.basename(local_file) or ".")
         return utils.system(scp_command)
 
+    def copy_abs (self,local_file,remote_file,recursive=False):
+        if self.is_local():
+            dest=""
+        else:
+            dest= "%s:"%self.hostname_part()
+        scp_command="scp "
+        scp_command += TestSsh.std_options
+        if recursive: scp_command += "-r "
+        scp_command += self.key_part()
+        scp_command += "%s %s%s"%(local_file,dest,remote_file)
+        return utils.system(scp_command)
+
     def fetch (self, remote_file, local_file, recursive=False):
         if self.is_local():
             command="cp "
