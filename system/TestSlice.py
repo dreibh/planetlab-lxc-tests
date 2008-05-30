@@ -75,7 +75,7 @@ class TestSlice:
                     found=True
         return (found,privatekey)
 
-    def check_slice(self,options,minutes=6,gracetime=3,period=30):
+    def check_slice(self,options,minutes=6,gracetime=3,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
         # locate a key
@@ -96,8 +96,9 @@ class TestSlice:
             for hostname in tocheck:
                 (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
+                if datetime.datetime.now() >= graceout:
+                    utils.header('Trying to enter into slice %s@%s'%(self.name(),hostname))
                 # this can be ran locally as we have the key
-                utils.header('Trying to enter into slice %s@%s'%(self.name(),hostname))
                 date = date_test_ssh.run("id;hostname")==0
                 if date:
                     utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
@@ -124,10 +125,7 @@ class TestSlice:
                 for hostname in tocheck:
                     utils.header("FAILURE to ssh into %s@%s"%(self.name(),hostname))
                 return False
-            #freezing ,slice don't get created before at least 3 minutes after sshd is started 
-            if datetime.datetime.now() < graceout:
-                utils.header ("The Slice %s under the Node %s is not created yet"%(self.name(),hostname))
-                time.sleep(gracetime*60)
-            else : time.sleep (period)
+            # wait for the period
+            time.sleep (period)
         # for an empty slice
         return True

@@ -485,7 +485,7 @@ class TestPlc:
         return hostnames
 
     # gracetime : during the first <gracetime> minutes nothing gets printed
-    def do_nodes_booted (self, minutes, gracetime,period=30):
+    def do_nodes_booted (self, minutes, gracetime,period=15):
         if self.options.dry_run:
             print 'dry_run'
             return True
@@ -533,7 +533,7 @@ class TestPlc:
     def nodes_booted(self):
         return self.do_nodes_booted(minutes=20,gracetime=15)
 
-    def do_nodes_ssh(self,minutes,gracetime,period=30):
+    def do_nodes_ssh(self,minutes,gracetime,period=15):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
