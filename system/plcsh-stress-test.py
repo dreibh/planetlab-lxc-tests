@@ -135,12 +135,15 @@ def random_key(key_types):
         'key': randkey()
         }
 
-nodegroups_tagname='deployment'
+def random_tag_type (role_ids):
+    return  {'tagname': randstr(12),
+             'category':randstr(8),
+             'min_role_id': random.sample(role_ids, 1)[0],
+             'description' : randstr(128),
+             }
+
 def random_nodegroup():
-    return (randstr(50), # groupname
-            nodegroups_tagname,      # tagname
-            randstr(8),  # tagvalue
-            )
+    return {'groupname' : randstr(50) }
 
 def random_node(boot_states):
     return {
@@ -170,6 +173,9 @@ def random_interface(method, type):
 
     return interface_fields
 
+def random_ilink ():
+    return randstr (12)
+
 def random_pcu():
     return {
         'hostname': randhostname(),
@@ -196,13 +202,6 @@ def random_conf_file():
         'always_update': bool(randint()),
         }
 
-def random_attribute_type(role_ids):
-    return {
-        'name': randstr(100),
-        'description': randstr(254),
-        'min_role_id': random.sample(role_ids, 1)[0],
-        }
-
 def random_slice(login_base):
     return {
         'name': login_base + "_" + randstr(11, letters).lower(),
@@ -217,12 +216,13 @@ class Test:
         'addresses_per_site': 1,
         'persons_per_site': 1,
         'keys_per_person': 1,
+        'slice_attributes': 1,
         'nodegroups': 1,
         'nodes_per_site': 1,
         'interfaces_per_node': 1,
+        'ilinks':1,
         'pcus_per_site': 1,
         'conf_files': 1,
-        'attribute_types': 1,
         'slices_per_site': 1,
         'attributes_per_slice': 1,
         }
@@ -233,33 +233,37 @@ class Test:
         'addresses_per_site': 2,
         'persons_per_site': 10,
         'keys_per_person': 2,
-        # we're using a single tag so a given node can only be in a single nodegroup
-        'nodegroups': 1,
+        'slice_attributes': 10,
+        'nodegroups': 20,
         'nodes_per_site': 2,
         'interfaces_per_node': 1,
+        'ilinks': 10,
         'pcus_per_site': 1,
         'conf_files': 10,
-        'attribute_types': 10,
         'slices_per_site': 10,
         'attributes_per_slice': 2,
         }
 
-    def __init__(self, api, check = True, verbose = True):
+    def __init__(self, api, check = True, verbose = True, preserve = False):
         self.api = api
         self.check = check
         self.verbose = verbose
+        self.preserve = preserve
         
         self.site_ids = []
         self.address_type_ids = []
         self.address_ids = []
         self.person_ids = []
         self.key_ids = []
+        self.slice_type_ids = []
+        self.nodegroup_type_ids = []
+        self.ilink_type_ids = []
         self.nodegroup_ids = []
         self.node_ids = []
         self.interface_ids = []
+        self.ilink_ids = []
         self.pcu_ids = []
         self.conf_file_ids = []
-        self.attribute_type_ids = []
         self.slice_ids = []
         self.slice_attribute_ids = []
 
@@ -277,7 +281,10 @@ class Test:
 
         self.Add(**kwds)
         self.Update()
-        self.Delete()
+        if self.preserve:
+            print 'Preserving - delete skipped'
+        else:
+            self.Delete()
 
     def Add(self, **kwds):
         """
@@ -296,12 +303,13 @@ class Test:
         self.AddAddresses(params['addresses_per_site'])
         self.AddPersons(params['persons_per_site'])
         self.AddKeys(params['keys_per_person'])
+        self.AddTagTypes(params['slice_attributes'],params['nodegroups'],params['ilinks'])
         self.AddNodeGroups(params['nodegroups'])
         self.AddNodes(params['nodes_per_site'])
         self.AddInterfaces(params['interfaces_per_node'])
+        self.AddIlinks (params['ilinks'])
         self.AddPCUs(params['pcus_per_site'])
         self.AddConfFiles(params['conf_files'])
-        self.AddSliceAttributeTypes(params['attribute_types'])
         self.AddSlices(params['slices_per_site'])
         self.AddSliceAttributes(params['attributes_per_slice'])
 
@@ -311,26 +319,27 @@ class Test:
         self.UpdateAddresses()
         self.UpdatePersons()
         self.UpdateKeys()
+        self.UpdateTagTypes()
         self.UpdateNodeGroups()
         self.UpdateNodes()
         self.UpdateInterfaces()
         self.UpdatePCUs()
         self.UpdateConfFiles()
-        self.UpdateSliceAttributeTypes()
         self.UpdateSlices()
         self.UpdateSliceAttributes()
 
     def Delete(self):
         self.DeleteSliceAttributes()
         self.DeleteSlices()
-        self.DeleteSliceAttributeTypes()
         self.DeleteKeys()
         self.DeleteConfFiles()
         self.DeletePCUs()
+        self.DeleteIlinks()
         self.DeleteInterfaces()
         self.DeleteNodes()
         self.DeletePersons()
         self.DeleteNodeGroups()
+        self.DeleteTagTypes()
         self.DeleteAddresses()
         self.DeleteAddressTypes()
         self.DeleteSites()
@@ -769,15 +778,19 @@ class Test:
 
         self.key_ids = []
 
-    # this assumes the default node tag types in db-config are visible
     def AddNodeGroups(self, n = 10):
         """
         Add a number of random node groups.
         """
 
         for i in range(n):
+            # locate tag type
+            tag_type_id = self.nodegroup_type_ids[i]
+            tagname=self.api.GetTagTypes([tag_type_id])[0]['tagname']
+            
             # Add node group
-            (groupname, tagname, tagvalue) = random_nodegroup()
+            groupname = random_nodegroup() ['groupname']
+            tagvalue = 'yes'
             nodegroup_id = self.api.AddNodeGroup(groupname, tagname, tagvalue)
 
             # Should return a unique nodegroup_id
@@ -787,8 +800,9 @@ class Test:
             if self.check:
                 # Check node group
                 nodegroup = self.api.GetNodeGroups([nodegroup_id])[0]
-                for field in nodegroup_fields:
-                    assert nodegroup[field] == nodegroup_fields[field]
+                assert nodegroup['groupname'] == groupname
+                assert nodegroup['tagname'] == tagname
+                assert nodegroup['tagvalue'] == tagvalue
 
             if self.verbose:
                 print "Added node group", nodegroup_id
@@ -800,10 +814,9 @@ class Test:
 
         for nodegroup_id in self.nodegroup_ids:
             # Update nodegroup
-            (groupname, tagname, tagvalue) = random_nodegroup()
+            groupname = random_nodegroup()['groupname']
             # cannot change tagname
-            nodegroup_fields = {'groupname':groupname,
-                                'tagvalue':tagvalue}
+            nodegroup_fields = { 'groupname':groupname }
             self.api.UpdateNodeGroup(nodegroup_id, nodegroup_fields)
 
             if self.check:
@@ -856,11 +869,10 @@ class Test:
                 self.node_ids.append(node_id)
 
                 # Add to a random set of node groups
-#                nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
-                nodegroup_ids = random.sample(self.nodegroup_ids, len(self.nodegroup_ids))
+                nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
                 for nodegroup_id in nodegroup_ids:
-                    tagvalue = self.api.GetNodeGroups([nodegroup_id])[0]['tagvalue']
-                    self.api.AddNodeTag( node_id, nodegroups_tagname, tagvalue )
+                    tagname = self.api.GetNodeGroups([nodegroup_id])[0]['tagname']
+                    self.api.AddNodeTag( node_id, tagname, 'yes' )
 
                 if self.check:
                     # Check node
@@ -889,14 +901,24 @@ class Test:
 
             # Add to a random set of node groups
             nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
-            for nodegroup_id in nodegroup_ids:
-                tagvalue = self.api.GetNodeGroups([nodegroup_id])[0]['tagvalue']
-                # with low lvl API, the tag is expected to already exist, so we need to *update* it
-                print 'DBG node_id',node_id,'nodegroups_tagname',nodegroups_tagname
-                node_tag = self.api.GetNodeTags( {'node_id':node_id, 'tagname':nodegroups_tagname } )[0]
-                self.api.UpdateNodeTag(node_tag['node_tag_id'],tagvalue)
-                print 'DBG node_tag_id',node_tag['node_tag_id']
-
+            for nodegroup_id in (set(nodegroup_ids) - set(node['nodegroup_ids'])):
+                nodegroup = self.api.GetNodeGroups([nodegroup_id])[0]
+                tagname = nodegroup['tagname']
+                node_tags = self.api.GetNodeTags({'node_id':node_id,'tagname':tagname})
+                if not node_tags:
+                    self.api.AddNodeTag(node_id,tagname,'yes')
+                else:
+                    node_tag=node_tags[0]
+                    self.api.UpdateNodeTag(node_tag['node_tag_id'],'yes')
+            for nodegroup_id in (set(node['nodegroup_ids']) - set(nodegroup_ids)):
+                nodegroup = self.api.GetNodeGroups([nodegroup_id])[0]
+                tagname = nodegroup['tagname']
+                node_tags = self.api.GetNodeTags({'node_id':node_id,'tagname':tagname})
+                if not node_tags:
+                    self.api.AddNodeTag(node_id,tagname,'no')
+                else:
+                    node_tag=node_tags[0]
+                    self.api.UpdateNodeTag(node_tag['node_tag_id'],'no')
 
             if self.check:
                 # Check node
@@ -907,7 +929,6 @@ class Test:
 
             if self.verbose:
                 print "Updated node", node_id
-                print "Added node", node_id, "to node groups", nodegroup_ids
 
     def DeleteNodes(self):
         """
@@ -917,8 +938,8 @@ class Test:
         for node_id in self.node_ids:
             # Remove from node groups
             node = self.api.GetNodes([node_id])[0]
-            node_tag = GetNodeTags ( {'node_id': node_id, 'tagname': nodegroups_tagname } )[0]
-            self.api.UpdateNodeTag(node_tag['node_tag_id'],'')
+            for node_tag in GetNodeTags ( {'node_id': node_id} ):
+                self.api.UpdateNodeTag(node_tag['node_tag_id'],'')
 
             if self.check:
                 node = self.api.GetNodes([node_id])[0]
@@ -955,7 +976,7 @@ class Test:
                 method = random.sample(network_methods, 1)[0]
                 type = random.sample(network_types, 1)[0]
 
-                # Add node network
+                # Add interface
                 interface_fields = random_interface(method, type)
                 interface_id = self.api.AddInterface(node_id, interface_fields)
 
@@ -964,13 +985,13 @@ class Test:
                 self.interface_ids.append(interface_id)
 
                 if self.check:
-                    # Check node network
+                    # Check interface
                     interface = self.api.GetInterfaces([interface_id])[0]
                     for field in interface_fields:
                         assert interface[field] == interface_fields[field]
 
                 if self.verbose:
-                    print "Added node network", interface_id, "to node", node_id
+                    print "Added interface", interface_id, "to node", node_id
 
     def UpdateInterfaces(self):
         """
@@ -1000,7 +1021,7 @@ class Test:
                     assert interface[field] == interface_fields[field]
 
             if self.verbose:
-                print "Updated node network", interface_id
+                print "Updated interface", interface_id
 
     def DeleteInterfaces(self):
         """
@@ -1014,12 +1035,52 @@ class Test:
                 assert not self.api.GetInterfaces([interface_id])
 
             if self.verbose:
-                print "Deleted node network", interface_id
+                print "Deleted interface", interface_id
 
         if self.check:
             assert not self.api.GetInterfaces(self.interface_ids)
 
         self.interface_ids = []
+        
+    def AddIlinks (self, n):
+        """
+        Add random links between interfaces.
+        """
+
+        for i in range (n):
+            src = random.sample(self.interface_ids,1)
+            dst = random.sample(self.interface_ids,1)
+            ilink_id = self.api.AddIlink (src,dst,
+                                          self.ilink_type_ids[i],
+                                          random_ilink())
+
+            assert ilink_id not in self.ilink_ids
+            self.ilink_ids.append(ilink_id)
+
+            if self.verbose:
+                print 'ilink',ilink_id,'attached interface',src,'to',dst
+
+            if self.check:
+                retrieve=GetIlinks({'src_interface_id':src,'dst_interface_id':dst,
+                                    'tag_type_id':self.ilink_type_ids[i]})
+                assert ilink_id=retrieve
+
+
+    def DeleteIlinks (self):
+        for ilink_id in self.ilink_ids:
+            self.api.DeleteIlink(ilink_id)
+
+            if self.check:
+                assert not self.api.GetIlinks({'ilink_id':ilink_id})
+
+            if self.verbose:
+                print 'Deleted Ilink',ilink_id
+
+        if self.check:
+            assert not self.api.GetIlinks(self.ilink_ids)
+
+        self.ilink_ids = []
+
 
     def AddPCUs(self, per_site = 1):
         """
@@ -1199,9 +1260,10 @@ class Test:
 
         self.conf_file_ids = []
 
-    def AddSliceAttributeTypes(self, n = 10):
+    def AddTagTypes(self,n_sa,n_ng,n_il):
         """
-        Add a number of random slice attribute types.
+        Add as many tag types as there are nodegroups, 
+        will use tagvalue=yes for each nodegroup
         """
 
         roles = self.api.GetRoles()
@@ -1209,24 +1271,31 @@ class Test:
             raise Exception, "No roles"
         role_ids = [role['role_id'] for role in roles]
 
-        for i in range(n):
-            attribute_type_fields = random_attribute_type(role_ids)
-            attribute_type_id = self.api.AddSliceAttributeType(attribute_type_fields)
+        for i in range (n_sa + n_ng + n_il):
+            tag_type_fields = random_tag_type (role_ids)
+            tag_type_id = self.api.AddTagType (tag_type_fields)
 
-            # Should return a unique attribute_type_id
-            assert attribute_type_id not in self.attribute_type_ids
-            self.attribute_type_ids.append(attribute_type_id)
+            assert tag_type_id not in \
+                self.slice_type_ids + \
+                self.nodegroup_type_ids + \
+                self.ilink_type_ids
+            
+            if i < n_sa:
+                self.slice_type_ids.append(tag_type_id)
+            elif i < n_sa+n_ng :
+                self.nodegroup_type_ids.append(tag_type_id)
+            else:
+                self.ilink_type_ids.append(tag_type_id)
 
             if self.check:
-                # Check slice attribute type
-                attribute_type = self.api.GetSliceAttributeTypes([attribute_type_id])[0]
-                for field in attribute_type_fields:
-                    assert attribute_type[field] == attribute_type_fields[field]
-
+                tag_type = self.api.GetTagTypes([tag_type_id])[0]
+                for field in tag_type_fields:
+                    assert tag_type[field] == tag_type_fields[field]
             if self.verbose:
-                print "Added slice attribute type", attribute_type_id
+                print "Updated slice attribute type", tag_type_id, \
+                    " tagname=", tag_type_fields['tagname']
 
-    def UpdateSliceAttributeTypes(self):
+    def UpdateTagTypes(self):
         """
         Make random changes to any slice attribute types we may have added.
         """
@@ -1236,38 +1305,38 @@ class Test:
             raise Exception, "No roles"
         role_ids = [role['role_id'] for role in roles]
 
-        for attribute_type_id in self.attribute_type_ids:
+        for tag_type_id in self.slice_type_ids + self.nodegroup_type_ids + self.ilink_type_ids:
             # Update slice attribute type
-            attribute_type_fields = random_attribute_type(role_ids)
-            self.api.UpdateSliceAttributeType(attribute_type_id, attribute_type_fields)
+            tag_type_fields = random_tag_type(role_ids)
+            self.api.UpdateTagType(tag_type_id, tag_type_fields)
 
             if self.check:
                 # Check slice attribute type
-                attribute_type = self.api.GetSliceAttributeTypes([attribute_type_id])[0]
-                for field in attribute_type_fields:
-                    assert attribute_type[field] == attribute_type_fields[field]
-
+                tag_type = self.api.GetTagTypes([tag_type_id])[0]
+                for field in tag_type_fields:
+                    assert tag_type[field] == tag_type_fields[field]
             if self.verbose:
-                print "Updated slice attribute type", attribute_type_id
+                print "Updated slice attribute type", tag_type_id
 
-    def DeleteSliceAttributeTypes(self):
+    def DeleteTagTypes(self):
         """
         Delete any random slice attribute types we may have added.
         """
 
-        for attribute_type_id in self.attribute_type_ids:
-            self.api.DeleteSliceAttributeType(attribute_type_id)
+        for tag_type_id in self.slice_type_ids + self.nodegroup_type_ids + self.ilink_type_ids:
+            self.api.DeleteTagType(tag_type_id)
 
             if self.check:
-                assert not self.api.GetSliceAttributeTypes([attribute_type_id])
+                assert not self.api.GetTagTypes([tag_type_id])
 
             if self.verbose:
-                print "Deleted slice attribute type", attribute_type_id
+                print "Deleted slice attribute type", tag_type_id
 
         if self.check:
-            assert not self.api.GetSliceAttributeTypes(self.attribute_type_ids)
+            assert not self.api.GetTagTypes(self.slice_type_ids+self.nodegroup_type_ids+self.ilink_type_ids)
 
-        self.attribute_type_ids = []
+        self.slice_type_ids = []
+        self.nodegroup_type_ids = []
 
     def AddSlices(self, per_site = 10):
         """
@@ -1374,7 +1443,7 @@ class Test:
         Add a number of random slices per site.
         """
 
-        if not self.attribute_type_ids:
+        if not self.slice_type_ids:
             return
 
         for slice_id in self.slice_ids:
@@ -1382,7 +1451,7 @@ class Test:
 
             for i in range(per_slice):
                 # Set a random slice/sliver attribute
-                for attribute_type_id in random.sample(self.attribute_type_ids, 1):
+                for tag_type_id in random.sample(self.slice_type_ids, 1):
                     value = randstr(16, letters + '_' + digits)
                     # Make it a sliver attribute with 50% probability
                     if slice['node_ids']:
@@ -1392,9 +1461,9 @@ class Test:
 
                     # Add slice attribute
                     if node_id is None:
-                        slice_attribute_id = self.api.AddSliceAttribute(slice_id, attribute_type_id, value)
+                        slice_attribute_id = self.api.AddSliceAttribute(slice_id, tag_type_id, value)
                     else:
-                        slice_attribute_id = self.api.AddSliceAttribute(slice_id, attribute_type_id, value, node_id)
+                        slice_attribute_id = self.api.AddSliceAttribute(slice_id, tag_type_id, value, node_id)
 
                     # Should return a unique slice_attribute_id
                     assert slice_attribute_id not in self.slice_attribute_ids
@@ -1403,11 +1472,11 @@ class Test:
                     if self.check:
                         # Check slice attribute
                         slice_attribute = self.api.GetSliceAttributes([slice_attribute_id])[0]
-                        for field in 'attribute_type_id', 'slice_id', 'node_id', 'slice_attribute_id', 'value':
+                        for field in 'tag_type_id', 'slice_id', 'node_id', 'slice_attribute_id', 'value':
                             assert slice_attribute[field] == locals()[field]
 
                     if self.verbose:
-                        print "Added slice attribute", slice_attribute_id, "of type", attribute_type_id,
+                        print "Added slice attribute", slice_attribute_id, "of type", tag_type_id,
                         if node_id is not None:
                             print "to node", node_id,
                         print
@@ -1454,13 +1523,16 @@ def main():
                       help = "Check most actions (default: %default)")
     parser.add_option("-q", "--quiet", action = "store_true", default = False, 
                       help = "Be quiet (default: %default)")
+    parser.add_option("-p","--preserve", action="store_true", default =False,
+                      help = "Do not delete created objects")
     parser.add_option("-t", "--tiny", action = "store_true", default = False, 
                       help = "Run a tiny test (default: %default)")
     (options, args) = parser.parse_args()
 
     test = Test(api = Shell(),
                 check = options.check,
-                verbose = not options.quiet)
+                verbose = not options.quiet,
+                preserve = options.preserve)
 
     if options.tiny:
         params = Test.tiny

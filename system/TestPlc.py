@@ -688,10 +688,10 @@ class TestPlc:
         location = "/usr/share/plc_api/plcsh-stress-test.py"
         remote="/vservers/%s/%s"%(self.vservername,location)
         self.test_ssh.copy_abs("plcsh-stress-test.py",remote)
+        command = location
+        command += " -- --check"
         if self.options.small_test:
-            command=location + " -- --tiny"
-        else:
-            command=location
+            command +=  " --tiny"
         return ( self.run_in_guest(command) == 0)
 
     def gather_logs (self):
