@@ -84,10 +84,10 @@ class TestNode:
                         nnid=nn['interface_id']
                         # locate or create node network attribute type
                         try:
-                            nnst = server.GetInterfaceSettingTypes(userauth,{'name':attribute})[0]
+                            nnst = server.GetTagTypes(userauth,{'name':attribute})[0]
                         except:
-                            nnst = server.AddInterfaceSettingType(rootauth,{'category':'test',
-                                                                              'name':attribute})
+                            nnst = server.AddTagType(rootauth,{'category':'test',
+                                                               'tagname':attribute})
                         # attach value
                         server.AddInterfaceSetting(userauth,nnid,attribute,value)
 

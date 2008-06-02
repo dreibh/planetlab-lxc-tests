@@ -441,7 +441,7 @@ class TestPlc:
         for (nodegroupname,group_nodes) in groups_dict.iteritems():
             print 'nodegroups:','dealing with nodegroup',nodegroupname,'on nodes',group_nodes
             # first, check if the nodetagtype is here
-            tag_types = self.apiserver.GetNodeTagTypes(auth,{'tagname':nodegroupname})
+            tag_types = self.apiserver.GetTagTypes(auth,{'tagname':nodegroupname})
             if tag_types:
                 tag_type_id = tag_types[0]['node_tag_type_id']
             else:
