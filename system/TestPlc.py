@@ -456,15 +456,18 @@ class TestPlc:
                                                              'description': 'for nodegroup %s'%nodegroupname,
                                                              'category':'test',
                                                              'min_role_id':10})
+                print 'located tag (type)',nodegroupname,'as',tag_type_id
                 # create nodegroup
                 nodegroups = self.apiserver.GetNodeGroups (auth, {'groupname':nodegroupname})
                 if not nodegroups:
                     self.apiserver.AddNodeGroup(auth, nodegroupname, tag_type_id, 'yes')
+                    print 'created nodegroup',nodegroupname,'from tagname',nodegroupname,'and value','yes'
                 # set node tag on all nodes, value='yes'
                 for nodename in group_nodes:
                     try:
                         self.apiserver.AddNodeTag(auth, nodename, nodegroupname, "yes")
                     except:
+                        traceback.print_exc()
                         print 'node',nodename,'seems to already have tag',nodegroupname
                     # check anyway
                     try:
