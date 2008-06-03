@@ -740,9 +740,11 @@ class TestPlc:
         return True
 
     def gather_var_logs (self):
+        utils.system("mkdir -p logs/myplc.var-log.%s"%self.name())
         to_plc = self.actual_command_in_guest("tar -C /var/log/ -cf - .")        
         command = to_plc + "| tar -C logs/myplc.var-log.%s -xf -"%self.name()
-        utils.system("mkdir -p logs/myplc.var-log.%s"%self.name())
+        utils.system(command)
+        command = "chmod a+r,a+x logs/myplc.var-log.%s/httpd"%self.name()
         utils.system(command)
 
     def gather_nodes_var_logs (self):
