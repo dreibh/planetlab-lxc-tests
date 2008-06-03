@@ -1306,8 +1306,7 @@ class Test:
                 for field in tag_type_fields:
                     assert tag_type[field] == tag_type_fields[field]
             if self.verbose:
-                print "Updated slice attribute type", tag_type_id, \
-                    " tagname=", tag_type_fields['tagname']
+                print "Updated slice attribute type", tag_type_id
 
     def UpdateTagTypes(self):
         """
