@@ -231,16 +231,16 @@ class Test:
         'sites': 10,
         'address_types': 2,
         'addresses_per_site': 2,
-        'persons_per_site': 10,
+        'persons_per_site': 4,
         'keys_per_person': 2,
         'slice_attributes': 10,
-        'nodegroups': 20,
+        'nodegroups': 10,
         'nodes_per_site': 2,
         'interfaces_per_node': 1,
-        'ilinks': 10,
+        'ilinks': 20,
         'pcus_per_site': 1,
         'conf_files': 10,
-        'slices_per_site': 10,
+        'slices_per_site': 4,
         'attributes_per_slice': 2,
         }
 
@@ -323,6 +323,7 @@ class Test:
         self.UpdateNodeGroups()
         self.UpdateNodes()
         self.UpdateInterfaces()
+        self.UpdateIlinks()
         self.UpdatePCUs()
         self.UpdateConfFiles()
         self.UpdateSlices()
@@ -1048,8 +1049,8 @@ class Test:
         """
 
         for i in range (n):
-            src = random.sample(self.interface_ids,1)
-            dst = random.sample(self.interface_ids,1)
+            src = random.sample(self.interface_ids,1)[0]
+            dst = random.sample(self.interface_ids,1)[0]
             ilink_id = self.api.AddIlink (src,dst,
                                           self.ilink_type_ids[i],
                                           random_ilink())
@@ -1058,13 +1059,26 @@ class Test:
             self.ilink_ids.append(ilink_id)
 
             if self.verbose:
-                print 'ilink',ilink_id,'attached interface',src,'to',dst
+                print 'Added Ilink',ilink_id,' - attached interface',src,'to',dst
 
             if self.check:
                 retrieve=GetIlinks({'src_interface_id':src,'dst_interface_id':dst,
                                     'tag_type_id':self.ilink_type_ids[i]})
-                assert ilink_id=retrieve
+                assert ilink_id==retrieve[0]['ilink_id']
 
+
+    def UpdateIlinks (self):
+
+        for ilink_id in self.ilink_ids:
+            new_value=random_ilink()
+            self.api.UpdateIlink(ilink_id,new_value)
+
+            if self.check:
+                ilink=self.api.GetIlinks([ilink_id])[0]
+                assert ilink['value'] == new_value
+
+            if self.verbose:
+                print 'Updated Ilink',ilink_id
 
     def DeleteIlinks (self):
         for ilink_id in self.ilink_ids:
