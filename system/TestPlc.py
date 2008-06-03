@@ -72,7 +72,7 @@ class TestPlc:
                      'check_initscripts', 'check_tcp', 'plcsh_stress_test', SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
-                    'clean_initscripts', 'clean_all_sites',
+                    'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
                     'clean_sites', 'clean_nodes', 
                     'clean_slices', 'clean_keys', SEP,
                     'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
@@ -420,9 +420,13 @@ class TestPlc:
                     test_node.create_node ()
         return True
 
-    # create nodegroups if needed, and populate
-    # no need for a clean_nodegroups if we are careful enough
     def nodegroups (self):
+        return self.do_nodegroups("add")
+    def clean_nodegroups (self):
+        return self.do_nodegroups("delete")
+
+    # create nodegroups if needed, and populate
+    def do_nodegroups (self, action="add"):
         # 1st pass to scan contents
         groups_dict = {}
         for site_spec in self.plc_spec['sites']:
@@ -438,43 +442,50 @@ class TestPlc:
                             groups_dict[nodegroupname]=[]
                         groups_dict[nodegroupname].append(test_node.name())
         auth=self.auth_root()
+        overall = True
         for (nodegroupname,group_nodes) in groups_dict.iteritems():
-            print 'nodegroups:','dealing with nodegroup',nodegroupname,'on nodes',group_nodes
-            # first, check if the nodetagtype is here
-            tag_types = self.apiserver.GetTagTypes(auth,{'tagname':nodegroupname})
-            if tag_types:
-                tag_type_id = tag_types[0]['node_tag_type_id']
-            else:
-                tag_type_id = self.apiserver.AddNodeTagType(auth,
+            if action == "add":
+                print 'nodegroups:','dealing with nodegroup',nodegroupname,'on nodes',group_nodes
+                # first, check if the nodetagtype is here
+                tag_types = self.apiserver.GetTagTypes(auth,{'tagname':nodegroupname})
+                if tag_types:
+                    tag_type_id = tag_types[0]['tag_type_id']
+                else:
+                    tag_type_id = self.apiserver.AddTagType(auth,
                                                             {'tagname':nodegroupname,
                                                              'description': 'for nodegroup %s'%nodegroupname,
                                                              'category':'test',
                                                              'min_role_id':10})
-            # create nodegroup
-            nodegroups = self.apiserver.GetNodeGroups (auth, {'groupname':nodegroupname})
-            if not nodegroups:
-                self.apiserver.AddNodeGroup(auth, nodegroupname, tag_type_id, 'yes')
-            # set node tag on all nodes, value='yes'
-            overall = True
-            for nodename in group_nodes:
+                # create nodegroup
+                nodegroups = self.apiserver.GetNodeGroups (auth, {'groupname':nodegroupname})
+                if not nodegroups:
+                    self.apiserver.AddNodeGroup(auth, nodegroupname, tag_type_id, 'yes')
+                # set node tag on all nodes, value='yes'
+                for nodename in group_nodes:
+                    try:
+                        self.apiserver.AddNodeTag(auth, nodename, nodegroupname, "yes")
+                    except:
+                        print 'node',nodename,'seems to already have tag',nodegroupname
+                    # check anyway
+                    try:
+                        expect_yes = self.apiserver.GetNodeTags(auth,
+                                                                {'hostname':nodename,
+                                                                 'tagname':nodegroupname},
+                                                                ['tagvalue'])[0]['tagvalue']
+                        if expect_yes != "yes":
+                            print 'Mismatch node tag on node',nodename,'got',expect_yes
+                            overall=False
+                    except:
+                        if not self.options.dry_run:
+                            print 'Cannot find tag',nodegroupname,'on node',nodename
+                            overall = False
+            else:
                 try:
-                    self.apiserver.AddNodeTag(auth, nodename, nodegroupname, "yes")
+                    print 'cleaning nodegroup',nodegroupname
+                    self.apiserver.DeleteNodeGroup(auth,nodegroupname)
                 except:
-                    print 'node',nodename,'seems to already have tag',nodegroupname
-                # check anyway
-                try:
-                    expect_yes = self.apiserver.GetNodeTags(
-                        auth,
-                        {'hostname':nodename,
-                         'tagname':nodegroupname},
-                        ['tagvalue'])[0]['tagvalue']
-                    if expect_yes != "yes":
-                        print 'Mismatch node tag on node',nodename,'got',expect_yes
-                        overall=False
-                except:
-                    if not self.options.dry_run:
-                        print 'Cannot find tag',nodegroupname,'on node',nodename
-                        overall = False
+                    traceback.print_exc()
+                    overall=False
         return overall
 
     def all_hostnames (self) :
