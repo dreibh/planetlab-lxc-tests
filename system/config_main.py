@@ -230,7 +230,7 @@ def plc (options) :
         'PLC_ROOT_PASSWORD' : 'test++',
         'PLC_NAME' : 'TestLab',
         'PLC_MAIL_ENABLED':'true',
-        'PLC_MAIL_SUPPORT_ADDRESS' : 'mohamed-amine.chaoui@sophia.inria.fr',
+        'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
         'PLC_DB_HOST' : 'test.one-lab.org',
         'PLC_API_HOST' : 'test.one-lab.org',
         'PLC_WWW_HOST' : 'test.one-lab.org',
