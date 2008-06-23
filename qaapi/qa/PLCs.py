@@ -57,11 +57,17 @@ class PLC(dict, Remote):
 	self.config.api = xmlrpclib.Server(api_server, allow_none = 1)
         self.config.api_type = 'xmlrpc'	
 
+    def update_node_images(self):
+	pass
+
     def scp_to_webroot(self, localfiles, recursive = False):
 	if self.config.verbose:
 	    utils.header("Copying %s to %s webroot" % (localfiles, self['name']), logfile = self.config.logfile)
 	self.scp_to("%(localfiles)s" % locals(), "/var/www/html/")
-    
+	url = 'http://%s/%s' % (self['ip'], localfiles)	
+	
+	return url 
+
 class PLCs(Table):
 
     def __init__(self, config, plcs):
