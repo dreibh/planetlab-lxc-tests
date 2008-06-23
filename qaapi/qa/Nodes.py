@@ -124,7 +124,23 @@ class Node(dict, VRemote):
 		time.sleep(30)   			
 
 	return ready  
-	 
+
+    def download_testscripts(self):
+	node_tests_dir = self['tests_dir']
+	(archive_filename, archive_path) = self.config.archive_node_tests()
+	self.scp_to(archive_path, node_tests_dir)   
+	
+	# Extract tests archive
+        tarx_cmd = "cd %(tests_dir)s && tar -xzm -f %(archive_filename)s" % locals()
+        print >> self.logfile, tarx_cmd
+        self.popen(tarx_cmd)	
+
+	# Make tests executable
+        # XX Should find a better way to do this
+        chmod_cmd = "cd %s/node && chmod -R 755 * " % (tests_dir )
+        print >> self.logfile, chmod_cmd
+        self.popen(chmod_cmd)
+ 
 class Nodes(Table):
 
     def __init__(self, config, nodes):
