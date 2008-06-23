@@ -21,12 +21,18 @@ class add_test_data(Test):
 	this_plc = lambda object: 'plcs' not in object or \
 				  'plcs' in object and plc['name'] in object['plcs'] or \
 				  object['plcs'] == None   
-     
-	sitelist = filter(this_plc, self.config.sites.values())  	
-	nodelist = filter(this_plc, self.config.nodes.values())
-	slicelist = filter(this_plc, self.config.slices.values())
-	personlist = filter(this_plc, self.config.persons.values()) 
-	nodegrouplist = filter(this_plc, self.config.nodegroups.values())
+     	
+	sitelist, nodelist, slicelist, personlist, nodegrouplist = [], [], [], [], []
+	if isinstance(self.config.sites.values, dict):
+	    sitelist = filter(this_plc, self.config.sites.values())  	
+	if isinstance(self.config.nodes, dict):
+	    nodelist = filter(this_plc, self.config.nodes.values())
+	if isinstance(self.config.slices, dict):
+	    slicelist = filter(this_plc, self.config.slices.values())
+	if isinstance(self.config.persons, dict):
+	    personlist = filter(this_plc, self.config.persons.values()) 
+	if isinstance(self.config.nodegroups, dict): 
+	    nodegrouplist = filter(this_plc, self.config.nodegroups.values())
 	
 	# Add Test site
 	for site in sitelist:
