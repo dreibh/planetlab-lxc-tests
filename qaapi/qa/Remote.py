@@ -24,7 +24,7 @@ class Remote:
 
         # Execute vserver exec if necessary
         if 'vserver' in self and self['vserver']:
-            command = " vserver %s exec %s " % (self['vserver'], command)
+            command = "/usr/sbin/vserver %s exec %s " % (self['vserver'], command)
 	
 	return command
 
