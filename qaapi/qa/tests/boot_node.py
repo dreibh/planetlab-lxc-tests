@@ -78,6 +78,8 @@ class boot_node(Test):
         
 	# Get this nodes configuration 
 	node = self.config.get_node(hostname)
+	node.rotate_logfile()
+
 	# Which plc does this node talk to 
 	plc = self.config.get_plc(plc_name)
         api = plc.config.api
@@ -108,8 +110,8 @@ class boot_node(Test):
 	# try reinstalling the node if it is in debug state
 	if node['boot_state'] in ['dbg']:
 	    if self.config.verbose:
-		utils.header("%(hostname)s is in debug state. Attempting a re-install" % locals(), logfile = self.config.logfiile)
-	    api.UpdateNode(auth, node['node_id'], {'boot_state': 'rins'}) 
+		utils.header("%(hostname)s is in debug state. Attempting a re-install" % locals(), logfile = self.config.logfile)
+	    api.UpdateNode(auth, node['hostname'], {'boot_state': 'rins'}) 
 	
 	# Create boot image
 	if self.config.verbose:
@@ -131,7 +133,7 @@ class boot_node(Test):
 	img_check_cmd =  "ls -ld %(diskimage)s" % locals()
 	(status, output) = node.host_commands(img_check_cmd, False)
 	if status != 0 or node['boot_state'] in ['rins', 'inst']:
-	    qemu_img_cmd = "qemu-img create -f qcow2 %(diskimage)s %(disk_size)s" % locals()
+	    qemu_img_cmd = "/usr/bin/qemu-img create -f qcow2 %(diskimage)s %(disk_size)s" % locals()
 	    node.host_commands(qemu_img_cmd)
 
 	
@@ -150,7 +152,7 @@ class boot_node(Test):
         ramsize=1024
 
         # always use the 64 bit version of qemu, as this will work on both 32 & 64 bit host kernels
-        bootcmd = "qemu-system-x86_64" 
+        bootcmd = "/usr/bin/qemu-system-x86_64" 
         # tell qemu to store its pid ina  file
         bootcmd = bootcmd + " -pidfile %(pidfile)s " % locals()
         # boot with ramsize memory
@@ -181,8 +183,6 @@ class boot_node(Test):
 	    (status, output) = node.host_commands(kill_cmd)
 	
 	time.sleep(2)
-	# Rotate node's logfile
-	node.rotate_logfile()
 	
 	# launch qemu
 	(self.stdin, self.stdout, self.stderr) = node.host_popen3(bootcmd)
