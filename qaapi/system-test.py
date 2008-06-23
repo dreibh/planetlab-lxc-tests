@@ -6,9 +6,12 @@ import traceback
 from optparse import OptionParser
 from random import Random
 from time import localtime
+from qa.sendmail import sendmail
 from qa.utils import commands
+from qa.logger import Logfile
 from qa import utils 
 from qa.Config import Config 
+from qa.Step import Step
 from qa.tests.vserver_create import vserver_create
 from qa.tests.vserver_delete import vserver_delete
 from qa.tests.plc_configure import plc_configure
@@ -20,50 +23,26 @@ from qa.tests.sync_person_key import sync_person_key
 from qa.tests.boot_node import boot_node
 from qa.tests.node_run_tests import node_run_tests
 
-def run_system_tests(config, vserver_name, plc_name):
-    # configure the plc in this vserver
-    config.plcs[plc_name]['vserver'] = vserver_name
-    config.plcs[plc_name]['host'] = config.hostname
-    config.plcs[plc_name]['ip'] = config.ip
-    config.plcs[plc_name].update_ip()
-	
-    plc_configure(config)(plc_name)
-    options = {}
-    for service in ['API', 'WWW', 'BOOT',' DB']:
-        options['PLC_'+service+'_HOST'] = config.plcs[plc_name]['ip']
-        options['PLC_'+service+'_IP'] = config.plcs[plc_name]['ip']
-    plc_configure(config)(plc_name, options)
-    plc_start(config)(plc_name)
-
-    # Add test site, node, person and slice data
-    # Adds slice to node and person to slice 
-    add_test_data(config)(plc_name)
-    plc_start(config)(plc_name)
-    person_email = config.persons.values()[0]['email']
-    sync_person_key(config)(person_email)
-
-    # Api unit test
-    try: api_unit_test(config)(plc_name)
-    except: utils.header("Error: %s" % traceback.format_exc(), logfile = config.logfile)
-	 
-    # Boot test node and confirm boot state
-    nodelist = ['vm1.paris.cs.princeton.edu', 'vm41.test.org']
-    slice = config.slices['ts_slice1']	
-    for node in nodelist:
-        if not node in config.nodes.keys():
-            continue
-        node = config.nodes[node]
-        node['vserver'] = config.plcs[plc_name]['vserver']
-	try:
-            boot_node(config)(plc_name, node['hostname'])
-	    if node.is_ready():
-	    	node_run_tests(config)(node['hostname'], plc_name)	
-	except:
-	    utils.header("Error: %s" % traceback.format_exc(), logfile = config.logfile)  	     	    
 def create_vserver(vserver_name, vserver_home, mailto):
     # create vserver for this system test if it doesnt already exist
     if not os.path.isdir('%(vserver_home)s/%(vserver_name)s' % locals()):
         vserver_create(config)(vserver_name, distro, mailto)
+
+def stop_vservers(prefix = 'plc', exempt = []):
+   	
+    # stop all running vservers
+    vserver_stat = "vserver-stat | grep %(prefix)s | awk '{print$8}'" % locals()
+    (stdin, stdout, stderr) = os.popen3(vserver_stat)
+    vservers = [line.strip() for line in stdout.readlines()]
+    vservers = filter(lambda x: x not in exempt, vservers)  		
+    for vserver in vservers:
+	try: 
+	    utils.header("Stopping %(vserver)s " % locals())
+	    stop_cmd = "vserver %(vserver)s stop" % locals()
+	    (status, output) = commands("vserver %(vserver)s stop" % locals())		
+	except: 
+	    print "Failed to stop %(vserver)s" % locals()
+	    utils.header("%s" % traceback.format_exc())
 
 def cleanup_vservers(max_vservers, vserver_home, vserver_basename):
     # only keep the newest MAX_VSERVERS 
@@ -119,20 +98,102 @@ logfile_dir = "/var/log/qaapi/%(vserver_name)s" % locals()
 config = Config(logdir = logfile_dir)
 config.load("qa/qa_config.py")	
 
-if options.vserver:
-    # run tests in vserver specified by user
-    create_vserver(vserver_name, VSERVER_HOME, mailto)	
-    run_system_tests(config, vserver_name, plc_name)
-else:
-    for distro in distros:
-        try: 	
-            vserver_name = "%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals()
-            create_vserver(vserver_name, VSERVER_HOME, mailto)	
-            run_system_tests(config, vserver_name, plc_name)
-        except:
-            utils.header("ERROR %(vserver_name)s tests failed" % locals(), logfile = config.logfile)	
-            utils.header("%s" % traceback.format_exc(), logfile = config.logfile)
+vserver_names = []
+for distro in distros:
+	vserver_names.append("%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals())
+	
+stop_vservers(exempt = vserver_names)
 
-# remove old vsevers
-cleanup_vservers(MAX_VSERVERS, VSERVER_HOME, VSERVER_BASENAME)
+for distro in distros:
+    try: 	
+	vserver_name = "%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals()
+        config.plcs[plc_name]['vserver'] = vserver_name
+	config.plcs[plc_name]['host'] = config.hostname
+	config.plcs[plc_name]['ip'] = config.ip
+	config.plcs[plc_name].update_ip()
+	person_email = config.persons.values()[0]['email']
+
+	# Set plc configuration options
+	config_options = {}
+	for service in ['API', 'WWW', 'BOOT',' DB']:
+	    config_options['PLC_'+service+'_HOST'] = config.plcs[plc_name]['ip']
+            config_options['PLC_'+service+'_IP'] = config.plcs[plc_name]['ip']	
+	config_options['PLC_ROOT_USER'] = 'root@localhost.localdomain'
+	config_options['PLC_ROOT_PASSWORD'] = 'root'
+	
+	# Set node configuration options
+	nodelist = ['vm1.paris.cs.princeton.edu']
+	node_tests = ['node_cpu_sched.py', 'pf2test.pl' ]
+	slice = config.slices['ts_slice1']
+	
+        steps = {}
+	steps[1] = Step("Create vserver %s" % vserver_name, create_vserver, 
+			(vserver_name, VSERVER_HOME, mailto), config.logfile.filename)
+	steps[2] = Step("Mount plc %s " % plc_name,  config.plcs[plc_name].commands, 
+			("/sbin/service plc mount",), config.logfile.filename)
+	steps[3] = Step("Configure plc %s" % plc_name, plc_configure(config), (plc_name, config_options,),
+			config.logfile.filename)
+	steps[4] = Step("Start plc %s " % plc_name, plc_start(config), (plc_name,),
+			config.logfile.filename)
+	steps[5] = Step("Add test data", add_test_data(config), (plc_name,), config.logfile.filename)
+	steps[6] = Step("Sync person public key", sync_person_key(config), (person_email,),
+			config.logfile.filename, False)
+	# XX fix logfile parameter
+	step_method = api_unit_test(config) 
+	steps[7] = Step("API unit test", step_method, (plc_name,), step_method.logfile.filename, False)
+
+	for node in nodelist:
+	    if not node in config.nodes.keys(): continue
+	    node = config.nodes[node] 	
+	    step_num = max(steps.keys()) + 1
+      	    steps[step_num] = Step("Boot node %s" % node['hostname'], boot_node(config),
+				   (plc_name, node['hostname']), node.logfile.filename)
+	    ready_step = Step("Check %s is ready" % node['hostname'], node.is_ready, (), node.logfile.filename)
+	    steps[step_num].next_steps.append(ready_step)
+
+	    download_scripts = Step("Download test scripts onto %s" % node['hostname'], node.download_testscripts,
+			       	    (), config.logfile.filename)
+	    steps[step_num].next_steps.append(download_scripts)
+
+ 		 
+	    # XX fix logfile parameter
+	    # XX node_run_tests should only run the test, download test on node before calling node_run_test
+	    for test in node_tests:
+		# Create a separate logfile for this script
+        	log_filename = "%s/%s-%s.log" % (config.logfile.dir, test, node['hostname'])
+		test_logfile = Logfile(log_filename)
+	        step_method = node_run_tests(config, test_logfile) 
+		test_step = Step("%s test on node %s" % (test, node['hostname']), 
+				 step_method, (node['hostname'], plc_name, test), 
+				 step_method.logfile.filename, False)
+	        steps[step_num].next_steps.append(test_step)  	
+    
+	# Now that all the steps are defined, run them
+	order = steps.keys()
+	order.sort()
+	results = {}
+	for num in order:
+	    steps[num].run()
+	    steps[num].notify_contacts()
+	    if steps[num].fatal and not steps[num].passed:
+		break	
+	
+	# Generate summary email
+	to = ["tmack@cs.princeton.edu"]
+	subject = "[QA Results] PLC - %(distro)s - %(DATE)s" % locals()
+	body = """
+	MyPLC %(distro)s results
+        Build: %(DATE)s \n\n""" % locals()
+	
+	utils.header("Sending summary email")
+	# add results to summary body
+	for num in order:
+	    step = steps[num]
+	    body += step.get_results()
+	 
+	sendmail(to, subject, body) 	
+ 
+    except:
+        utils.header("ERROR %(vserver_name)s tests failed" % locals(), logfile = config.logfile)	
+        utils.header("%s" % traceback.format_exc(), logfile = config.logfile)
 
