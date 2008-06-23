@@ -284,6 +284,11 @@ def random_message():
 
 class api_unit_test(Test):
 
+    def __init__(self, config = None, logfile = None):
+	if not config: config = Config() 
+	if not logfile: logfile = Logfile(config.logfile.dir + 'api-unittest.log')	
+	Test.__init__(self, config, logfile)
+
     def call(self,
 	     plc_name = None,
 	     boot_states = 2,
@@ -316,7 +321,7 @@ class api_unit_test(Test):
 	plc = self.config.get_plc(plc_name)
         self.api = plc.config.api
         self.auth = plc.config.auth
-        self.logfile = Logfile(self.config.logfile.dir + 'api-unittest.log')
+        #self.logfile = Logfile(self.config.logfile.dir + 'api-unittest.log')
 
 	# Filter out deprecated (Adm) and boot Methods
 	current_methods = lambda method: not method.startswith('Adm') and \
