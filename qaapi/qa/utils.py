@@ -43,7 +43,7 @@ def commands(command, fatal = True, verbose = False, logfile = Logfile('/var/log
     (status, output) = getstatusoutput(command)
     print >> logfile, "+ "+command
     print >> logfile, output.strip() 		
-    if fatal and status == 0 and status == 256 and output:
+    if fatal and status == 256 and output:
         raise Exception, "%(command)s Failed:\n%(output)s" % locals()
     return (status, output)	   		 
 
