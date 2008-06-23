@@ -135,21 +135,21 @@ class Config:
 	loadables = ['plcs', 'sites', 'nodes', 'nodegroups', 'slices', 'persons']
 	config = Config(logdir = self.logdir)
 	for element in confdata.keys():
-	    if element in ['plcs']:
+	    if element in ['plcs'] and confdata.has_key(element):
 	        setattr(self, element, PLCs(config, confdata[element]).dict('name'))
-	    elif element in ['nodes']:
+	    elif element in ['nodes'] and confdata.has_key(element):
 		setattr(self, element, Nodes(config, confdata[element]).dict('hostname'))
-	    elif element in ['nodegroups']:
-			setattr(self, element, Table(confdata[element]).dict('name'))	
-	    elif element in ['sites']:
+	    elif element in ['nodegroups'] and confdata.has_key(element):
+		setattr(self, element, Table(confdata[element]).dict('name'))	
+	    elif element in ['sites'] and confdata.has_key(element):
 		setattr(self, element, Sites(confdata[element]).dict('login_base'))
-	    elif element in ['slices']:
+	    elif element in ['slices'] and confdata.has_key(element):
 		setattr(self, element, Slices(confdata[element]).dict('name'))
-	    elif element in ['persons']:
+	    elif element in ['persons'] and confdata.has_key(element):
 		setattr(self, element, Persons(confdata[element]).dict('email'))
-	    elif element in ['node_tests']:
+	    elif element in ['node_tests'] and confdata.has_key(element):
 		setattr(self, element, TestScripts(confdata[element]).dict('name')) 
-	    elif element in ['slice_tests']:
+	    elif element in ['slice_tests'] and confdata.has_key(element):
 	 	setattr(self, element, TestScript(confdata[element]).dict('name'))
 
     def archive_scripts(self, prefix):
