@@ -32,12 +32,12 @@ sites = [
 	}
 	]
 
-nodegroups = [
-	{'plcs': ['TestPLC', 'ParisPLC'],
-	 'name': '41',	 
-	 'nodes': ['vm41.test.org'],
-	}
-	]
+#nodegroups = [
+#	{'plcs': ['TestPLC', 'ParisPLC'],
+#	 'name': '41',	 
+#	 'nodes': ['vm41.test.org'],
+#	}
+#	]
 	 
 nodes = [
 	{'plcs': ['TestPLC', 'ParisPLC'],   	
@@ -64,9 +64,10 @@ nodes = [
 	 'hostname': 'vm41.test.org',
 	 'host': 'localhost',
 	 'redir_ssh_port': '51122',
-	 'type': 'qemu/minhw',
+	 'type': 'vm',
+	 'model': 'qemu/minhw',
 	 'boot_state': 'rins',
-	 'nodegroups': ['41'],	
+	 #'nodegroups': ['41'],	
 	 'nodenetworks': [{'type': 'ipv4',
 			   'method': 'static',
 	  	   	   'ip': '10.0.2.17',
