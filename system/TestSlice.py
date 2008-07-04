@@ -75,7 +75,7 @@ class TestSlice:
                     found=True
         return (found,privatekey)
 
-    def check_slice(self,options,minutes=6,gracetime=3,period=15):
+    def check_slice(self,options,minutes=10,gracetime=4,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
         # locate a key

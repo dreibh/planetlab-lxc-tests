@@ -583,7 +583,7 @@ class TestPlc:
         return True
         
     def nodes_ssh(self):
-        return self.do_nodes_ssh(minutes=6,gracetime=4)
+        return self.do_nodes_ssh(minutes=10,gracetime=5)
     
     @node_mapper
     def init_node (self): pass
