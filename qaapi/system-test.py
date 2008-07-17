@@ -84,8 +84,11 @@ if options.distro is not None:  distros = [options.distro]
 else: distros = ['f8']
 
 # did the user specify a vserver or plc
-if options.vserver is not None: vserver_name = options.vserver
-
+vserver_names = []
+if options.vserver is not None: 
+    vserver_name = options.vserver
+    vserver_names.append(vserver_name)
+	  
 if options.plcname is not None: plc_name = options.plcname
 else: plc_name = 'TestPLC' 
 
@@ -93,20 +96,19 @@ else: plc_name = 'TestPLC'
 if options.mailto is not None: mailto = options.mailto
 else: mailto = 'tmack@cs.princeton.edu'     
 
-# Setup configuration 
-logfile_dir = "/var/log/qaapi/%(vserver_name)s" % locals()
-config = Config(logdir = logfile_dir)
-config.load("qa/qa_config.py")	
-
-vserver_names = []
-for distro in distros:
-	vserver_names.append("%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals())
+if not options.vserver:
+    for distro in distros:
+        vserver_names.append("%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals())
 	
 stop_vservers(exempt = vserver_names)
 
-for distro in distros:
+for vserver_name in vserver_names:
     try: 	
-	vserver_name = "%(VSERVER_BASENAME)s-%(distro)s-%(DATE)s" % locals()
+	# Setup configuration 
+	logfile_dir = "/var/log/qaapi/%(vserver_name)s" % locals()
+	config = Config(logdir = logfile_dir)
+	config.load("qa/qa_config.py")	
+	
         config.plcs[plc_name]['vserver'] = vserver_name
 	config.plcs[plc_name]['host'] = config.hostname
 	config.plcs[plc_name]['ip'] = config.ip
@@ -140,17 +142,23 @@ for distro in distros:
 			config.logfile.filename, False)
 	# XX fix logfile parameter
 	step_method = api_unit_test(config) 
-	steps[7] = Step("API unit test", step_method, (plc_name,), step_method.logfile.filename, False)
+	#steps[7] = Step("API unit test", step_method, (plc_name,), step_method.logfile.filename, False)
 
 	for node in nodelist:
 	    if not node in config.nodes.keys(): continue
 	    node = config.nodes[node] 	
+	    node['vserver'] = vserver_name 
 	    step_num = max(steps.keys()) + 1
+
+	    # Boot node
       	    steps[step_num] = Step("Boot node %s" % node['hostname'], boot_node(config),
 				   (plc_name, node['hostname']), node.logfile.filename)
+	    
+	    # Check if node is fully booted
 	    ready_step = Step("Check %s is ready" % node['hostname'], node.is_ready, (), node.logfile.filename)
 	    steps[step_num].next_steps.append(ready_step)
 
+	    # Download test scripts
 	    download_scripts = Step("Download test scripts onto %s" % node['hostname'], node.download_testscripts,
 			       	    (), config.logfile.filename)
 	    steps[step_num].next_steps.append(download_scripts)
@@ -167,7 +175,18 @@ for distro in distros:
 				 step_method, (node['hostname'], plc_name, test), 
 				 step_method.logfile.filename, False)
 	        steps[step_num].next_steps.append(test_step)  	
-    
+
+	    # enter test slice
+	    step_num = step_num + 1
+	    steps[step_num] = Step("Enter slice %s on %s" % (slice['name'], node['hostname']),
+				   node.slice_commands, ("echo `whoami`@`hostname`", slice['name']),
+				   node.logfile.filename, False)
+	   	     
+	    # Copy contents of /var/log
+	    step_num = step_num + 1
+	    steps[step_num] = Step("Get %s logs" % node['hostname'], node.get_logs, (),
+	                           node.logfile.filename, False)
+	      
 	# Now that all the steps are defined, run them
 	order = steps.keys()
 	order.sort()
@@ -179,11 +198,10 @@ for distro in distros:
 		break	
 	
 	# Generate summary email
-	to = ["tmack@cs.princeton.edu"]
-	subject = "[QA Results] PLC - %(distro)s - %(DATE)s" % locals()
+	to = ["qa@planet-lab.org"]
+	subject = "PLC - %(distro)s - %(DATE)s QA summary" % locals()
 	body = """
-	MyPLC %(distro)s results
-        Build: %(DATE)s \n\n""" % locals()
+	The following are the results of QA tests for %(DATE)s %(distro)s MyPLC.\n\n""" % locals()
 	
 	utils.header("Sending summary email")
 	# add results to summary body
@@ -192,7 +210,7 @@ for distro in distros:
 	    body += step.get_results()
 	 
 	sendmail(to, subject, body) 	
- 
+	sendmail(['tmack@cs.princeton.edu'], subject, body) 
     except:
         utils.header("ERROR %(vserver_name)s tests failed" % locals(), logfile = config.logfile)	
         utils.header("%s" % traceback.format_exc(), logfile = config.logfile)
