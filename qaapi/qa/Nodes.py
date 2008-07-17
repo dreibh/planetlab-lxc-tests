@@ -26,7 +26,8 @@ class Node(dict, VRemote):
 	'tests_dir': '/usr/share/tests/',
 	'tests': []				      # which test to run. None or empty list means run all   		
 	}
-
+	
+    
     def __init__(self, config, fields = {}):
 
 	# XX Filter out fields not specified in fields
@@ -116,6 +117,7 @@ class Node(dict, VRemote):
 		        	   	 	
 	    # Check results. We are ready if all passed 		
 	    if not set(results.values()).intersection([False, None]):
+		utils.header("%s is ready" % (self['hostname'])) 
 		ready = True
 	    else:
 		if self.config.verbose:
@@ -127,19 +129,42 @@ class Node(dict, VRemote):
 
     def download_testscripts(self):
 	node_tests_dir = self['tests_dir']
+	self.commands("mkdir %(node_tests_dir)s" % locals(), fatal = False) 
 	(archive_filename, archive_path) = self.config.archive_node_tests()
 	self.scp_to(archive_path, node_tests_dir)   
 	
 	# Extract tests archive
-        tarx_cmd = "cd %(tests_dir)s && tar -xzm -f %(archive_filename)s" % locals()
+        tarx_cmd = "cd %(node_tests_dir)s && tar -xzm -f %(archive_filename)s" % locals()
         print >> self.logfile, tarx_cmd
         self.popen(tarx_cmd)	
 
 	# Make tests executable
         # XX Should find a better way to do this
-        chmod_cmd = "cd %s/node && chmod -R 755 * " % (tests_dir )
+        chmod_cmd = "cd %s/node && chmod -R 755 * " % (node_tests_dir)
         print >> self.logfile, chmod_cmd
         self.popen(chmod_cmd)
+
+    def slice_commands(self, command, slice, key = None):
+	if key is None: 
+	    print self.config.slices
+	    # get a valid key
+	    persons = self.config.slices[slice]['persons']
+	    if not persons: raise Exception 
+	    name, domain = persons[0].split('@')
+	    key = "/%s/%s" % (self.config.KEYS_PATH,  name)
+	
+	return VRemote.slice_commands(command, slice, key, False)     		
+	   
+    def get_logs(self, files = None):
+	
+	hostname = self['hostname']
+	logs_dir = '/var/log/'
+	dest = "%s/%s-var.log/" % (self.logfile.dir, hostname)  
+	try: os.mkdir(dest)
+	except: pass
+	#utils.commands('rm -Rf %(dest)s/*' % locals()) 
+	self.scp_from(logs_dir, dest, recursive = True)
+
  
 class Nodes(Table):
 
