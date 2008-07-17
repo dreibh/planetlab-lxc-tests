@@ -91,12 +91,16 @@ class boot_node(Test):
 	bootimage_filename = "%(hostname)s-bootcd.iso" % locals()
 	diskimage_filename = "%(hostname)s-hda.img" % locals() 
 	bootimage = "%(homedir)s/%(bootimage_filename)s" % locals()
-	diskimage = "%(homedir)s/%(diskimage_filename)s" % locals() 
-	diskimage_path = "/%(path)s/%(diskimage_filename)s" % locals() 
+	diskimage = "%(homedir)s/%(diskimage_filename)s" % locals()
+	print bootimage
+	print diskimage 
+	diskimage_path = "/%(path)s/%(diskimage)s" % locals() 
         bootimage_tmppath = "%(tmpdir)s/%(bootimage_filename)s" % locals()
-	bootimage_path = "%(path)s/%(bootimage_filename)s" % locals()
+	bootimage_path = "/%(path)s/%(bootimage)s" % locals()
 	remote_bootimage_path = "%(homedir)s/%(bootimage_filename)s" % locals()	
-	 
+	print bootimage_path
+	print diskimage_path
+	print remote_bootimage_path 
 	# wait up to 30 minutes for a node to boot and install itself correctly
         self.hostname = hostname
         self.totaltime = 60*60*wait
@@ -126,8 +130,8 @@ class boot_node(Test):
 	node.scp_to_host(bootimage_tmppath, "%(remote_bootimage_path)s" % locals())
 
 	# If node is vm (qemu) try installing kqemu
-	node.host_commands("yum -y install kqemu", False)
-	node.host_commands("modprobe kqemu")
+	#node.host_commands("yum -y install kqemu", False)
+	#node.host_commands("modprobe kqemu", False)
 	
 	# Create a temporary disk image if it doesnt already exist or we are reinstalling
 	img_check_cmd =  "ls -ld %(diskimage)s" % locals()
@@ -175,7 +179,7 @@ class boot_node(Test):
 	bootcmd = bootcmd + " 2>&1 >> %s " % (node.logfile.filename)
         
 	# kill any old qemu processes for this node
-	pid_cmd = "ps -elfy | grep qemu | grep %(hostname)s | awk '{print$3}'" % locals()
+	pid_cmd = "ps -elfy | grep qemu | grep -v grep | grep %(hostname)s | awk '{print$3}'" % locals()
 	(status, output) = node.host_commands(pid_cmd)
 	pids = " ".join(output.split("\n")).strip() 
 	if pids:

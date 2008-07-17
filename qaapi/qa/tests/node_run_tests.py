@@ -33,7 +33,7 @@ class node_run_tests(Test):
 		raise Exception, "Invalid test(s) %s. File(s) not found in %s" % \
 				(" ".join(list(invalid_tests)), node_tests_path)
 		
-	result = {}
+	results = {}
 	if self.config.verbose:
 	    utils.header("Running %(test)s test on %(hostname)s" % locals(), logfile = self.logfile)
 	script = self.config.get_node_test(test)
@@ -42,17 +42,17 @@ class node_run_tests(Test):
 	if script['pre']: exe_pre = script['exe_pre']
 	if script['args']: exe_script = "%s %s" % (script['name'], script['args'])
 	if script['post']: exe_post = script['exe_post']
- 
+
 	for command in [exe_pre, exe_script, exe_post]:
             if command:
-	        command = "cd %(tests_dir)s/%(archive_dir)s && ./%(command)s" % locals()
+	        command = "cd %(tests_dir)s/node/  && ./%(command)s" % locals()
 	        print >> node.logfile,  command
 	        print >> self.logfile, command
   
                 # Execute script on node
 	        (stdout, stderr) = node.popen(command, False)
 	        print >> node.logfile, "".join(stdout) 	 
-	        print >> logfile, "".join(stdout) 
+	        print >> self.logfile, "".join(stdout) 
 	        if self.config.verbose:
 	            utils.header(stdout, logfile = self.config.logfile)
 	        results[test] = (stdout, stderr)

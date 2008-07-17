@@ -23,7 +23,8 @@ class add_test_data(Test):
 				  object['plcs'] == None   
      	
 	sitelist, nodelist, slicelist, personlist, nodegrouplist = [], [], [], [], []
-	if isinstance(self.config.sites.values, dict):
+	
+	if isinstance(self.config.sites, dict):
 	    sitelist = filter(this_plc, self.config.sites.values())  	
 	if isinstance(self.config.nodes, dict):
 	    nodelist = filter(this_plc, self.config.nodes.values())
@@ -33,7 +34,7 @@ class add_test_data(Test):
 	    personlist = filter(this_plc, self.config.persons.values()) 
 	if isinstance(self.config.nodegroups, dict): 
 	    nodegrouplist = filter(this_plc, self.config.nodegroups.values())
-	
+
 	# Add Test site
 	for site in sitelist:
 	    sites = api.GetSites(auth, [site['login_base']])
