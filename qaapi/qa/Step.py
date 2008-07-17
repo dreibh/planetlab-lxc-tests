@@ -40,7 +40,7 @@ class Step(dict):
 	    self.status = "Failed"
 	    utils.header("%s" % traceback.format_exc())	
 	    if not self.fatal:
-		for step in  self.next_step:
+		for step in  self.next_steps:
 		    step.run()
 
 	return None
