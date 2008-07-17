@@ -88,7 +88,8 @@ slices = [
 	 'max_nodes': 1000,
 	 'description': 'blank',
 	 'url': 'http://test.org',
-	 'nodes': ['vm1.paris.cs.princeton.edu', 'vm41.test.org']
+	 'nodes': ['vm1.paris.cs.princeton.edu', 'vm41.test.org'],
+	 'persons': ['person@cs.princeton.edu']	
 	}
 	]
 
