@@ -139,17 +139,23 @@ class VRemote(Remote):
         return command
 
     # Host remote commands
-    def host_popen(self, command, fatal = True):
+    def host_popen(self, command, fatal = True, logfile = None):
+	if logfile is None:
+	    logfile = self.logfile
         command = self.get_host_command(command)
-        return utils.popen(command, fatal, self.config.verbose, self.logfile)
+        return utils.popen(command, fatal, self.config.verbose, logfile)
 
-    def host_popen3(self, command):
+    def host_popen3(self, command, logfile = None):
+	if logfile is None:
+	    logfile = self.logfile
         command = self.get_host_command(command)
-        return utils.popen3(command, self.config.verbose, self.logfile)
+        return utils.popen3(command, self.config.verbose, logfile)
 
-    def host_commands(self, command, fatal = True):
+    def host_commands(self, command, fatal = True, logfile = None):
+	if logfile is None:
+	    logfiile = self.logfile
         command = self.get_host_command(command)
-        return utils.commands(command, fatal, self.config.verbose, self.logfile)
+        return utils.commands(command, fatal, self.config.verbose, logfile)
 
     # Slice remote commands
     def slice_popen(self, command, user = 'root', key = None, fatal = True):
