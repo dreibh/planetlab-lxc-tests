@@ -137,20 +137,28 @@ class Config:
 	for element in confdata.keys():
 	    if element in ['plcs'] and confdata.has_key(element):
 	        setattr(self, element, PLCs(config, confdata[element]).dict('name'))
+		setattr(config, element, PLCs(config, confdata[element]).dict('name'))
 	    elif element in ['nodes'] and confdata.has_key(element):
 		setattr(self, element, Nodes(config, confdata[element]).dict('hostname'))
+		setattr(config, element, Nodes(config, confdata[element]).dict('hostname'))
 	    elif element in ['nodegroups'] and confdata.has_key(element):
 		setattr(self, element, Table(confdata[element]).dict('name'))	
+		setattr(config, element, Table(confdata[element]).dict('name'))
 	    elif element in ['sites'] and confdata.has_key(element):
 		setattr(self, element, Sites(confdata[element]).dict('login_base'))
+		setattr(config, element, Sites(confdata[element]).dict('login_base'))
 	    elif element in ['slices'] and confdata.has_key(element):
-		setattr(self, element, Slices(confdata[element]).dict('name'))
+		setattr(self, element, Slices(config, confdata[element]).dict('name'))
+		setattr(config, element, Slices(config, confdata[element]).dict('name'))
 	    elif element in ['persons'] and confdata.has_key(element):
 		setattr(self, element, Persons(confdata[element]).dict('email'))
+		setattr(config, element, Persons(confdata[element]).dict('email'))
 	    elif element in ['node_tests'] and confdata.has_key(element):
 		setattr(self, element, TestScripts(confdata[element]).dict('name')) 
+		setattr(config, element, TestScripts(confdata[element]).dict('name'))
 	    elif element in ['slice_tests'] and confdata.has_key(element):
-	 	setattr(self, element, TestScript(confdata[element]).dict('name'))
+	 	setattr(self, element, TestScripts(confdata[element]).dict('name'))
+		setattr(config, element, TestScripts(confdata[element]).dict('name'))
 
     def archive_scripts(self, prefix):
 	valid_prefix = ['slice', 'node'] 
