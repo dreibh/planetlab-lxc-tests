@@ -77,5 +77,6 @@ print "Generating connections...\n";
 launch;
 $SIG{ALRM}=\&alhandler;
 alarm(60);
-$tcpdthr.join;
+$tcpdthr->join;
+$numsynacks++;
 print "[SUCCESS] Test completed OK. $numsynacks SYN/ACK packets intercepted.\n";
