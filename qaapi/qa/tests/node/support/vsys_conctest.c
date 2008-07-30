@@ -8,19 +8,28 @@
 #include <unistd.h>
 #include <errno.h>
 
-int main()
+#define IMAPIG 1024
+
+int main(int argc,char *argv[])
 {
   FILE *fp = NULL, *fp_in = NULL;
   FILE *out_fp = NULL, *diff_fp = NULL;
-  const char* topcmd = "/vservers/pl_netflow/vsys/test.out";
-  const char* top_in_file = "/vservers/pl_netflow/vsys/test.in";
-  char buf[4096];
+
+  if (argc<2) {
+	  printf("usage: vsys_conctest <slicename>\n");
+	  exit(-1);
+  }
+  const char topcmd[IMAPIG];
+  const char top_in_file[IMAPIG];
+  char buf[IMAPIG*8];
   int fd_in = -1, fd_out;
   int res;
   int flag,flag2;
   int count = 1;
   struct timeval tv={.tv_sec=5,.tv_usec=0};
 
+  sprintf("%s/vsys/test.out",argv[1]);
+  sprintf("%s/vsys/test.in",argv[1]);
   while (count < 200000) {
     fd_set readSet;
     int res;
