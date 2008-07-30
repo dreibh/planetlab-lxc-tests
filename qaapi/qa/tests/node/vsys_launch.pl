@@ -1,11 +1,17 @@
 #!/usr/bin/perl
+use strict;
+
+my $prefix="pl";
+# my $prefix="ple";
+
+my $slice="$prefix"."_netflow";
+my $slicedir="/vservers/$slice";
 
 # Subtest #1 Create new vsys entry
-
 print "Creating entries...\t";
 
-$vsys_entry="#!/bin/bash\n\ncat /etc/passwd";
-$vsys_entry_acl = "/vservers/pl_netflow pl_netflow";
+my $vsys_entry="#!/bin/bash\n\ncat /etc/passwd";
+my $vsys_entry_acl = "$slice";
 
 open ACL,">/vsys/test.acl" || die ("Could not create acl for test entry.");
 print ACL $vsys_entry_acl;
@@ -23,21 +29,21 @@ chmod 0755,"/vsys/test";
 (-f "/vservers/pl_netflow/test.out") || die ("out file didn't show up in the slice");
 
 # OK, SUBTEST #1 SUCCEEDED
-print "(success)\n";
+print "[SUCCESS] The new entried appeared OK\n";
 
 # Subtest #2 
 
 print "Multiple-connection test...\t";
 system("su -c support/vsys_conctest pl_netflow -");
-($? && die ("Multiple-connection test failed\n"));
+($? && die ("[FAILED] Multiple-connection test failed\n"));
 
 
 # OK, SUBTEST #2 SUCCEEDED
-print "(success)\n";
+print "[SUCCESS])\n";
 
 # Subtest #3
 unlink "/vsys/test.acl";
 unlink "/vsys/test";
 
-(-f "/vservers/pl_netflow/test.in" || -f "/vservers/pl_netflow/test.out") && die ("cleanup failed");
+(-f "$slicedir/test.in" || -f "$slicedir/test.out") && die ("cleanup failed");
 
