@@ -1,5 +1,9 @@
 #!/usr/bin/perl
-# Generate a ton of connections and check if we can see syn/ack packets via tcpdump
+
+# Module: VNET+
+# Description: 	
+# Generate a ton of connections and check if we can see syn/ack packets via tcpdump.
+# Author: sapanb@cs.princeton.edu
 
 use strict;
 use IO::Socket;
