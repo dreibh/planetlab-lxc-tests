@@ -9,28 +9,16 @@ use threads;
 
 #please change to something local
 my $guineapig='planetlab-1.cs.princeton.edu';
-my $numiter=10000;
+my $numiter=1000;
 
 sub run {
 	system("ping -c $numiter -i 0.1 $guineapig");
 	}
 
 
-sub launch {
-	my @tarray;
-	foreach (1..$numthreads) {
-		my $thr = threads->create(\&mfetch);
-		push @tarray,$thr;
-	}
-
-	for (@tarray) {
-		$_->join;
-	}
-}
-
 sub open_tcpdump {
 	my $filter="icmp and src $guineapig";
-	my $cmdline="/usr/sbin/tcpdump -c $numpackets $filter";
+	my $cmdline="/usr/sbin/tcpdump -c $numiter $filter";
 	
 	system($cmdline);
 }
@@ -44,7 +32,7 @@ print "Starting tcpdump...\n";
 my $tcpdthr=threads->create(\&open_tcpdump);
 sleep 10;
 print "Generating connections...\n";
-launch;
+run;
 $SIG{ALRM}=\&alhandler;
 alarm(60);
 
