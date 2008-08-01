@@ -9,17 +9,12 @@ use threads;
 
 #please change to something local
 my $guineapig='planetlab-1.cs.princeton.edu';
-my $numiter=1000;
+my $numiter=10000;
 
 sub run {
-	system("ping $guineapig");
+	system("ping -c $numiter -i 0.1 $guineapig");
 	}
 
-sub mfetch {
-	foreach (1..$numiter) {
-		run;
-	}
-}
 
 sub launch {
 	my @tarray;
@@ -52,6 +47,6 @@ print "Generating connections...\n";
 launch;
 $SIG{ALRM}=\&alhandler;
 alarm(60);
+
 $tcpdthr->join;
-$numsynacks++;
-print "[SUCCESS] Test completed OK. $numsynacks SYN/ACK packets intercepted.\n";
+print "[SUCCESS] Test completed OK.\n";
