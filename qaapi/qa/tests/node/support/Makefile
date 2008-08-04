@@ -1,1 +1,1 @@
-all: vsys_conctest
+all: vsys_conctest t9
