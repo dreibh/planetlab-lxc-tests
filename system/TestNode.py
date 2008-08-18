@@ -68,7 +68,7 @@ class TestNode:
                        self.test_site.site_spec['site_fields']['login_base'],
                        self.node_spec['node_fields'])
         # create as reinstall to avoid user confirmation
-        server.UpdateNode(userauth, self.name(), {'boot_state':'rins'})
+        server.UpdateNode(userauth, self.name(), {'boot_state':'reinstall'})
         # populate network interfaces - primary
         server.AddInterface(userauth,self.name(),
                                             self.node_spec['network_fields'])
