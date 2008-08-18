@@ -131,7 +131,7 @@ class TestNode:
 
     def reinstall_node (self):
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
-                                           self.name(),{'boot_state':'rins'})
+                                           self.name(),{'boot_state':'reinstall'})
         return True
     
     def configure_qemu(self):
