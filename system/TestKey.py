@@ -17,17 +17,17 @@ class TestKey:
     def privatepath(self):
         return "keys/%s.rsa"%(self.name())
 
-    def store_remote_key(self,hostname):
-        #Not tested yet, don't know if needed
-        pub=self.publicpath()
-        priv=self.privatepath()
-        utils.header("Storing key %s in %s into %s "%(self.name(),pub,hostname))
-        dir=os.path.dirname(pub)
-        self.test_ssh.run("mkdir %s"%dir)
-        self.test_ssh.run("cat %s >> %s"%(self.key_spec['key_fields']['key'],pub))
-        self.test_ssh.run("cat %s >> %s"%(self.key_spec['private'],priv))
-        self.test_ssh.run("chmod %s 0400"%priv)
-        self.test_ssh.run("chmod %s 0444"%pub)
+#Not tested yet, don't know if needed
+#    def store_remote_key(self,hostname):
+#        pub=self.publicpath()
+#        priv=self.privatepath()
+#        utils.header("Storing key %s in %s into %s "%(self.name(),pub,hostname))
+#        dir=os.path.dirname(pub)
+#        self.test_ssh.run("mkdir %s"%dir)
+#        self.test_ssh.run("cat %s >> %s"%(self.key_spec['key_fields']['key'],pub))
+#        self.test_ssh.run("cat %s >> %s"%(self.key_spec['private'],priv))
+#        self.test_ssh.run("chmod %s 0400"%priv)
+#        self.test_ssh.run("chmod %s 0444"%pub)
             
     def store_key(self):
         pub=self.publicpath()

@@ -140,6 +140,9 @@ class TestSsh:
         scp_command += "%s %s%s"%(local_file,dest,remote_file)
         return utils.system(scp_command)
 
+    def copy_home (self, local_file, recursive=False):
+        return self.copy_abs(local_file,os.path.basename(local_file),recursive)
+
     def fetch (self, remote_file, local_file, recursive=False):
         if self.is_local():
             command="cp "

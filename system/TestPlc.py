@@ -63,13 +63,13 @@ SEP='<sep>'
 class TestPlc:
 
     default_steps = ['uninstall','install','install_rpm', 
-                     'configure', 'start', SEP,
+                     'configure', 'start', 'fetch_keys', SEP,
                      'store_keys', 'clear_known_hosts', 'initscripts', SEP,
                      'sites', 'nodes', 'slices', 'nodegroups', SEP,
                      'init_node','bootcd', 'configure_qemu', 'export_qemu',
                      'kill_all_qemus', 'reinstall_node','start_node', SEP,
-                     'nodes_booted', 'nodes_ssh', 'check_slice',
-                     'check_initscripts', 'check_tcp', 'plcsh_stress_test', SEP,
+                     'nodes_booted', 'nodes_ssh', 'check_slice', 'check_initscripts', SEP,
+                     'check_sanity', 'check_tcp', 'plcsh_stress_test', SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
                     'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
@@ -361,7 +361,7 @@ class TestPlc:
         self.start_guest()
         return True
 
-    # could use a TestKey class
+    # stores the keys from the config for further use
     def store_keys(self):
         for key_spec in self.plc_spec['keys']:
 		TestKey(self,key_spec).store_key()
@@ -369,6 +369,17 @@ class TestPlc:
 
     def clean_keys(self):
         utils.system("rm -rf %s/keys/"%os.path(sys.argv[0]))
+
+    # fetches the ssh keys in the plc's /etc/planetlab and stores them in keys/
+    # for later direct access to the nodes
+    def fetch_keys(self):
+        prefix = 'root_ssh_key'
+        vservername=self.vservername
+        for ext in [ 'pub', 'rsa' ] :
+            src="/vservers/%(vservername)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
+            dst="keys/%(vservername)s.%(ext)s"%locals()
+            self.run_in_guest_piped
+            self.test_ssh.fetch(src,dst)
 
     def sites (self):
         return self.do_sites()
@@ -596,6 +607,14 @@ class TestPlc:
     @node_mapper
     def export_qemu (self): pass
         
+    @node_mapper
+    def check_sanity_node (self): pass
+    @slice_mapper_options
+    def check_sanity_slice (self) : pass
+    
+    def check_sanity (self):
+        return self.check_sanity_node() and self.check_sanity_slice()
+
     def do_check_initscripts(self):
         overall = True
         for slice_spec in self.plc_spec['slices']:
