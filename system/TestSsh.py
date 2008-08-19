@@ -154,7 +154,7 @@ class TestSsh:
             if recursive: command += "-r "
             command += self.key_part()
             command += "%s:%s/%s %s"%(self.hostname_part(),self.buildname,remote_file,local_file)
-        utils.system(command)
+        return utils.system(command)
 
     # this is only to avoid harmless message when host cannot be identified
     # convenience only
@@ -163,5 +163,5 @@ class TestSsh:
     def clear_known_hosts (self):
         known_hosts = "%s/.ssh/known_hosts"%os.getenv("HOME")
         utils.header("Clearing entry for %s in %s"%(self.hostname,known_hosts))
-        utils.system("sed -i -e /^%s/d %s"%(self.hostname,known_hosts))
+        return utils.system("sed -i -e /^%s/d %s"%(self.hostname,known_hosts))
         

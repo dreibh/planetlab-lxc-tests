@@ -130,6 +130,3 @@ class TestSlice:
         # for an empty slice
         return True
 
-    def check_sanity_slice (self):
-        print 'TestSlice.check_sanity_slice (run scripts in slice): XXX todo'
-        return True

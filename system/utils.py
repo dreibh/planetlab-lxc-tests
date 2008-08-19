@@ -1,7 +1,5 @@
 # $Id$
-import time
-import os
-import re
+import time, os, re, glob
 from pprint import PrettyPrinter
 
 options={}
@@ -133,4 +131,11 @@ def match (string, pattern):
     pattern=pattern.replace("*",".*")
     pattern=pattern.replace("?",".")
     return re.compile(pattern).match(string)
+    
+def locate_sanity_scripts (message,path,extensions):
+    print message,'searching',path,'for extensions',extensions
+    scripts=[]
+    for ext in extensions:
+        scripts += glob.glob (path+'/*.'+ext)
+    return scripts
     

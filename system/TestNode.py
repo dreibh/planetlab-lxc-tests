@@ -209,26 +209,29 @@ class TestNode:
         TestSsh(self.name()).clear_known_hosts()
         return True
 
-    def check_sanity_node_script (self,local_script):
+    def create_test_ssh(self):
         # get the plc's keys for entering the node
         vservername=self.test_plc.vservername
+        # assuming we've run testplc.fetch_keys()
         key = "keys/%(vservername)s.rsa"%locals()
+        return TestSsh(self.name(), buildname=self.buildname(), key=key)
+
+    def check_sanity (self):
+        extensions = [ 'py','pl','sh' ]
+        path='tests/qaapi/qa/tests/node/'
+        scripts=utils.locate_sanity_scripts ('node '+self.name(), path,extensions)
+        overall = True
+        for script in scripts:
+            if not self.check_sanity_script (script):
+                overall = False
+        return overall
+
+    def check_sanity_script (self,local_script):
         # push the script on the node's root context
-        ssh_handle = TestSsh(self.name(),
-                             buildname=self.buildname(),
-                             key=key)
+        ssh_handle=self.create_test_ssh()
         ssh_handle.copy_home(local_script)
         if ssh_handle.run("./"+os.path.basename(local_script)) != 0:
             print "WARNING: sanity check script %s FAILED"
             # xxx - temporary : always return true for now
             #return False
         return True
-    
-    def check_sanity_node (self):
-        # locate the relevant scripts - xxx
-        scripts = [ 'tests/qaapi/qa/tests/node/vsys_launch.pl' ]
-        overall = True
-        for script in scripts:
-            if not self.check_sanity_node_script (script):
-                overall = False
-        return overall

@@ -23,7 +23,7 @@ class TestSliver:
     def create_test_ssh(self):
         (found,privatekey) = self.get_privateKey()
         if not found:
-            raise Exception,"Cannot find a valid key for slice %s"%self.test_slice.name()
+            raise Exception,"Cannot find the private key for slice %s"%self.test_slice.name()
         return TestSsh (self.test_node.name(),key=privatekey,username=self.test_slice.name(),
                         # so that copies end up in the home dir
                         buildname=".")
@@ -49,4 +49,24 @@ class TestSliver:
 
     def tar_var_logs (self):
         return self.test_ssh.actual_command("sudo tar -C /var/log -cf - .")
+    
+    def check_sanity (self):
+        print 'WARNING: slice sanity check scripts NOT (yet?) run in sudo'
+        extensions = [ 'py','pl','sh' ]
+        path='tests/qaapi/qa/tests/slice/'
+        scripts=utils.locate_sanity_scripts ('sliver '+self.name(), path,extensions)
+        overall = True
+        for script in scripts:
+            if not self.check_sanity_script (script):
+                overall = False
+        return overall
+
+    def check_sanity_script (self,local_script):
+        ssh_handle=self.create_test_ssh()
+        ssh_handle.copy_home(local_script)
+        if ssh_handle.run("./"+os.path.basename(local_script)) != 0:
+            print "WARNING: sanity check script %s FAILED"
+            # xxx - temporary : ignore result and always return true for now
+            #return False
+        return True
     

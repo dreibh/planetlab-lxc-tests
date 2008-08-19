@@ -179,6 +179,37 @@ class TestPlc:
                 return slice
         raise Exception,"Cannot locate slice %s"%slicename
 
+    def all_sliver_objs (self):
+        result=[]
+        for slice_spec in self.plc_spec['slices']:
+            slicename = slice_spec['slice_fields']['name']
+            for nodename in slice_spec['nodenames']:
+                result.append(self.locate_sliver_obj (nodename,slicename))
+        return result
+
+    def locate_sliver_obj (self,nodename,slicename):
+        (site,node) = self.locate_node(nodename)
+        slice = self.locate_slice (slicename)
+        # build objects
+        test_site = TestSite (self, site)
+        test_node = TestNode (self, test_site,node)
+        # xxx the slice site is assumed to be the node site - mhh - probably harmless
+        test_slice = TestSlice (self, test_site, slice)
+        return TestSliver (self, test_node, test_slice)
+
+    def locate_first_node(self):
+        nodename=self.plc_spec['slices'][0]['nodenames'][0]
+        (site,node) = self.locate_node(nodename)
+        test_site = TestSite (self, site)
+        test_node = TestNode (self, test_site,node)
+        return test_node
+
+    def locate_first_sliver (self):
+        slice_spec=self.plc_spec['slices'][0]
+        slicename=slice_spec['slice_fields']['name']
+        nodename=slice_spec['nodenames'][0]
+        return self.locate_sliver_obj(nodename,slicename)
+
     # all different hostboxes used in this plc
     def gather_hostBoxes(self):
         # maps on sites and nodes, return [ (host_box,test_node) ]
@@ -373,13 +404,17 @@ class TestPlc:
     # fetches the ssh keys in the plc's /etc/planetlab and stores them in keys/
     # for later direct access to the nodes
     def fetch_keys(self):
+        dir="./keys"
+        if not os.path.isdir(dir):
+            os.mkdir(dir)
         prefix = 'root_ssh_key'
         vservername=self.vservername
+        overall=True
         for ext in [ 'pub', 'rsa' ] :
             src="/vservers/%(vservername)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
             dst="keys/%(vservername)s.%(ext)s"%locals()
-            self.run_in_guest_piped
-            self.test_ssh.fetch(src,dst)
+            if self.test_ssh.fetch(src,dst) != 0: overall=False
+        return overall
 
     def sites (self):
         return self.do_sites()
@@ -607,14 +642,16 @@ class TestPlc:
     @node_mapper
     def export_qemu (self): pass
         
-    @node_mapper
-    def check_sanity_node (self): pass
-    @slice_mapper_options
-    def check_sanity_slice (self) : pass
+    ### check sanity : invoke scripts from qaapi/qa/tests/{node,slice}
+    def check_sanity_node (self): 
+        return self.locate_first_node().check_sanity()
+    def check_sanity_sliver (self) : 
+        return self.locate_first_sliver().check_sanity()
     
     def check_sanity (self):
-        return self.check_sanity_node() and self.check_sanity_slice()
+        return self.check_sanity_node() and self.check_sanity_sliver()
 
+    ### initscripts
     def do_check_initscripts(self):
         overall = True
         for slice_spec in self.plc_spec['slices']:
@@ -652,6 +689,7 @@ class TestPlc:
                 print 'deletion went wrong - probably did not exist'
         return True
 
+    ### manage slices
     def slices (self):
         return self.do_slices()
 
@@ -680,24 +718,6 @@ class TestPlc:
     
     @node_mapper
     def start_node (self) : pass
-
-    def all_sliver_objs (self):
-        result=[]
-        for slice_spec in self.plc_spec['slices']:
-            slicename = slice_spec['slice_fields']['name']
-            for nodename in slice_spec['nodenames']:
-                result.append(self.locate_sliver_obj (nodename,slicename))
-        return result
-
-    def locate_sliver_obj (self,nodename,slicename):
-        (site,node) = self.locate_node(nodename)
-        slice = self.locate_slice (slicename)
-        # build objects
-        test_site = TestSite (self, site)
-        test_node = TestNode (self, test_site,node)
-        # xxx the slice site is assumed to be the node site - mhh - probably harmless
-        test_slice = TestSlice (self, test_site, slice)
-        return TestSliver (self, test_node, test_slice)
 
     def check_tcp (self):
         specs = self.plc_spec['tcp_test']
