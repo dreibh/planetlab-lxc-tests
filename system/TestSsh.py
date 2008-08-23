@@ -153,7 +153,12 @@ class TestSsh:
             command += TestSsh.std_options
             if recursive: command += "-r "
             command += self.key_part()
-            command += "%s:%s/%s %s"%(self.hostname_part(),self.buildname,remote_file,local_file)
+            # absolute path - do not preprend buildname
+            if remote_file.find("/")==0:
+                remote_path=remote_file
+            else:
+                remote_path="%s/%s"%(self.buildname,remote_file)
+            command += "%s:%s %s"%(self.hostname_part(),remote_path,local_file)
         return utils.system(command)
 
     # this is only to avoid harmless message when host cannot be identified
