@@ -1,7 +1,15 @@
 #!/usr/bin/perl
 use strict;
 
-my $prefix="pl";
+my $prefix;
+
+if ($#ARGV>0) {
+		$prefix=$ARGV[0];
+		print "Setting prefix = $prefix\n";
+}
+else {
+	$prefix="pl";
+}
 # my $prefix="ple";
 
 my $slice="$prefix"."_netflow";
