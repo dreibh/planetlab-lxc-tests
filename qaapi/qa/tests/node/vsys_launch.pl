@@ -24,9 +24,10 @@ close $vsys_entry;
 chmod 0755,"/vsys/test";
 
 # Check if it has shown up
+sleep(2);
 
-(-f "/vservers/pl_netflow/test.in") || die ("in file didn't show up in the slice");
-(-f "/vservers/pl_netflow/test.out") || die ("out file didn't show up in the slice");
+(-p "/vservers/$slice/vsys/test.in") || die ("in file didn't show up in the slice");
+(-p "/vservers/$slice/vsys/test.out") || die ("out file didn't show up in the slice");
 
 # OK, SUBTEST #1 SUCCEEDED
 print "[SUCCESS] The new entried appeared OK\n";
@@ -34,7 +35,9 @@ print "[SUCCESS] The new entried appeared OK\n";
 # Subtest #2 
 
 print "Multiple-connection test...\t";
-system("su -c support/vsys_conctest pl_netflow -");
+mkdir ("/vservers/$slice/support");
+system("cp vsys_conctest /vservers/$slice/support");
+system("su -c '/support/vsys_conctest $slice' $slice -");
 ($? && die ("[FAILED] Multiple-connection test failed\n"));
 
 
