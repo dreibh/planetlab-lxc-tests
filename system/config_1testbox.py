@@ -7,9 +7,9 @@ from TestMapper import TestMapper
 def config (plcs, options):
 
     if options.arch == "i386":
-        target = 'testbox32.one-lab.org'
+        target = 'testbox32.onelab.eu'
     elif options.arch == "x86_64":
-        target = 'testbox64.one-lab.org'
+        target = 'testbox64.onelab.eu'
     else:
         print 'Unsupported arch %s'%options.arch
         sys.exit(1)

@@ -11,7 +11,7 @@ def nodes(options):
     nodes= [{'name':'node1',
              'node_fields': {'hostname': 'deferred01',
                              'model':'qemu/minhw', } ,
-             'host_box': 'testbox1.one-lab.org',
+             'host_box': 'testbox1.onelab.eu',
              'owner' : 'pi',
              'nodegroups' : 'mynodegroup',
              'network_fields': { 'method':'static',
@@ -28,7 +28,7 @@ def nodes(options):
             {'name':'node2',
              'node_fields': {'hostname': 'deferred02',
                              'model':'qemu/minhw', } ,
-             'host_box': 'testbox1.one-lab.org',
+             'host_box': 'testbox1.onelab.eu',
              'owner' : 'pi',
              'network_fields': { 'method':'static',
                                  'type':'ipv4',
@@ -51,7 +51,7 @@ def all_nodenames (options):
     return [ node['name'] for node in nodes(options)]
 
 def users (options) :
-    domain="one-lab.org"
+    domain="onelab.eu"
     return [ {'name' : 'pi', 'keynames' : [ 'key1' ],
               'user_fields' : {'first_name':'PI', 'last_name':'PI',
                                'enabled':'True',
@@ -93,7 +93,7 @@ def sites (options):
                                'login_base':'main',
                                'abbreviated_name':'PLanettest',
                                'max_slices':100,
-                               'url':'http://testbox1.one-lab.org',
+                               'url':'http://testbox1.onelab.eu',
                                },
               'address_fields' : {'line1':'route des lucioles',
                                   'city':'sophia',
@@ -106,7 +106,7 @@ def sites (options):
             }]
 
 ##########
-public_key="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== root@test.one-lab.org
+public_key="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== root@test.onelab.eu
 """
 private_key="""-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFU
@@ -226,15 +226,15 @@ def plc (options) :
         # 'vservername': '138.96.250.131'
         # 'vserverip': '138.96.250.131'
         'role' : 'root',
-        'PLC_ROOT_USER' : 'root@test.one-lab.org',
+        'PLC_ROOT_USER' : 'root@test.onelab.eu',
         'PLC_ROOT_PASSWORD' : 'test++',
         'PLC_NAME' : 'TestLab',
         'PLC_MAIL_ENABLED':'true',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
-        'PLC_DB_HOST' : 'test.one-lab.org',
-        'PLC_API_HOST' : 'test.one-lab.org',
-        'PLC_WWW_HOST' : 'test.one-lab.org',
-        'PLC_BOOT_HOST' : 'test.one-lab.org',
+        'PLC_DB_HOST' : 'test.onelab.eu',
+        'PLC_API_HOST' : 'test.onelab.eu',
+        'PLC_WWW_HOST' : 'test.onelab.eu',
+        'PLC_BOOT_HOST' : 'test.onelab.eu',
         'PLC_NET_DNS1' : 'xxx-deferred-xxx',
         'PLC_NET_DNS2' : 'xxx-deferred-xxx',
         'sites' : sites(options),

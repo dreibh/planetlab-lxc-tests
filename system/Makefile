@@ -20,7 +20,7 @@ RSYNC			:= rsync -a -v $(RSYNC_COND_DRY_RUN) $(RSYNC_EXCLUDES)
 sync:
 ifeq (,$(PLCSSH))
 	echo "sync: You must define PLCHOST and BUILDNAME on the command line"
-	echo " e.g. make sync PLCHOST=private.one-lab.org BUILDNAME=" ; exit 1
+	echo " e.g. make sync PLCHOST=private.onelab.eu BUILDNAME=" ; exit 1
 else
 	+$(RSYNC) ./ $(PLCSSH)
 endif
