@@ -337,10 +337,11 @@ class TestPlc:
         repo_url = self.options.arch_rpms_url
         for level in [ 'arch' ]:
 	    repo_url = os.path.dirname(repo_url)
-        if self.options.arch == "i386":
-            personality_option="-p linux32"
-        else:
-            personality_option="-p linux64"
+        # pass the vbuild-nightly options to vtest-init-vserver
+        test_env_options=""
+        test_env_options += " -p %s"%self.options.personality
+        test_env_options += " -d %s"%self.options.pldistro
+        test_env_options += " -f %s"%self.options.fcdistro
         script="vtest-init-vserver.sh"
         vserver_name = self.vservername
         vserver_options="--netdev eth0 --interface %s"%self.vserverip
@@ -349,7 +350,7 @@ class TestPlc:
             vserver_options += " --hostname %s"%vserver_hostname
         except:
             pass
-        create_vserver="%(build_dir)s/%(script)s %(personality_option)s %(vserver_name)s %(repo_url)s -- %(vserver_options)s"%locals()
+        create_vserver="%(build_dir)s/%(script)s %(test_env_options)s %(vserver_name)s %(repo_url)s -- %(vserver_options)s"%locals()
         return self.run_in_host(create_vserver) == 0
 
     ### install_rpm 

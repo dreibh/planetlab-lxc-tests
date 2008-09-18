@@ -59,6 +59,12 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
                           help="Config module - can be set multiple times, or use quotes")
+        parser.add_option("-p","--personality",action="store", dest="personality", default="linux32",
+                          help="personality - as in vbuild-nightly")
+        parser.add_option("-d","--pldistro",action="store", dest="pldistro", default="planetlab",
+                          help="pldistro - as in vbuild-nightly")
+        parser.add_option("-f","--fcdistro",action="store", dest="fcdistro", default="f8",
+                          help="fcdistro - as in vbuild-nightly")
         parser.add_option("-x","--exclude",action="callback", callback=TestMain.optparse_list, dest="exclude",
                           nargs=1,type="string",default=[],
                           help="steps to exclude - can be set multiple times, or use quotes")
@@ -74,7 +80,7 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Specify the set of IP addresses to use for plcs (scanning disabled)")
         parser.add_option("-1","--small",action="store_true",dest="small_test",default=False,
                           help="run a small test -- typically only one node")
-        parser.add_option("-d","--dbname",action="store",dest="dbname",default=None,
+        parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
                            help="Used by db_dump and db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
@@ -82,7 +88,7 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run in quiet mode")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
-        parser.add_option("-f","--forcenm", action="store_true", dest="forcenm", default=False, 
+        parser.add_option("-r","--restart-nm", action="store_true", dest="forcenm", default=False, 
                           help="Force the NM to restart in check_slices step")
         parser.add_option("-t","--trace", action="store", dest="trace_file", default=None,
                           #default="logs/trace-@TIME@.txt",
@@ -111,6 +117,9 @@ steps refer to a method in TestPlc or to a step_* module
             ('plc_ips','arg-plc-ips',[]) , 
             ('config','arg-config',TestMain.default_config) , 
             ('arch_rpms_url','arg-arch-rpms-url',"") , 
+            ('personality','arg-personality',"linux32"),
+            ('pldistro','arg-pldistro',"planetlab"),
+            ('fcdistro','arg-fcdistro','f8'),
             ) :
 #            print 'handling',recname
             path=filename
@@ -146,9 +155,12 @@ steps refer to a method in TestPlc or to a step_* module
             fsave.close()
 #            utils.header('Saved %s into %s'%(recname,filename))
 
-        self.options.arch = "i386"
-        if self.options.arch_rpms_url.find("x86_64") >= 0:
-            self.options.arch="x86_64"
+        if self.options.personality == "linux32":
+            self.options.arch = "i386"
+        elif self.options.personality == "linux64":
+            self.options.arch = "x86_64"
+        else:
+            raise Exception, "Unsupported personality %r"%self.options.personality
         # steps
         if not self.options.steps:
             #default (all) steps
