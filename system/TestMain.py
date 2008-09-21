@@ -59,11 +59,11 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
                           help="Config module - can be set multiple times, or use quotes")
-        parser.add_option("-p","--personality",action="store", dest="personality", default="linux32",
+        parser.add_option("-p","--personality",action="store", dest="personality", 
                           help="personality - as in vbuild-nightly")
-        parser.add_option("-d","--pldistro",action="store", dest="pldistro", default="planetlab",
+        parser.add_option("-d","--pldistro",action="store", dest="pldistro", 
                           help="pldistro - as in vbuild-nightly")
-        parser.add_option("-f","--fcdistro",action="store", dest="fcdistro", default="f8",
+        parser.add_option("-f","--fcdistro",action="store", dest="fcdistro", 
                           help="fcdistro - as in vbuild-nightly")
         parser.add_option("-x","--exclude",action="callback", callback=TestMain.optparse_list, dest="exclude",
                           nargs=1,type="string",default=[],
