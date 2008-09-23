@@ -29,7 +29,7 @@ start () {
 
     #if we have already configured the same host_box no need to do it again
     /sbin/ifconfig $INTERFACE_BRIDGE &> /dev/null && {
-	echo "Interface bridge $INTERFACE_BRIDGE already exist."
+	echo "Bridge interface $INTERFACE_BRIDGE already set up - $COMMAND start exiting"
 	exit 0
     }
     /sbin/ifconfig $INTERFACE_LAN &>/dev/null || {
@@ -125,7 +125,7 @@ stop () {
     type -p brctl &> /dev/null || { echo "brctl not found, please install bridge-utils" ; exit 1 ; }
 
     /sbin/ifconfig $INTERFACE_BRIDGE &> /dev/null || {
-	echo "Interface bridge $INTERFACE_BRIDGE does not exist."
+	echo "Bridge interface $INTERFACE_BRIDGE does not exist - $COMMAND stop exiting"
 	exit 0
     }
     brctl delif $INTERFACE_BRIDGE $INTERFACE_LAN
