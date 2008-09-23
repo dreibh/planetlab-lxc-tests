@@ -198,6 +198,13 @@ steps refer to a method in TestPlc or to a step_* module
         # show config
         if not self.options.quiet:
             utils.show_test_spec("Test specifications",all_plc_specs)
+        # remember plc IP address(es) if not specified
+        current=file('arg-plc-ips').read()
+        if not current:
+            plc_ips_file=open('arg-plc-ips','w')
+            for plc_spec in all_plc_specs:
+                plc_ips_file.write("%s\n"%plc_spec['PLC_API_HOST'])
+            plc_ips_file.close()
         # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
             spec['disabled'] = False
@@ -213,7 +220,7 @@ steps refer to a method in TestPlc or to a step_* module
             if not TestPlc.valid_step(step):
                 continue
             force=False
-            # is it a forcedstep
+            # is it a forced step
             if step.find("force_") == 0:
                 step=step.replace("force_","")
                 force=True

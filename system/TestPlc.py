@@ -76,7 +76,7 @@ class TestPlc:
                     'clean_sites', 'clean_nodes', 
                     'clean_slices', 'clean_keys', SEP,
                     'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
-                    'db_dump' , 'db_restore', ' cleanup_tracker',
+                    'db_dump' , 'db_restore', 'cleanup_trackers', 'cleanup_all_trackers',
                     'standby_1 through 20'
                     ]
 
@@ -277,41 +277,80 @@ class TestPlc:
     # (*) the record_tracker method adds an entry at the bottom of the file
     # (*) the cleanup_tracker method stops all known vservers and removes the tracker file
 
-    TRACKER_FILE="~/running-test-plcs"
+    TRACKER_FILE=os.environ['HOME']+"/running-test-plcs"
 
     def record_tracker (self):
-        command="echo %s %s >> %s"%(self.vservername,self.test_ssh.hostname,TestPlc.TRACKER_FILE)
-        (code,output) = utils.output_of (self.test_ssh.actual_command(command))
-        if code != 0:
-            print "WARNING : COULD NOT record_tracker %s as a running plc on %s"%(self.vservername,self.test_ssh.hostname)
-            return False
+        try:
+            lines=file(TestPlc.TRACKER_FILE).readlines()
+        except:
+            lines=[]
+
+        this_line="%s %s\n"%(self.vservername,self.test_ssh.hostname)
+        for line in lines:
+            if line==this_line:
+                print 'this vserver is already included in %s'%TestPlc.TRACKER_FILE
+                return True
+        if self.options.dry_run:
+            print 'dry_run: record_tracker - skipping tracker update'
+            return True
+        tracker=file(TestPlc.TRACKER_FILE,"w")
+        for line in lines+[this_line]:
+            tracker.write(line)
+        tracker.close()
         print "Recorded %s in running plcs on host %s"%(self.vservername,self.test_ssh.hostname)
         return True
 
-    def free_tracker (self):
-        command="head -1 %s"%TestPlc.TRACKER_FILE
-        (code,line) = utils.output_of(self.test_ssh.actual_command(command))
-        if code != 0:
-            print "No entry found in %s on %s"%(TestPlc.TRACKER_FILE,self.test_ssh.hostname)
-            return False
+    def free_tracker (self, keep_vservers=3):
         try:
-            [vserver_to_stop,hostname] = line.split()
+            lines=file(TestPlc.TRACKER_FILE).readlines()
         except:
-            print "WARNING: free_tracker: Could not parse %s - skipped"%TestPlc.TRACKER_FILE
-            return False
-        stop_command = "vserver --silent %s stop"%vserver_to_stop
-        utils.system(self.test_ssh.actual_command(stop_command))
-        x=TestPlc.TRACKER_FILE
-        flush_command = "tail --lines=+2 %s > %s.tmp ; mv %s.tmp %s"%(x,x,x,x)
-        utils.system(self.test_ssh.actual_command(flush_command))
+            print 'dry_run: free_tracker - skipping tracker update'
+            return True
+        how_many = len(lines) - keep_vservers
+        # nothing todo until we have more than keep_vservers in the tracker
+        if how_many <= 0:
+            print 'free_tracker : limit %d not reached'%keep_vservers
+            return True
+        to_stop = lines[:how_many]
+        to_keep = lines[how_many:]
+        for line in to_stop:
+            print '>%s<'%line
+            [vname,hostname]=line.split()
+            command=TestSsh(hostname).actual_command("vserver --silent %s stop"%vname)
+            utils.system(command)
+        if self.options.dry_run:
+            print 'dry_run: free_tracker would stop %d vservers'%len(to_stop)
+            for line in to_stop: print line,
+            print 'dry_run: free_tracker would keep %d vservers'%len(to_keep)
+            for line in to_keep: print line,
+            return True
+        print "Storing %d remaining vservers in %s"%(len(to_keep),TestPlc.TRACKER_FILE)
+        tracker=open(TestPlc.TRACKER_FILE,"w")
+        for line in to_keep:
+            tracker.write(line)
+        tracker.close()
         return True
 
     # this should/could stop only the ones in TRACKER_FILE if that turns out to be reliable
-    def cleanup_tracker (self):
+    def cleanup_trackers (self):
+        try:
+            for line in TestPlc.TRACKER_FILE.readlines():
+                [vname,hostname]=line.split()
+                stop="vserver --silent %s stop"%vname
+                command=TestSsh(hostname).actual_command(stop)
+                utils.system(command)
+            clean_tracker = "rm -f %s"%TestPlc.TRACKER_FILE
+            utils.system(self.test_ssh.actual_command(clean_tracker))
+        except:
+            return True
+
+    # this should/could stop only the ones in TRACKER_FILE if that turns out to be reliable
+    def cleanup_all_trackers (self):
         stop_all = "cd /vservers ; for i in * ; do vserver --silent $i stop ; done"
         utils.system(self.test_ssh.actual_command(stop_all))
         clean_tracker = "rm -f %s"%TestPlc.TRACKER_FILE
         utils.system(self.test_ssh.actual_command(clean_tracker))
+        return True
 
     def uninstall(self):
         self.run_in_host("vserver --silent %s delete"%self.vservername)
