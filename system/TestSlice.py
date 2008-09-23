@@ -129,4 +129,3 @@ class TestSlice:
             time.sleep (period)
         # for an empty slice
         return True
-
