@@ -395,7 +395,7 @@ class TestPlc:
     ### install_rpm 
     def install_rpm(self):
         return self.run_in_guest("yum -y install myplc-native")==0 \
-            and self.run_in_guest("yum -y install noderepo-%s-%s"%(self.options.pldistro,self.options.arch))
+            and self.run_in_guest("yum -y install noderepo-%s-%s"%(self.options.pldistro,self.options.arch))==0
 
     ### 
     def configure(self):
