@@ -394,7 +394,8 @@ class TestPlc:
 
     ### install_rpm 
     def install_rpm(self):
-        return self.run_in_guest("yum -y install myplc-native")==0
+        return self.run_in_guest("yum -y install myplc-native")==0 \
+            and self.run_in_guest("yum -y install noderepo-$(cat /etc/nodefamily)")
 
     ### 
     def configure(self):
@@ -633,20 +634,27 @@ class TestPlc:
     def nodes_booted(self):
         return self.do_nodes_booted(minutes=20,gracetime=15)
 
-    def do_nodes_ssh(self,minutes,gracetime,period=15):
+    def do_nodes_ssh(self,minutes,gracetime,period=20):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
         tocheck = self.all_hostnames()
 #        self.scan_publicKeys(tocheck)
-        utils.header("checking Connectivity on nodes %r"%tocheck)
+        utils.header("checking ssh access to root context on nodes %r"%tocheck)
         while tocheck:
             for hostname in tocheck:
                 # try to ssh in nodes
-                node_test_ssh = TestSsh (hostname,key="/etc/planetlab/root_ssh_key.rsa")
-                success=self.run_in_guest(node_test_ssh.actual_command("hostname"))==0
+                # ssh hostname to the node from the plc
+                cmd1 = TestSsh (hostname,key="/etc/planetlab/root_ssh_key.rsa").actual_command("hostname")
+                # run this in the guest
+                cmd2 = self.test_ssh.actual_command(cmd1)
+                # don't spam logs - show the command only after the grace period 
+                if datetime.datetime.now() > graceout:
+                    success=utils.system(cmd2)
+                else:
+                    success=os.system(cmd2)
                 if success:
-                    utils.header('The node %s is sshable -->'%hostname)
+                    utils.header('Successfully entered root@%s'%hostname)
                     # refresh tocheck
                     tocheck.remove(hostname)
                 else:
@@ -655,8 +663,6 @@ class TestPlc:
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header ("WARNING : check ssh access into real node %s - skipped"%hostname)
 			tocheck.remove(hostname)
-                    elif datetime.datetime.now() > graceout:
-                        utils.header("Could not ssh-enter root context on %s"%hostname)
             if  not tocheck:
                 return True
             if datetime.datetime.now() > timeout:
@@ -669,7 +675,7 @@ class TestPlc:
         return True
         
     def nodes_ssh(self):
-        return self.do_nodes_ssh(minutes=30,gracetime=5)
+        return self.do_nodes_ssh(minutes=30,gracetime=10)
     
     @node_mapper
     def init_node (self): pass
