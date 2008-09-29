@@ -15,9 +15,15 @@ files = [
 	'/etc/rc5.d/S10util-vserver',
 	'/etc/rc6.d/K90util-vserver',
 ]
+print "[CHECKING] util-vserver init scripts : ",
 for file in files:
-	if os.path.exits(file):
-		print "[PASSED] util-vserver init script is enabled."
+	if os.path.exists(file):
+		print ".",
+		sys.stdout.flush()
 	else:
-		print "[FAILED] util-vserver does not appear to be enabled via 'chkconfig util-vserver on'."
+		print "\n[FAILED] util-vserver does not appear to be enabled via 'chkconfig util-vserver on'."
 		sys.exit(1)
+
+print "\n[PASSED] util-vserver runlevel init script is enabled"
+
+sys.exit(0)
