@@ -1,0 +1,3 @@
+base config performs a basic sanity check on the base configuration, i.e. the
+bootstrapfs setup of a node.  I'm guessing that it will check for various
+configuration files, and perhaps various packages needed by the system.
