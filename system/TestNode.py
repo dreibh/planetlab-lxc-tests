@@ -179,9 +179,9 @@ class TestNode:
         test_box = self.test_box()
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 
-        test_box.run_in_buildname("%s/qemu-bridge-init start >> %s/qemu.log"%(self.nodedir(),self.nodedir()))
+        test_box.run_in_buildname("%s/qemu-bridge-init start >> %s/log.txt"%(self.nodedir(),self.nodedir()))
         # kick it off in background, as it would otherwise hang
-        test_box.run_in_buildname("%s/qemu-start-node 2>&1 >> %s/qemu.log"%(self.nodedir(),self.nodedir()),True)
+        test_box.run_in_buildname("%s/qemu-start-node 2>&1 >> %s/log.txt"%(self.nodedir(),self.nodedir()),True)
 
     def list_qemu (self):
         utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
@@ -201,7 +201,7 @@ class TestNode:
     def gather_qemu_logs (self):
         if not self.is_qemu():
             return True
-        remote_log="%s/qemu.log"%self.nodedir()
+        remote_log="%s/log.txt"%self.nodedir()
         local_log="logs/node.qemu.%s.log"%self.name()
         self.test_box().test_ssh.fetch(remote_log,local_log)
 
