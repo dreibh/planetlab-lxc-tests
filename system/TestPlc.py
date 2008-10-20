@@ -641,19 +641,19 @@ class TestPlc:
         tocheck = self.all_hostnames()
 #        self.scan_publicKeys(tocheck)
         utils.header("checking ssh access to root context on nodes %r"%tocheck)
+        vservername=self.vservername
         while tocheck:
             for hostname in tocheck:
-                # try to ssh in nodes
-                # ssh hostname to the node from the plc
-                cmd1 = TestSsh (hostname,key="/etc/planetlab/root_ssh_key.rsa").actual_command("hostname")
-                # run this in the guest
-                cmd2 = self.test_ssh.actual_command(cmd1)
+                # try to run 'hostname' in the node
+                # using locally cached keys - assuming we've run testplc.fetch_keys()
+                local_key = "keys/%(vservername)s.rsa"%locals()
+                command = TestSsh (hostname,key=local_key).actual_command("hostname")
                 # don't spam logs - show the command only after the grace period 
                 if datetime.datetime.now() > graceout:
-                    success=utils.system(cmd2)
+                    success=utils.system(command)
                 else:
-                    success=os.system(cmd2)
-                if success:
+                    success=os.system(command)
+                if success==0:
                     utils.header('Successfully entered root@%s'%hostname)
                     # refresh tocheck
                     tocheck.remove(hostname)
