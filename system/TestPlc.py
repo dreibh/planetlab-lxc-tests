@@ -278,6 +278,8 @@ class TestPlc:
     # (*) the cleanup_tracker method stops all known vservers and removes the tracker file
 
     TRACKER_FILE=os.environ['HOME']+"/running-test-plcs"
+    # how many concurrent plcs are we keeping alive - adjust with the IP pool size
+    TRACKER_KEEP_VSERVERS = 12
 
     def record_tracker (self):
         try:
@@ -300,7 +302,8 @@ class TestPlc:
         print "Recorded %s in running plcs on host %s"%(self.vservername,self.test_ssh.hostname)
         return True
 
-    def free_tracker (self, keep_vservers=3):
+    def free_tracker (self, keep_vservers=None):
+        if not keep_vservers: keep_vservers=TestPlc.TRACKER_KEEP_VSERVERS
         try:
             lines=file(TestPlc.TRACKER_FILE).readlines()
         except:

@@ -7,7 +7,7 @@ from TestPool import TestPool
 #    ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, '02:34:56:00:ee:%02d'%i) for i in range(1,10) ]
 # vplc09 is reserved for a fixed myplc - from 01 to 08
 onelab_plcs_pool = [ 
-    ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, '02:34:56:00:ee:%02d'%i) for i in range(1,9) ]
+    ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, '02:34:56:00:ee:%02d'%i) for i in range(1,21) ]
 
 def config (plcs,options):
     
