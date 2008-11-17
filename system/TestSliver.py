@@ -47,8 +47,13 @@ class TestSliver:
         return self.test_ssh.copy("tcptest.py")==0 and \
             self.test_ssh.run(client_command,background=True)==0
 
+    # use the node's main ssh root entrance, as the slice entrance might be down
+    #def tar_var_logs (self):
+    #    return self.test_ssh.actual_command("sudo tar -C /var/log -cf - .")
     def tar_var_logs (self):
-        return self.test_ssh.actual_command("sudo tar -C /var/log -cf - .")
+        test_ssh=self.test_node.create_test_ssh()
+        dir_to_tar="/vservers/%s/var/log"%self.test_slice.name()
+        return test_ssh.actual_command("tar -C %s -cf - ."%dir_to_tar)
     
     def check_sanity (self):
         print 'NOTE: slice sanity check scripts NOT (yet?) run in sudo'
