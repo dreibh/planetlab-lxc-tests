@@ -7,14 +7,12 @@ from TestMapper import TestMapper
 def config (plcs, options):
 
     if options.arch == "i386":
-        testbox1 = 'testbox1.inria.fr'
-        testbox2 = 'testbox1.inria.fr'
+        testbox1 = 'testbox32.onelab.eu'
+        testbox2 = 'testbox64_2.onelab.eu'
         target=testbox1
     elif options.arch == "x86_64":
-#        testbox1 = 'testbox64-1.onelab.eu'
-#        testbox2 = 'testbox64-2.onelab.eu'
-        testbox1 = 'testbox2.inria.fr'
-        testbox2 = 'testbox4.inria.fr'
+        testbox1 = 'testbox64_1.onelab.eu'
+        testbox2 = 'testbox64_2.onelab.eu'
         target=testbox1
     else:
         print 'Unsupported arch %s'%options.arch
