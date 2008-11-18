@@ -278,16 +278,34 @@ steps refer to a method in TestPlc or to a step_* module
                 # run the step
                 time=strftime("%Y-%m-%d-%H-%M")
                 if not spec['disabled'] or force or self.options.interactive:
+                    skip_step=False
                     if self.options.interactive:
-                        msg="Run step %s on %s [y]/n/q ? "%(stepname,plcname)
-                        answer=raw_input(msg).strip().lower() or "y"
-                        answer=answer[0]
-                        if answer in ['n']:
-                            print '%s on %s skipped'%(stepname,plcname)
-                            continue
-                        elif answer in ['q','b']:
-                            print 'Exiting'
-                            return
+                        prompting=True
+                        while prompting:
+                            msg="Run step %s on %s [r](un)/d(ry_run)/s(kip)/q(uit) ? "%(stepname,plcname)
+                            answer=raw_input(msg).strip().lower() or "r"
+                            answer=answer[0]
+                            if answer in ['s','n']:     # skip/no/next
+                                print '%s on %s skipped'%(stepname,plcname)
+                                prompting=False
+                                skip_step=True
+                            elif answer in ['q','b']:   # quit/bye
+                                print 'Exiting'
+                                return
+                            elif answer in ['d']:       # dry_run
+                                dry_run=self.options.dry_run
+                                self.options.dry_run=True
+                                obj.options.dry_run=True
+                                obj.apiserver.set_dry_run(True)
+                                step_result=method(obj)
+                                print 'dry_run step ->',step_result
+                                self.options.dry_run=dry_run
+                                obj.options.dry_run=dry_run
+                                obj.apiserver.set_dry_run(dry_run)
+                            elif answer in ['r','y']:   # run/yes
+                                prompting=False
+                    if skip_step:
+                        continue
                     try:
                         force_msg=""
                         if force: force_msg=" (forced)"

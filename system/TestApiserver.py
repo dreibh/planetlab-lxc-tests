@@ -63,3 +63,8 @@ class TestApiserver:
         self.dry_run=dry_run
         for (method,defaults) in server_methods:
             setattr(self,method,TestApiserver.Callable(self.apiserver,dry_run,method,defaults))
+    
+    def set_dry_run (self, dry_run):
+        self.dry_run=dry_run
+        for (method,defaults) in server_methods:
+            getattr(self,method).dry_run = dry_run
