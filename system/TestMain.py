@@ -5,6 +5,7 @@ import sys, os, os.path
 from optparse import OptionParser
 import traceback
 from time import strftime
+import readline
 
 import utils
 from TestPlc import TestPlc
@@ -45,7 +46,7 @@ build-url defaults to the last value used, as stored in arg-build-url,
    or %s
 config defaults to the last value used, as stored in arg-config,
    or %r
-node-ips and plc-ips defaults to the last value used, as stored in arg-node-ips and arg-plc-ips,
+node-ips and plc-ips defaults to the last value used, as stored in arg-ips-node and arg-ips-plc,
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
 ===
@@ -72,10 +73,10 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
                           help="List known steps")
-        parser.add_option("-N","--nodes",action="callback", callback=TestMain.optparse_list, dest="node_ips",
+        parser.add_option("-N","--nodes",action="callback", callback=TestMain.optparse_list, dest="ips_node",
                           nargs=1,type="string",
                           help="Specify the set of IP addresses to use for nodes (scanning disabled)")
-        parser.add_option("-P","--plcs",action="callback", callback=TestMain.optparse_list, dest="plc_ips",
+        parser.add_option("-P","--plcs",action="callback", callback=TestMain.optparse_list, dest="ips_plc",
                           nargs=1,type="string",
                           help="Specify the set of IP addresses to use for plcs (scanning disabled)")
         parser.add_option("-1","--small",action="store_true",dest="small_test",default=False,
@@ -86,6 +87,8 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run in verbose mode")
         parser.add_option("-q","--quiet", action="store_true", dest="quiet", default=False, 
                           help="Run in quiet mode")
+        parser.add_option("-i","--interactive",action="store_true",dest="interactive",default=False,
+                          help="prompts before each step")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
         parser.add_option("-r","--restart-nm", action="store_true", dest="forcenm", default=False, 
@@ -113,8 +116,8 @@ steps refer to a method in TestPlc or to a step_* module
         # handle defaults and option persistence
         for (recname,filename,default) in (
             ('build_url','arg-build-url',TestMain.default_build_url) ,
-            ('node_ips','arg-node-ips',[]) , 
-            ('plc_ips','arg-plc-ips',[]) , 
+            ('ips_node','arg-ips-node',[]) , 
+            ('ips_plc','arg-ips-plc',[]) , 
             ('config','arg-config',TestMain.default_config) , 
             ('arch_rpms_url','arg-arch-rpms-url',"") , 
             ('personality','arg-personality',"linux32"),
@@ -195,16 +198,22 @@ steps refer to a method in TestPlc or to a step_* module
                 traceback.print_exc()
                 print 'Cannot load config %s -- ignored'%modulename
                 raise
-        # show config
-        if not self.options.quiet:
-            utils.show_test_spec("Test specifications",all_plc_specs)
         # remember plc IP address(es) if not specified
-        current=file('arg-plc-ips').read()
+        current=file('arg-ips-plc').read()
         if not current:
-            plc_ips_file=open('arg-plc-ips','w')
+            ips_plc_file=open('arg-ips-plc','w')
             for plc_spec in all_plc_specs:
-                plc_ips_file.write("%s\n"%plc_spec['PLC_API_HOST'])
-            plc_ips_file.close()
+                ips_plc_file.write("%s\n"%plc_spec['PLC_API_HOST'])
+            ips_plc_file.close()
+        # ditto for nodes
+        current=file('arg-ips-node').read()
+        if not current:
+            ips_node_file=open('arg-ips-node','w')
+            for plc_spec in all_plc_specs:
+                for site_spec in plc_spec['sites']:
+                    for node_spec in site_spec['nodes']:
+                        ips_node_file.write("%s\n"%node_spec['node_fields']['hostname'])
+            ips_node_file.close()
         # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
             spec['disabled'] = False
@@ -268,7 +277,17 @@ steps refer to a method in TestPlc or to a step_* module
 
                 # run the step
                 time=strftime("%Y-%m-%d-%H-%M")
-                if not spec['disabled'] or force:
+                if not spec['disabled'] or force or self.options.interactive:
+                    if self.options.interactive:
+                        msg="Run step %s on %s [y]/n/q ? "%(stepname,plcname)
+                        answer=raw_input(msg).strip().lower() or "y"
+                        answer=answer[0]
+                        if answer in ['n']:
+                            print '%s on %s skipped'%(stepname,plcname)
+                            continue
+                        elif answer in ['q','b']:
+                            print 'Exiting'
+                            return
                     try:
                         force_msg=""
                         if force: force_msg=" (forced)"

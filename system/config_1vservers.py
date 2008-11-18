@@ -15,16 +15,16 @@ def config (plcs,options):
 
     test_pool = TestPool (onelab_plcs_pool,options)
 
-    if len(options.plc_ips) != 0:
-        utils.header('Using user-provided IPS:\nplc_ips=%r'%options.plc_ips)
-        options.plc_ips.reverse()
+    if len(options.ips_plc) != 0:
+        utils.header('Using user-provided IPS:\nips_plc=%r'%options.ips_plc)
+        options.ips_plc.reverse()
 
     plc_counter=0
     for plc in plcs:
         try:
-            if len(options.plc_ips) != 0:
-                ip=options.plc_ips[0]
-                options.plc_ips=options.plc_ips[1:]
+            if len(options.ips_plc) != 0:
+                ip=options.ips_plc[0]
+                options.ips_plc=options.ips_plc[1:]
                 (hostname,ip,mac)=test_pool.locate(ip)
                 utils.header("Using user-provided %s %s for plc %s"%(
                         hostname,ip,plc['name']))

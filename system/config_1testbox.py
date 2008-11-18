@@ -7,9 +7,15 @@ from TestMapper import TestMapper
 def config (plcs, options):
 
     if options.arch == "i386":
-        target = 'testbox32.onelab.eu'
+        testbox1 = 'testbox32.onelab.eu'
+        testbox2 = 'testbox32.onelab.eu'
+        target=testbox1
     elif options.arch == "x86_64":
-        target = 'testbox64.onelab.eu'
+#        testbox1 = 'testbox64-1.onelab.eu'
+#        testbox2 = 'testbox64-2.onelab.eu'
+        testbox1 = 'testbox64.onelab.eu'
+        testbox2 = 'estran.inria.fr'
+        target=testbox1
     else:
         print 'Unsupported arch %s'%options.arch
         sys.exit(1)
@@ -19,8 +25,11 @@ def config (plcs, options):
                                'PLC_API_HOST':target,
                                'PLC_BOOT_HOST':target,
                                'PLC_WWW_HOST':target,
-                               'name':'%s-'+options.arch } ) ],
-              'node': [ ('*' , {'host_box': target } ) ],
+                               'name':'%s-'+options.arch } ) 
+                       ],
+              'node': [ ('deferred01' , {'host_box': testbox1 } ),
+                        ('deferred02' , {'host_box': testbox2 } ),
+                        ],
               }
     
     return TestMapper(plcs,options).map(mapper)

@@ -71,16 +71,16 @@ class TestNode:
         server.UpdateNode(userauth, self.name(), {'boot_state':'reinstall'})
         # populate network interfaces - primary
         server.AddInterface(userauth,self.name(),
-                                            self.node_spec['network_fields'])
+                                            self.node_spec['interface_fields'])
         # populate network interfaces - others
         if self.node_spec.has_key('extra_interfaces'):
             for interface in self.node_spec['extra_interfaces']:
                 server.AddInterface(userauth,self.name(),
-                                                    interface['network_fields'])
+                                                    interface['interface_fields'])
                 if interface.has_key('settings'):
                     for (attribute,value) in interface['settings'].iteritems():
                         # locate node network
-                        nn = server.GetInterfaces(userauth,{'ip':interface['network_fields']['ip']})[0]
+                        nn = server.GetInterfaces(userauth,{'ip':interface['interface_fields']['ip']})[0]
                         nnid=nn['interface_id']
                         # locate or create node network attribute type
                         try:
@@ -137,9 +137,9 @@ class TestNode:
     def configure_qemu(self):
         if not self.is_qemu():
             return
-        mac=self.node_spec['network_fields']['mac']
+        mac=self.node_spec['interface_fields']['mac']
         hostname=self.node_spec['node_fields']['hostname']
-        ip=self.node_spec['network_fields']['ip']
+        ip=self.node_spec['interface_fields']['ip']
         auth=self.test_plc.auth_root()
         target_arch=self.test_plc.apiserver.GetPlcRelease(auth)['build']['target-arch']
         conf_filename="%s/qemu.conf"%(self.nodedir())

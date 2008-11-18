@@ -62,7 +62,7 @@ SEP='<sep>'
 
 class TestPlc:
 
-    default_steps = ['uninstall','install','install_rpm', 
+    default_steps = ['display','uninstall','install','install_rpm', 
                      'configure', 'start', 'fetch_keys', SEP,
                      'store_keys', 'clear_known_hosts', 'initscripts', SEP,
                      'sites', 'nodes', 'slices', 'nodegroups', SEP,
@@ -267,6 +267,9 @@ class TestPlc:
                 node.kill_qemu()
         return True
 
+    def display (self):
+        utils.show_plc_spec (self.plc_spec)
+        return True
 
     ### utility methods for handling the pool of IP addresses allocated to plcs
     # Logic

@@ -26,6 +26,8 @@ class TestMapper:
 
     def apply_first_map (self, type, name, obj, maplist):
         for (map_pattern,rename_dict) in maplist:
+            if self.options.verbose:
+                print 'dbg: TestMapper/',type,'name=',name,'& pattern=',map_pattern
             if utils.match (name,map_pattern):
                 utils.header("TestMapper/%s : applying rules '%s' on %s"%(type,map_pattern,name))
                 for (k,v) in rename_dict.iteritems():
@@ -62,14 +64,8 @@ class TestMapper:
 
     def map (self,mapper):
 
-        try:
-            plc_maps = mapper['plc']
-        except:
-            plc_maps = []
-        try:
-            node_maps = mapper['node']
-        except:
-            node_maps = []
+        plc_maps  = mapper.get('plc',[])
+        node_maps = mapper.get('node',[])
 
         for plc in self.plcs:
             name=TestMapper.plc_name(plc)
