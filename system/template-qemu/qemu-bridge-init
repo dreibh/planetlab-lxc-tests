@@ -21,6 +21,12 @@ INTERFACE_LAN=eth0
 # Fonction de mise en place du pont
 start () {
 
+    echo "========== $COMMAND: entering start - beg"
+    hostname
+    uname -a
+    ifconfig
+    echo "========== $COMMAND: entering start - end"
+
     # take extra arg for ifname, if provided
     [ -n "$1" ] && { INTERFACE_LAN=$1; shift ; }
 
@@ -84,6 +90,9 @@ start () {
     echo "Configuring gateway=$gateway"
     route add default gw $gateway
 
+    echo "========== $COMMAND: exiting start - beg"
+    ifconfig
+    echo "========== $COMMAND: exiting start - end"
 }
 
 #Adding a new interface to the bridge: this is used by qemu-ifup 
@@ -91,6 +100,10 @@ add () {
 
     [[ -z "$@" ]] && { echo "Usage: $COMMAND add ifname" ; exit 1 ; }
     INTERFACE_LAN=$1; shift
+
+    echo "========== $COMMAND: entering add - beg"
+    ifconfig
+    echo "========== $COMMAND: entering add - end"
 
     echo "Activating link for $INTERFACE_LAN..."
     /sbin/ip link set $INTERFACE_LAN up
@@ -111,9 +124,14 @@ add () {
     ./iptables.py iptables.pre iptables.post $IP
     iptables-restore < iptables.post
 
+    echo "========== $COMMAND: exiting add - beg"
+
+    ifconfig
+
     echo "Installed iptables"
     iptables-save
     
+    echo "========== $COMMAND: exiting add - end"
 }
 
 #Stop the bridge and restore the original setting

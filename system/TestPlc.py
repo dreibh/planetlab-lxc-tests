@@ -653,7 +653,7 @@ class TestPlc:
                 # try to run 'hostname' in the node
                 # using locally cached keys - assuming we've run testplc.fetch_keys()
                 local_key = "keys/%(vservername)s.rsa"%locals()
-                command = TestSsh (hostname,key=local_key).actual_command("hostname")
+                command = TestSsh (hostname,key=local_key).actual_command("hostname;uname -a")
                 # don't spam logs - show the command only after the grace period 
                 if datetime.datetime.now() > graceout:
                     success=utils.system(command)
