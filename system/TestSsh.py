@@ -55,7 +55,7 @@ class TestSsh:
     def is_local(self):
         return TestSsh.is_local_hostname(self.hostname)
      
-    std_options="-o StrictHostKeyChecking=no -o BatchMode=yes "
+    std_options="-o BatchMode=yes -o StrictHostKeyChecking=no -o CheckHostIP=no -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null "
     
     def key_part (self):
         if not self.key:
