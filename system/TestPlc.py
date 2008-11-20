@@ -596,14 +596,14 @@ class TestPlc:
                            for node_spec in site_spec['nodes'] ]
         return hostnames
 
-    # gracetime : during the first <gracetime> minutes nothing gets printed
-    def nodes_check_boot_state (self, target_boot_state, minutes, gracetime,period=15):
+    # silent_minutes : during the first <silent_minutes> minutes nothing gets printed
+    def nodes_check_boot_state (self, target_boot_state, timeout_minutes, silent_minutes,period=15):
         if self.options.dry_run:
             print 'dry_run'
             return True
         # compute timeout
-        timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
-        graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
+        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
+        graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # the nodes that haven't checked yet - start with a full list and shrink over time
         tocheck = self.all_hostnames()
         utils.header("checking nodes %r"%tocheck)
@@ -643,12 +643,12 @@ class TestPlc:
         return True
 
     def nodes_booted(self):
-        return self.nodes_check_boot_state('boot',minutes=20,gracetime=15)
+        return self.nodes_check_boot_state('boot',timeout_minutes=20,silent_minutes=15)
 
-    def check_nodes_ssh(self,debug,minutes,gracetime,period=20):
+    def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period=20):
         # compute timeout
-        timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
-        graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
+        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
+        graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         vservername=self.vservername
         if debug: 
             message="debug"
@@ -658,6 +658,7 @@ class TestPlc:
             local_key = "keys/%(vservername)s.rsa"%locals()
         tocheck = self.all_hostnames()
         utils.header("checking ssh access (expected in %s mode) to nodes %r"%(message,tocheck))
+        utils.header("max timeout is %d minutes, silent for %d minutes"%(timeout_minutes,silent_minutes))
         while tocheck:
             for hostname in tocheck:
                 # try to run 'hostname' in the node
@@ -689,10 +690,10 @@ class TestPlc:
         return True
         
     def nodes_debug_ssh(self):
-        return self.check_nodes_ssh(debug=True,minutes=30,gracetime=10)
+        return self.check_nodes_ssh(debug=True,timeout_minutes=30,silent_minutes=10)
     
     def nodes_boot_ssh(self):
-        return self.check_nodes_ssh(debug=False,minutes=30,gracetime=10)
+        return self.check_nodes_ssh(debug=False,timeout_minutes=30,silent_minutes=10)
     
     @node_mapper
     def init_node (self): pass
