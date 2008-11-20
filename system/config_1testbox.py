@@ -8,7 +8,7 @@ def config (plcs, options):
 
     if options.arch == "i386":
         testbox1 = 'testbox32.onelab.eu'
-        testbox2 = 'testbox64_2.onelab.eu'
+        testbox2 = 'testbox32.onelab.eu'
         target=testbox1
     elif options.arch == "x86_64":
         testbox1 = 'testbox64_1.onelab.eu'
