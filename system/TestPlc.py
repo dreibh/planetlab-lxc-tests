@@ -658,7 +658,8 @@ class TestPlc:
             local_key = "keys/%(vservername)s.rsa"%locals()
         tocheck = self.all_hostnames()
         utils.header("checking ssh access (expected in %s mode) to nodes %r"%(message,tocheck))
-        utils.header("max timeout is %d minutes, silent for %d minutes"%(timeout_minutes,silent_minutes))
+        utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
+                         (timeout_minutes,silent_minutes,period))
         while tocheck:
             for hostname in tocheck:
                 # try to run 'hostname' in the node

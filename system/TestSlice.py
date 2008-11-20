@@ -92,6 +92,9 @@ class TestSlice:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tocheck.append(node_spec['node_fields']['hostname'])
 
+        utils.header("checking ssh access into slice %s on nodes %r"%(self.name(),tocheck))
+        utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
+                         (timeout_minutes,silent_minutes,period))
         while tocheck:
             for hostname in tocheck:
                 (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
