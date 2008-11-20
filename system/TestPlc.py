@@ -667,7 +667,15 @@ class TestPlc:
                 if datetime.datetime.now() > graceout:
                     success=utils.system(command)
                 else:
-                    success=os.system(command)
+                    # truly silent, just print out a dot to show we're alive
+                    print '.',
+                    sys.stdout.flush()
+                    command += " 2>/dev/null"
+                    if self.options.dry_run:
+                        print 'dry_run',command
+                        success=0
+                    else:
+                        success=os.system(command)
                 if success==0:
                     utils.header('Successfully entered root@%s (%s)'%(hostname,message))
                     # refresh tocheck

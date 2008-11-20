@@ -1,5 +1,5 @@
 # $Id$
-import time, os, re, glob
+import time, os, re, glob, sys
 from pprint import PrettyPrinter
 
 options={}
@@ -26,6 +26,9 @@ def system(command,background=False):
         print 'dry_run:',command
         return 0
     else:
+        now=time.strftime("%H:%M:%S", time.localtime())
+        print "*",now,'--',
+        sys.stdout.flush()
         return os.system("set -x; " + command)
 
 ### WARNING : this ALWAYS does its job, even in dry_run mode
