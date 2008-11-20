@@ -68,7 +68,7 @@ class TestPlc:
                      'sites', 'nodes', 'slices', 'nodegroups', SEP,
                      'init_node','bootcd', 'configure_qemu', 'export_qemu',
                      'kill_all_qemus', 'reinstall_node','start_node', SEP,
-                     'nodes_booted', 'nodes_ssh', 'check_slice', 'check_initscripts', SEP,
+                     'nodes_debug_ssh', 'nodes_boot_ssh', 'check_slice', 'check_initscripts', SEP,
                      'check_sanity', 'check_tcp', 'plcsh_stress_test', SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
@@ -454,12 +454,17 @@ class TestPlc:
         dir="./keys"
         if not os.path.isdir(dir):
             os.mkdir(dir)
-        prefix = 'root_ssh_key'
         vservername=self.vservername
         overall=True
+        prefix = 'root_ssh_key'
         for ext in [ 'pub', 'rsa' ] :
             src="/vservers/%(vservername)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
             dst="keys/%(vservername)s.%(ext)s"%locals()
+            if self.test_ssh.fetch(src,dst) != 0: overall=False
+        prefix = 'debug_ssh_key'
+        for ext in [ 'pub', 'rsa' ] :
+            src="/vservers/%(vservername)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
+            dst="keys/%(vservername)s-debug.%(ext)s"%locals()
             if self.test_ssh.fetch(src,dst) != 0: overall=False
         return overall
 
@@ -592,7 +597,7 @@ class TestPlc:
         return hostnames
 
     # gracetime : during the first <gracetime> minutes nothing gets printed
-    def do_nodes_booted (self, minutes, gracetime,period=15):
+    def nodes_check_boot_state (self, target_boot_state, minutes, gracetime,period=15):
         if self.options.dry_run:
             print 'dry_run'
             return True
@@ -611,21 +616,21 @@ class TestPlc:
             for array in tocheck_status:
                 hostname=array['hostname']
                 boot_state=array['boot_state']
-                if boot_state == 'boot':
-                    utils.header ("%s has reached the 'boot' state"%hostname)
+                if boot_state == target_boot_state:
+                    utils.header ("%s has reached the %s state"%(hostname,target_boot_state))
                 else:
                     # if it's a real node, never mind
                     (site_spec,node_spec)=self.locate_hostname(hostname)
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header("WARNING - Real node %s in %s - ignored"%(hostname,boot_state))
                         # let's cheat
-                        boot_state = 'boot'
+                        boot_state = target_boot_state
                     elif datetime.datetime.now() > graceout:
                         utils.header ("%s still in '%s' state"%(hostname,boot_state))
                         graceout=datetime.datetime.now()+datetime.timedelta(1)
                 status[hostname] = boot_state
             # refresh tocheck
-            tocheck = [ hostname for (hostname,boot_state) in status.iteritems() if boot_state != 'boot' ]
+            tocheck = [ hostname for (hostname,boot_state) in status.iteritems() if boot_state != target_boot_state ]
             if not tocheck:
                 return True
             if datetime.datetime.now() > timeout:
@@ -638,21 +643,24 @@ class TestPlc:
         return True
 
     def nodes_booted(self):
-        return self.do_nodes_booted(minutes=20,gracetime=15)
+        return self.nodes_check_boot_state('boot',minutes=20,gracetime=15)
 
-    def do_nodes_ssh(self,minutes,gracetime,period=20):
+    def check_nodes_ssh(self,debug,minutes,gracetime,period=20):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=gracetime)
-        tocheck = self.all_hostnames()
-#        self.scan_publicKeys(tocheck)
-        utils.header("checking ssh access to root context on nodes %r"%tocheck)
         vservername=self.vservername
+        if debug: 
+            message="debug"
+            local_key = "keys/%(vservername)s-debug.rsa"%locals()
+        else: 
+            message="boot"
+            local_key = "keys/%(vservername)s.rsa"%locals()
+        tocheck = self.all_hostnames()
+        utils.header("checking ssh access (expected in %s mode) to nodes %r"%(message,tocheck))
         while tocheck:
             for hostname in tocheck:
                 # try to run 'hostname' in the node
-                # using locally cached keys - assuming we've run testplc.fetch_keys()
-                local_key = "keys/%(vservername)s.rsa"%locals()
                 command = TestSsh (hostname,key=local_key).actual_command("hostname;uname -a")
                 # don't spam logs - show the command only after the grace period 
                 if datetime.datetime.now() > graceout:
@@ -660,7 +668,7 @@ class TestPlc:
                 else:
                     success=os.system(command)
                 if success==0:
-                    utils.header('Successfully entered root@%s'%hostname)
+                    utils.header('Successfully entered root@%s (%s)'%(hostname,message))
                     # refresh tocheck
                     tocheck.remove(hostname)
                 else:
@@ -680,8 +688,11 @@ class TestPlc:
         # only useful in empty plcs
         return True
         
-    def nodes_ssh(self):
-        return self.do_nodes_ssh(minutes=30,gracetime=10)
+    def nodes_debug_ssh(self):
+        return self.check_nodes_ssh(debug=True,minutes=30,gracetime=10)
+    
+    def nodes_boot_ssh(self):
+        return self.check_nodes_ssh(debug=False,minutes=30,gracetime=10)
     
     @node_mapper
     def init_node (self): pass
