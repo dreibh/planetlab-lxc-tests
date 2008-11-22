@@ -79,8 +79,10 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-P","--plcs",action="callback", callback=TestMain.optparse_list, dest="ips_plc",
                           nargs=1,type="string",
                           help="Specify the set of IP addresses to use for plcs (scanning disabled)")
-        parser.add_option("-1","--small",action="store_true",dest="small_test",default=False,
-                          help="run a small test -- typically only one node")
+        parser.add_option("-1","--small",action="store_true",dest="small_test",
+                          help="run a small test (default) -- typically only one plc and one node")
+        parser.add_option("-2","--large",action="store_false",dest="small_test",default=True,
+                          help="runs full-size test")
         parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
                            help="Used by db_dump and db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
