@@ -5,6 +5,7 @@ import xmlrpclib
 
 server_methods = [ ('GetNodes' ,  []),
                    ('AddNode' , True),
+                   ('SetNodePlainBootstrapfs', True),
                    ('DeleteNode' , True),
                    ('UpdateNode' , True),
                    ('AddInterface' , True),

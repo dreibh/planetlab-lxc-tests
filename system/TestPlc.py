@@ -515,7 +515,8 @@ class TestPlc:
             raise Exception, "Unsupported personality %r"%self.options.personality
         return \
             self.run_in_guest("yum -y install myplc-native")==0 and \
-            self.run_in_guest("yum -y install noderepo-%s-%s"%(self.options.pldistro,arch))==0
+            self.run_in_guest("yum -y install noderepo-%s-%s"%(self.options.pldistro,arch))==0 and \
+            self.run_in_guest("yum -y install bootstrapfs-%s-%s-plain"%(self.options.pldistro,arch))==0 
 
     ### 
     def configure(self):

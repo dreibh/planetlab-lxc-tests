@@ -67,6 +67,7 @@ class TestNode:
         server.AddNode(userauth,
                        self.test_site.site_spec['site_fields']['login_base'],
                        self.node_spec['node_fields'])
+        server.SetNodePlainBootstrapfs(self.node_spec['node_fields']['hostname'],'YES')
         # create as reinstall to avoid user confirmation
         server.UpdateNode(userauth, self.name(), {'boot_state':'reinstall'})
         # populate network interfaces - primary
