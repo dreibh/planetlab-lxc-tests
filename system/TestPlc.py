@@ -69,9 +69,10 @@ class TestPlc:
                      'init_node','bootcd', 'configure_qemu', 'export_qemu',
                      'kill_all_qemus', 'reinstall_node','start_node', SEP,
                      'nodes_debug_ssh', 'nodes_boot_ssh', 'check_slice', 'check_initscripts', SEP,
-                     'check_sanity', 'check_tcp', 'plcsh_stress_test', SEP,
+                     'check_tcp', 'plcsh_stress_test', SEP,
                      'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
     other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
+                    'check_sanity', SEP,
                     'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
                     'clean_sites', 'clean_nodes', 
                     'clean_slices', 'clean_keys', SEP,
