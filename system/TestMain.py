@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -u
 # $Id$
 
 import sys, os, os.path
@@ -79,10 +79,8 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-P","--plcs",action="callback", callback=TestMain.optparse_list, dest="ips_plc",
                           nargs=1,type="string",
                           help="Specify the set of IP addresses to use for plcs (scanning disabled)")
-        parser.add_option("-1","--small",action="store_true",dest="small_test",
-                          help="run a small test (default) -- typically only one plc and one node")
-        parser.add_option("-2","--large",action="store_false",dest="small_test",default=True,
-                          help="runs full-size test")
+        parser.add_option("-s","--size",action="store",type="int",dest="size",default=1,
+                          help="sets test size in # of plcs - default is 1")
         parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
                            help="Used by db_dump and db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
@@ -99,6 +97,8 @@ steps refer to a method in TestPlc or to a step_* module
                           #default="logs/trace-@TIME@.txt",
                           help="Trace file location")
         (self.options, self.args) = parser.parse_args()
+        if self.options.quiet:
+            self.options.verbose=False
 
         if len(self.args) == 0:
             if self.options.all_steps:
@@ -124,7 +124,7 @@ steps refer to a method in TestPlc or to a step_* module
             ('arch_rpms_url','arg-arch-rpms-url',"") , 
             ('personality','arg-personality',"linux32"),
             ('pldistro','arg-pldistro',"planetlab"),
-            ('fcdistro','arg-fcdistro','f8'),
+            ('fcdistro','arg-fcdistro','centos5'),
             ) :
 #            print 'handling',recname
             path=filename
@@ -147,8 +147,6 @@ steps refer to a method in TestPlc or to a step_* module
                         print "Cannot determine",recname
                         print "Run %s --help for help"%sys.argv[0]                        
                         sys.exit(1)
-            if not self.options.quiet:
-                utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
 
             # save for next run
             fsave=open(path,"w")
@@ -159,6 +157,14 @@ steps refer to a method in TestPlc or to a step_* module
                     fsave.write(value + "\n")
             fsave.close()
 #            utils.header('Saved %s into %s'%(recname,filename))
+
+            # lists need be reversed
+            if isinstance(getattr(self.options,recname),list):
+                getattr(self.options,recname).reverse()
+
+            if not self.options.quiet:
+                utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
+
 
         if self.options.personality == "linux32":
             self.options.arch = "i386"
@@ -201,21 +207,17 @@ steps refer to a method in TestPlc or to a step_* module
                 print 'Cannot load config %s -- ignored'%modulename
                 raise
         # remember plc IP address(es) if not specified
-        current=file('arg-ips-plc').read()
-        if not current:
-            ips_plc_file=open('arg-ips-plc','w')
-            for plc_spec in all_plc_specs:
-                ips_plc_file.write("%s\n"%plc_spec['PLC_API_HOST'])
-            ips_plc_file.close()
+        ips_plc_file=open('arg-ips-plc','w')
+        for plc_spec in all_plc_specs:
+            ips_plc_file.write("%s\n"%plc_spec['PLC_API_HOST'])
+        ips_plc_file.close()
         # ditto for nodes
-        current=file('arg-ips-node').read()
-        if not current:
-            ips_node_file=open('arg-ips-node','w')
-            for plc_spec in all_plc_specs:
-                for site_spec in plc_spec['sites']:
-                    for node_spec in site_spec['nodes']:
-                        ips_node_file.write("%s\n"%node_spec['node_fields']['hostname'])
-            ips_node_file.close()
+        ips_node_file=open('arg-ips-node','w')
+        for plc_spec in all_plc_specs:
+            for site_spec in plc_spec['sites']:
+                for node_spec in site_spec['nodes']:
+                    ips_node_file.write("%s\n"%node_spec['node_fields']['hostname'])
+        ips_node_file.close()
         # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
             spec['disabled'] = False

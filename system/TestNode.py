@@ -236,3 +236,4 @@ class TestNode:
             # xxx - temporary : always return true for now
             #return False
         return True
+

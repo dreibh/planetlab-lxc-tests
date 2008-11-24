@@ -15,23 +15,20 @@ def config (plcs,options):
 
     test_pool = TestPool (onelab_plcs_pool,options)
 
-    if len(options.ips_plc) != 0:
-        utils.header('Using user-provided IPS:\nips_plc=%r'%options.ips_plc)
-        options.ips_plc.reverse()
-
     plc_counter=0
     for plc in plcs:
         try:
-            if len(options.ips_plc) != 0:
-                ip=options.ips_plc[0]
-                options.ips_plc=options.ips_plc[1:]
-                (hostname,ip,mac)=test_pool.locate(ip)
-                utils.header("Using user-provided %s %s for plc %s"%(
-                        hostname,ip,plc['name']))
+            if options.ips_plc :
+                ip=options.ips_plc.pop()
+                (hostname,ip,mac)=test_pool.locate(ip,True)
+                if not options.quiet:
+                    utils.header("Using user-provided %s %s for plc %s"%(
+                            hostname,ip,plc['name']))
             else:
                 (hostname,ip,mac)=test_pool.next_free()
-                utils.header("Using auto-allocated %s %s for plc %s"%(
-                        hostname,ip,plc['name']))
+                if not options.quiet:
+                    utils.header("Using auto-allocated %s %s for plc %s"%(
+                            hostname,ip,plc['name']))
 
             ### rewrite fields in plc
             # compute a helpful vserver name - remove domain in hostname

@@ -38,12 +38,20 @@ class TestPool:
 
     def next_free (self):
         # if preferred is provided, let's re-order
+        if self.options.quiet:
+            print 'TestPool is looking for a free IP address',
         for (host,ip,user_data) in self.pool:
             if host in self.busy:
                 continue
-            utils.header('TestPool : checking %s'%host)
+            if not self.options.quiet:
+                utils.header('TestPool : checking %s'%host)
+            if self.options.quiet:
+                print '.',
             if not TestPool.check_ping (host):
-                utils.header('%s is available'%host)
+                if not self.options.quiet:
+                    utils.header('%s is available'%host)
+                else:
+                    print ''
                 self.busy.append(host)
                 return (host,ip,user_data)
             else:

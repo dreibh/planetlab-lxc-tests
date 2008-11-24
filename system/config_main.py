@@ -7,48 +7,27 @@
 
 # values like 'hostname', 'ip' and the like my be rewritten later with a TestPool object
 
-def nodes(options):
-    nodes= [{'name':'node1',
-             'node_fields': {'hostname': 'deferred01',
+def nodes(options,index):
+    return [{'name':'node%d'%index,
+             'node_fields': {'hostname': 'deferred-nodename%d'%index,
                              'model':'qemu/minhw', } ,
-             'host_box': 'deferred-testbox01',
+             'host_box': 'deferred-node-hostbox-%d'%index,
              'owner' : 'pi',
              'nodegroups' : 'mynodegroup',
              'interface_fields': { 'method':'static',
-                                 'type':'ipv4',
-                                 'ip':'xxx-deferred-xxx',
-                                 'gateway':'xxx-deferred-xxx',
-                                 'network':'xxx-deferred-xxx',
-                                 'broadcast':'xxx-deferred-xxx',
-                                 'netmask':'xxx-deferred-xxx',
-                                 'dns1': 'xxx-deferred-xxx',
-                                 'dns2': 'xxx-deferred-xxx',
-                                 },
-             },
-            {'name':'node2',
-             'node_fields': {'hostname': 'deferred02',
-                             'model':'qemu/minhw', } ,
-             'host_box': 'deferred-testbox02',
-             'owner' : 'pi',
-             'interface_fields': { 'method':'static',
-                                 'type':'ipv4',
-                                 'ip':'xxx-deferred-xxx',
-                                 'gateway':'xxx-deferred-xxx',
-                                 'network':'xxx-deferred-xxx',
-                                 'broadcast':'xxx-deferred-xxx',
-                                 'netmask':'xxx-deferred-xxx',
-                                 'dns1': 'xxx-deferred-xxx',
-                                 'dns2': 'xxx-deferred-xxx',
-                                 },
-             },
-            ]
-    if options.small_test:
-        return [nodes[0]]
-    else:
-        return nodes
+                                   'type':'ipv4',
+                                   'ip':'xxx-deferred-xxx',
+                                   'gateway':'xxx-deferred-xxx',
+                                   'network':'xxx-deferred-xxx',
+                                   'broadcast':'xxx-deferred-xxx',
+                                   'netmask':'xxx-deferred-xxx',
+                                   'dns1': 'xxx-deferred-xxx',
+                                   'dns2': 'xxx-deferred-xxx',
+                                   },
+             }]
 
-def all_nodenames (options):
-    return [ node['name'] for node in nodes(options)]
+def all_nodenames (options,index):
+    return [ node['name'] for node in nodes(options,index)]
 
 def users (options) :
     domain="onelab.eu"
@@ -88,7 +67,7 @@ def users (options) :
 def all_usernames (options):
     return [ user['name'] for user in users(options)]
 
-def sites (options):
+def sites (options,index):
     return [ {'site_fields' : {'name':'mainsite',
                                'login_base':'main',
                                'abbreviated_name':'PLanettest',
@@ -102,7 +81,7 @@ def sites (options):
                                   'country':'france',
                                   },
               'users' : users(options),
-              'nodes': nodes(options),
+              'nodes': nodes(options,index),
             }]
 
 ##########
@@ -137,14 +116,14 @@ BO+VyPNWF+kDNI8mSUwi7jLW6liMdhNOmDaSX0+0X8CHtK898xM=
 -----END RSA PRIVATE KEY-----
 """
 
-def keys (options):
+def keys (options,index):
     return [ {'name': 'key1',
               'private' : private_key,
               'key_fields' : {'key_type':'ssh',
                               'key': public_key}}
              ]
 
-def initscripts(options): 
+def initscripts(options,index): 
     initscripts= [ { 'initscript_fields' : 
                      { 'enabled' : True,
                        'name':'script1',
@@ -156,93 +135,77 @@ def initscripts(options):
                        'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/script2.stamp \n ',
                        }},
                    ]
-    if options.small_test:
-        return [initscripts[0]]
-    else:
-        return initscripts
+    return initscripts
 
-def slices (options):
-    both = [ { 'slice_fields': {'name':'main_slicetest1',
+def slices (options,index):
+    return [ { 'slice_fields': {'name':'main_slicetest%d'%index,
                                 'instantiation':'plc-instantiated',
-                                'url':'http://foo@ffo.com',
-                                'description':'testslice the first slice for the site testsite',
-                                'max_nodes':2
+                                'url':'http://foo%d@foo.com'%index,
+                                'description':'testslice number %d'%index,
+                                'max_nodes':2,
                                 },
                'usernames' : [ 'pi','tech','techuser' ],
-               'nodenames' : all_nodenames(options),
-               'initscriptname' : 'script1',
-               'sitename' : 'main',
-               'owner' : 'pi',
-               },
-             { 'slice_fields': {'name':'main_slicetest2',
-                                'instantiation':'plc-instantiated',
-                                'url':'http://foo2@ffo2.com',
-                                'description':'testslice the second slice for the site testsite',
-                                'max_nodes':100
-                                },
-               'usernames' : [ 'user', 'pitech' ],
-               'nodenames' : all_nodenames(options),
-               'initscriptname' : 'script2',
+               'nodenames' : all_nodenames(options,index),
+               'initscriptname' : 'script%d'%index,
                'sitename' : 'main',
                'owner' : 'pi',
                }]
-    if options.small_test:
-        return [both[0]]
+
+def all_slicenames (options,index):
+    return [ slice['slice_fields']['name'] for slice in slices(options,index)]
+
+def tcp_tests (options,index):
+    if index == 1:
+        return [
+            # local test
+            { 'server_node': 'node1',
+              'server_slice' : 'main_slicetest1',
+              'client_node' : 'node1',
+              'client_slice' : 'main_slicetest1',
+              'port' : 2000,
+              }]
+    elif index == 2:
+        return [
+            # remote test
+            { 'server_node': 'node1',
+              'server_slice' : 'main_slicetest1',
+              'client_node' : 'node2',
+              'client_slice' : 'main_slicetest2',
+              'port' : 4000,
+              },
+            ]
     else:
-        return both
-
-
-def all_slicenames (options):
-    return [ slice['slice_fields']['name'] for slice in slices(options)]
-
-def tcp_tests (options):
-    all_tests = [ 
-        # local test
-        { 'server_node': 'node1',
-          'server_slice' : 'main_slicetest1',
-          'client_node' : 'node1',
-          'client_slice' : 'main_slicetest1',
-          'port' : 2000,
-          },
-        # remote test
-        { 'server_node': 'node1',
-          'server_slice' : 'main_slicetest1',
-          'client_node' : 'node2',
-          'client_slice' : 'main_slicetest1',
-          'port' : 4000,
-          },
-        ]
-    if options.small_test:
-        return [all_tests[0]]
-    else:
-        return all_tests
+        return []
              
-def plc (options) :
+def plc (options,index) :
     return { 
-        'name' : 'onetest',
+        'name' : 'onetest%d'%index,
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'hostname' : 'xxx-deferred-xxx',
+        'hostname' : 'deferred-myplc-hostbox-%d'%index,
         # set these two items to run within a vserver
-        # 'vservername': '138.96.250.131'
-        # 'vserverip': '138.96.250.131'
+        'vservername': 'deferred-vservername',
+        'vserverip': 'deferred-vserverip',
         'role' : 'root',
         'PLC_ROOT_USER' : 'root@test.onelab.eu',
         'PLC_ROOT_PASSWORD' : 'test++',
         'PLC_NAME' : 'TestLab',
         'PLC_MAIL_ENABLED':'true',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
-        'PLC_DB_HOST' : 'test.onelab.eu',
-        'PLC_API_HOST' : 'test.onelab.eu',
-        'PLC_WWW_HOST' : 'test.onelab.eu',
-        'PLC_BOOT_HOST' : 'test.onelab.eu',
-        'PLC_NET_DNS1' : 'xxx-deferred-xxx',
-        'PLC_NET_DNS2' : 'xxx-deferred-xxx',
-        'sites' : sites(options),
-        'keys' : keys(options),
-        'initscripts': initscripts(options),
-        'slices' : slices(options),
-        'tcp_test' : tcp_tests(options),
+        'PLC_DB_HOST' : 'deferred-myplc-hostname',
+        'PLC_API_HOST' : 'deferred-myplc-hostname',
+        'PLC_WWW_HOST' : 'deferred-myplc-hostname',
+        'PLC_BOOT_HOST' : 'deferred-myplc-hostname',
+        'PLC_NET_DNS1' : 'deferred-dns-1',
+        'PLC_NET_DNS2' : 'deferred-dns-2',
+        'sites' : sites(options,index),
+        'keys' : keys(options,index),
+        'initscripts': initscripts(options,index),
+        'slices' : slices(options,index),
+        'tcp_test' : tcp_tests(options,index),
     }
 
 def config (plc_specs,options):
-    return plc_specs + [ plc(options) ]
+    result=plc_specs
+    for i in range (options.size):
+        result += [ plc(options,i+1) ]
+    return result

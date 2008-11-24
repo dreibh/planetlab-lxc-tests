@@ -102,7 +102,7 @@ class TestSlice:
                 if datetime.datetime.now() >= graceout:
                     utils.header('Trying to enter into slice %s@%s'%(self.name(),hostname))
                 # this can be ran locally as we have the key
-                date = date_test_ssh.run("id;hostname")==0
+                date = date_test_ssh.run("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")==0
                 if date:
                     utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
                     tocheck.remove(hostname)

@@ -25,8 +25,8 @@ def config (plcs, options):
                                'PLC_WWW_HOST':plc_box,
                                'name':'%s-'+options.arch } ) 
                        ],
-              'node': [ ('deferred01' , {'host_box': node_box1 } ),
-                        ('deferred02' , {'host_box': node_box2 } ),
+              'node': [ ('node1' , {'host_box': node_box1 } ),
+                        ('node2' , {'host_box': node_box2 } ),
                         ],
               }
     

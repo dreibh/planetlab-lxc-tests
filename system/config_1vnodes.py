@@ -1,5 +1,6 @@
 # map all nodes onto the avail. pool
 
+import utils
 from TestMapper import TestMapper
 from TestPool import TestPool
 
@@ -22,12 +23,12 @@ def config (plcs, options):
     all_nodenames = test_mapper.node_names()
     maps = []
     for nodename in all_nodenames:
-        if len(options.ips_node) != 0:
-            ip=options.ips_node[0]
-            options.ips_node=options.ips_node[1:]
-            (hostname,ip,mac)=test_pool.locate(ip)
+        if options.ips_node:
+            ip=options.ips_node.pop()
+            (hostname,ip,mac)=test_pool.locate(ip,True)
         else:
             (hostname,ip,mac) = test_pool.next_free()
+        utils.header('Attaching node %s to %s (%s)'%(nodename,hostname,ip))
         node_dict= {'node_fields:hostname':hostname,
                     'interface_fields:ip':ip, 
                     'interface_fields:mac':mac,

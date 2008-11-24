@@ -62,24 +62,29 @@ SEP='<sep>'
 
 class TestPlc:
 
-    default_steps = ['display','uninstall','install','install_rpm', 
-                     'configure', 'start', 'fetch_keys', SEP,
-                     'store_keys', 'clear_known_hosts', 'initscripts', SEP,
-                     'sites', 'nodes', 'slices', 'nodegroups', SEP,
-                     'init_node','bootcd', 'configure_qemu', 'export_qemu',
-                     'kill_all_qemus', 'reinstall_node','start_node', SEP,
-                     'nodes_debug_ssh', 'nodes_boot_ssh', 'check_slice', 'check_initscripts', SEP,
-                     'check_tcp', 'plcsh_stress_test', SEP,
-                     'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker' ]
-    other_steps = [ 'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
-                    'check_sanity', SEP,
-                    'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
-                    'clean_sites', 'clean_nodes', 
-                    'clean_slices', 'clean_keys', SEP,
-                    'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
-                    'db_dump' , 'db_restore', 'cleanup_trackers', 'cleanup_all_trackers',
-                    'standby_1 through 20'
-                    ]
+    default_steps = [
+        'display','uninstall','install','install_rpm', 
+        'configure', 'start', 'fetch_keys', SEP,
+        'store_keys', 'clear_known_hosts', 'initscripts', SEP,
+        'sites', 'nodes', 'slices', 'nodegroups', SEP,
+        'init_node','bootcd', 'configure_qemu', 'export_qemu',
+        'kill_all_qemus', 'reinstall_node','start_node', SEP,
+        # better use of time: do this now that the nodes are taking off
+        'plcsh_stress_test', SEP,
+        'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
+        'check_tcp',  SEP,
+        'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker',
+        ]
+    other_steps = [ 
+        'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
+        'check_sanity',  SEP,
+        'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
+        'clean_sites', 'clean_nodes', 
+        'clean_slices', 'clean_keys', SEP,
+        'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
+        'db_dump' , 'db_restore', 'cleanup_trackers', 'cleanup_all_trackers',
+        'standby_1 through 20',
+        ]
 
     @staticmethod
     def printable_steps (list):
@@ -268,9 +273,110 @@ class TestPlc:
                 node.kill_qemu()
         return True
 
+    #################### display config
     def display (self):
-        utils.show_plc_spec (self.plc_spec)
+        self.display_pass (1)
+        self.display_pass (2)
         return True
+
+    # entry point
+    def display_pass (self,passno):
+        for (key,val) in self.plc_spec.iteritems():
+            if passno == 2:
+                if key == 'sites':
+                    for site in val:
+                        self.display_site_spec(site)
+                        for node in site['nodes']:
+                            self.display_node_spec(node)
+                elif key=='initscripts':
+                    for initscript in val:
+                        self.display_initscript_spec (initscript)
+                elif key=='slices':
+                    for slice in val:
+                        self.display_slice_spec (slice)
+                elif key=='keys':
+                    for key in val:
+                        self.display_key_spec (key)
+            elif passno == 1:
+                if key not in ['sites','initscripts','slices','keys']:
+                    print '*   ',key,':',val
+
+    def display_site_spec (self,site):
+        print '* ======== site',site['site_fields']['name']
+        for (k,v) in site.iteritems():
+            if k=='nodes':
+                if v: 
+                    print '*       ','nodes : ',
+                    for node in v:  
+                        print node['node_fields']['hostname'],'',
+                    print ''
+            elif k=='users':
+                if v: 
+                    print '*       users : ',
+                    for user in v:  
+                        print user['name'],'',
+                    print ''
+            elif k == 'site_fields':
+                print '*       login_base',':',v['login_base']
+            elif k == 'address_fields':
+                pass
+            else:
+                print '*       ',k,
+                PrettyPrinter(indent=8,depth=2).pprint(v)
+        
+    def display_initscript_spec (self,initscript):
+        print '* ======== initscript',initscript['initscript_fields']['name']
+
+    def display_key_spec (self,key):
+        print '* ======== key',key['name']
+
+    def display_slice_spec (self,slice):
+        print '* ======== slice',slice['slice_fields']['name']
+        for (k,v) in slice.iteritems():
+            if k=='nodenames':
+                if v: 
+                    print '*       nodes : ',
+                    for nodename in v:  
+                        print nodename,'',
+                    print ''
+            elif k=='usernames':
+                if v: 
+                    print '*       users : ',
+                    for username in v:  
+                        print username,'',
+                    print ''
+            elif k=='slice_fields':
+                print '*       fields',':',
+                print 'max_nodes=',v['max_nodes'],
+                print ''
+            else:
+                print '*       ',k,v
+
+    def display_node_spec (self,node):
+        print "*           node",node['name'],"host_box=",node['host_box'],
+        print "hostname=",node['node_fields']['hostname'],
+        print "ip=",node['interface_fields']['ip']
+    
+
+    # another entry point for just showing the boxes involved
+    def display_mapping (self):
+        TestPlc.display_mapping_plc(self.plc_spec)
+        return True
+
+    @staticmethod
+    def display_mapping_plc (plc_spec):
+        print '* MyPLC',plc_spec['name']
+        print '*\tvserver address = root@%s:/vservers/%s'%(plc_spec['hostname'],plc_spec['vservername'])
+        print '*\tIP = %s/%s'%(plc_spec['PLC_API_HOST'],plc_spec['vserverip'])
+        for site_spec in plc_spec['sites']:
+            for node_spec in site_spec['nodes']:
+                TestPlc.display_mapping_node(node_spec)
+
+    @staticmethod
+    def display_mapping_node (node_spec):
+        print '*   NODE %s'%(node_spec['name'])
+        print '*\tqemu box %s'%node_spec['host_box']
+        print '*\thostname=%s'%node_spec['node_fields']['hostname']
 
     ### utility methods for handling the pool of IP addresses allocated to plcs
     # Logic
@@ -699,10 +805,10 @@ class TestPlc:
         # only useful in empty plcs
         return True
         
-    def nodes_debug_ssh(self):
+    def nodes_ssh_debug(self):
         return self.check_nodes_ssh(debug=True,timeout_minutes=30,silent_minutes=10)
     
-    def nodes_boot_ssh(self):
+    def nodes_ssh_boot(self):
         return self.check_nodes_ssh(debug=False,timeout_minutes=30,silent_minutes=10)
     
     @node_mapper
@@ -817,7 +923,7 @@ class TestPlc:
         self.test_ssh.copy_abs("plcsh-stress-test.py",remote)
         command = location
         command += " -- --check"
-        if self.options.small_test:
+        if self.options.size == 1:
             command +=  " --tiny"
         return ( self.run_in_guest(command) == 0)
 
