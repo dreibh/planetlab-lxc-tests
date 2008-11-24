@@ -19,14 +19,12 @@ CONFIG=qemu.conf
 [ -f "$CONFIG" ] || { echo "Config file for qemu $CONFIG not found in $(pwd)" ; exit 1 ; }
 . $CONFIG
 
-# the launcher, depending on local/target archs
+# the launcher, depending on target arch
 # make sure to check qemu-kill-node for consistency
-archs="$(uname -i)+$TARGET_ARCH"
-case $archs in
-    i386+i386)		QEMU=qemu;;
-    i386+x86_64)	QEMU=qemu-system-x86_64;;
-    x86_64+i386)	QEMU=qemu;;
-    x86_64+x86_64)	QEMU=qemu-system-x86_64;;
+case $TARGET_ARCH in
+    i386)		QEMU=qemu;;
+    x86_64)		QEMU=qemu-system-x86_64;;
+    *)			echo "Cannot handle TARGET_ARCH=$TARGET_ARCH"; exit 1 ;;
 esac
 
 echo "Running $COMMAND in $(pwd)"

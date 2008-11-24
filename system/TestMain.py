@@ -166,12 +166,6 @@ steps refer to a method in TestPlc or to a step_* module
                 utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
 
 
-        if self.options.personality == "linux32":
-            self.options.arch = "i386"
-        elif self.options.personality == "linux64":
-            self.options.arch = "x86_64"
-        else:
-            raise Exception, "Unsupported personality %r"%self.options.personality
         # steps
         if not self.options.steps:
             #default (all) steps

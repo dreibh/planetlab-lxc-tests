@@ -485,7 +485,7 @@ class TestPlc:
         if self.run_in_host(build_checkout) != 0:
             return False
         # the repo url is taken from arch-rpms-url 
-        # with the last step (i386.) removed
+        # with the last step (i386) removed
         repo_url = self.options.arch_rpms_url
         for level in [ 'arch' ]:
 	    repo_url = os.path.dirname(repo_url)
@@ -507,8 +507,15 @@ class TestPlc:
 
     ### install_rpm 
     def install_rpm(self):
-        return self.run_in_guest("yum -y install myplc-native")==0 \
-            and self.run_in_guest("yum -y install noderepo-%s-%s"%(self.options.pldistro,self.options.arch))==0
+        if self.options.personality == "linux32":
+            arch = "i386"
+        elif self.options.personality == "linux64":
+            arch = "x86_64"
+        else:
+            raise Exception, "Unsupported personality %r"%self.options.personality
+        return \
+            self.run_in_guest("yum -y install myplc-native")==0 and \
+            self.run_in_guest("yum -y install noderepo-%s-%s"%(self.options.pldistro,arch))==0
 
     ### 
     def configure(self):
