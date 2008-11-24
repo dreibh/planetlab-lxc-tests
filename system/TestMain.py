@@ -1,4 +1,4 @@
-#!/usr/bin/env python -u
+#!/usr/bin/python -u
 # $Id$
 
 import sys, os, os.path
