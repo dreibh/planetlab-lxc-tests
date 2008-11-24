@@ -114,7 +114,8 @@ class TestNode:
         utils.header("Calling GetBootMedium for %s"%self.name())
         options = []
         if self.is_qemu():
-            options=['serial']
+            options.append('serial')
+            options.append('no-hangcheck')
         encoded=self.test_plc.apiserver.GetBootMedium(self.test_plc.auth_root(), 
                                                       self.name(), 'node-iso', '', options)
         if (encoded == ''):
