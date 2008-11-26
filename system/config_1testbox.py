@@ -7,8 +7,6 @@ from TestPool import TestPoolQemu
 onelab_qemus_pool = [ 
     ( 'kruder.inria.fr', None, None),
     ( 'estran.inria.fr', None, None),
-# cut here
-    ( 'blitz.inria.fr', None, None),
 ]
     
 def config (plcs, options):
