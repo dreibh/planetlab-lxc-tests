@@ -46,7 +46,7 @@ build-url defaults to the last value used, as stored in arg-build-url,
    or %s
 config defaults to the last value used, as stored in arg-config,
    or %r
-node-ips and plc-ips defaults to the last value used, as stored in arg-ips-node and arg-ips-plc,
+ips_node, ips_plc and ips_qemu defaults to the last value used, as stored in arg-ips-{node,plc,qemu},
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
 ===
@@ -75,10 +75,13 @@ steps refer to a method in TestPlc or to a step_* module
                           help="List known steps")
         parser.add_option("-N","--nodes",action="callback", callback=TestMain.optparse_list, dest="ips_node",
                           nargs=1,type="string",
-                          help="Specify the set of IP addresses to use for nodes (scanning disabled)")
+                          help="Specify the set of hostname/IP's to use for nodes")
         parser.add_option("-P","--plcs",action="callback", callback=TestMain.optparse_list, dest="ips_plc",
                           nargs=1,type="string",
-                          help="Specify the set of IP addresses to use for plcs (scanning disabled)")
+                          help="Specify the set of hostname/IP's to use for plcs")
+        parser.add_option("-Q","--qemus",action="callback", callback=TestMain.optparse_list, dest="ips_qemu",
+                          nargs=1,type="string",
+                          help="Specify the set of hostname/IP's to use for qemu boxes")
         parser.add_option("-s","--size",action="store",type="int",dest="size",default=1,
                           help="sets test size in # of plcs - default is 1")
         parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
@@ -120,6 +123,7 @@ steps refer to a method in TestPlc or to a step_* module
             ('build_url','arg-build-url',TestMain.default_build_url) ,
             ('ips_node','arg-ips-node',[]) , 
             ('ips_plc','arg-ips-plc',[]) , 
+            ('ips_qemu','arg-ips-qemu',[]) , 
             ('config','arg-config',TestMain.default_config) , 
             ('arch_rpms_url','arg-arch-rpms-url',"") , 
             ('personality','arg-personality',"linux32"),
@@ -212,6 +216,13 @@ steps refer to a method in TestPlc or to a step_* module
                 for node_spec in site_spec['nodes']:
                     ips_node_file.write("%s\n"%node_spec['node_fields']['hostname'])
         ips_node_file.close()
+        # ditto for qemu boxes
+        ips_qemu_file=open('arg-ips-qemu','w')
+        for plc_spec in all_plc_specs:
+            for site_spec in plc_spec['sites']:
+                for node_spec in site_spec['nodes']:
+                    ips_qemu_file.write("%s\n"%node_spec['host_box'])
+        ips_qemu_file.close()
         # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
             spec['disabled'] = False

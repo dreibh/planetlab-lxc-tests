@@ -5,13 +5,17 @@
 # 
 # allows to pick an available IP among a pool
 #
-# input is expressed as a list of tuples ('hostname_or_ip',user_data)
-# can be searched iteratively
+# input is expressed as a list of tuples (hostname,ip,user_data)
+# that can be searched iteratively for a free slot
+# TestPoolIP : look for a free IP address
+# TestPoolQemu : look for a test_box with no qemu running
 # e.g.
-# pool = [ (hostname1,ip1,user_data1),  (hostname2,ip2,user_data2),  
-#          (hostname3,ip3,user_data2),  (hostname4,ip4,user_data4) ]
+# pool = [ (hostname1,ip1,user_data1),  
+#          (hostname2,ip2,user_data2),  
+#          (hostname3,ip3,user_data2),  
+#          (hostname4,ip4,user_data4) ]
 # assuming that ip1 and ip3 are taken (pingable), then we'd get
-# pool=TestPool(pool)
+# pool=TestPoolIP(pool)
 # pool.next_free() -> entry2
 # pool.next_free() -> entry4
 # pool.next_free() -> None
@@ -22,13 +26,14 @@ import utils
 
 class TestPool:
 
-    def __init__ (self, pool, options):
+    def __init__ (self, pool, options,message):
         self.pool=pool
         self.options=options
         self.busy=[]
+        self.message=message
 
     # let's be flexible
-    def locate (self, hostname_or_ip, busy=False):
+    def locate_entry (self, hostname_or_ip, busy=True):
         for (h,i,u) in self.pool:
             if h.find(hostname_or_ip)>=0  or i.find(hostname_or_ip)>=0 :
                 if busy:
@@ -37,41 +42,70 @@ class TestPool:
         return None
 
     def next_free (self):
-        # if preferred is provided, let's re-order
         if self.options.quiet:
-            print 'TestPool is looking for a free IP address',
-        for (host,ip,user_data) in self.pool:
-            if host in self.busy:
+            print 'TestPool is looking for a %s'%self.message,
+        for (hostname,ip,user_data) in self.pool:
+            if hostname in self.busy:
                 continue
             if not self.options.quiet:
-                utils.header('TestPool : checking %s'%host)
+                utils.header('TestPool : checking %s'%hostname)
             if self.options.quiet:
                 print '.',
-            if not TestPool.check_ping (host):
+            if self.free_hostname(hostname):
                 if not self.options.quiet:
-                    utils.header('%s is available'%host)
+                    utils.header('%s is available'%hostname)
                 else:
                     print ''
-                self.busy.append(host)
-                return (host,ip,user_data)
+                self.busy.append(hostname)
+                return (hostname,ip,user_data)
             else:
-                self.busy.append(host)
-        return None
+                self.busy.append(hostname)
+        raise Exception, "No space left in pool (%s)"%self.message
+
+class TestPoolIP (TestPool):
+
+    def __init__ (self,pool,options):
+        TestPool.__init__(self,pool,options,"free IP address")
+
+    def free_hostname (self, hostname):
+        return not TestPoolIP.check_ping(hostname)
 
 # OS-dependent ping option (support for macos, for convenience)
     ping_timeout_option = None
 # checks whether a given hostname/ip responds to ping
     @staticmethod
     def check_ping (hostname):
-        if not TestPool.ping_timeout_option:
+        if not TestPoolIP.ping_timeout_option:
             (status,osname) = commands.getstatusoutput("uname -s")
             if status != 0:
                 raise Exception, "TestPool: Cannot figure your OS name"
             if osname == "Linux":
-                TestPool.ping_timeout_option="-w"
+                TestPoolIP.ping_timeout_option="-w"
             elif osname == "Darwin":
-                TestPool.ping_timeout_option="-t"
+                TestPoolIP.ping_timeout_option="-t"
 
-        command="ping -c 1 %s 1 %s"%(TestPool.ping_timeout_option,hostname)
+        command="ping -c 1 %s 1 %s"%(TestPoolIP.ping_timeout_option,hostname)
         (status,output) = commands.getstatusoutput(command)
         return status == 0
+
+class TestPoolQemu (TestPool):
+    
+    def __init__ (self,pool,options):
+        TestPool.__init__(self,pool,options,"free qemu box")
+
+    def free_hostname (self, hostname):
+        return not TestPoolQemu.busy_qemu(hostname)
+
+    # is there a qemu runing on that box already ?
+    @staticmethod
+    def busy_qemu (hostname):
+        command="ssh -o ConnectTimeout=5 root@%s ps -e -o cmd"%hostname
+        (status,output) = commands.getstatusoutput(command)
+        # if we fail to run that, let's assume we don't have ssh access, so
+        # we pretend the box is busy
+        if status!=0:
+            return True
+        elif output.find("qemu") >=0 :
+            return True
+        else:
+            return False

@@ -1,24 +1,34 @@
 import sys
 
 from TestMapper import TestMapper
+from TestPool import TestPoolQemu
 
-# using mapper to do the reallocation job
-
+# a small qemu pool for now
+onelab_qemus_pool = [ 
+    ( 'kruder.inria.fr', None, None),
+    ( 'estran.inria.fr', None, None),
+# cut here
+    ( 'blitz.inria.fr', None, None),
+]
+    
 def config (plcs, options):
 
-    if options.personality == "linux32":
-        plc_box   ='speedball.inria.fr'
-        node_box1 = 'testbox64_1.onelab.eu'
-        node_box2 = 'testbox64_2.onelab.eu'
-        label="32"
-    elif options.personality == "linux64":
-        plc_box =   'speedball.inria.fr'
-        node_box1 = 'testbox64_1.onelab.eu'
-        node_box2 = 'testbox64_2.onelab.eu'
-        label="64"
-    else:
-        print 'Unsupported personality %s'%options.personality
-        sys.exit(1)
+    # all plcs on the same vserver box
+    plc_box   ='speedball.inria.fr'
+    # informative
+    label=options.personality.replace("linux","")
+
+    # all qemus on a unique pool of 64bits boxes
+    node_map = []
+    qemu_pool = TestPoolQemu (onelab_qemus_pool,options)
+    for index in range(options.size):
+        index += 1
+        if options.ips_qemu:
+            ip_or_hostname=options.ips_qemu.pop()
+            (hostname,ip,unused)=qemu_pool.locate_entry(ip_or_hostname)
+        else:
+            (hostname,ip,unused) = qemu_pool.next_free()
+        node_map += [ ('node%d'%index, {'host_box':hostname},) ]
 
     mapper = {'plc': [ ('*' , {'hostname':plc_box,
                                'PLC_DB_HOST':plc_box,
@@ -27,9 +37,7 @@ def config (plcs, options):
                                'PLC_WWW_HOST':plc_box,
                                'name':'%s-'+label } ) 
                        ],
-              'node': [ ('node1' , {'host_box': node_box1 } ),
-                        ('node2' , {'host_box': node_box2 } ),
-                        ],
+              'node': node_map,
               }
     
     return TestMapper(plcs,options).map(mapper)

@@ -1,31 +1,29 @@
 import utils
 import os.path
-from TestPool import TestPool
+from TestPool import TestPoolIP
 
-# the pool of IP addresses available - from 01 to 09
-#onelab_plcs_pool = [ 
-#    ( 'vplc%02d.inria.fr'%i, '138.96.250.13%d'%i, '02:34:56:00:ee:%02d'%i) for i in range(1,10) ]
-# vplc09 is reserved for a fixed myplc - from 01 to 08
-onelab_plcs_pool = [ 
-    ( 'vplc%02d.inria.fr'%i, '138.96.255.%d'%(200+i), '02:34:56:00:ee:%02d'%i) for i in range(1,21) ]
+onelab_plcs_ip_pool = [ 
+    ( 'vplc%02d.inria.fr'%i, 
+      '138.96.255.%d'%(200+i), 
+      '02:34:56:00:ee:%02d'%i) for i in range(1,21) ]
 
 def config (plcs,options):
     
     utils.header ("Turning configuration into a vserver-based one for onelab")
 
-    test_pool = TestPool (onelab_plcs_pool,options)
+    ip_pool = TestPoolIP (onelab_plcs_ip_pool,options)
 
     plc_counter=0
     for plc in plcs:
         try:
             if options.ips_plc :
-                ip=options.ips_plc.pop()
-                (hostname,ip,mac)=test_pool.locate(ip,True)
+                ip_or_hostname=options.ips_plc.pop()
+                (hostname,ip,mac)=ip_pool.locate_entry(ip_or_hostname)
                 if not options.quiet:
                     utils.header("Using user-provided %s %s for plc %s"%(
-                            hostname,ip,plc['name']))
+                            hostname,ip_or_hostname,plc['name']))
             else:
-                (hostname,ip,mac)=test_pool.next_free()
+                (hostname,ip,mac)=ip_pool.next_free()
                 if not options.quiet:
                     utils.header("Using auto-allocated %s %s for plc %s"%(
                             hostname,ip,plc['name']))

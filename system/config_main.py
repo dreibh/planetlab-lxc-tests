@@ -5,7 +5,7 @@
 #     (**) TestMain options field
 # (*) and that returns the new set of plc_specs
 
-# values like 'hostname', 'ip' and the like my be rewritten later with a TestPool object
+# values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
 def nodes(options,index):
     return [{'name':'node%d'%index,
