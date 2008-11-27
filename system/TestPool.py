@@ -35,7 +35,7 @@ class TestPool:
     # let's be flexible
     def locate_entry (self, hostname_or_ip, busy=True):
         for (h,i,u) in self.pool:
-            if h.find(hostname_or_ip)>=0  or i.find(hostname_or_ip)>=0 :
+            if h.find(hostname_or_ip)>=0  or (i and i.find(hostname_or_ip)>=0) :
                 if busy:
                     self.busy.append(h)
                 return (h,i,u)
