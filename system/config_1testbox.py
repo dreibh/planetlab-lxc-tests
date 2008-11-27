@@ -4,10 +4,7 @@ from TestMapper import TestMapper
 from TestPool import TestPoolQemu
 
 # a small qemu pool for now
-onelab_qemus_pool = [ 
-    ( 'kruder.inria.fr', None, None),
-    ( 'estran.inria.fr', None, None),
-]
+onelab_qemus_pool = [ ( 'testqemu%d.onelab.eu'%i, None, None) for i in range(1,4) ]
     
 def config (plcs, options):
 
