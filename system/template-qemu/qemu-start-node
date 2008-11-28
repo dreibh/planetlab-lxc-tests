@@ -1,17 +1,32 @@
 #!/bin/bash
+# $Id$
+
+# it does the following:
+# (*) close all file descriptors and redirect output to log.txt 
+#     this is because it is designed for use through ssh from a remote test master controller
+# (*) initialize a disk image if it does not exist yet
+# (*) starts a qemu instance 
 
 # cd in this command's directory
 COMMAND=$(basename $0)
 cd $(dirname $0)
 
 ########## globals
+# 1 gigabyte ram
 RAM=1024
 DISK_SIZE=18G
-HDA=hdd-cow2-${DISK_SIZE}.img
-QEMU_CREATE_IMAGE="qemu-img create -f qcow2 $HDA ${DISK_SIZE}"
+DISK_FORMAT=qcow2
+DISK_IMAGE=hdd-${DISK_FORMAT}-${DISK_SIZE}.img
 
 SCRIPT=qemu-ifup
-TAP="tap,script=$SCRIPT"
+
+####### we want this script to be invokable through ssh without the ssh client to remain hanging
+# close stdin
+exec <&-
+# redirect stdout
+exec >> log.txt
+# redirect stderr on stdout
+exec 2>&1
 
 ########## from the test environment
 # expected vars are MACADDR, NODE_ISO, HOSTNAME, IP and TARGET_ARCH
@@ -30,13 +45,12 @@ esac
 echo "Running $COMMAND in $(pwd)"
 echo "Starting at $(date)"
 
-#Creating new HDA if needed only
-#using qcow2 disk image format which is essential to support VM snapshots
-if [ -f $HDA ] ; then
-    echo "Using existing $HDA"
+#Creating new DISK_IMAGE if needed only
+if [ -f $DISK_IMAGE ] ; then
+    echo "Using existing $DISK_IMAGE"
 else
-    echo -n "Creating hard disk image (${DISK_SIZE}) as $HDA .. "
-    img=$($QEMU_CREATE_IMAGE)
+    echo -n "Creating hard disk image (${DISK_SIZE}) as $DISK_IMAGE .. "
+    img=$(qemu-img create -f ${DISK_FORMAT} $DISK_IMAGE ${DISK_SIZE})
     if [ -z "$img" ];then
 	echo "Failed"
 	exit 1
@@ -47,6 +61,19 @@ fi
 rm -f qemu.pid
 
 #Command for running the Qemu Emulator
-ARGS="-boot d  -net nic,macaddr=${MACADDR} -net $TAP, -cdrom ${NODE_ISO} -hda ${HDA} -m ${RAM} -nographic -pidfile qemu.pid"
-echo "Running $QEMU $ARGS < /dev/null"
-exec $QEMU $ARGS < /dev/null
+# can't use -daemonize: qemu-ifup: could not launch network script
+ARGS=""
+# basics
+ARGS="$ARGS -m ${RAM}"
+ARGS="$ARGS -hda ${DISK_IMAGE}"
+ARGS="$ARGS -nographic"
+ARGS="$ARGS -pidfile qemu.pid"
+# boot from CD
+ARGS="$ARGS -boot d"
+ARGS="$ARGS -cdrom ${NODE_ISO}"
+# set mac address
+ARGS="$ARGS -net nic,macaddr=${MACADDR}"
+# set init script
+ARGS="$ARGS -net tap,script=${SCRIPT}"
+echo "Running $QEMU $ARGS"
+exec $QEMU $ARGS &

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# use the bridge as set up by qemu-bridge-init start
+# this is the script provided to the qemu command-line, that qemu invokes to init the net device
+# basically this adds the interface to the bridge
 
 cd $(dirname $0)
-./qemu-bridge-init add $1
+exec ./qemu-bridge-init add $1

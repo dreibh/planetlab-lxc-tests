@@ -185,7 +185,7 @@ class TestNode:
 
         test_box.run_in_buildname("%s/qemu-bridge-init start >> %s/log.txt"%(self.nodedir(),self.nodedir()))
         # kick it off in background, as it would otherwise hang
-        test_box.run_in_buildname("%s/qemu-start-node 2>&1 >> %s/log.txt"%(self.nodedir(),self.nodedir()),True)
+        test_box.run_in_buildname("%s/qemu-start-node 2>&1 >> %s/log.txt"%(self.nodedir(),self.nodedir()))
 
     def list_qemu (self):
         utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
