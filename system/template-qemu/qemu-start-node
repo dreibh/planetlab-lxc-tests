@@ -58,6 +58,12 @@ else
     echo "Done"
 fi
 
+echo 'Checking for a loaded kqemu module'
+lsmod | grep kqemu
+echo 'Checking for /dev/kqemu'
+ls -l /dev/kqemu
+
+echo 'Cleaning up pid file'
 rm -f qemu.pid
 
 #Command for running the Qemu Emulator
