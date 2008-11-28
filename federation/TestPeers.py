@@ -743,38 +743,38 @@ def test05_sat (args=[1,2]):
     for i in args:
         name = sat_name(i)
         try:
-            sat_id=s[i].GetSliceAttributeTypes ([name])[0]
+            sat_id=s[i].GetSliceTagTypes ([name])[0]
         except:
             description="custom sat on plc%d"%i
             min_role_id=10
-            sat_id=s[i].AddSliceAttributeType ({ 'name':name,
+            sat_id=s[i].AddSliceTagType ({ 'name':name,
                                                  'description': description,
                                                  'min_role_id' : min_role_id})
             if sat_id:
-                print '%02d:== created SliceAttributeType = %d'%(i,sat_id)
+                print '%02d:== created SliceTagType = %d'%(i,sat_id)
 
-# for test, we create 4 slice_attributes
+# for test, we create 4 slice_tags
 # on slice1 - sat=custom_made (see above) - all nodes
 # on slice1 - sat=custom_made (see above) - node=n1
 # on slice1 - sat='net_max' - all nodes
 # on slice1 - sat='net_max' - node=n1
 
 def test05_sa_atom (slice_name,sat_name,value,node,i):
-    sa_id=s[i].GetSliceAttributes({'name':sat_name,
+    sa_id=s[i].GetSliceTags({'name':sat_name,
                                    'value':value})
     if not sa_id:
         if node:
-            sa_id=s[i].AddSliceAttribute(slice_name,
+            sa_id=s[i].AddSliceTag(slice_name,
                                          sat_name,
                                          value,
                                          node)
         else:
             print 'slice_name',slice_name,'sat_name',sat_name
-            sa_id=s[i].AddSliceAttribute(slice_name,
+            sa_id=s[i].AddSliceTag(slice_name,
                                          sat_name,
                                          value)
         if sa_id:
-            print '%02d:== created SliceAttribute = %d'%(i,sa_id),
+            print '%02d:== created SliceTag = %d'%(i,sa_id),
             print 'On slice',slice_name,'and node',node
         
 def test05_sa (args=[1,2]):
@@ -801,7 +801,7 @@ def p_node(n):
 
 def p_slice(s):
     print 'name: %-12s'%s['name'],'id: %02d'%s['slice_id'],'peer:',s['peer_id'],'nodes=',s['node_ids'],'persons=',s['person_ids']
-    print '---','sa_ids=',s['slice_attribute_ids'],'creator: %03r'%s['creator_person_id']
+    print '---','sa_ids=',s['slice_tag_ids'],'creator: %03r'%s['creator_person_id']
     print "--- 'expires':",s['expires']
 
 def p_sat(sat):
@@ -810,7 +810,7 @@ def p_sat(sat):
 
 def p_sa (sa):
         print 'name: %-12s'%sa['name'], 
-        print 'sa_id: %02d'%sa['slice_attribute_id'],'sat_id: %02d'%sa['attribute_type_id'],
+        print 'sa_id: %02d'%sa['slice_tag_id'],'sat_id: %02d'%sa['attribute_type_id'],
         print 'sl=%02d'%sa['slice_id'],'v=',sa['value'],'n=',sa['node_id']
 
 import pprint
@@ -843,9 +843,9 @@ def dump (args=[1,2]):
         print '%02d: SLICES'%i
         [p_slice(x) for x in s[i].GetSlices()]
         print '%02d: Slice Attribute Types'%i
-        [p_sat(x) for x in s[i].GetSliceAttributeTypes()]
+        [p_sat(x) for x in s[i].GetSliceTagTypes()]
         print '%02d: Slice Attributes'%i
-        [p_sa(x) for x in s[i].GetSliceAttributes()]
+        [p_sa(x) for x in s[i].GetSliceTags()]
         timer_show()
         snodes=min(3,number_nodes)
         print '%02d: SLIVERS for first %d nodes'%(i,snodes)
@@ -878,11 +878,11 @@ def ps ():
         p_slice(x)
 
 def psat():
-    for x in GetSliceAttributeTypes():
+    for x in GetSliceTagTypes():
         p_sat(x)
         
 def psa():
-    for x in GetSliceAttributes():
+    for x in GetSliceTags():
         p_sa(x)
         
 def pv ():
@@ -1057,7 +1057,7 @@ def test_all_slices ():
     
 def test_all_sats ():
     test05_sat ()
-    test00_refresh("after SliceAttributeType creation")                   
+    test00_refresh("after SliceTagType creation")                   
 
 def test_all ():
     test_all_init ()

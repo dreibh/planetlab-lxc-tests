@@ -78,21 +78,20 @@ class TestNode:
         # populate network interfaces - others
         if self.node_spec.has_key('extra_interfaces'):
             for interface in self.node_spec['extra_interfaces']:
-                server.AddInterface(userauth,self.name(),
-                                                    interface['interface_fields'])
+                server.AddInterface(userauth,self.name(), interface['interface_fields'])
                 if interface.has_key('settings'):
                     for (attribute,value) in interface['settings'].iteritems():
                         # locate node network
-                        nn = server.GetInterfaces(userauth,{'ip':interface['interface_fields']['ip']})[0]
-                        nnid=nn['interface_id']
+                        interface = server.GetInterfaces(userauth,{'ip':interface['interface_fields']['ip']})[0]
+                        interface_id=interface['interface_id']
                         # locate or create node network attribute type
                         try:
-                            nnst = server.GetTagTypes(userauth,{'name':attribute})[0]
+                            interface_tagtype = server.GetTagTypes(userauth,{'name':attribute})[0]
                         except:
-                            nnst = server.AddTagType(rootauth,{'category':'test',
-                                                               'tagname':attribute})
+                            interface_tagtype = server.AddTagType(rootauth,{'category':'test',
+                                                                            'tagname':attribute})
                         # attach value
-                        server.AddInterfaceSetting(userauth,nnid,attribute,value)
+                        server.AddInterfaceTag(userauth,interface_id,attribute,value)
 
     def delete_node (self):
         # uses the right auth as far as poss.

@@ -216,7 +216,7 @@ class Test:
         'addresses_per_site': 1,
         'persons_per_site': 1,
         'keys_per_person': 1,
-        'slice_attributes': 1,
+        'slice_tags': 1,
         'nodegroups': 1,
         'nodes_per_site': 1,
         'interfaces_per_node': 1,
@@ -233,7 +233,7 @@ class Test:
         'addresses_per_site': 2,
         'persons_per_site': 4,
         'keys_per_person': 2,
-        'slice_attributes': 10,
+        'slice_tags': 10,
         'nodegroups': 10,
         'nodes_per_site': 2,
         'interfaces_per_node': 1,
@@ -265,7 +265,7 @@ class Test:
         self.pcu_ids = []
         self.conf_file_ids = []
         self.slice_ids = []
-        self.slice_attribute_ids = []
+        self.slice_tag_ids = []
 
     def Run(self, **kwds):
         """
@@ -303,7 +303,7 @@ class Test:
         self.AddAddresses(params['addresses_per_site'])
         self.AddPersons(params['persons_per_site'])
         self.AddKeys(params['keys_per_person'])
-        self.AddTagTypes(params['slice_attributes'],params['nodegroups'],params['ilinks'])
+        self.AddTagTypes(params['slice_tags'],params['nodegroups'],params['ilinks'])
         self.AddNodeGroups(params['nodegroups'])
         self.AddNodes(params['nodes_per_site'])
         self.AddInterfaces(params['interfaces_per_node'])
@@ -311,7 +311,7 @@ class Test:
         self.AddPCUs(params['pcus_per_site'])
         self.AddConfFiles(params['conf_files'])
         self.AddSlices(params['slices_per_site'])
-        self.AddSliceAttributes(params['attributes_per_slice'])
+        self.AddSliceTags(params['attributes_per_slice'])
 
     def Update(self):
         self.UpdateSites()
@@ -327,10 +327,10 @@ class Test:
         self.UpdatePCUs()
         self.UpdateConfFiles()
         self.UpdateSlices()
-        self.UpdateSliceAttributes()
+        self.UpdateSliceTags()
 
     def Delete(self):
-        self.DeleteSliceAttributes()
+        self.DeleteSliceTags()
         self.DeleteSlices()
         self.DeleteKeys()
         self.DeleteConfFiles()
@@ -1451,7 +1451,7 @@ class Test:
 
         self.slice_ids = []
 
-    def AddSliceAttributes(self, per_slice = 2):
+    def AddSliceTags(self, per_slice = 2):
         """
         Add a number of random slices per site.
         """
@@ -1474,61 +1474,61 @@ class Test:
 
                     # Add slice attribute
                     if node_id is None:
-                        slice_attribute_id = self.api.AddSliceAttribute(slice_id, tag_type_id, value)
+                        slice_tag_id = self.api.AddSliceTag(slice_id, tag_type_id, value)
                     else:
-                        slice_attribute_id = self.api.AddSliceAttribute(slice_id, tag_type_id, value, node_id)
+                        slice_tag_id = self.api.AddSliceTag(slice_id, tag_type_id, value, node_id)
 
-                    # Should return a unique slice_attribute_id
-                    assert slice_attribute_id not in self.slice_attribute_ids
-                    self.slice_attribute_ids.append(slice_attribute_id)
+                    # Should return a unique slice_tag_id
+                    assert slice_tag_id not in self.slice_tag_ids
+                    self.slice_tag_ids.append(slice_tag_id)
 
                     if self.check:
                         # Check slice attribute
-                        slice_attribute = self.api.GetSliceAttributes([slice_attribute_id])[0]
-                        for field in 'tag_type_id', 'slice_id', 'node_id', 'slice_attribute_id', 'value':
-                            assert slice_attribute[field] == locals()[field]
+                        slice_tag = self.api.GetSliceTags([slice_tag_id])[0]
+                        for field in 'tag_type_id', 'slice_id', 'node_id', 'slice_tag_id', 'value':
+                            assert slice_tag[field] == locals()[field]
 
                     if self.verbose:
-                        print "Added slice attribute", slice_attribute_id, "of type", tag_type_id,
+                        print "Added slice attribute", slice_tag_id, "of type", tag_type_id,
                         if node_id is not None:
                             print "to node", node_id,
                         print
                         
-    def UpdateSliceAttributes(self):
+    def UpdateSliceTags(self):
         """
         Make random changes to any slice attributes we may have added.
         """
 
-        for slice_attribute_id in self.slice_attribute_ids:
+        for slice_tag_id in self.slice_tag_ids:
             # Update slice attribute
             value = randstr(16, letters + '_' + digits)
-            self.api.UpdateSliceAttribute(slice_attribute_id, value)
+            self.api.UpdateSliceTag(slice_tag_id, value)
 
             # Check slice attribute again
-            slice_attribute = self.api.GetSliceAttributes([slice_attribute_id])[0]
-            assert slice_attribute['value'] == value
+            slice_tag = self.api.GetSliceTags([slice_tag_id])[0]
+            assert slice_tag['value'] == value
 
             if self.verbose:
-                print "Updated slice attribute", slice_attribute_id
+                print "Updated slice attribute", slice_tag_id
 
-    def DeleteSliceAttributes(self):
+    def DeleteSliceTags(self):
         """
         Delete any random slice attributes we may have added.
         """
 
-        for slice_attribute_id in self.slice_attribute_ids:
-            self.api.DeleteSliceAttribute(slice_attribute_id)
+        for slice_tag_id in self.slice_tag_ids:
+            self.api.DeleteSliceTag(slice_tag_id)
 
             if self.check:
-                assert not self.api.GetSliceAttributes([slice_attribute_id])
+                assert not self.api.GetSliceTags([slice_tag_id])
 
             if self.verbose:
-                print "Deleted slice attribute", slice_attribute_id
+                print "Deleted slice attribute", slice_tag_id
 
         if self.check:
-            assert not self.api.GetSliceAttributes(self.slice_attribute_ids)
+            assert not self.api.GetSliceTags(self.slice_tag_ids)
 
-        self.slice_attribute_ids = []
+        self.slice_tag_ids = []
 
 def main():
     parser = OptionParser()
