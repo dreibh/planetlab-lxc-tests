@@ -9,7 +9,7 @@ onelab_qemus_pool = [ ( 'testqemu%d.onelab.eu'%i, None, None) for i in range(1,4
 def config (plcs, options):
 
     # all plcs on the same vserver box
-    plc_box   ='speedball.inria.fr'
+    plc_box   ='testbox-plc.onelab.eu'
     # informative
     label=options.personality.replace("linux","")
 
