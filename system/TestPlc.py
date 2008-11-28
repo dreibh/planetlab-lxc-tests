@@ -81,7 +81,7 @@ class TestPlc:
         'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
         'clean_sites', 'clean_nodes', 
         'clean_slices', 'clean_keys', SEP,
-        'show_boxes', 'list_all_qemus', 'list_qemus', SEP,
+        'show_boxes', 'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
         'db_dump' , 'db_restore', 'cleanup_trackers', 'cleanup_all_trackers',
         'standby_1 through 20',
         ]
