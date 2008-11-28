@@ -73,7 +73,7 @@ class TestPlc:
         'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
         'check_tcp',  SEP,
-        'force_gather_logs', 'force_kill_qemus', 'force_record_tracker','force_free_tracker',
+        'force_gather_logs', 'force_record_tracker','force_free_tracker',
         ]
     other_steps = [ 
         'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
