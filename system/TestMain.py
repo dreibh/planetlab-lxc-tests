@@ -176,6 +176,9 @@ steps refer to a method in TestPlc or to a step_* module
             #self.options.steps=['dump','clean','install','populate']
             self.options.steps=TestPlc.default_steps
 
+        # rewrite '-' into '_' in step names
+        self.options.steps = [ step.replace('-','_') for step in self.options.steps ]
+
         # exclude
         selected=[]
         for step in self.options.steps:

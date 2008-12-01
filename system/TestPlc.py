@@ -17,6 +17,7 @@ from TestSliver import TestSliver
 from TestBox import TestBox
 from TestSsh import TestSsh
 from TestApiserver import TestApiserver
+from Trackers import TrackerPlc, TrackerQemu
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
@@ -63,7 +64,7 @@ SEP='<sep>'
 class TestPlc:
 
     default_steps = [
-        'display','uninstall','install','install_rpm', 
+        'display','trqemu_record','trqemu_free','uninstall','install','install_rpm', 
         'configure', 'start', 'fetch_keys', SEP,
         'store_keys', 'clear_known_hosts', 'initscripts', SEP,
         'sites', 'nodes', 'slices', 'nodegroups', SEP,
@@ -73,7 +74,7 @@ class TestPlc:
         'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
         'check_tcp',  SEP,
-        'force_gather_logs', 'force_record_tracker','force_free_tracker',
+        'force_gather_logs', 'force_trplc_record','force_trplc_free',
         ]
     other_steps = [ 
         'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
@@ -82,7 +83,7 @@ class TestPlc:
         'clean_sites', 'clean_nodes', 
         'clean_slices', 'clean_keys', SEP,
         'show_boxes', 'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
-        'db_dump' , 'db_restore', 'cleanup_trackers', 'cleanup_all_trackers',
+        'db_dump' , 'db_restore', 'trplc_cleanup','trqemu_cleanup','trackers_cleanup', SEP,
         'standby_1 through 20',
         ]
 
@@ -378,91 +379,52 @@ class TestPlc:
         print '*\tqemu box %s'%node_spec['host_box']
         print '*\thostname=%s'%node_spec['node_fields']['hostname']
 
-    ### utility methods for handling the pool of IP addresses allocated to plcs
-    # Logic
-    # (*) running plcs are recorded in the file named ~/running-test-plcs
-    # (*) this file contains a line for each running plc, older first
-    # (*) each line contains the vserver name + the hostname of the (vserver) testbox where it sits
-    # (*) the free_tracker method performs a vserver stop on the oldest entry
-    # (*) the record_tracker method adds an entry at the bottom of the file
-    # (*) the cleanup_tracker method stops all known vservers and removes the tracker file
-
-    TRACKER_FILE=os.environ['HOME']+"/running-test-plcs"
-    # how many concurrent plcs are we keeping alive - adjust with the IP pool size
-    TRACKER_KEEP_VSERVERS = 12
-
-    def record_tracker (self):
-        try:
-            lines=file(TestPlc.TRACKER_FILE).readlines()
-        except:
-            lines=[]
-
-        this_line="%s %s\n"%(self.vservername,self.test_ssh.hostname)
-        for line in lines:
-            if line==this_line:
-                print 'this vserver is already included in %s'%TestPlc.TRACKER_FILE
-                return True
-        if self.options.dry_run:
-            print 'dry_run: record_tracker - skipping tracker update'
-            return True
-        tracker=file(TestPlc.TRACKER_FILE,"w")
-        for line in lines+[this_line]:
-            tracker.write(line)
-        tracker.close()
-        print "Recorded %s in running plcs on host %s"%(self.vservername,self.test_ssh.hostname)
+    ### tracking
+    def trplc_record (self):
+        tracker = TrackerPlc(self.options)
+        tracker.record(self.test_ssh.hostname,self.vservername)
+        tracker.store()
         return True
 
-    def free_tracker (self, keep_vservers=None):
-        if not keep_vservers: keep_vservers=TestPlc.TRACKER_KEEP_VSERVERS
-        try:
-            lines=file(TestPlc.TRACKER_FILE).readlines()
-        except:
-            print 'dry_run: free_tracker - skipping tracker update'
-            return True
-        how_many = len(lines) - keep_vservers
-        # nothing todo until we have more than keep_vservers in the tracker
-        if how_many <= 0:
-            print 'free_tracker : limit %d not reached'%keep_vservers
-            return True
-        to_stop = lines[:how_many]
-        to_keep = lines[how_many:]
-        for line in to_stop:
-            print '>%s<'%line
-            [vname,hostname]=line.split()
-            command=TestSsh(hostname).actual_command("vserver --silent %s stop"%vname)
-            utils.system(command)
-        if self.options.dry_run:
-            print 'dry_run: free_tracker would stop %d vservers'%len(to_stop)
-            for line in to_stop: print line,
-            print 'dry_run: free_tracker would keep %d vservers'%len(to_keep)
-            for line in to_keep: print line,
-            return True
-        print "Storing %d remaining vservers in %s"%(len(to_keep),TestPlc.TRACKER_FILE)
-        tracker=open(TestPlc.TRACKER_FILE,"w")
-        for line in to_keep:
-            tracker.write(line)
-        tracker.close()
+    def trplc_free (self):
+        tracker = TrackerPlc(self.options)
+        tracker.free()
+        tracker.store()
         return True
 
-    # this should/could stop only the ones in TRACKER_FILE if that turns out to be reliable
-    def cleanup_trackers (self):
-        try:
-            for line in TestPlc.TRACKER_FILE.readlines():
-                [vname,hostname]=line.split()
-                stop="vserver --silent %s stop"%vname
-                command=TestSsh(hostname).actual_command(stop)
-                utils.system(command)
-            clean_tracker = "rm -f %s"%TestPlc.TRACKER_FILE
-            utils.system(self.test_ssh.actual_command(clean_tracker))
-        except:
-            return True
+    def trplc_cleanup (self):
+        tracker = TrackerPlc(self.options)
+        tracker.cleanup()
+        tracker.store()
+        return True
 
-    # this should/could stop only the ones in TRACKER_FILE if that turns out to be reliable
-    def cleanup_all_trackers (self):
-        stop_all = "cd /vservers ; for i in * ; do vserver --silent $i stop ; done"
-        utils.system(self.test_ssh.actual_command(stop_all))
-        clean_tracker = "rm -f %s"%TestPlc.TRACKER_FILE
-        utils.system(self.test_ssh.actual_command(clean_tracker))
+    def trqemu_record (self):
+        tracker=TrackerQemu(self.options)
+        for site_spec in self.plc_spec['sites']:
+            for node_spec in site_spec['nodes']:
+                tracker.record(node_spec['host_box'],self.options.buildname,node_spec['node_fields']['hostname'])
+        tracker.store()
+        return True
+
+    def trqemu_free (self):
+        tracker=TrackerQemu(self.options)
+        for site_spec in self.plc_spec['sites']:
+            for node_spec in site_spec['nodes']:
+                tracker.free()
+        tracker.store()
+        return True
+
+    def trqemu_cleanup (self):
+        tracker=TrackerQemu(self.options)
+        for site_spec in self.plc_spec['sites']:
+            for node_spec in site_spec['nodes']:
+                tracker.cleanup()
+        tracker.store()
+        return True
+
+    def trackers_cleanup (self):
+        self.trqemu_cleanup()
+        self.trplc_cleanup()
         return True
 
     def uninstall(self):
@@ -1068,4 +1030,3 @@ class TestPlc:
     def standby_19(): pass
     @standby_generic 
     def standby_20(): pass
-    
