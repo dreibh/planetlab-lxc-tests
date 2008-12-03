@@ -196,7 +196,7 @@ class TestNode:
         #Prepare the log file before killing the nodes
         test_box = self.test_box()
         # kill the right processes 
-        utils.header("Stopping qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
+        utils.header("Stopping qemu for node %s on box %s"%(self.name(),self.test_box().hostname()))
         command="%s/qemu-kill-node %s"%(self.nodedir(),self.name())
         self.test_box().run_in_buildname(command)
         return True

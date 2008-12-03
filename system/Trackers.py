@@ -89,7 +89,7 @@ class TrackerPlc (Tracker):
 
 class TrackerQemu (Tracker):
 
-    DEFAULT_FILENAME=os.environ['HOME']+"/tracker-emus"
+    DEFAULT_FILENAME=os.environ['HOME']+"/tracker-qemus"
     # how many concurrent plcs are we keeping alive - adjust with the IP pool size
     DEFAULT_MAX_INSTANCES = 2
 
