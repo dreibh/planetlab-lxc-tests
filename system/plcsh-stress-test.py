@@ -267,6 +267,14 @@ class Test:
         self.slice_ids = []
         self.slice_tag_ids = []
 
+    def Cardinals (self):
+        return [len(x) for x in ( 
+                self.api.GetNodes({},['node_id']),
+                self.api.GetSites({},['site_id']),
+                self.api.GetPersons({},['person_id']),
+                self.api.GetSlices({},['slice_id']),
+            )]
+
     def Run(self, **kwds):
         """
         Run a complete database and API consistency test. Populates
@@ -279,12 +287,21 @@ class Test:
         test.Run(sites = 123, slices_per_site = 4) # Defaults with overrides
         """
 
+        cardinals_before=self.Cardinals()
+        print 'Cardinals before test (n,s,p,sl)',cardinals_before
+
         self.Add(**kwds)
         self.Update()
         if self.preserve:
             print 'Preserving - delete skipped'
         else:
             self.Delete()
+
+        cardinals_after=self.Cardinals()
+        print 'Cardinals after test (n,s,p,sl)',cardinals_after
+
+        if cardinals_before != cardinals_after:
+            raise Exception, 'cardinals before and after differ - check deletion mechanisms'
 
     def Add(self, **kwds):
         """
