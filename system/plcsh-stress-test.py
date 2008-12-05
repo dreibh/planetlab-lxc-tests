@@ -145,12 +145,14 @@ def random_tag_type (role_ids):
 def random_nodegroup():
     return {'groupname' : randstr(50) }
 
-def random_node(boot_states):
+def random_node(node_types,boot_states):
     return {
         'hostname': randhostname(),
+        'node_type': random.sample(node_types,1)[0],
         'boot_state': random.sample(boot_states, 1)[0],
         'model': randstr(255),
         'version': randstr(64),
+        'arch':randstr(10),
         }
 
 def random_interface(method, type):
@@ -872,6 +874,9 @@ class Test:
         previously run.
         """
         
+        node_types = self.api.GetNodeTypes()
+        if not node_types:
+            raise Exception, "No node types"
         boot_states = self.api.GetBootStates()
         if not boot_states:
             raise Exception, "No boot states"
@@ -879,7 +884,7 @@ class Test:
         for site_id in self.site_ids:
             for i in range(per_site):
                 # Add node
-                node_fields = random_node(boot_states)
+                node_fields = random_node(node_types,boot_states)
                 node_id = self.api.AddNode(site_id, node_fields)
 
                 # Should return a unique node_id
@@ -906,13 +911,16 @@ class Test:
         Make random changes to any nodes we may have added.
         """
 
+        node_types = self.api.GetNodeTypes()
+        if not node_types:
+            raise Exception, "No node types"
         boot_states = self.api.GetBootStates()
         if not boot_states:
             raise Exception, "No boot states"
 
         for node_id in self.node_ids:
             # Update node
-            node_fields = random_node(boot_states)
+            node_fields = random_node(node_types,boot_states)
             self.api.UpdateNode(node_id, node_fields)
 
             node = self.api.GetNodes([node_id])[0]
