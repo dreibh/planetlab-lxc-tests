@@ -152,6 +152,7 @@ def random_node(node_types,boot_states):
         'boot_state': random.sample(boot_states, 1)[0],
         'model': randstr(255),
         'version': randstr(64),
+        # for testing node tags
         'arch':randstr(10),
         }
 
@@ -922,8 +923,19 @@ class Test:
             # Update node
             node_fields = random_node(node_types,boot_states)
             self.api.UpdateNode(node_id, node_fields)
+            
+            # for testing node arch
+            check=node_fields.copy()
+            arch=check.pop('arch')
+            node = self.api.GetNodes(node_id)[0]
+            if node != check:
+                raise Exception,'Unexpected result in GetNodes()'
+            
+            # again when fetching 'arch' explicitly
+            node = self.api.GetNodes(node_id,Node.fields.keys()+'arch')[0]
+            if node != node_fields:
+                raise Exception,"Unexpected result in GetNodes(['__all__','arch'])"
 
-            node = self.api.GetNodes([node_id])[0]
 
             # Add to a random set of node groups
             nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
