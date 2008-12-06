@@ -145,6 +145,7 @@ def random_tag_type (role_ids):
 def random_nodegroup():
     return {'groupname' : randstr(50) }
 
+tag_fields=['arch']
 def random_node(node_types,boot_states):
     return {
         'hostname': randhostname(),
@@ -902,7 +903,8 @@ class Test:
                     # Check node
                     node = self.api.GetNodes([node_id])[0]
                     for field in node_fields:
-                        assert node[field] == node_fields[field]
+                        if field not in tag_fields:
+                            assert node[field] == node_fields[field]
 
                 if self.verbose:
                     print "Added node", node_id
@@ -926,15 +928,16 @@ class Test:
             
             # for testing node arch
             check=node_fields.copy()
-            arch=check.pop('arch')
+            for tagname in tag_fields:
+                check.pop(tagname)
             node = self.api.GetNodes(node_id)[0]
             if node != check:
                 raise Exception,'Unexpected result in GetNodes()'
             
             # again when fetching 'arch' explicitly
-            node = self.api.GetNodes(node_id,Node.fields.keys()+'arch')[0]
+            node = self.api.GetNodes(node_id,Node.fields.keys()+tag_fields)[0]
             if node != node_fields:
-                raise Exception,"Unexpected result in GetNodes(['__all__','arch'])"
+                raise Exception,"Unexpected result in GetNodes() with tags"
 
 
             # Add to a random set of node groups
