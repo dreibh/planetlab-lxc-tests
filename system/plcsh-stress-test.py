@@ -812,8 +812,8 @@ class Test:
             
             # Add node group
             groupname = random_nodegroup() ['groupname']
-            tagvalue = 'yes'
-            nodegroup_id = self.api.AddNodeGroup(groupname, tagname, tagvalue)
+            value = 'yes'
+            nodegroup_id = self.api.AddNodeGroup(groupname, tagname, value)
 
             # Should return a unique nodegroup_id
             assert nodegroup_id not in self.nodegroup_ids
@@ -824,7 +824,7 @@ class Test:
                 nodegroup = self.api.GetNodeGroups([nodegroup_id])[0]
                 assert nodegroup['groupname'] == groupname
                 assert nodegroup['tagname'] == tagname
-                assert nodegroup['tagvalue'] == tagvalue
+                assert nodegroup['value'] == value
 
             if self.verbose:
                 print "Added node group", nodegroup_id
@@ -1314,7 +1314,7 @@ class Test:
     def AddTagTypes(self,n_sa,n_ng,n_il):
         """
         Add as many tag types as there are nodegroups, 
-        will use tagvalue=yes for each nodegroup
+        will use value=yes for each nodegroup
         """
 
         roles = self.api.GetRoles()

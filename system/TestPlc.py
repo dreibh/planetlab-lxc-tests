@@ -649,7 +649,7 @@ class TestPlc:
                         expect_yes = self.apiserver.GetNodeTags(auth,
                                                                 {'hostname':nodename,
                                                                  'tagname':nodegroupname},
-                                                                ['tagvalue'])[0]['tagvalue']
+                                                                ['value'])[0]['value']
                         if expect_yes != "yes":
                             print 'Mismatch node tag on node',nodename,'got',expect_yes
                             overall=False
