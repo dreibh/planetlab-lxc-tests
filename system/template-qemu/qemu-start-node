@@ -37,8 +37,8 @@ CONFIG=qemu.conf
 # the launcher, depending on target arch
 # make sure to check qemu-kill-node for consistency
 case $TARGET_ARCH in
-    i386)		QEMU=qemu;;
-    x86_64)		QEMU=qemu-system-x86_64;;
+    i386)		QEMU=qemu ; ARGS="" ;;
+    x86_64)		QEMU=qemu-system-x86_64 ; ARGS="-no-kqemu" ;;
     *)			echo "Cannot handle TARGET_ARCH=$TARGET_ARCH"; exit 1 ;;
 esac
 
@@ -66,9 +66,7 @@ ls -l /dev/kqemu
 echo 'Cleaning up pid file'
 rm -f qemu.pid
 
-#Command for running the Qemu Emulator
-# can't use -daemonize: qemu-ifup: could not launch network script
-ARGS=""
+# qemu options
 # basics
 ARGS="$ARGS -m ${RAM}"
 ARGS="$ARGS -hda ${DISK_IMAGE}"
