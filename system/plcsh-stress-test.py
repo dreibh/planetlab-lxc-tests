@@ -9,7 +9,7 @@
 #
 
 from pprint import pprint
-from string import letters, digits, punctuation
+from string import letters, digits, punctuation, whitespace
 from traceback import print_exc
 from optparse import OptionParser
 import socket
@@ -65,15 +65,18 @@ def randstr(length, pool = valid_xml_chars, encoding = "utf-8"):
             break
     return s
 
+# nasty - see Test.namelengths* below
+namelengths={}
+
 def randhostname():
     # 1. Each part begins and ends with a letter or number.
     # 2. Each part except the last can contain letters, numbers, or hyphens.
     # 3. Each part is between 1 and 64 characters, including the trailing dot.
     # 4. At least two parts.
     # 5. Last part can only contain between 2 and 6 letters.
-    hostname = 'a' + randstr(61, letters + digits + '-') + '1.' + \
-               'b' + randstr(61, letters + digits + '-') + '2.' + \
-               'c' + randstr(5, letters)
+    hostname = 'a' + randstr(namelengths['hostname1'], letters + digits + '-') + '1.' + \
+               'b' + randstr(namelengths['hostname1'], letters + digits + '-') + '2.' + \
+               'c' + randstr(namelengths['hostname2'], letters)
     return hostname
 
 def randpath(length):
@@ -93,10 +96,19 @@ def randkey(bits = 2048):
                      randemail()])
 
 def random_site():
+    try:
+        sitename=randstr(namelengths['sitename'],namelengths['sitename_contents'])
+    except:
+        sitename=randstr(namelengths['sitename'])
+    try:
+        abbreviated_name=randstr(namelengths['abbreviated_name'],namelengths['abbreviated_name_contents'])
+    except:
+        abbreviated_name=randstr(namelengths['abbreviated_name'])
+
     return {
-        'name': randstr(254),
-        'abbreviated_name': randstr(50),
-        'login_base': randstr(20, letters).lower(),
+        'name': sitename,
+        'abbreviated_name': abbreviated_name,
+        'login_base': randstr(namelengths['login_base'], letters).lower(),
         'latitude': int(randfloat(-90.0, 90.0) * 1000) / 1000.0,
         'longitude': int(randfloat(-180.0, 180.0) * 1000) / 1000.0,
         }
@@ -214,7 +226,7 @@ def random_slice(login_base):
         }
 
 class Test:
-    tiny = {
+    sizes_tiny = {
         'sites': 1,
         'address_types': 1,
         'addresses_per_site': 1,
@@ -231,7 +243,7 @@ class Test:
         'attributes_per_slice': 1,
         }
 
-    default = {
+    sizes_default = {
         'sites': 10,
         'address_types': 2,
         'addresses_per_site': 2,
@@ -246,6 +258,24 @@ class Test:
         'conf_files': 10,
         'slices_per_site': 4,
         'attributes_per_slice': 2,
+        }
+
+    namelengths_default = {
+        'hostname1': 61,
+        'hostname2':5,
+        'login_base':20,
+        'sitename':254,
+        'abbreviated_name':50,
+        }
+
+    namelengths_short = {
+        'hostname1': 12,
+        'hostname2':3,
+        'login_base':8,
+        'sitename':64,
+        'sitename_contents':letters+digits+whitespace+punctuation,
+        'abbreviated_name':24,
+        'abbreviated_name_contents':letters+digits+whitespace+punctuation,
         }
 
     def __init__(self, api, check = True, verbose = True, preserve = False):
@@ -286,8 +316,8 @@ class Test:
         deletes them. Examples:
 
         test.Run() # Defaults
-        test.Run(**Test.default) # Defaults
-        test.Run(**Test.tiny) # Tiny set
+        test.Run(**Test.sizes_default) # Defaults
+        test.Run(**Test.sizes_tiny) # Tiny set
         test.Run(sites = 123, slices_per_site = 4) # Defaults with overrides
         """
 
@@ -301,38 +331,36 @@ class Test:
         else:
             self.Delete()
 
-        cardinals_after=self.Cardinals()
-        print 'Cardinals after test (n,s,p,sl)',cardinals_after
+            cardinals_after=self.Cardinals()
+            print 'Cardinals after test (n,s,p,sl)',cardinals_after
 
-        if cardinals_before != cardinals_after:
-            raise Exception, 'cardinals before and after differ - check deletion mechanisms'
+            if cardinals_before != cardinals_after:
+                raise Exception, 'cardinals before and after differ - check deletion mechanisms'
 
     def Add(self, **kwds):
         """
         Populate the database with a set of random entities. Examples:
 
-        test.populate() # Defaults
-        test.populate(Test.tiny) # Tiny set
-        test.populate(sites = 123, slices_per_site = 4) # Defaults with overrides
+        same args as Run()
         """
 
-        params = self.default.copy()
-        params.update(kwds)
+        sizes = self.sizes_default.copy()
+        sizes.update(kwds)
 
-        self.AddSites(params['sites'])
-        self.AddAddressTypes(params['address_types'])
-        self.AddAddresses(params['addresses_per_site'])
-        self.AddPersons(params['persons_per_site'])
-        self.AddKeys(params['keys_per_person'])
-        self.AddTagTypes(params['slice_tags'],params['nodegroups'],params['ilinks'])
-        self.AddNodeGroups(params['nodegroups'])
-        self.AddNodes(params['nodes_per_site'])
-        self.AddInterfaces(params['interfaces_per_node'])
-        self.AddIlinks (params['ilinks'])
-        self.AddPCUs(params['pcus_per_site'])
-        self.AddConfFiles(params['conf_files'])
-        self.AddSlices(params['slices_per_site'])
-        self.AddSliceTags(params['attributes_per_slice'])
+        self.AddSites(sizes['sites'])
+        self.AddAddressTypes(sizes['address_types'])
+        self.AddAddresses(sizes['addresses_per_site'])
+        self.AddPersons(sizes['persons_per_site'])
+        self.AddKeys(sizes['keys_per_person'])
+        self.AddTagTypes(sizes['slice_tags'],sizes['nodegroups'],sizes['ilinks'])
+        self.AddNodeGroups(sizes['nodegroups'])
+        self.AddNodes(sizes['nodes_per_site'])
+        self.AddInterfaces(sizes['interfaces_per_node'])
+        self.AddIlinks (sizes['ilinks'])
+        self.AddPCUs(sizes['pcus_per_site'])
+        self.AddConfFiles(sizes['conf_files'])
+        self.AddSlices(sizes['slices_per_site'])
+        self.AddSliceTags(sizes['attributes_per_slice'])
 
     def Update(self):
         self.UpdateSites()
@@ -1577,6 +1605,8 @@ def main():
                       help = "Do not delete created objects")
     parser.add_option("-t", "--tiny", action = "store_true", default = False, 
                       help = "Run a tiny test (default: %default)")
+    parser.add_option("-s", "--short-names", action="store_true", dest="short_names", default = False, 
+                      help = "Generate smaller names for checking UI rendering")
     (options, args) = parser.parse_args()
 
     test = Test(api = Shell(),
@@ -1585,11 +1615,17 @@ def main():
                 preserve = options.preserve)
 
     if options.tiny:
-        params = Test.tiny
+        sizes = Test.sizes_tiny
     else:
-        params = Test.default
+        sizes = Test.sizes_default
 
-    test.Run(**params)
+    global namelengths
+    if options.short_names:
+        namelengths = Test.namelengths_short
+    else:
+        namelengths = Test.namelengths_default
+
+    test.Run(**sizes)
 
 if __name__ == "__main__":
     main()
