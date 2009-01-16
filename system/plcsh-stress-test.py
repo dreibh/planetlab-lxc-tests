@@ -163,7 +163,7 @@ def random_node(node_types,boot_states):
         'hostname': randhostname(),
         'node_type': random.sample(node_types,1)[0],
         'boot_state': random.sample(boot_states, 1)[0],
-        'model': randstr(255),
+        'model': randstr(namelengths['model']),
         'version': randstr(64),
         # for testing node tags
         'arch':randstr(10),
@@ -266,6 +266,7 @@ class Test:
         'login_base':20,
         'sitename':254,
         'abbreviated_name':50,
+        'model':255,
         }
 
     namelengths_short = {
@@ -276,6 +277,7 @@ class Test:
         'sitename_contents':letters+digits+whitespace+punctuation,
         'abbreviated_name':24,
         'abbreviated_name_contents':letters+digits+whitespace+punctuation,
+        'model':40,
         }
 
     def __init__(self, api, check = True, verbose = True, preserve = False):
