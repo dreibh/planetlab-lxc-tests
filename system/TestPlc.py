@@ -74,11 +74,11 @@ class TestPlc:
         'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
         'check_tcp',  SEP,
+        'check_sanity',  SEP,
         'force_gather_logs', 'force_trplc_record','force_trplc_free',
         ]
     other_steps = [ 
         'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
-        'check_sanity',  SEP,
         'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
         'clean_sites', 'clean_nodes', 
         'clean_slices', 'clean_keys', SEP,
