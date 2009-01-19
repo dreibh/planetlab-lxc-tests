@@ -86,7 +86,7 @@ def randpath(length):
     return u'/'.join(parts)[0:length]
 
 def randemail():
-    return (randstr(100, letters + digits) + "@" + randhostname()).lower()
+    return (randstr(namelengths['email'], letters + digits) + "@" + randhostname()).lower()
 
 def randkey(bits = 2048):
     ssh_key_types = ["ssh-dss", "ssh-rsa"]
@@ -267,6 +267,7 @@ class Test:
         'sitename':254,
         'abbreviated_name':50,
         'model':255,
+        'email':100,
         }
 
     namelengths_short = {
@@ -278,6 +279,7 @@ class Test:
         'abbreviated_name':24,
         'abbreviated_name_contents':letters+digits+whitespace+punctuation,
         'model':40,
+        'email':24,
         }
 
     def __init__(self, api, check = True, verbose = True, preserve = False):
