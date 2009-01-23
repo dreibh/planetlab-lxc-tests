@@ -28,8 +28,8 @@ int main(int argc,char *argv[])
   int count = 1;
   struct timeval tv={.tv_sec=5,.tv_usec=0};
 
-  sprintf("%s/vsys/test.out",argv[1]);
-  sprintf("%s/vsys/test.in",argv[1]);
+  sprintf(topcmd,"%s/vsys/test.out",argv[1]);
+  sprintf(top_in_file,"%s/vsys/test.in",argv[1]);
   while (count < 200000) {
     fd_set readSet;
     int res;
@@ -44,7 +44,7 @@ int main(int argc,char *argv[])
 
     
     while ((fd_in = open(top_in_file, O_WRONLY| O_NONBLOCK)) < 0) {
-      fprintf(stderr, "Waiting for %s (%s)\n", top_in_file,strerror(errno));
+      //fprintf(stderr, "Waiting for %s (%s)\n", top_in_file,strerror(errno));
      	usleep (50); 
     }
 
