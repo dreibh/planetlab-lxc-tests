@@ -25,7 +25,7 @@ class Spinner(Thread):
     def __init__(self, test):
         Thread.__init__(self)
 
-        cmd = '/usr/bin/time ./busyloop.py 15'
+        cmd = '/usr/bin/time ./_busyloop.py 15'
         if test.share:
             flags = '--idle-time'
         else:

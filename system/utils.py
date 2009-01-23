@@ -55,7 +55,8 @@ def locate_sanity_scripts (message,path,extensions):
     print message,'searching',path,'for extensions',extensions
     scripts=[]
     for ext in extensions:
-        scripts += glob.glob (path+'/*.'+ext)
+        # skip helper programs
+        scripts += glob.glob (path+'/[a-zA-Z]*.'+ext)
     return scripts
     
 # quick & dirty - should probably use the parseroption object instead
