@@ -45,7 +45,7 @@ if ($traceroute !~ /^\//) {
 my %hash;
 
 sub open_tcptraceroute {
-	my $cmdline="$ttraceroute $guineapig";
+	my $cmdline="sudo $ttraceroute $guineapig";
 	my $out='';
 	open TT,"$cmdline|";
 
