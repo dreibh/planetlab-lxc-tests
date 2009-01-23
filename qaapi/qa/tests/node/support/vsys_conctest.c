@@ -30,7 +30,7 @@ int main(int argc,char *argv[])
 
   sprintf(topcmd,"%s/vsys/test.out",argv[1]);
   sprintf(top_in_file,"%s/vsys/test.in",argv[1]);
-  while (count < 200000) {
+  while (count < 10000) {
     fd_set readSet;
     int res;
     int nlines=0;
