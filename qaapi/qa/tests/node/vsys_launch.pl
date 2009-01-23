@@ -8,11 +8,10 @@ if ($#ARGV>0) {
 		print "Setting prefix = $prefix\n";
 }
 else {
-	$prefix="pl";
+    # Setting temporarily for Thierry's test environment
+	$prefix="ple";
 }
 
-# Setting temporarily for Thierry's test environment
-$prefix="ple";
 
 my $slice="$prefix"."_netflow";
 my $slicedir="/vservers/$slice";
