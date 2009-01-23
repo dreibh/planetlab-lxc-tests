@@ -10,7 +10,9 @@ if ($#ARGV>0) {
 else {
 	$prefix="pl";
 }
-# my $prefix="ple";
+
+# Setting temporarily for Thierry's test environment
+$prefix="ple";
 
 my $slice="$prefix"."_netflow";
 my $slicedir="/vservers/$slice";
