@@ -231,12 +231,16 @@ class TestNode:
 
     def check_sanity_script (self,local_script):
         # push the script on the node's root context
+        script_name=os.path.basename(local_script)
+        utils.header ("NODE %s : running sanity check script %s"%self.name(),script_name)
         ssh_handle=self.create_test_ssh()
         ssh_handle.copy_home(local_script)
-        script_name=os.path.basename(local_script)
         if ssh_handle.run("./"+script_name) != 0:
-            print "WARNING: sanity check script %s FAILED"%script_name
-            # xxx - temporary : always return true for now
+            utils.header ("WARNING: node sanity check script %s FAILED"%script_name)
+            print 'temporary : ignoring result and always return true for now'
             #return False
-        return True
+            return True
+        else:
+            utils.header ("SUCCESS: node sanity check script %s OK"%script_name)
+            return True
 

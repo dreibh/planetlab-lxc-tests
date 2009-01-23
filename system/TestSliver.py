@@ -67,12 +67,16 @@ class TestSliver:
         return overall
 
     def check_sanity_script (self,local_script):
+        script_name=os.path.basename(local_script)
+        utils.header ("SLIVER %s : running sanity check script %s"%self.name(),script_name)
         ssh_handle=self.create_test_ssh()
         ssh_handle.copy_home(local_script)
-        scriptname=os.path.basename(local_script)
-        if ssh_handle.run("./"+scriptname) != 0:
-            print "WARNING: sanity check script %s FAILED"%scriptname
-            # xxx - temporary : ignore result and always return true for now
+        if ssh_handle.run("./"+script_name) != 0:
+            utils.header ("WARNING: sanity check script %s FAILED"%script_name)
+            print 'temporary : ignoring result and always return true for now'
             #return False
-        return True
+            return True
+        else:
+            utils.header ("SUCCESS: sliver sanity check script %s OK"%script_name)
+            return True
     
