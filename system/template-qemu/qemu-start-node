@@ -66,12 +66,17 @@ ls -l /dev/kqemu
 echo 'Cleaning up pid file'
 rm -f qemu.pid
 
+
+
 # qemu options
 # basics
 ARGS="$ARGS -m ${RAM}"
 ARGS="$ARGS -hda ${DISK_IMAGE}"
 ARGS="$ARGS -nographic"
 ARGS="$ARGS -pidfile qemu.pid"
+# how many pysical procs have we got, run in smp mode if possible
+procs=$(grep -i mhz /proc/cpuinfo | wc -l )
+if (( $procs >= 2 )) ; then ARGS="$ARGS -smp 2" ; fi
 # boot from CD
 ARGS="$ARGS -boot d"
 ARGS="$ARGS -cdrom ${NODE_ISO}"
