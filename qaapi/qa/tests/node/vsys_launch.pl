@@ -9,7 +9,7 @@ if ($#ARGV>0) {
 }
 else {
     # Setting temporarily for Thierry's test environment
-	$prefix="ple";
+	$prefix="pl";
 }
 
 

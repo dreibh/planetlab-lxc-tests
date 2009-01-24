@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-$netflow_slice="ple_netflow";
+$netflow_slice="pl_netflow";
 
 print "Warning! This test runs only once. I.e., it will usually not run twice in succession till syslog sees some new activitt\n";
 print "Preparing...";
