@@ -68,7 +68,7 @@ class TestSliver:
 
     def check_sanity_script (self,local_script):
         script_name=os.path.basename(local_script)
-        utils.header ("SLIVER %s : running sanity check script %s"%self.name(),script_name)
+        utils.header ("SLIVER %s : running sanity check script %s"%(self.name(),script_name))
         ssh_handle=self.create_test_ssh()
         ssh_handle.copy_home(local_script)
         if ssh_handle.run("./"+script_name) != 0:
