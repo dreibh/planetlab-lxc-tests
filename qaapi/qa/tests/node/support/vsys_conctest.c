@@ -129,6 +129,7 @@ int main(int argc,char *argv[])
 
     if (nlines<5) {
 	    printf("Test returned different results - run again to verify\n");
+        printf("%s\n",buf);
 	    exit(-1);
     }
 

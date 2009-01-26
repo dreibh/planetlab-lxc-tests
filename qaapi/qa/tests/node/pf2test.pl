@@ -8,6 +8,14 @@ print "Preparing...";
 
 system("cp /var/log/messages /tmp/pf2_test");
 
+
+# Wait for pl_netflow to come up
+
+$timeout=600;
+
+until ((-f "/var/run/vservers/pl_netflow" && -d "/home/pl_netflow") || ($timeout==0)) {sleep (15);print "Waiting for pl_netflow to show up...\n";$timeout-=15;}
+
+if ($timeout>0) {
 # ping magic IP address
 print "Sending out packet...\n";
 system("su -c \"ping -I eth0 -c 1 10.0.0.8\" $netflow_slice -"); 
@@ -31,6 +39,10 @@ if ($success) {
 }
 else {
         print "[FAILED]";
+}
+}
+else {
+    die("[FAILED] Timed out.. pl_netflow didn't come up for 10 minutes...\n");
 }
 
 
