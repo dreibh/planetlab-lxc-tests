@@ -132,8 +132,8 @@ def random_address():
 
 def random_person():
     return {
-        'first_name': randstr(128),
-        'last_name': randstr(128),
+        'first_name': randstr(namelengths['first_name']),
+        'last_name': randstr(namelengths['last_name']),
         'email': randemail(),
         'bio': randstr(254),
         # Accounts are disabled by default
@@ -267,6 +267,8 @@ class Test:
         'sitename':254,
         'abbreviated_name':50,
         'model':255,
+        'first_name':128,
+        'last_name':128,
         'email':100,
         }
 
@@ -279,6 +281,8 @@ class Test:
         'abbreviated_name':24,
         'abbreviated_name_contents':letters+digits+whitespace+punctuation,
         'model':40,
+        'first_name':12,
+        'last_name':20,
         'email':24,
         }
 
