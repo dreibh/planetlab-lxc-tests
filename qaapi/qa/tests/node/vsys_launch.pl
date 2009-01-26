@@ -12,6 +12,13 @@ else {
 	$prefix="pl";
 }
 
+my $timeout=600;
+
+until ((-f "/var/run/vservers/pl_netflow" && -d "/home/pl_netflow") || ($timeout==0)) {sleep (15);print "Waiting for pl_netflow to show up...\n";$timeout-=15;}
+
+if (!$timeout) {
+    die ("Timed out waiting for pl_netflow to appear\n");
+}
 
 my $slice="$prefix"."_netflow";
 my $slicedir="/vservers/$slice";
