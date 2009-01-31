@@ -888,9 +888,9 @@ class TestPlc:
 
     def plcsh_stress_test (self):
         # install the stress-test in the plc image
-        location = "/usr/share/plc_api/plcsh-stress-test.py"
+        location = "/usr/share/plc_api/plcsh_stress_test.py"
         remote="/vservers/%s/%s"%(self.vservername,location)
-        self.test_ssh.copy_abs("plcsh-stress-test.py",remote)
+        self.test_ssh.copy_abs("plcsh_stress_test.py",remote)
         command = location
         command += " -- --check"
         if self.options.size == 1:

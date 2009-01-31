@@ -23,6 +23,11 @@ from PLC.Shell import Shell
 from random import Random
 random = Random()
 
+# note about namelengths
+# original version uses full lengths for all fields for testing overflows and things
+# however for a realistic test, involving a web UI, this is not appropriate, so we
+# use smaller identifiers
+
 def randfloat(min = 0.0, max = 1.0):
     return float(min) + (random.random() * (float(max) - float(min)))
 
@@ -65,10 +70,7 @@ def randstr(length, pool = valid_xml_chars, encoding = "utf-8"):
             break
     return s
 
-# nasty - see Test.namelengths* below
-namelengths={}
-
-def randhostname():
+def randhostname(namelengths):
     # 1. Each part begins and ends with a letter or number.
     # 2. Each part except the last can contain letters, numbers, or hyphens.
     # 3. Each part is between 1 and 64 characters, including the trailing dot.
@@ -85,17 +87,17 @@ def randpath(length):
         parts.append(randstr(randint(1, 30), ascii_xml_chars))
     return u'/'.join(parts)[0:length]
 
-def randemail():
-    return (randstr(namelengths['email'], letters + digits) + "@" + randhostname()).lower()
+def randemail(namelengths):
+    return (randstr(namelengths['email'], letters + digits) + "@" + randhostname(namelengths)).lower()
 
-def randkey(bits = 2048):
+def randkey(namelengths,bits = 2048):
     ssh_key_types = ["ssh-dss", "ssh-rsa"]
     key_type = random.sample(ssh_key_types, 1)[0]
     return ' '.join([key_type,
                      base64.b64encode(''.join(randstr(bits / 8).encode("utf-8"))),
-                     randemail()])
+                     randemail(namelengths)])
 
-def random_site():
+def random_site(namelengths):
     try:
         sitename=randstr(namelengths['sitename'],namelengths['sitename_contents'])
     except:
@@ -130,21 +132,21 @@ def random_address():
         'country': randstr(128),
         }
 
-def random_person():
+def random_person(namelengths):
     return {
         'first_name': randstr(namelengths['first_name']),
         'last_name': randstr(namelengths['last_name']),
-        'email': randemail(),
+        'email': randemail(namelengths),
         'bio': randstr(254),
         # Accounts are disabled by default
         'enabled': False,
         'password': randstr(254),
         }
 
-def random_key(key_types):
+def random_key(key_types,namelengths):
     return {
         'key_type': random.sample(key_types, 1)[0],
-        'key': randkey()
+        'key': randkey(namelengths)
         }
 
 def random_tag_type (role_ids):
@@ -158,9 +160,9 @@ def random_nodegroup():
     return {'groupname' : randstr(50) }
 
 tag_fields=['arch']
-def random_node(node_types,boot_states):
+def random_node(node_types,boot_states,namelengths):
     return {
-        'hostname': randhostname(),
+        'hostname': randhostname(namelengths),
         'node_type': random.sample(node_types,1)[0],
         'boot_state': random.sample(boot_states, 1)[0],
         'model': randstr(namelengths['model']),
@@ -192,9 +194,9 @@ def random_interface(method, type):
 def random_ilink ():
     return randstr (12)
 
-def random_pcu():
+def random_pcu(namelengths):
     return {
-        'hostname': randhostname(),
+        'hostname': randhostname(namelengths),
         'ip': socket.inet_ntoa(struct.pack('>L', randint(0, 0xffffffff))),
         'protocol': randstr(16),
         'username': randstr(254),
@@ -218,10 +220,10 @@ def random_conf_file():
         'always_update': bool(randint()),
         }
 
-def random_slice(login_base):
+def random_slice(login_base,namelengths):
     return {
         'name': login_base + "_" + randstr(11, letters).lower(),
-        'url': "http://" + randhostname() + "/",
+        'url': "http://" + randhostname(namelengths) + "/",
         'description': randstr(2048),
         }
 
@@ -409,7 +411,7 @@ class Test:
 
         for i in range(n):
             # Add site
-            site_fields = random_site()
+            site_fields = random_site(self.namelengths)
             site_id = self.api.AddSite(site_fields)
 
             # Should return a unique site_id
@@ -436,7 +438,7 @@ class Test:
 
         for site_id in self.site_ids:
             # Update site
-            site_fields = random_site()
+            site_fields = random_site(self.namelengths)
             # Do not change login_base
 	    if 'login_base' in site_fields:
 		del site_fields['login_base']
@@ -613,7 +615,7 @@ class Test:
         for site_id in self.site_ids:
             for i in range(per_site):
                 # Add user
-                person_fields = random_person()
+                person_fields = random_person(self.namelengths)
                 person_id = self.api.AddPerson(person_fields)
 
                 # Should return a unique person_id
@@ -672,7 +674,7 @@ class Test:
 
         for person_id in self.person_ids:
             # Update user
-            person_fields = random_person()
+            person_fields = random_person(self.namelengths)
             # Keep them enabled
             person_fields['enabled'] = True
             self.api.UpdatePerson(person_id, person_fields)
@@ -762,7 +764,7 @@ class Test:
         for person_id in self.person_ids:
             for i in range(per_person):
                 # Add key
-                key_fields = random_key(key_types)
+                key_fields = random_key(key_types,self.namelengths)
                 key_id = self.api.AddPersonKey(person_id, key_fields)
 
                 # Should return a unique key_id
@@ -776,7 +778,7 @@ class Test:
                         assert key[field] == key_fields[field]
 
                     # Add and immediately blacklist a key
-                    key_fields = random_key(key_types)
+                    key_fields = random_key(key_types,self.namelengths)
                     key_id = self.api.AddPersonKey(person_id, key_fields)
 
                     self.api.BlacklistKey(key_id)
@@ -805,7 +807,7 @@ class Test:
 
         for key_id in self.key_ids:
             # Update key
-            key_fields = random_key(key_types)
+            key_fields = random_key(key_types,self.namelengths)
             self.api.UpdateKey(key_id, key_fields)
 
             if self.check:
@@ -922,7 +924,7 @@ class Test:
         for site_id in self.site_ids:
             for i in range(per_site):
                 # Add node
-                node_fields = random_node(node_types,boot_states)
+                node_fields = random_node(node_types,boot_states,self.namelengths)
                 node_id = self.api.AddNode(site_id, node_fields)
 
                 # Should return a unique node_id
@@ -959,7 +961,7 @@ class Test:
 
         for node_id in self.node_ids:
             # Update node
-            node_fields = random_node(node_types,boot_states)
+            node_fields = random_node(node_types,boot_states,self.namelengths)
             self.api.UpdateNode(node_id, node_fields)
             
             node = self.api.GetNodes([node_id])[0]
@@ -1179,7 +1181,7 @@ class Test:
         for site_id in self.site_ids:
             for i in range(per_site):
                 # Add PCU
-                pcu_fields = random_pcu()
+                pcu_fields = random_pcu(self.namelengths)
                 pcu_id = self.api.AddPCU(site_id, pcu_fields)
 
                 # Should return a unique pcu_id
@@ -1209,7 +1211,7 @@ class Test:
 
         for pcu_id in self.pcu_ids:
             # Update PCU
-            pcu_fields = random_pcu()
+            pcu_fields = random_pcu(self.namelengths)
             self.api.UpdatePCU(pcu_id, pcu_fields)
 
             if self.check:
@@ -1432,7 +1434,7 @@ class Test:
         for site in self.api.GetSites(self.site_ids):
             for i in range(min(per_site, site['max_slices'])):
                 # Add slice
-                slice_fields = random_slice(site['login_base'])
+                slice_fields = random_slice(site['login_base'],self.namelengths)
                 slice_id = self.api.AddSlice(slice_fields)
 
                 # Should return a unique slice_id
@@ -1473,7 +1475,7 @@ class Test:
 
         for slice_id in self.slice_ids:
             # Update slice
-            slice_fields = random_slice("unused")
+            slice_fields = random_slice("unused",self.namelengths)
             # Cannot change slice name
 	    if 'name' in slice_fields:
 		del slice_fields['name']
@@ -1627,11 +1629,10 @@ def main():
     else:
         sizes = Test.sizes_default
 
-    global namelengths
     if options.short_names:
-        namelengths = Test.namelengths_short
+        test.namelengths = Test.namelengths_short
     else:
-        namelengths = Test.namelengths_default
+        test.namelengths = Test.namelengths_default
 
     test.Run(**sizes)
 
