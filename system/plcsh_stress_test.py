@@ -97,6 +97,16 @@ def randkey(namelengths,bits = 2048):
                      base64.b64encode(''.join(randstr(bits / 8).encode("utf-8"))),
                      randemail(namelengths)])
 
+def random_peer():
+    return {
+        'peername': randstr(24,letters + ' ' + digits),
+        'peer_url': "https://" + randhostname ({'hostname1':8,'hostname2':3}) + ":443/PLCAPI/",
+        'key' : randstr(1024,letters+digits),
+        'cacert' : randstr(1024,letters+digits),
+        'shortname' : randstr(1,letters) + 'LAB',
+        'hrn_root' : 'planetlab.' + randstr (3,letters),
+        }
+
 def random_site(namelengths):
     try:
         sitename=randstr(namelengths['sitename'],namelengths['sitename_contents'])
@@ -262,6 +272,40 @@ class Test:
         'attributes_per_slice': 2,
         }
 
+    sizes_large = {
+        'sites': 200,
+        'address_types': 4,
+        'addresses_per_site': 2,
+        'persons_per_site': 5,
+        'keys_per_person': 2,
+        'slice_tags': 4,
+        'nodegroups': 20,
+        'nodes_per_site': 2,
+        'interfaces_per_node': 2,
+        'ilinks':100,
+        'pcus_per_site': 1,
+        'conf_files': 50,
+        'slices_per_site': 10,
+        'attributes_per_slice': 4,
+        }
+
+    sizes_xlarge = {
+        'sites': 1000,
+        'address_types': 4,
+        'addresses_per_site': 2,
+        'persons_per_site': 5,
+        'keys_per_person': 2,
+        'slice_tags': 4,
+        'nodegroups': 20,
+        'nodes_per_site': 2,
+        'interfaces_per_node': 2,
+        'ilinks':100,
+        'pcus_per_site': 1,
+        'conf_files': 50,
+        'slices_per_site': 10,
+        'attributes_per_slice': 4,
+        }
+
     namelengths_default = {
         'hostname1': 61,
         'hostname2':5,
@@ -288,11 +332,12 @@ class Test:
         'email':24,
         }
 
-    def __init__(self, api, check = True, verbose = True, preserve = False):
+    def __init__(self, api, check, verbose, preserve, federating):
         self.api = api
         self.check = check
         self.verbose = verbose
         self.preserve = preserve
+        self.federating = federating
         
         self.site_ids = []
         self.address_type_ids = []
@@ -335,6 +380,10 @@ class Test:
         print 'Cardinals before test (n,s,p,sl)',cardinals_before
 
         self.Add(**kwds)
+        # if federating : we're done
+        if self.federating:
+            return
+
         self.Update()
         if self.preserve:
             print 'Preserving - delete skipped'
@@ -357,20 +406,32 @@ class Test:
         sizes = self.sizes_default.copy()
         sizes.update(kwds)
 
-        self.AddSites(sizes['sites'])
-        self.AddAddressTypes(sizes['address_types'])
-        self.AddAddresses(sizes['addresses_per_site'])
-        self.AddPersons(sizes['persons_per_site'])
-        self.AddKeys(sizes['keys_per_person'])
-        self.AddTagTypes(sizes['slice_tags'],sizes['nodegroups'],sizes['ilinks'])
-        self.AddNodeGroups(sizes['nodegroups'])
-        self.AddNodes(sizes['nodes_per_site'])
-        self.AddInterfaces(sizes['interfaces_per_node'])
-        self.AddIlinks (sizes['ilinks'])
-        self.AddPCUs(sizes['pcus_per_site'])
-        self.AddConfFiles(sizes['conf_files'])
-        self.AddSlices(sizes['slices_per_site'])
-        self.AddSliceTags(sizes['attributes_per_slice'])
+        if not self.federating:
+            self.AddSites(sizes['sites'])
+            self.AddAddressTypes(sizes['address_types'])
+            self.AddAddresses(sizes['addresses_per_site'])
+            self.AddPersons(sizes['persons_per_site'])
+            self.AddKeys(sizes['keys_per_person'])
+            self.AddTagTypes(sizes['slice_tags'],sizes['nodegroups'],sizes['ilinks'])
+            self.AddNodeGroups(sizes['nodegroups'])
+            self.AddNodes(sizes['nodes_per_site'])
+            self.AddInterfaces(sizes['interfaces_per_node'])
+            self.AddIlinks (sizes['ilinks'])
+            self.AddPCUs(sizes['pcus_per_site'])
+            self.AddConfFiles(sizes['conf_files'])
+            self.AddSlices(sizes['slices_per_site'])
+            self.AddSliceTags(sizes['attributes_per_slice'])
+        
+        else:
+            self.RecordStatus()
+            self.AddSites(sizes['sites'])
+            self.AddPersons(sizes['persons_per_site'])
+            self.AddKeys(sizes['keys_per_person'])
+            self.AddNodes(sizes['nodes_per_site'])
+            self.AddSlices(sizes['slices_per_site'])
+            # create peer and add newly created entities
+            self.AddPeer()
+
 
     def Update(self):
         self.UpdateSites()
@@ -403,6 +464,33 @@ class Test:
         self.DeleteAddresses()
         self.DeleteAddressTypes()
         self.DeleteSites()
+
+    # record current (old) objects 
+    def RecordStatus (self):
+        self.old_site_ids = [ s['site_id'] for s in self.api.GetSites({},['site_id']) ]
+        self.old_person_ids = [ s['person_id'] for s in self.api.GetPersons({},['person_id']) ]
+        self.old_key_ids = [ s['key_id'] for s in self.api.GetKeys({},['key_id']) ]
+        self.old_node_ids = [ s['node_id'] for s in self.api.GetNodes({},['node_id']) ]
+        self.old_slice_ids = [ s['slice_id'] for s in self.api.GetSlices({},['slice_id']) ]
+
+    def AddPeer (self):
+        peer_id=self.api.AddPeer (random_peer())
+        peer = GetPeers([peer_id])[0]
+        if self.verbose:
+            print "Added peer",peer_id
+
+        # add new sites (the ones not in self.site_ids) in the peer
+        # cheating a bit
+        for site in self.api.GetSites ({'~site_id':self.old_site_ids}):
+            peer.add_site(site,site['site_id'])
+        for person in self.api.GetPersons ({'~person_id':self.old_person_ids}):
+            peer.add_person(person,person['person_id'])
+        for key in self.api.GetKeys ({'~key_id':self.old_key_ids}):
+            peer.add_key(key,key['key_id'])
+        for node in self.api.GetNodes ({'~node_id':self.old_node_ids}):
+            peer.add_node(node,node['node_id'])
+        for slice in self.api.GetSlices ({'~slice_id':self.old_slice_ids}):
+            peer.add_slice(slice,slice['slice_id'])
 
     def AddSites(self, n = 10):
         """
@@ -1615,24 +1703,35 @@ def main():
                       help = "Do not delete created objects")
     parser.add_option("-t", "--tiny", action = "store_true", default = False, 
                       help = "Run a tiny test (default: %default)")
+    parser.add_option("-l", "--large", action = "store_true", default = False, 
+                      help = "Run a large test (default: %default)")
+    parser.add_option("-x", "--xlarge", action = "store_true", default = False, 
+                      help = "Run an XL test (default: %default)")
     parser.add_option("-s", "--short-names", action="store_true", dest="short_names", default = False, 
                       help = "Generate smaller names for checking UI rendering")
+    parser.add_option ("-f", "--foreign", action="store_true", dest="federating", default = False,
+                       help = "Create a fake peer and add items in it (no update, no delete)")
     (options, args) = parser.parse_args()
 
     test = Test(api = Shell(),
                 check = options.check,
                 verbose = not options.quiet,
-                preserve = options.preserve)
-
-    if options.tiny:
-        sizes = Test.sizes_tiny
-    else:
-        sizes = Test.sizes_default
+                preserve = options.preserve,
+                federating = options.federating)
 
     if options.short_names:
         test.namelengths = Test.namelengths_short
     else:
         test.namelengths = Test.namelengths_default
+
+    if options.tiny:
+        sizes = Test.sizes_tiny
+    elif options.large:
+        sizes = Test.sizes_large
+    elif options.xlarge:
+        sizes = Test.sizes_xlarge
+    else:
+        sizes = Test.sizes_default
 
     test.Run(**sizes)
 
