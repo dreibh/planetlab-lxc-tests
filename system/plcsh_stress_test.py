@@ -160,14 +160,14 @@ def random_key(key_types,namelengths):
         }
 
 def random_tag_type (role_ids):
-    return  {'tagname': randstr(12),
-             'category':randstr(8),
+    return  {'tagname': randstr(12,letters+digits),
+             'category':randstr(4,letters+digits)+'/'+randstr(6,letters+digits),
              'min_role_id': random.sample(role_ids, 1)[0],
-             'description' : randstr(128),
+             'description' : randstr(128,letters+digits+whitespace+punctuation),
              }
 
 def random_nodegroup():
-    return {'groupname' : randstr(50) }
+    return {'groupname' : randstr(30, letters+digits+whitespace) }
 
 tag_fields=['arch']
 def random_node(node_types,boot_states,namelengths):
@@ -181,7 +181,7 @@ def random_node(node_types,boot_states,namelengths):
         'arch':randstr(10),
         }
 
-def random_interface(method, type):
+def random_interface(method, type,namelengths):
     interface_fields = {
         'method': method,
         'type': type,
@@ -198,6 +198,8 @@ def random_interface(method, type):
 
         for field in 'ip', 'netmask', 'network', 'broadcast', 'gateway', 'dns1':
             interface_fields[field] = socket.inet_ntoa(struct.pack('>L', locals()[field]))
+        if randint(0,1):
+            interface_fields['hostname']=randhostname(namelengths);
 
     return interface_fields
 
@@ -319,7 +321,7 @@ class Test:
         }
 
     namelengths_short = {
-        'hostname1': 12,
+        'hostname1': 8,
         'hostname2':3,
         'login_base':8,
         'sitename':64,
@@ -381,13 +383,11 @@ class Test:
 
         self.Add(**kwds)
         # if federating : we're done
-        if self.federating:
-            return
 
-        self.Update()
-        if self.preserve:
-            print 'Preserving - delete skipped'
+        if self.federating or self.preserve:
+            print 'Preserving - update & delete skipped'
         else:
+            self.Update()
             self.Delete()
 
             cardinals_after=self.Cardinals()
@@ -1141,7 +1141,7 @@ class Test:
                 type = random.sample(network_types, 1)[0]
 
                 # Add interface
-                interface_fields = random_interface(method, type)
+                interface_fields = random_interface(method, type,self.namelengths)
                 interface_id = self.api.AddInterface(node_id, interface_fields)
 
                 # Should return a unique interface_id
