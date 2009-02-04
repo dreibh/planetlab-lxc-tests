@@ -1084,8 +1084,7 @@ class Test:
                             raise Exception, "Unexpected field %s in node after GetNodes()"%field
                 assert set(nodegroup_ids) == set(node['nodegroup_ids'])
 
-                print 'WARNING: skipping updatenode with tags as this is not implemented yet'
-                # again when fetching 'arch' explicitly
+                # again but we are now fetching 'arch' explicitly
                 node2 = self.api.GetNodes([node_id],node_fields.keys())[0]
                 for field in node_fields:
                     if node2[field] != node_fields[field]:
@@ -1175,7 +1174,7 @@ class Test:
             type = random.sample(network_types, 1)[0]
 
             # Update interface
-            interface_fields = random_interface(method, type)
+            interface_fields = random_interface(method, type,self.namelengths)
             self.api.UpdateInterface(interface_id, interface_fields)
 
             if self.check:
