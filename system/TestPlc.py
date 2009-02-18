@@ -71,7 +71,7 @@ class TestPlc:
         'init_node','bootcd', 'configure_qemu', 'export_qemu',
         'kill_all_qemus', 'reinstall_node','start_node', SEP,
         # better use of time: do this now that the nodes are taking off
-        'plcsh_stress_test', SEP,
+        'plcsh_stress_test', 'populate' , SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
         'check_tcp',  SEP,
         'check_sanity',  SEP,
@@ -896,6 +896,22 @@ class TestPlc:
         if self.options.size == 1:
             command +=  " --tiny"
         return ( self.run_in_guest(command) == 0)
+
+    # populate runs the same utility without slightly different options
+    # in particular runs with --preserve (dont cleanup) and without --check
+    # also it gets run twice, once with the --foreign option for creating fake foreign entries
+    def populate (self):
+        # install the stress-test in the plc image
+        location = "/usr/share/plc_api/plcsh_stress_test.py"
+        remote="/vservers/%s/%s"%(self.vservername,location)
+        self.test_ssh.copy_abs("plcsh_stress_test.py",remote)
+        command = location
+        command += " -- --preserve --short-names"
+        local = (self.run_in_guest(command) == 0);
+        # second run with --foreign
+        command += ' --foreign'
+        remote = (self.run_in_guest(command) == 0);
+        return ( local and remote)
 
     def gather_logs (self):
         # (1.a) get the plc's /var/log/ and store it locally in logs/myplc.var-log.<plcname>/*
