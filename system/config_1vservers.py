@@ -2,10 +2,11 @@ import utils
 import os.path
 from TestPool import TestPoolIP
 
+# using vplc01 .. vplc15 - keep [16,17,18] for 4.2 and 19 and 20 for long-haul tests
 onelab_plcs_ip_pool = [ 
     ( 'vplc%02d.inria.fr'%i, 
       '138.96.255.%d'%(200+i), 
-      '02:34:56:00:ee:%02d'%i) for i in range(1,21) ]
+      '02:34:56:00:ee:%02d'%i) for i in range(1,16) ]
 
 def config (plcs,options):
     
