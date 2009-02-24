@@ -3,8 +3,8 @@ import sys
 from TestMapper import TestMapper
 from TestPool import TestPoolQemu
 
-# a small qemu pool for now
-onelab_qemus_pool = [ ( 'testqemu%d.onelab.eu'%i, None, None) for i in range(1,4) ]
+# testbox1-2 for the trunk, 3 for 4.2
+onelab_qemus_pool = [ ( 'testqemu%d.onelab.eu'%i, None, None) for i in range(1,3) ]
     
 def config (plcs, options):
 
