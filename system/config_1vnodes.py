@@ -6,7 +6,7 @@ from TestPool import TestPoolIP
 
 onelab_nodes_ip_pool = [ 
     ( 'vnode%02d.inria.fr'%i, 
-      '138.96.255.%d'%(220+i), 
+      '138.96.255.%d'%(230+i), 
       '02:34:56:00:00:%02d'%i) for i in range(1,10) ]
 
 site_dict = {
