@@ -2,7 +2,7 @@
 # Module: VNET+
 # Description: 	
 # Connect to the node manager
-# Author: acb@cs.princeton.edu
+# Author: acb@cs.princeton.edu/sapanb@cs.princeton.edu
 
 import sys
 

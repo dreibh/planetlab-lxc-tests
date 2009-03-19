@@ -1,0 +1,5 @@
+Description: VNET packet local packet tagging test
+Action: Connect to the node manager requesting a loan
+Pass: The loan is granted because NM is able to authenticate the request
+Fail: Authentication fails
+Author: sapanb@cs.princeton.edu
