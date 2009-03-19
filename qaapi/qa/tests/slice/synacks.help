@@ -1,0 +1,5 @@
+Description: VNET test to ensure that terminal packets of TCP connections are properly mapped into slices
+Action: Generate a ton of TCP connections and check if tcpdump intercepts the syn/ack packets
+Pass: tcpdump intercepts all of the syn/ack packets generated
+Fail: tcpdump misses some syn/ack packets as a result of which it does not terminate and an alarm handler is triggered
+Author: sapanb@cs.princeton.edu
