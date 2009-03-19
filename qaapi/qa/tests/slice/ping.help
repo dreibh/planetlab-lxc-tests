@@ -1,0 +1,5 @@
+Description: Ping test for VNET+.
+Action: Send out ping echo requests to a given IP.
+Pass: ping echo replies return for each outgoing request.
+Fail: one or more echo requests go unanswered.
+Author: sapanb@cs.princeton.edu

@@ -9,6 +9,7 @@
 # Author: sapanb@cs.princeton.edu
 
 $|=1;
+use strict;
 
 # ********************************************************************************
 # CONFIGURATION
@@ -21,6 +22,8 @@ my $guineapig="vini-veritas.net";
 # Location of traceroute, tcptraceroute
 my $ttraceroute=`which tcptraceroute 2>/dev/null`;
 my $traceroute=`which traceroute 2>/dev/null`;
+
+my %tr;
 
 chop($ttraceroute);
 chop($traceroute);
@@ -35,60 +38,55 @@ if (!-e "$ttraceroute") {
 	die("[FAILED] Please install tcptraceroute in the slice before running this test\n");
 }	
 else {
-	print "Found rcptraceroute. Good.\n";
+	print "Found tcptraceroute. Good.\n";
 }
 
 if ($traceroute !~ /^\//) {
 	die("[FAILED] Please install traceroute in the slice before running this test\n");
 }	
 
-my %hash;
-
 sub open_tcptraceroute {
-	my $cmdline="sudo $ttraceroute $guineapig";
+	my $cmdline="sudo $ttraceroute $guineapig 2>&1";
+	print $cmdline."\n";
 	my $out='';
 	open TT,"$cmdline|";
 
 	while (<TT>) {
 		if (/\((\d+\.\d+\.\d+\.\d+)\)/) {
-			glob %hash;
-			print ">>> $_";
-			$hash{$1}++;
+            glob %tr;
+            $tr{"IP$1"}++;
+            print ">>>$1\n";
 		}
 	}
 }
 
 sub open_traceroute {
 	my $ref=shift;
-	my $cmdline="$traceroute $guineapig";
+	my $cmdline="$traceroute $guineapig 2>&1";
 	my $out='';
 	print $cmdline."\n";
 	open TT,"$cmdline|";
 
 	while (<TT>) {
 		if (/\((\d+\.\d+\.\d+\.\d+)\)/) {
-			glob %hash;
-			print ">>> $_";
-			$hash{$1}=$hash{$1}+1;
+            glob %tr;
+            $tr{"IP$1"}++;
+            print ">>>$1\n";
 		}
 	}
 }
 
 sub compare {
-	my $ref=shift;
 	my $ret=1;
 	my $double=0;
 	my $single=0;
-	glob %hash;
-	foreach (keys %hash) {
-		if ($hash{$_}==1) {
+	glob %tr;
+	foreach (keys %tr) {
+		if ($tr{$_}==1) {
 			$single++;
-		} elsif ($hash{$_}==2) {
-			print "Concorded on $_\n";
+		} elsif ($tr{$_}==2) {
 			$double++;
 		}
-		else { die ("[FAILED] Could not complete test.\n");}
-
 	}
 	return ($single,$double);
 }
@@ -98,25 +96,23 @@ sub alhandler {
 	exit(-1);
 }
 
-print "Starting tcptraceroute...\n";
 if (fork==0) {
 	my %r1;
 	my $s;
 	my $d;
+    glob %tr;
 
 	open_tcptraceroute;
 	open_traceroute;
-	($s,$d)=compare;
-	if ($s==0 && $d>2) {
-		print "[SUCCESS] traceroute and tcptraceroute reported the same result. $d hops.\n";
-		exit(0);
-	}
-	elsif ($s && $d>2) {
-		print "[PARTIAL SUCCESS] traceroute and tcptraceroute reported $s different hops out of $d.\n";
-	}
-	else {
-		print "[FAILED] traceroute and tcptraceroute reported different results\n";
-	}
+
+    ($s,$d)=compare;
+
+    if ($d>4) {
+        print "[SUCCESS] traceroutes succeeded, singles: $s, doubles: $d\n";
+    }
+    else {
+        print "[FAILED] traceroutes returned different results: $s, $d\n";
+    }
 }
 else {
 	print "Generating connections...\n";
