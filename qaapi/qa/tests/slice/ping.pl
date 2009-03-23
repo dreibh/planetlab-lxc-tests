@@ -12,7 +12,7 @@ my $guineapig='planetlab-1.cs.princeton.edu';
 my $numiter=1000;
 
 sub run {
-	system("ping -c $numiter -i 0.1 $guineapig");
+	system("sudo ping -c $numiter -i 0.1 $guineapig");
 	}
 
 
