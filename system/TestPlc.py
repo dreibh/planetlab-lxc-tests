@@ -71,7 +71,7 @@ class TestPlc:
         'init_node','bootcd', 'configure_qemu', 'export_qemu',
         'kill_all_qemus', 'reinstall_node','start_node', SEP,
         # better use of time: do this now that the nodes are taking off
-        'plcsh_stress_test', 'populate' , SEP,
+        'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
         'check_tcp',  SEP,
         'check_sanity',  SEP,
@@ -82,6 +82,7 @@ class TestPlc:
         'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
         'clean_sites', 'clean_nodes', 
         'clean_slices', 'clean_keys', SEP,
+        'populate' , SEP,
         'show_boxes', 'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
         'db_dump' , 'db_restore', 'trplc_cleanup','trqemu_cleanup','trackers_cleanup', SEP,
         'standby_1 through 20',
