@@ -6,9 +6,6 @@ import TestPlc
 
 def config (plc_specs, options):
 
-#    for step in ['main','1testbox','1nodes','1vservers']:
-#        module=__import__(
-
     import config_main
     plcs = config_main.config([],options)
     if options.verbose:
@@ -16,10 +13,10 @@ def config (plc_specs, options):
         for plc in plcs: TestPlc.TestPlc.display_mapping_plc(plc)
         print '========================================'
 
-    import config_1testbox
-    plcs = config_1testbox.config (plcs,options)
+    import config_1testqemus
+    plcs = config_1testqemus.config (plcs,options)
     if options.verbose:
-        print '======================================== AFTER testbox'
+        print '======================================== AFTER testqemus'
         for plc in plcs: TestPlc.TestPlc.display_mapping_plc(plc)
         print '========================================'
 
@@ -30,8 +27,8 @@ def config (plc_specs, options):
         for plc in plcs: TestPlc.TestPlc.display_mapping_plc(plc)
         print '========================================'
 
-    import config_1vservers
-    plcs = config_1vservers.config (plcs,options)
+    import config_1vplcs
+    plcs = config_1vplcs.config (plcs,options)
     if options.verbose:
         print '======================================== AFTER vservers'
         for plc in plcs: TestPlc.TestPlc.display_mapping_plc(plc)

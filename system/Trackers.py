@@ -91,7 +91,7 @@ class TrackerQemu (Tracker):
 
     DEFAULT_FILENAME=os.environ['HOME']+"/tracker-qemus"
     # how many concurrent plcs are we keeping alive - adjust with the IP pool size
-    DEFAULT_MAX_INSTANCES = 1
+    DEFAULT_MAX_INSTANCES = 2
 
     def __init__ (self,options,filename=None,instances=0):
         if not filename: filename=TrackerQemu.DEFAULT_FILENAME
