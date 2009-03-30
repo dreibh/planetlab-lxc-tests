@@ -35,7 +35,11 @@ if ($traceroute !~ /^\//) {
 
 if (!-e "$ttraceroute") {
 	print $ttraceroute."\n";
-	die("[FAILED] Please install tcptraceroute in the slice before running this test\n");
+	print "[OOPS] TCPtraceroute not found. Installing... \n";
+    system("yum -y tcptraceroute");
+    if (!-e "$ttraceroute") {
+	    print "[FAILED] TCPtraceroute could not be installed. Test failed.\n";
+    }
 }	
 else {
 	print "Found tcptraceroute. Good.\n";
