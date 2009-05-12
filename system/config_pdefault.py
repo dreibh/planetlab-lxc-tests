@@ -13,6 +13,14 @@ def config (plc_specs, options):
         for plc in plcs: TestPlc.TestPlc.display_mapping_plc(plc)
         print '========================================'
 
+    ### side-effects on global config (was for onelab.eu initially)
+    from TestMapper import TestMapper
+    main_mapper = TestMapper (plcs,options)
+    plc_map = [ ( '*', {'PLC_ROOT_USER' : 'root@test.planet-lab.org',
+                        'PLC_MAIL_ENABLED' : 'false',
+                        }) ]
+    plcs = main_mapper.map ( { 'plc' : plc_map } )
+
     import config_ptestqemus
     plcs = config_ptestqemus.config (plcs,options)
     if options.verbose:
