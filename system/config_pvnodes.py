@@ -5,8 +5,9 @@ from TestMapper import TestMapper
 from TestPool import TestPoolIP
 
 onelab_nodes_ip_pool = [ 
-    ("p-node-01.onelab.eu","128.112.139.123", "de:ad:be:ef:00:01"),
-    ("p-node-02.onelab.eu","128.112.139.124", "de:ad:be:ef:00:02"),
+    ("p-node-01.onelab.eu","128.112.139.123", "de:ad:be:ef:00:10"),
+    ("p-node-02.onelab.eu","128.112.139.124", "de:ad:be:ef:00:20"),
+# these ones are free and have been dns-declared but don't have a corresponding MAC address
     ("p-node-03.onelab.eu","128.112.139.125", "de:ad:be:ef:00:03"),
     ("p-node-04.onelab.eu","128.112.139.126", "de:ad:be:ef:00:04"),
 ]    
