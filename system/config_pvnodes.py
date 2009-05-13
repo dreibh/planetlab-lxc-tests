@@ -5,18 +5,15 @@ from TestMapper import TestMapper
 from TestPool import TestPoolIP
 
 onelab_nodes_ip_pool = [ 
-    ("p-node-01.onelab.eu","128.112.139.123", "de:ad:be:ef:00:10"),
-    ("p-node-02.onelab.eu","128.112.139.124", "de:ad:be:ef:00:20"),
-# these ones are free and have been dns-declared but don't have a corresponding MAC address
-    ("p-node-03.onelab.eu","128.112.139.125", "de:ad:be:ef:00:03"),
-    ("p-node-04.onelab.eu","128.112.139.126", "de:ad:be:ef:00:04"),
+    ("node-01.test.planet-lab.org","128.112.139.44", "de:ad:be:ef:00:10"),
+    ("node-02.test.planet-lab.org","128.112.139.66", "de:ad:be:ef:00:20"),
 ]    
 
 site_dict = {
     'interface_fields:gateway':'128.112.139.1',
     'interface_fields:network':'128.112.139.0',
     'interface_fields:broadcast':'128.112.139.127',
-    'interface_fields:netmask':'255.255.25.128',
+    'interface_fields:netmask':'255.255.255.128',
     'interface_fields:dns1': '128.112.136.10',
     'interface_fields:dns2': '128.112.136.12',
 }
