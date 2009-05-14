@@ -28,6 +28,14 @@ class Tracker:
             tracks=[]
         self.tracks = [track for track in tracks if track]
 
+    def list (self):
+        try:
+            contents=file(self.filename).read()
+            print "==>",self.filename,"<=="
+            print contents
+        except:
+            print "xxxxxxxxxxxx",self.filename,"not found"
+
     def store (self):
         out = file(self.filename,'w')
         for track in self.tracks:
@@ -45,7 +53,7 @@ class Tracker:
         self.tracks.append( track )
         print "Recorded %s in tracker %s"%(track,self.filename)
 
-    # this actually stops the old instances to fit the number of instances 
+    # this actually stops the old instances, so that the total fits in the number of instances 
     def free (self):
         # number of instances to stop
         how_many=len(self.tracks)-self.instances
@@ -91,7 +99,7 @@ class TrackerQemu (Tracker):
 
     DEFAULT_FILENAME=os.environ['HOME']+"/tracker-qemus"
     # how many concurrent plcs are we keeping alive - adjust with the IP pool size
-    DEFAULT_MAX_INSTANCES = 2
+    DEFAULT_MAX_INSTANCES = 3
 
     def __init__ (self,options,filename=None,instances=0):
         if not filename: filename=TrackerQemu.DEFAULT_FILENAME

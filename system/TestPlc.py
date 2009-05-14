@@ -17,7 +17,6 @@ from TestSliver import TestSliver
 from TestBox import TestBox
 from TestSsh import TestSsh
 from TestApiserver import TestApiserver
-from Trackers import TrackerPlc, TrackerQemu
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
@@ -45,6 +44,8 @@ def node_mapper (method):
                 test_node = TestNode (self,test_site,node_spec)
                 if not node_method(test_node): overall=False
         return overall
+    # restore the doc text
+    actual.__doc__=method.__doc__
     return actual
 
 def slice_mapper_options (method):
@@ -57,6 +58,8 @@ def slice_mapper_options (method):
             test_slice=TestSlice(self,test_site,slice_spec)
             if not slice_method(test_slice,self.options): overall=False
         return overall
+    # restore the doc text
+    actual.__doc__=method.__doc__
     return actual
 
 SEP='<sep>'
@@ -64,27 +67,26 @@ SEP='<sep>'
 class TestPlc:
 
     default_steps = [
-        'display','trqemu_record','trqemu_free','uninstall','install','install_rpm', 
-        'configure', 'start', 'fetch_keys', SEP,
-        'store_keys', 'clear_known_hosts', 'initscripts', SEP,
-        'sites', 'nodes', 'slices', 'nodegroups', SEP,
-        'init_node','bootcd', 'configure_qemu', 'export_qemu',
-        'kill_all_qemus', 'reinstall_node','start_node', SEP,
+        'display', 'local_pre', SEP,
+        'delete','create','install', 'configure', 'start', SEP,
+        'fetch_keys', 'store_keys', 'clear_known_hosts', SEP,
+        'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', SEP,
+        'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu',
+        'kill_all_qemus', 'start_node', SEP,
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
-        'check_tcp',  SEP,
-        'check_sanity',  SEP,
-        'force_gather_logs', 'force_trplc_record','force_trplc_free',
+        'check_tcp',  'check_sanity',  SEP,
+        'force_gather_logs', 'force_local_post',
         ]
     other_steps = [ 
-        'stop_all_vservers','fresh_install', 'cache_rpm', 'stop', 'vs_start', SEP,
+        'fresh_install', 'stop', 'vs_start', SEP,
         'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
-        'clean_sites', 'clean_nodes', 
-        'clean_slices', 'clean_keys', SEP,
+        'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
         'populate' , SEP,
         'show_boxes', 'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
-        'db_dump' , 'db_restore', 'trplc_cleanup','trqemu_cleanup','trackers_cleanup', SEP,
+        'db_dump' , 'db_restore', SEP,
+        'local_list','local_cleanup',SEP,
         'standby_1 through 20',
         ]
 
@@ -245,6 +247,7 @@ class TestPlc:
 
     # make this a valid step
     def kill_all_qemus(self):
+        "all qemu boxes: kill all running qemus (even of former runs)"
         # this is the brute force version, kill all qemus on that host box
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # pass the first nodename, as we don't push template-qemu on testboxes
@@ -277,6 +280,7 @@ class TestPlc:
 
     #################### display config
     def display (self):
+        "show test configuration after localization"
         self.display_pass (1)
         self.display_pass (2)
         return True
@@ -380,60 +384,34 @@ class TestPlc:
         print '*\tqemu box %s'%node_spec['host_box']
         print '*\thostname=%s'%node_spec['node_fields']['hostname']
 
-    ### tracking
-    def trplc_record (self):
-        tracker = TrackerPlc(self.options)
-        tracker.record(self.test_ssh.hostname,self.vservername)
-        tracker.store()
-        return True
-
-    def trplc_free (self):
-        tracker = TrackerPlc(self.options)
-        tracker.free()
-        tracker.store()
-        return True
-
-    def trplc_cleanup (self):
-        tracker = TrackerPlc(self.options)
-        tracker.cleanup()
-        tracker.store()
-        return True
-
-    def trqemu_record (self):
-        tracker=TrackerQemu(self.options)
-        for site_spec in self.plc_spec['sites']:
-            for node_spec in site_spec['nodes']:
-                tracker.record(node_spec['host_box'],self.options.buildname,node_spec['node_fields']['hostname'])
-        tracker.store()
-        return True
-
-    def trqemu_free (self):
-        tracker=TrackerQemu(self.options)
-        for site_spec in self.plc_spec['sites']:
-            for node_spec in site_spec['nodes']:
-                tracker.free()
-        tracker.store()
-        return True
-
-    def trqemu_cleanup (self):
-        tracker=TrackerQemu(self.options)
-        for site_spec in self.plc_spec['sites']:
-            for node_spec in site_spec['nodes']:
-                tracker.cleanup()
-        tracker.store()
-        return True
-
-    def trackers_cleanup (self):
-        self.trqemu_cleanup()
-        self.trplc_cleanup()
-        return True
-
-    def uninstall(self):
+    def local_pre (self):
+        "run site-dependant pre-test script as defined in LocalTestResources"
+        from LocalTestResources import local_resources
+        return local_resources.step_pre(self)
+ 
+    def local_post (self):
+        "run site-dependant post-test script as defined in LocalTestResources"
+        from LocalTestResources import local_resources
+        return local_resources.step_post(self)
+ 
+    def local_list (self):
+        "run site-dependant list script as defined in LocalTestResources"
+        from LocalTestResources import local_resources
+        return local_resources.step_list(self)
+ 
+    def local_cleanup (self):
+        "run site-dependant cleanup script as defined in LocalTestResources"
+        from LocalTestResources import local_resources
+        return local_resources.step_cleanup(self)
+ 
+    def delete(self):
+        "vserver delete the test myplc"
         self.run_in_host("vserver --silent %s delete"%self.vservername)
         return True
 
     ### install
-    def install(self):
+    def create (self):
+        "vserver creation (no install done)"
         if self.is_local():
             # a full path for the local calls
             build_dir=os.path.dirname(sys.argv[0])
@@ -469,7 +447,8 @@ class TestPlc:
         return self.run_in_host(create_vserver) == 0
 
     ### install_rpm 
-    def install_rpm(self):
+    def install(self):
+        "yum install myplc, noderepo, and the plain bootstrapfs"
         if self.options.personality == "linux32":
             arch = "i386"
         elif self.options.personality == "linux64":
@@ -483,6 +462,7 @@ class TestPlc:
 
     ### 
     def configure(self):
+        "run plc-config-tty"
         tmpname='%s.plc-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',
@@ -506,10 +486,12 @@ class TestPlc:
         return True
 
     def start(self):
+        "service plc start"
         self.run_in_guest('service plc start')
         return True
 
     def stop(self):
+        "service plc stop"
         self.run_in_guest('service plc stop')
         return True
         
@@ -519,6 +501,7 @@ class TestPlc:
 
     # stores the keys from the config for further use
     def store_keys(self):
+        "stores test users ssh keys in keys/"
         for key_spec in self.plc_spec['keys']:
 		TestKey(self,key_spec).store_key()
         return True
@@ -529,6 +512,7 @@ class TestPlc:
     # fetches the ssh keys in the plc's /etc/planetlab and stores them in keys/
     # for later direct access to the nodes
     def fetch_keys(self):
+        "gets ssh keys in /etc/planetlab/ and stores them locally in keys/"
         dir="./keys"
         if not os.path.isdir(dir):
             os.mkdir(dir)
@@ -547,9 +531,11 @@ class TestPlc:
         return overall
 
     def sites (self):
+        "create sites with PLCAPI"
         return self.do_sites()
     
     def clean_sites (self):
+        "delete sites with PLCAPI"
         return self.do_sites(action="delete")
     
     def do_sites (self,action="add"):
@@ -575,8 +561,10 @@ class TestPlc:
             self.apiserver.DeleteSite(self.auth_root(),site_id)
 
     def nodes (self):
+        "create nodes with PLCAPI"
         return self.do_nodes()
     def clean_nodes (self):
+        "delete nodes with PLCAPI"
         return self.do_nodes(action="delete")
 
     def do_nodes (self,action="add"):
@@ -597,8 +585,10 @@ class TestPlc:
         return True
 
     def nodegroups (self):
+        "create nodegroups with PLCAPI"
         return self.do_nodegroups("add")
     def clean_nodegroups (self):
+        "delete nodegroups with PLCAPI"
         return self.do_nodegroups("delete")
 
     # create nodegroups if needed, and populate
@@ -777,21 +767,33 @@ class TestPlc:
         return True
         
     def nodes_ssh_debug(self):
+        "Tries to ssh into nodes in debug mode with the debug ssh key"
         return self.check_nodes_ssh(debug=True,timeout_minutes=30,silent_minutes=10)
     
     def nodes_ssh_boot(self):
+        "Tries to ssh into nodes in production mode with the root ssh key"
         return self.check_nodes_ssh(debug=False,timeout_minutes=30,silent_minutes=10)
     
     @node_mapper
-    def init_node (self): pass
+    def init_node (self): 
+        "all nodes : init a clean local directory for holding node-dep stuff like iso image..."
+        pass
     @node_mapper
-    def bootcd (self): pass
+    def bootcd (self): 
+        "all nodes: invoke GetBootMedium and store result locally"
+        pass
     @node_mapper
-    def configure_qemu (self): pass
+    def configure_qemu (self): 
+        "all nodes: compute qemu config qemu.conf and store it locally"
+        pass
     @node_mapper
-    def reinstall_node (self): pass
+    def reinstall_node (self): 
+        "all nodes: mark PLCAPI boot_state as reinstall"
+        pass
     @node_mapper
-    def export_qemu (self): pass
+    def export_qemu (self): 
+        "all nodes: push local node-dep directory on the qemu box"
+        pass
         
     ### check sanity : invoke scripts from qaapi/qa/tests/{node,slice}
     def check_sanity_node (self): 
@@ -800,6 +802,7 @@ class TestPlc:
         return self.locate_first_sliver().check_sanity()
     
     def check_sanity (self):
+        "runs unit tests in the node and slice contexts - see tests/qaapi/qa/tests/{node,slice}"
         return self.check_sanity_node() and self.check_sanity_sliver()
 
     ### initscripts
@@ -821,15 +824,18 @@ class TestPlc:
         return overall
 	    
     def check_initscripts(self):
-	    return self.do_check_initscripts()
-	            
+        "check that the initscripts have triggered"
+        return self.do_check_initscripts()
+    
     def initscripts (self):
+        "create initscripts with PLCAPI"
         for initscript in self.plc_spec['initscripts']:
             utils.pprint('Adding Initscript in plc %s'%self.plc_spec['name'],initscript)
             self.apiserver.AddInitScript(self.auth_root(),initscript['initscript_fields'])
         return True
 
     def clean_initscripts (self):
+        "delete initscripts with PLCAPI"
         for initscript in self.plc_spec['initscripts']:
             initscript_name = initscript['initscript_fields']['name']
             print('Attempting to delete %s in plc %s'%(initscript_name,self.plc_spec['name']))
@@ -842,9 +848,11 @@ class TestPlc:
 
     ### manage slices
     def slices (self):
+        "create slices with PLCAPI"
         return self.do_slices()
 
     def clean_slices (self):
+        "delete slices with PLCAPI"
         return self.do_slices("delete")
 
     def do_slices (self,  action="add"):
@@ -862,15 +870,22 @@ class TestPlc:
         return True
         
     @slice_mapper_options
-    def check_slice(self): pass
+    def check_slice(self): 
+        "tries to ssh-enter the slice with the user key, to ensure slice creation"
+        pass
 
     @node_mapper
-    def clear_known_hosts (self): pass
+    def clear_known_hosts (self): 
+        "remove test nodes entries from the local known_hosts file"
+        pass
     
     @node_mapper
-    def start_node (self) : pass
+    def start_node (self) : 
+        "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
+        pass
 
     def check_tcp (self):
+        "check TCP connectivity between 2 slices (or in loopback if only one is defined)"
         specs = self.plc_spec['tcp_test']
         overall=True
         for spec in specs:
@@ -888,6 +903,7 @@ class TestPlc:
         return overall
 
     def plcsh_stress_test (self):
+        "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
         remote="/vservers/%s/%s"%(self.vservername,location)
@@ -902,6 +918,7 @@ class TestPlc:
     # in particular runs with --preserve (dont cleanup) and without --check
     # also it gets run twice, once with the --foreign option for creating fake foreign entries
     def populate (self):
+        "creates random entries in the PLCAPI"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
         remote="/vservers/%s/%s"%(self.vservername,location)
@@ -915,6 +932,7 @@ class TestPlc:
         return ( local and remote)
 
     def gather_logs (self):
+        "gets all possible logs from plc's/qemu node's/slice's for future reference"
         # (1.a) get the plc's /var/log/ and store it locally in logs/myplc.var-log.<plcname>/*
         # (1.b) get the plc's  /var/lib/pgsql/data/pg_log/ -> logs/myplc.pgsql-log.<plcname>/*
         # (2) get all the nodes qemu log and store it as logs/node.qemu.<node>.log

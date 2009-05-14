@@ -35,7 +35,7 @@ class TestMapper:
     def apply_first_map (self, type, name, obj, maplist):
         for (map_pattern,rename_dict) in maplist:
             if utils.match (name,map_pattern):
-                if not self.options.quiet:
+                if self.options.verbose:
                     utils.header("TestMapper/%s : applying rules '%s' on %s"%(type,map_pattern,name))
                 for (k,v) in rename_dict.iteritems():
                     # apply : separator
@@ -45,20 +45,20 @@ class TestMapper:
                     for step in path[:-1]:
                         if not o.has_key(step):
                             o[step]={}
-                            if not self.options.quiet:
+                            if self.options.verbose:
                                 utils.header ("WARNING : created step %s in path %s on %s %s"%(
                                         step,path,type,name))
                         o=o[step]
                     # last step is the one for side-effect
                     step=path[-1]
-                    if not self.options.quiet:
+                    if self.options.verbose:
                         if not o.has_key(step):
                             utils.header ("WARNING : inserting key %s for path %s on %s %s"%(
                                     step,path,type,name))
                     # apply formatting if '%s' found in the value
                     if v.find('%s')>=0:
                         v=v%obj[k]
-                    if not self.options.quiet:
+                    if self.options.verbose:
                         print("TestMapper, rewriting %s: %s into %s"%(name,k,v))
                     o[step]=v
                 # only apply first rule

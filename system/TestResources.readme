@@ -1,0 +1,37 @@
+Historically, all the site-dependant configuration was part of the svn
+tree.
+
+However this turned out to be a wrong choice as the actual test h/w
+configuration changes over time, so when you try to test e.g. a 4.2
+build in 2009, you get a very old description of the test hardware.
+
+So, here's the way out
+
+==================== loading local resources
+
+- the test code expects to find a module named LocalTestResources in $HOME
+- and this module is expected to define the following stuff
+
+* one object named local_resources that implement the following methods
+
+* local_resources.localize (plcs,options) -> plcs
+--> this is called on the plcs obtained after the configs are loaded, 
+    and should return the altered plc
+
+* local_resources.local_pre (plc) -> boolean
+--> this is the implementation of the local_pre step on TestPlc
+does any required house cleaning, like turning down qemu instances or the like
+
+* local_resources.local_post (plc) -> boolean
+--> this is the implementation of the local_post step on TestPlc
+
+local_pre and local_post are parts of the default set of steps
+
+* local_list (plc) -> boolean
+* local_cleanup (plc) -> boolean
+
+
+===================== template
+
+The TestResources class can be used as a template for implementing local_resources
+See OnelabTestResources for how to use it

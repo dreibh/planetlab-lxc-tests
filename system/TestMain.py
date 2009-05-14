@@ -12,6 +12,10 @@ from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
 
+# add $HOME in PYTHONPATH so we can import LocalTestResources.py
+sys.path.append(os.environ['HOME'])
+import LocalTestResources
+
 class TestMain:
 
     subversion_id = "$Id$"
@@ -24,10 +28,35 @@ class TestMain:
 	self.path=os.path.dirname(sys.argv[0]) or "."
         os.chdir(self.path)
 
-    @staticmethod
-    def show_env (options, message):
-        utils.header (message)
-        utils.show_options("main options",options)
+    def show_env (self,options, message):
+        if self.options.verbose:
+            utils.header (message)
+            utils.show_options("main options",options)
+
+    def init_steps(self):
+        self.steps_message=20*'x'+" Defaut steps are\n"+TestPlc.printable_steps(TestPlc.default_steps)
+        self.steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestPlc.printable_steps(TestPlc.other_steps)
+
+    def list_steps(self):
+        if not self.options.verbose:
+            print self.steps_message
+        else:
+            testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
+            scopes = [("Default steps",TestPlc.default_steps)]
+            if self.options.all_steps:
+                scopes.append ( ("Other steps",TestPlc.other_steps) )
+            for (scope,steps) in scopes:
+                print '--------------------',scope
+                for step in [step for step in steps if TestPlc.valid_step(step)]:
+                    stepname=step
+                    if step.find("force_") == 0:
+                        stepname=step.replace("force_","")
+                        force=True
+                    print '*',step,"\r",4*"\t",
+                    try:
+                        print testplc_method_dict[stepname].__doc__
+                    except:
+                        print "*** no doc found"
 
     @staticmethod
     def optparse_list (option, opt, value, parser):
@@ -37,8 +66,7 @@ class TestMain:
             setattr(parser.values,option.dest,value.split())
 
     def run (self):
-        steps_message=20*'x'+" Defaut steps are\n"+TestPlc.printable_steps(TestPlc.default_steps)
-        steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestPlc.printable_steps(TestPlc.other_steps)
+        self.init_steps()
         usage = """usage: %%prog [options] steps
 arch-rpms-url defaults to the last value used, as stored in arg-arch-rpms-url,
    no default
@@ -51,7 +79,7 @@ ips_node, ips_plc and ips_qemu defaults to the last value used, as stored in arg
 steps refer to a method in TestPlc or to a step_* module
 ===
 """%(TestMain.default_build_url,TestMain.default_config)
-        usage += steps_message
+        usage += self.steps_message
         parser=OptionParser(usage=usage,version=self.subversion_id)
         parser.add_option("-u","--url",action="store", dest="arch_rpms_url", 
                           help="URL of the arch-dependent RPMS area - for locating what to test")
@@ -103,20 +131,15 @@ steps refer to a method in TestPlc or to a step_* module
         if self.options.quiet:
             self.options.verbose=False
 
+        # no step specified
         if len(self.args) == 0:
-            if self.options.all_steps:
-                self.options.steps=TestPlc.default_steps
-            elif self.options.dry_run:
-                self.options.steps=TestPlc.default_steps
-            elif self.options.list_steps:
-                print steps_message
-                sys.exit(1)
-            else:
-                print 'No step found (do you mean -a ? )'
-                print "Run %s --help for help"%sys.argv[0]                        
-                sys.exit(1)
+            self.options.steps=TestPlc.default_steps
         else:
             self.options.steps = self.args
+
+        if self.options.list_steps:
+            self.list_steps()
+            sys.exit(1)
 
         # handle defaults and option persistence
         for (recname,filename,default) in (
@@ -166,7 +189,7 @@ steps refer to a method in TestPlc or to a step_* module
             if isinstance(getattr(self.options,recname),list):
                 getattr(self.options,recname).reverse()
 
-            if not self.options.quiet:
+            if self.options.verbose:
                 utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
 
 
@@ -207,6 +230,10 @@ steps refer to a method in TestPlc or to a step_* module
                 traceback.print_exc()
                 print 'Cannot load config %s -- ignored'%modulename
                 raise
+
+        # run localize as defined by local_resources
+        all_plc_specs = LocalTestResources.local_resources.localize(all_plc_specs,self.options)
+
         # remember plc IP address(es) if not specified
         ips_plc_file=open('arg-ips-plc','w')
         for plc_spec in all_plc_specs:
