@@ -4,14 +4,11 @@ from TestPool import TestPoolIP
 
 # using vplc01 .. vplc15 - keep [16,17,18] for 4.2 and 19 and 20 for long-haul tests
 princeton_plcs_ip_pool = [ 
-    ("p-plc-01.onelab.eu","128.112.139.99", "de:ad:be:ef:ff:01"),
-    ("p-plc-02.onelab.eu","128.112.139.100","de:ad:be:ef:ff:02"),
-    ("p-plc-03.onelab.eu","128.112.139.103","de:ad:be:ef:ff:03"),
-    ("p-plc-04.onelab.eu","128.112.139.105","de:ad:be:ef:ff:04"),
-    ("p-plc-05.onelab.eu","128.112.139.106","de:ad:be:ef:ff:05"),
-    ("p-plc-06.onelab.eu","128.112.139.109","de:ad:be:ef:ff:06"),
-    ("p-plc-07.onelab.eu","128.112.139.110","de:ad:be:ef:ff:07"),
-    ("p-plc-08.onelab.eu","128.112.139.122","de:ad:be:ef:ff:08"),
+    ("plc-01.test.planet-lab.org","128.112.139.34", "de:ad:be:ef:ff:01"),
+    ("plc-02.test.planet-lab.org","128.112.139.35", "de:ad:be:ef:ff:02"),
+    ("plc-03.test.planet-lab.org","128.112.139.36", "de:ad:be:ef:ff:03"),
+    ("plc-04.test.planet-lab.org","128.112.139.37", "de:ad:be:ef:ff:04"),
+    ("plc-05.test.planet-lab.org","128.112.139.41", "de:ad:be:ef:ff:05"),
 ]
 
 def config (plcs,options):
