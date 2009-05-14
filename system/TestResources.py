@@ -165,13 +165,13 @@ class TestResources:
         return True
 
     ###
-    def trplc_record (self):
+    def trplc_record (self,plc):
         tracker = TrackerPlc(plc.options,instances=self.max_plcs())
         tracker.record(self.test_ssh.hostname,self.vservername)
         tracker.store()
         return True
 
-    def trplc_free (self):
+    def trplc_free (self,plc):
         tracker = TrackerPlc(plc.options,instances=self.max_plcs())
         tracker.free()
         tracker.store()

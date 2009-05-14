@@ -76,7 +76,7 @@ class TestPlc:
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
-        'check_tcp',  'check_sanity',  SEP,
+        'check_tcp',  'check_hooks',  SEP,
         'force_gather_logs', 'force_local_post',
         ]
     other_steps = [ 
@@ -795,15 +795,15 @@ class TestPlc:
         "all nodes: push local node-dep directory on the qemu box"
         pass
         
-    ### check sanity : invoke scripts from qaapi/qa/tests/{node,slice}
-    def check_sanity_node (self): 
-        return self.locate_first_node().check_sanity()
-    def check_sanity_sliver (self) : 
-        return self.locate_first_sliver().check_sanity()
+    ### check hooks : invoke scripts from hooks/{node,slice}
+    def check_hooks_node (self): 
+        return self.locate_first_node().check_hooks()
+    def check_hooks_sliver (self) : 
+        return self.locate_first_sliver().check_hooks()
     
-    def check_sanity (self):
-        "runs unit tests in the node and slice contexts - see tests/qaapi/qa/tests/{node,slice}"
-        return self.check_sanity_node() and self.check_sanity_sliver()
+    def check_hooks (self):
+        "runs unit tests in the node and slice contexts - see hooks/{node,slice}"
+        return self.check_hooks_node() and self.check_hooks_sliver()
 
     ### initscripts
     def do_check_initscripts(self):

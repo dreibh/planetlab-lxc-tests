@@ -55,28 +55,28 @@ class TestSliver:
         dir_to_tar="/vservers/%s/var/log"%self.test_slice.name()
         return test_ssh.actual_command("tar -C %s -cf - ."%dir_to_tar)
     
-    def check_sanity (self):
-        print 'NOTE: slice sanity check scripts NOT (yet?) run in sudo'
+    def check_hooks (self):
+        print 'NOTE: slice hooks check scripts NOT (yet?) run in sudo'
         extensions = [ 'py','pl','sh' ]
-        path='tests/qaapi/qa/tests/slice/'
-        scripts=utils.locate_sanity_scripts ('sliver '+self.name(), path,extensions)
+        path='hooks/slice/'
+        scripts=utils.locate_hooks_scripts ('sliver '+self.name(), path,extensions)
         overall = True
         for script in scripts:
-            if not self.check_sanity_script (script):
+            if not self.check_hooks_script (script):
                 overall = False
         return overall
 
-    def check_sanity_script (self,local_script):
+    def check_hooks_script (self,local_script):
         script_name=os.path.basename(local_script)
-        utils.header ("SLIVER %s : running sanity check script %s"%(self.name(),script_name))
+        utils.header ("SLIVER %s : running hooks check script %s"%(self.name(),script_name))
         ssh_handle=self.create_test_ssh()
         ssh_handle.copy_home(local_script)
         if ssh_handle.run("./"+script_name) != 0:
-            utils.header ("WARNING: sanity check script %s FAILED"%script_name)
+            utils.header ("WARNING: hooks check script %s FAILED"%script_name)
             print 'temporary : ignoring result and always return true for now'
             #return False
             return True
         else:
-            utils.header ("SUCCESS: sliver sanity check script %s OK"%script_name)
+            utils.header ("SUCCESS: sliver hooks check script %s OK"%script_name)
             return True
     

@@ -219,28 +219,28 @@ class TestNode:
         key = "keys/%(vservername)s.rsa"%locals()
         return TestSsh(self.name(), buildname=self.buildname(), key=key)
 
-    def check_sanity (self):
+    def check_hooks (self):
         extensions = [ 'py','pl','sh' ]
-        path='tests/qaapi/qa/tests/node/'
-        scripts=utils.locate_sanity_scripts ('node '+self.name(), path,extensions)
+        path='hooks/node'
+        scripts=utils.locate_hooks_scripts ('node '+self.name(), path,extensions)
         overall = True
         for script in scripts:
-            if not self.check_sanity_script (script):
+            if not self.check_hooks_script (script):
                 overall = False
         return overall
 
-    def check_sanity_script (self,local_script):
+    def check_hooks_script (self,local_script):
         # push the script on the node's root context
         script_name=os.path.basename(local_script)
-        utils.header ("NODE %s : running sanity check script %s"%(self.name(),script_name))
+        utils.header ("NODE %s : running hooks check script %s"%(self.name(),script_name))
         ssh_handle=self.create_test_ssh()
         ssh_handle.copy_home(local_script)
         if ssh_handle.run("./"+script_name) != 0:
-            utils.header ("WARNING: node sanity check script %s FAILED"%script_name)
+            utils.header ("WARNING: node hooks check script %s FAILED"%script_name)
             print 'temporary : ignoring result and always return true for now'
             #return False
             return True
         else:
-            utils.header ("SUCCESS: node sanity check script %s OK"%script_name)
+            utils.header ("SUCCESS: node hooks check script %s OK"%script_name)
             return True
 

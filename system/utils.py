@@ -51,7 +51,7 @@ def match (string, pattern):
     pattern=pattern.replace("?",".")
     return re.compile(pattern).match(string)
     
-def locate_sanity_scripts (message,path,extensions):
+def locate_hooks_scripts (message,path,extensions):
     print message,'searching',path,'for extensions',extensions
     scripts=[]
     for ext in extensions:
