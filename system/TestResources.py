@@ -147,6 +147,9 @@ class TestResources:
     def step_cleanup (self,plc):
         return self.trqemu_cleanup(plc) and self.trplc_cleanup(plc)
 
+    def step_list (self,plc):
+        return self.trqemu_list(plc) and self.trplc_list(plc)
+
     ####################
     def trqemu_record (self,plc):
         tracker=TrackerQemu(plc.options,instances=self.max_qemus()-1)
@@ -167,7 +170,7 @@ class TestResources:
     ###
     def trplc_record (self,plc):
         tracker = TrackerPlc(plc.options,instances=self.max_plcs())
-        tracker.record(self.test_ssh.hostname,self.vservername)
+        tracker.record(plc.test_ssh.hostname,plc.vservername)
         tracker.store()
         return True
 
@@ -192,3 +195,10 @@ class TestResources:
         tracker.store()
         return True
 
+    def trqemu_list (self,plc):
+        TrackerQemu(plc.options,instances=self.max_qemus()-1).list()
+        return True
+
+    def trplc_list (self,plc):
+        TrackerPlc(plc.options,instances=self.max_plcs()).list()
+        return True
