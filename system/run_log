@@ -2,7 +2,7 @@
 cd $(dirname $0)
 mkdir -p logs
 time=$(date +%H-%M)
-logfile=logs/runtest-${time}.log
+logfile=logs/run-${time}.log
 tracefile=logs/trace-${time}.txt
 
 # figure if TestMain succeeds, as the retcod gets lost in the pipe
