@@ -9,7 +9,7 @@ from TestMapper import TestMapper
 from TestPool import TestPoolQemu, TestPoolIP
 from Trackers import TrackerPlc, TrackerQemu
 
-class TestResources ():
+class TestResources:
 
     # need more specialization, see an example in OnelabTestResources
 
