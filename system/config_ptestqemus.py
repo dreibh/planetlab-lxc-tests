@@ -3,12 +3,12 @@ import sys
 from TestMapper import TestMapper
 from TestPool import TestPoolQemu
 
-princeton_qemus_pool = [  ( 'p-testqemu1.onelab.eu', None, None ) ]
+princeton_qemus_pool = [  ( 'testqemu1.test.planet-lab.org', None, None ) ]
     
 def config (plcs, options):
 
     # all plcs on the same vserver box
-    plc_box   ='p-testbox-plc.onelab.eu'
+    plc_box   ='testbox.test.planet-lab.org'
     # informative
     label=options.personality.replace("linux","")
 
