@@ -1,0 +1,49 @@
+#
+# $Id$
+# 
+# this is only an example file
+# the actual file is installed in your testmaster box as /root/LocalTestResources.py
+# 
+# 
+
+from TestResources import TestResources
+
+class OnelabTestResources (TestResources):
+    
+    # we use only one for now but who knows
+    def plc_boxes (self):
+        return [ 'testbox.test.planet-lab.org' ]
+
+    def network_dict (self):
+        return { 'interface_fields:gateway':	'128.112.139.1',
+                 'interface_fields:network':	'128.112.139.0',
+                 'interface_fields:broadcast':	'128.112.139.127',
+                 'interface_fields:netmask':	'255.255.255.128',
+                 'interface_fields:dns1':	'128.112.136.10',
+                 'interface_fields:dns2':	'128.112.136.12',
+                 }
+
+    def nodes_ip_pool (self):
+        return [ ("node-01.test.planet-lab.org", "128.112.139.44", "de:ad:be:ef:00:10"),
+                 ("node-02.test.planet-lab.org", "128.112.139.66", "de:ad:be:ef:00:20"),
+                 ]
+    
+    def qemus_ip_pool (self):
+        return [  ( 'testqemu1.test.planet-lab.org', None, None ) ]
+
+    def max_qemus (self):
+        return 1
+
+    def plcs_ip_pool (self):
+        return [ ("plc-01.test.planet-lab.org","128.112.139.34", "de:ad:be:ef:ff:01"),
+                 ("plc-02.test.planet-lab.org","128.112.139.35", "de:ad:be:ef:ff:02"),
+                 ("plc-03.test.planet-lab.org","128.112.139.36", "de:ad:be:ef:ff:03"),
+                 ("plc-04.test.planet-lab.org","128.112.139.37", "de:ad:be:ef:ff:04"),
+                 ("plc-05.test.planet-lab.org","128.112.139.41", "de:ad:be:ef:ff:05"),
+                 ]
+
+    def max_plcs (self):
+        return 4
+
+
+local_resources = OnelabTestResources ()

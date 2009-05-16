@@ -1,7 +1,8 @@
 #
 # $Id$
 # 
-# this is only an example file, the actual file sits on our testmaster's homedirectory
+# this is only an example file
+# the actual file is installed in your testmaster box as /root/LocalTestResources.py
 # 
 # 
 

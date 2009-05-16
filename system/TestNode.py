@@ -232,15 +232,14 @@ class TestNode:
     def check_hooks_script (self,local_script):
         # push the script on the node's root context
         script_name=os.path.basename(local_script)
-        utils.header ("NODE %s : running hooks check script %s"%(self.name(),script_name))
-        ssh_handle=self.create_test_ssh()
-        ssh_handle.copy_home(local_script)
-        if ssh_handle.run("./"+script_name) != 0:
-            utils.header ("WARNING: node hooks check script %s FAILED"%script_name)
-            print 'temporary : ignoring result and always return true for now'
+        utils.header ("NODE hook %s (%s)"%(script_name,self.name()))
+        test_ssh=self.create_test_ssh()
+        test_ssh.copy_home(local_script)
+        if test_ssh.run("./"+script_name) != 0:
+            utils.header ("WARNING: node hooks check script %s FAILED (ignored)"%script_name)
             #return False
             return True
         else:
-            utils.header ("SUCCESS: node hooks check script %s OK"%script_name)
+            utils.header ("SUCCESS: node hook %s OK"%script_name)
             return True
 
