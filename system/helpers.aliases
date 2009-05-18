@@ -5,13 +5,11 @@ local_defs=~/LocalTestResources.helpers
 if [ -f $local_defs ] ; then 
     source $local_defs
 else
-    echo "you should define qemuboxes and plcboxes in $local_defs"
-    exit
+    echo "WARNING !! you should define qemuboxes and plcboxes in $local_defs"
 fi
 
 if [ -z "$qemuboxes" -o -z "$plcboxes" ] ; then
-    echo "you should define qemuboxes and plcboxes in $local_defs"
-    exit
+    echo "WARNING !! you should define qemuboxes and plcboxes in $local_defs"
 fi
 
 ########## list: from trackers, what should be
