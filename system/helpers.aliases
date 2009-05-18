@@ -1,0 +1,53 @@
+## -*-sh-*-
+
+########## locad local defs
+local_defs=~/LocalTestResources.helpers
+if [ -f $local_defs ] ; then 
+    source $local_defs
+else
+    echo "you should define qemuboxes and plcboxes in $local_defs"
+    exit
+fi
+
+if [ -z "$qemuboxes" -o -z "$plcboxes" ] ; then
+    echo "you should define qemuboxes and plcboxes in $local_defs"
+    exit
+fi
+
+########## list: from trackers, what should be
+alias list_qemus="head -v ~/tracker-qemus"
+alias list_plcs="head -v ~/tracker-plcs"
+alias list_all="list_qemus ; list_plcs"
+
+########## probe: from real data
+alias probe_qemus='for box in $qemuboxes ; do echo qemu instances in $box ; ssh root@$box pgrep qemu ; done'
+alias probe_plcs='for box in $plcboxes ; do echo plc instances in $box; ssh $box vserver-stat; done'
+alias probe_all="probe_qemus ; probe_plcs"
+
+########## cleanup: stop plc or kill qemus
+function cleanup_qemus () {
+    for box in $qemuboxes ; do 
+	echo killing qemu instances in $box
+	ssh root@$box pkill qemu
+    done
+    if [ -f ~/tracker-qemus ] ; then 
+	echo ~/cleaning tracker-qemus ; rm ~/tracker-qemus 
+    fi
+}
+function cleanup_plcs () { 
+    for box in $plcboxes ; do 
+	echo stopping vserver instances in $box 
+	ssh root@$box 'cd /vservers ; for vsname in *; do echo -n "stop $vsname y/[n] ? "; read answer ; case $answer in nN) echo skipping $vsname ;; *) vserver $vsname stop ;; esac; done'
+    done
+    if [ -f ~/tracker-plcs ] ; then 
+	echo ~/cleaning tracker-plcs
+	rm ~/tracker-plcs
+    fi
+}
+alias cleanup_all="cleanup_qemus ; cleanup_plcs"
+
+########## reboot: reboot the root contexts 
+alias reboot_qemus='for box in $qemuboxes; do echo rebooting $box ; ssh root@$box shutdown -r now ; done'
+alias reboot_plcs='for box in $plcboxes; do echo rebooting $box ; ssh root@$box shutdown -r now ; done'
+alias reboot_all="reboot_qemus ; reboot_plcs"
+

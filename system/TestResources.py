@@ -17,18 +17,18 @@ class TestResources:
     def localize (self,plcs,options):
         try:
             plcs = self.localize_qemus(plcs,options)
-        except:
-            print 'Could not localize qemus - exiting'
+        except Exception, e:
+            print 'Could not localize qemus','--',e,'--','exiting'
             sys.exit(1)
         try:
             plcs = self.localize_nodes(plcs,options)
-        except:
-            print 'Could not localize nodes - exiting'
+        except Exception,e:
+            print 'Could not localize nodes','--',e,'--','exiting'
             sys.exit(1)
         try:
             plcs = self.localize_plcs(plcs,options)
-        except:
-            print 'Could not localize plcs - exiting'
+        except Exception,e:
+            print 'Could not localize plcs','--',e,'--','exiting'
             sys.exit(1)
         return plcs
 

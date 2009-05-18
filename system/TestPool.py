@@ -73,8 +73,7 @@ class TestPoolIP (TestPool):
 # OS-dependent ping option (support for macos, for convenience)
     ping_timeout_option = None
 # checks whether a given hostname/ip responds to ping
-    @staticmethod
-    def check_ping (hostname):
+    def check_ping (self,hostname):
         if not TestPoolIP.ping_timeout_option:
             (status,osname) = commands.getstatusoutput("uname -s")
             if status != 0:
@@ -84,6 +83,8 @@ class TestPoolIP (TestPool):
             elif osname == "Darwin":
                 TestPoolIP.ping_timeout_option="-t"
 
+        if self.options.verbose:
+            utils.header ("TestPoolIP: pinging %s"%hostname)
         command="ping -c 1 %s 1 %s"%(TestPoolIP.ping_timeout_option,hostname)
         (status,output) = commands.getstatusoutput(command)
         return status == 0
@@ -97,8 +98,9 @@ class TestPoolQemu (TestPool):
         return not TestPoolQemu.busy_qemu(hostname)
 
     # is there a qemu runing on that box already ?
-    @staticmethod
-    def busy_qemu (hostname):
+    def busy_qemu (self, hostname):
+        if self.options.verbose:
+            utils.header("TestPoolQemu: checking for running qemu instances on %s"%hostname)
         command="ssh -o ConnectTimeout=5 root@%s ps -e -o cmd"%hostname
         (status,output) = commands.getstatusoutput(command)
         # if we fail to run that, let's assume we don't have ssh access, so
