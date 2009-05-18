@@ -68,7 +68,7 @@ class TestPoolIP (TestPool):
         TestPool.__init__(self,pool,options,"free IP address")
 
     def free_hostname (self, hostname):
-        return not TestPoolIP.check_ping(hostname)
+        return not self.check_ping(hostname)
 
 # OS-dependent ping option (support for macos, for convenience)
     ping_timeout_option = None
@@ -95,7 +95,7 @@ class TestPoolQemu (TestPool):
         TestPool.__init__(self,pool,options,"free qemu box")
 
     def free_hostname (self, hostname):
-        return not TestPoolQemu.busy_qemu(hostname)
+        return not self.busy_qemu(hostname)
 
     # is there a qemu runing on that box already ?
     def busy_qemu (self, hostname):
