@@ -8,7 +8,7 @@ use strict;
 use threads;
 
 #please change to something local
-my $guineapig='planetlab-1.cs.princeton.edu';
+my $guineapig='tux.cs.princeton.edu';
 my $numiter=1000;
 
 sub run {
