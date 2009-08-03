@@ -17,6 +17,8 @@ from TestSliver import TestSliver
 from TestBox import TestBox
 from TestSsh import TestSsh
 from TestApiserver import TestApiserver
+from TestSliceSfa import TestSliceSfa
+from TestUserSfa import TestUserSfa
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
@@ -62,6 +64,21 @@ def slice_mapper_options (method):
     actual.__doc__=method.__doc__
     return actual
 
+def slice_mapper_options_sfa (method):
+    def actual(self):
+	test_plc=self
+        overall=True
+        slice_method = TestSliceSfa.__dict__[method.__name__]
+        for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+            site_spec = self.locate_site (slice_spec['sitename'])
+            test_site = TestSite(self,site_spec)
+            test_slice=TestSliceSfa(test_plc,test_site,slice_spec)
+            if not slice_method(test_slice,self.options): overall=False
+        return overall
+    # restore the doc text
+    actual.__doc__=method.__doc__
+    return actual
+
 SEP='<sep>'
 
 class TestPlc:
@@ -76,6 +93,9 @@ class TestPlc:
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
+	'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEP,
+        'setup_sfa', 'add_sfa', 'update_sfa', SEP,
+        'view_sfa', 'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEP,
         'check_tcp',  'check_hooks',  SEP,
         'force_gather_logs', 'force_local_post',
         ]
@@ -471,6 +491,8 @@ class TestPlc:
                      'PLC_MAIL_ENABLED',
                      'PLC_MAIL_SUPPORT_ADDRESS',
                      'PLC_DB_HOST',
+                     'PLC_DB_PASSWORD',
+		     # Above line was added for integrating SFA Testing
                      'PLC_API_HOST',
                      'PLC_WWW_HOST',
                      'PLC_BOOT_HOST',
@@ -917,6 +939,171 @@ class TestPlc:
     # populate runs the same utility without slightly different options
     # in particular runs with --preserve (dont cleanup) and without --check
     # also it gets run twice, once with the --foreign option for creating fake foreign entries
+
+    ### install_sfa_rpm
+    def install_sfa(self):
+        "yum install sfa, sfa-plc and sfa-client"
+        if self.options.personality == "linux32":
+            arch = "i386"
+        elif self.options.personality == "linux64":
+            arch = "x86_64"
+        else:
+            raise Exception, "Unsupported personality %r"%self.options.personality
+        return \
+            self.run_in_guest("yum -y install sfa")==0 and \
+            self.run_in_guest("yum -y install sfa-client")==0 and \
+            self.run_in_guest("yum -y install sfa-plc")==0
+    ###
+    def configure_sfa(self):
+        "run sfa-config-tty"
+        tmpname='%s.sfa-config-tty'%(self.name())
+        fileconf=open(tmpname,'w')
+        fileconf.write ('u\n')
+        for var in [ 'SFA_REGISTRY_ROOT_AUTH',
+                     'SFA_REGISTRY_LEVEL1_AUTH',
+                     'SFA_PLC_USER',
+                     'SFA_PLC_PASSWORD',
+                     'SFA_PLC_DB_HOST',
+                     'SFA_PLC_DB_USER',
+                     'SFA_PLC_DB_PASSWORD']:
+            fileconf.write ('%s\n'%(self.plc_spec['sfa'][var]))
+        fileconf.write('w\n')
+        fileconf.write('q\n')
+        fileconf.close()
+        utils.system('cat %s'%tmpname)
+        self.run_in_guest_piped('cat %s'%tmpname,'sfa-config-tty')
+        utils.system('rm %s'%tmpname)
+        return True
+
+    def import_sfa(self):
+        "sfa-import-plc"
+	auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+        self.run_in_guest('sfa-import-plc.py')
+        self.run_in_guest('cp /etc/sfa/authorities/%s/%s.pkey /etc/sfa/authorities/server.key'%(auth,auth))
+        return True
+
+    def start_sfa(self):
+        "service sfa start"
+        self.run_in_guest('service sfa start')
+        return True
+
+    def setup_sfa(self):
+        "sfi client configuration"
+	dir_name=".sfi"
+	if os.path.exists(dir_name):
+           utils.system('rm -rf %s'%dir_name)
+	utils.system('mkdir %s'%dir_name)
+	file_name=dir_name + os.sep + 'fake-pi1.pkey'
+        fileconf=open(file_name,'w')
+        fileconf.write (self.plc_spec['keys'][0]['private'])
+        fileconf.close()
+
+	file_name=dir_name + os.sep + 'sfi_config'
+        fileconf=open(file_name,'w')
+	SFI_AUTH=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']+".main"
+        fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
+	fileconf.write('\n')
+	SFI_USER=SFI_AUTH+'.fake-pi1'
+        fileconf.write ("SFI_USER='%s'"%SFI_USER)
+	fileconf.write('\n')
+        fileconf.write ("SFI_REGISTRY='http://localhost:12345/'")
+	fileconf.write('\n')
+        fileconf.write ("SFI_SM='http://localhost:12347/'")
+	fileconf.write('\n')
+        fileconf.close()
+
+	file_name=dir_name + os.sep + 'person.xml'
+        fileconf=open(file_name,'w')
+	for record in self.plc_spec['sfa']['sfa_person_xml']:
+	   person_record=record
+	fileconf.write(person_record)
+	fileconf.write('\n')
+        fileconf.close()
+
+	file_name=dir_name + os.sep + 'slice.xml'
+        fileconf=open(file_name,'w')
+	for record in self.plc_spec['sfa']['sfa_slice_xml']:
+	    slice_record=record
+	#slice_record=self.plc_spec['sfa']['sfa_slice_xml']
+	fileconf.write(slice_record)
+	fileconf.write('\n')
+        fileconf.close()
+
+	file_name=dir_name + os.sep + 'slice.rspec'
+        fileconf=open(file_name,'w')
+	slice_rspec=''
+	for (key, value) in self.plc_spec['sfa']['sfa_slice_rspec'].items():
+	    slice_rspec +=value 
+	fileconf.write(slice_rspec)
+	fileconf.write('\n')
+        fileconf.close()
+        location = "root/"
+        remote="/vservers/%s/%s"%(self.vservername,location)
+	self.test_ssh.copy_abs(dir_name, remote, recursive=True)
+
+        #utils.system('cat %s'%tmpname)
+        utils.system('rm -rf %s'%dir_name)
+        return True
+
+    def add_sfa(self):
+        "run sfi.py add (on Registry) and sfi.py create (on SM) to form new objects"
+	test_plc=self
+        test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
+        success=test_user_sfa.add_user()
+
+	for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+            site_spec = self.locate_site (slice_spec['sitename'])
+            test_site = TestSite(self,site_spec)
+	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
+	    success1=test_slice_sfa.add_slice()
+	    success2=test_slice_sfa.create_slice()
+	return success and success1 and success2
+
+    def update_sfa(self):
+        "run sfi.py update (on Registry) and sfi.py create (on SM) on existing objects"
+	test_plc=self
+	test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
+	success1=test_user_sfa.update_user()
+	
+	for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+	    site_spec = self.locate_site (slice_spec['sitename'])
+	    test_site = TestSite(self,site_spec)
+	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
+	    success2=test_slice_sfa.update_slice()
+	return success1 and success2
+
+    def view_sfa(self):
+        "run sfi.py list and sfi.py show (both on Registry) and sfi.py slices and sfi.py resources (both on SM)"
+	auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+	return \
+	self.run_in_guest("sfi.py -d /root/.sfi/ list %s.main"%auth)==0 and \
+	self.run_in_guest("sfi.py -d /root/.sfi/ show %s.main"%auth)==0 and \
+	self.run_in_guest("sfi.py -d /root/.sfi/ slices")==0 and \
+	self.run_in_guest("sfi.py -d /root/.sfi/ resources")==0
+
+    @slice_mapper_options_sfa
+    def check_slice_sfa(self): 
+	"tries to ssh-enter the SFA slice"
+        pass
+
+    def delete_sfa(self):
+	"run sfi.py delete (on SM), sfi.py remove (on Registry)"
+	test_plc=self
+	test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
+	success1=test_user_sfa.delete_user()
+	for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+            site_spec = self.locate_site (slice_spec['sitename'])
+            test_site = TestSite(self,site_spec)
+	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
+	    success2=test_slice_sfa.delete_slice()
+
+	return success1 and success2
+
+    def stop_sfa(self):
+        "service sfa stop"
+        self.run_in_guest('service sfa stop')
+        return True
+
     def populate (self):
         "creates random entries in the PLCAPI"
         # install the stress-test in the plc image

@@ -30,6 +30,11 @@ class TestResources:
         except Exception,e:
             print 'Could not localize plcs','--',e,'--','exiting'
             sys.exit(1)
+        try:
+            plcs = self.localize_rspec(plcs,options)
+        except Exception,e:
+            print 'Could not localize RSpec','--',e,'--','exiting'
+            sys.exit(1)
         return plcs
 
     def localize_qemus (self,plcs,options):
@@ -67,7 +72,7 @@ class TestResources:
         
 
     def localize_nodes (self, plcs, options):
-        
+	
         ip_pool = TestPoolIP (self.nodes_ip_pool(),options)
         network_dict = self.network_dict()
 
@@ -100,7 +105,6 @@ class TestResources:
     def localize_plcs (self,plcs,options):
         
         utils.header ("Turning configuration into a vserver-based one for onelab")
-    
         ip_pool = TestPoolIP (self.plcs_ip_pool(),options)
     
         plc_counter=0
@@ -202,3 +206,14 @@ class TestResources:
     def trplc_list (self,plc):
         TrackerPlc(plc.options,instances=self.max_plcs()).list()
         return True
+
+    def localize_rspec (self,plcs,options):
+        
+        utils.header ("Localize SFA Slice RSpec")
+
+	for plc in plcs:
+	    for site in plc['sites']:
+		for node in site['nodes']:
+	            plc['sfa']['sfa_slice_rspec']['part4'] = node['node_fields']['hostname']
+	
+	return plcs

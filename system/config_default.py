@@ -193,6 +193,7 @@ def plc (options,index) :
         'PLC_MAIL_ENABLED':'true',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
         'PLC_DB_HOST' : 'deferred-myplc-hostname',
+        'PLC_DB_PASSWORD' : 'test++',
         'PLC_API_HOST' : 'deferred-myplc-hostname',
         'PLC_WWW_HOST' : 'deferred-myplc-hostname',
         'PLC_BOOT_HOST' : 'deferred-myplc-hostname',
@@ -203,8 +204,71 @@ def plc (options,index) :
         'initscripts': initscripts(options,index),
         'slices' : slices(options,index),
         'tcp_test' : tcp_tests(options,index),
+	'sfa' : sfa(options,index),
     }
 
+def sfa (options,index) :
+    if index==1:
+	root_auth='plc'
+    else:
+	root_auth='ple'
+    return { 
+        'SFA_REGISTRY_ROOT_AUTH' : root_auth,
+        'SFA_REGISTRY_LEVEL1_AUTH' : '',
+        'SFA_PLC_USER' : 'root@test.onelab.eu',
+        'SFA_PLC_PASSWORD' : 'test++',
+        'SFA_PLC_DB_HOST':'localhost',
+        'SFA_PLC_DB_USER' : 'pgsqluser',
+        'SFA_PLC_DB_PASSWORD' : 'test++',
+        'slices_sfa' : slices_sfa(options,index),
+	'sfa_slice_xml' : sfa_slice_xml(options,index),
+	'sfa_person_xml' : sfa_person_xml(options,index),
+	'sfa_slice_rspec' : sfa_slice_rspec(options,index)
+    }
+
+def slices_sfa (options,index):
+    return [ { 'slice_fields': {'name':'main_sfaslicea1',
+                                'url':'http://foo%d@foo.com'%index,
+                                'description':'SFA-testing',
+                                'max_nodes':2,
+                                },
+               'usernames' : [ ('sfafakeuser1','key1') ],
+               'nodenames' : all_nodenames(options,index),
+               'sitename' : 'main',
+               }]
+
+def sfa_slice_xml(options,index):
+    if index==1:
+	hrn='plc.main.sfaslicea1'
+	researcher='plc.main.fake-pi1'
+    else:
+	hrn='ple.main.sfaslicea1'
+	researcher='ple.main.fake-pi1'
+
+    return  ["""<record hrn="%s" type="slice" description="SFA-testing" url="http://anil.onelab.eu/"><researcher>%s</researcher></record>"""%(hrn, researcher)]
+
+def sfa_person_xml(options,index):
+    if index==1:
+        hrn='plc.main.sfafakeuser1'
+    else:
+        hrn='ple.main.sfafakeuser1'
+
+    return ["""<record email="sfafakeuser1@sophia.inria.fr" enabled="True" first_name="Anil" hrn="%s" last_name="Kumar" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>plc.main</sites></record>"""%(hrn,hrn,public_key)]
+
+def sfa_slice_rspec(options,index):
+    node_name='deferred'
+    if index==1:
+       netspec_name='\"plc\"'
+    else:
+       netspec_name='\"ple\"'
+
+    return { 'part1' : """<?xml version="1.0" ?><Rspec><networks><NetSpec name=""",
+             'part2' : "%s"%netspec_name,
+	     'part3' : """><nodes><NodeSpec cpu_min="" cpu_pct="" cpu_share="" disk_max="" init_params="" name=\"""",
+	     'part4' : "%s"%node_name,
+             'part5' : """\" start_time="" type=""><net_if><IfSpec init_params="" ip_spoof="" max_kbyte="" max_rate="" min_rate="" name="True" type="ipv4"/></net_if></NodeSpec></nodes></NetSpec></networks></Rspec>"""
+           }
+             
 def config (plc_specs,options):
     result=plc_specs
     for i in range (options.size):
