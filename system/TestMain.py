@@ -311,7 +311,7 @@ steps refer to a method in TestPlc or to a step_* module
         # do all steps on all plcs
         TRACE_FORMAT="TRACE: time=%(time)s plc=%(plcname)s step=%(stepname)s status=%(status)s force=%(force)s\n"
         for (stepname,method,force) in all_step_infos:
-	    if stepname.endswith('sfa') and (self.options.personality != 'linux32' or self.options.pldistro != 'onelab' or self.options.fcdistro != 'f8'):
+	    if stepname.endswith('sfa') and self.options.pldistro != 'onelab':
 	      utils.header("SFA testing currently not enabled on this dist.")
               continue		
             for (spec,obj) in all_plcs:
