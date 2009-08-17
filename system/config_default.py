@@ -253,7 +253,7 @@ def sfa_person_xml(options,index):
     else:
         hrn='ple.main.sfafakeuser1'
 
-    return ["""<record email="sfafakeuser1@sophia.inria.fr" enabled="True" first_name="Anil" hrn="%s" last_name="Kumar" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>plc.main</sites></record>"""%(hrn,hrn,public_key)]
+    return ["""<record email="sfafakeuser1@onelab.eu" enabled="True" first_name="Anil" hrn="%s" last_name="Kumar" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>plc.main</sites></record>"""%(hrn,hrn,public_key)]
 
 def sfa_slice_rspec(options,index):
     node_name='deferred'
