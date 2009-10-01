@@ -325,61 +325,61 @@ class TestPlc:
                         self.display_key_spec (key)
             elif passno == 1:
                 if key not in ['sites','initscripts','slices','keys']:
-                    print '*   ',key,':',val
+                    print '+   ',key,':',val
 
     def display_site_spec (self,site):
-        print '* ======== site',site['site_fields']['name']
+        print '+ ======== site',site['site_fields']['name']
         for (k,v) in site.iteritems():
             if k=='nodes':
                 if v: 
-                    print '*       ','nodes : ',
+                    print '+       ','nodes : ',
                     for node in v:  
                         print node['node_fields']['hostname'],'',
                     print ''
             elif k=='users':
                 if v: 
-                    print '*       users : ',
+                    print '+       users : ',
                     for user in v:  
                         print user['name'],'',
                     print ''
             elif k == 'site_fields':
-                print '*       login_base',':',v['login_base']
+                print '+       login_base',':',v['login_base']
             elif k == 'address_fields':
                 pass
             else:
-                print '*       ',k,
+                print '+       ',k,
                 PrettyPrinter(indent=8,depth=2).pprint(v)
         
     def display_initscript_spec (self,initscript):
-        print '* ======== initscript',initscript['initscript_fields']['name']
+        print '+ ======== initscript',initscript['initscript_fields']['name']
 
     def display_key_spec (self,key):
-        print '* ======== key',key['name']
+        print '+ ======== key',key['name']
 
     def display_slice_spec (self,slice):
-        print '* ======== slice',slice['slice_fields']['name']
+        print '+ ======== slice',slice['slice_fields']['name']
         for (k,v) in slice.iteritems():
             if k=='nodenames':
                 if v: 
-                    print '*       nodes : ',
+                    print '+       nodes : ',
                     for nodename in v:  
                         print nodename,'',
                     print ''
             elif k=='usernames':
                 if v: 
-                    print '*       users : ',
+                    print '+       users : ',
                     for username in v:  
                         print username,'',
                     print ''
             elif k=='slice_fields':
-                print '*       fields',':',
+                print '+       fields',':',
                 print 'max_nodes=',v['max_nodes'],
                 print ''
             else:
-                print '*       ',k,v
+                print '+       ',k,v
 
     def display_node_spec (self,node):
-        print "*           node",node['name'],"host_box=",node['host_box'],
+        print "+           node",node['name'],"host_box=",node['host_box'],
         print "hostname=",node['node_fields']['hostname'],
         print "ip=",node['interface_fields']['ip']
     
@@ -391,18 +391,18 @@ class TestPlc:
 
     @staticmethod
     def display_mapping_plc (plc_spec):
-        print '* MyPLC',plc_spec['name']
-        print '*\tvserver address = root@%s:/vservers/%s'%(plc_spec['hostname'],plc_spec['vservername'])
-        print '*\tIP = %s/%s'%(plc_spec['PLC_API_HOST'],plc_spec['vserverip'])
+        print '+ MyPLC',plc_spec['name']
+        print '+\tvserver address = root@%s:/vservers/%s'%(plc_spec['hostname'],plc_spec['vservername'])
+        print '+\tIP = %s/%s'%(plc_spec['PLC_API_HOST'],plc_spec['vserverip'])
         for site_spec in plc_spec['sites']:
             for node_spec in site_spec['nodes']:
                 TestPlc.display_mapping_node(node_spec)
 
     @staticmethod
     def display_mapping_node (node_spec):
-        print '*   NODE %s'%(node_spec['name'])
-        print '*\tqemu box %s'%node_spec['host_box']
-        print '*\thostname=%s'%node_spec['node_fields']['hostname']
+        print '+   NODE %s'%(node_spec['name'])
+        print '+\tqemu box %s'%node_spec['host_box']
+        print '+\thostname=%s'%node_spec['node_fields']['hostname']
 
     def local_pre (self):
         "run site-dependant pre-test script as defined in LocalTestResources"
