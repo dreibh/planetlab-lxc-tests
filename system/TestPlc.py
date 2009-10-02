@@ -952,7 +952,8 @@ class TestPlc:
         return \
             self.run_in_guest("yum -y install sfa")==0 and \
             self.run_in_guest("yum -y install sfa-client")==0 and \
-            self.run_in_guest("yum -y install sfa-plc")==0
+            self.run_in_guest("yum -y install sfa-plc")==0 and \
+            self.run_in_guest("yum -y install sfa-sfatables")==0
     ###
     def configure_sfa(self):
         "run sfa-config-tty"
