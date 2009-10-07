@@ -62,6 +62,13 @@ def users (options) :
                                'email':'fake-pi2@%s'%domain,
                                'password':'testusertech'},
               'roles':['pi','tech']},
+             {'name':'admin', 'keynames' : [ 'key1' ],
+              'user_fields' : {'first_name':'Admin',
+                               'last_name':'Admin',
+                               'enabled':'true',
+                               'email':'admin@%s'%domain,
+                               'password':'testuseradmin'},
+              'roles':['admin']},
              ]
 
 def all_usernames (options):

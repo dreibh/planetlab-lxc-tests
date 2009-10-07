@@ -745,7 +745,7 @@ class TestPlc:
             local_key = "keys/%(vservername)s-debug.rsa"%locals()
         else: 
             message="boot"
-            local_key = "keys/%(vservername)s.rsa"%locals()
+	    local_key = "keys/key1.rsa"
         tocheck = self.all_hostnames()
         utils.header("checking ssh access (expected in %s mode) to nodes %r"%(message,tocheck))
         utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
