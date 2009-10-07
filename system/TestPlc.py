@@ -540,11 +540,6 @@ class TestPlc:
             os.mkdir(dir)
         vservername=self.vservername
         overall=True
-        prefix = 'root_ssh_key'
-        for ext in [ 'pub', 'rsa' ] :
-            src="/vservers/%(vservername)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
-            dst="keys/%(vservername)s.%(ext)s"%locals()
-            if self.test_ssh.fetch(src,dst) != 0: overall=False
         prefix = 'debug_ssh_key'
         for ext in [ 'pub', 'rsa' ] :
             src="/vservers/%(vservername)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
