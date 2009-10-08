@@ -114,8 +114,8 @@ class TestSlice:
                     # nm restart after first failure, if requested 
                     if options.forcenm and hostname not in restarted:
                         utils.header ("forcenm option : restarting nm on %s"%hostname)
-                        restart_test_ssh=TestSsh(hostname,key="/etc/planetlab/root_ssh_key.rsa")
-                        access=self.test_plc.run_in_guest(restart_test_ssh.actual_command('service nm restart'))
+                        restart_test_ssh=TestSsh(hostname,key="keys/key1.rsa")
+                        access=restart_test_ssh.actual_command('service nm restart')
                         if (access==0):
                             utils.header('nm restarted on %s'%hostname)
                         else:

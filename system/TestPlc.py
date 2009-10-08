@@ -1169,9 +1169,9 @@ class TestPlc:
             test_site = TestSite (self,site_spec)
             for node_spec in site_spec['nodes']:
                 test_node=TestNode(self,test_site,node_spec)
-                test_ssh = TestSsh (test_node.name(),key="/etc/planetlab/root_ssh_key.rsa")
-                to_plc = self.actual_command_in_guest ( test_ssh.actual_command("tar -C /var/log -cf - ."))
-                command = to_plc + "| tar -C logs/node.var-log.%s -xf -"%test_node.name()
+                test_ssh = TestSsh (test_node.name(),key="keys/key1.rsa")
+                command = test_ssh.actual_command("tar -C /var/log -cf - .")
+                command = command + "| tar -C logs/node.var-log.%s -xf -"%test_node.name()
                 utils.system("mkdir -p logs/node.var-log.%s"%test_node.name())
                 utils.system(command)
 
