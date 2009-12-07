@@ -39,6 +39,10 @@ class TestPool:
                 if busy:
                     self.busy.append(h)
                 return (h,i,u)
+        print 'TestPool.locate_entry: Could not locate entry for',hostname_or_ip
+        print 'in pool:'
+        for (h,i,u) in self.pool:
+            print "\t* ",i,"\t",h
         return None
 
     def next_free (self):
@@ -49,7 +53,7 @@ class TestPool:
                 continue
             if not self.options.quiet:
                 utils.header('TestPool : checking %s'%hostname)
-            if self.options.quiet:
+            else:
                 print '.',
             if self.free_hostname(hostname):
                 if not self.options.quiet:
