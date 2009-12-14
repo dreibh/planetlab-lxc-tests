@@ -1101,7 +1101,7 @@ class Test:
         for node_id in self.node_ids:
             # Remove from node groups
             node = self.api.GetNodes([node_id])[0]
-            for node_tag in GetNodeTags ( {'node_id': node_id} ):
+            for node_tag in self.api.GetNodeTags ( {'node_id': node_id} ):
                 self.api.UpdateNodeTag(node_tag['node_tag_id'],'')
 
             if self.check:
