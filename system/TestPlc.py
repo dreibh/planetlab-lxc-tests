@@ -957,11 +957,15 @@ class TestPlc:
         fileconf.write ('u\n')
         for var in [ 'SFA_REGISTRY_ROOT_AUTH',
                      'SFA_REGISTRY_LEVEL1_AUTH',
+		     'SFA_REGISTRY_HOST',
+		     'SFA_AGGREGATE_HOST',
+                     'SFA_SM_HOST',
                      'SFA_PLC_USER',
                      'SFA_PLC_PASSWORD',
                      'SFA_PLC_DB_HOST',
                      'SFA_PLC_DB_USER',
-                     'SFA_PLC_DB_PASSWORD']:
+                     'SFA_PLC_DB_PASSWORD',
+		     'SFA_PLC_URL']:
             fileconf.write ('%s\n'%(self.plc_spec['sfa'][var]))
         fileconf.write('w\n')
         fileconf.write('q\n')
@@ -1002,9 +1006,11 @@ class TestPlc:
 	SFI_USER=SFI_AUTH+'.fake-pi1'
         fileconf.write ("SFI_USER='%s'"%SFI_USER)
 	fileconf.write('\n')
-        fileconf.write ("SFI_REGISTRY='http://localhost:12345/'")
+	SFI_REGISTRY='http://' + self.plc_spec['sfa']['SFA_PLC_DB_HOST'] + ':12345/'
+        fileconf.write ("SFI_REGISTRY='%s'"%SFI_REGISTRY)
 	fileconf.write('\n')
-        fileconf.write ("SFI_SM='http://localhost:12347/'")
+	SFI_SM='http://' + self.plc_spec['sfa']['SFA_PLC_DB_HOST'] + ':12347/'
+        fileconf.write ("SFI_SM='%s'"%SFI_SM)
 	fileconf.write('\n')
         fileconf.close()
 
@@ -1075,7 +1081,7 @@ class TestPlc:
 	self.run_in_guest("sfi.py -d /root/.sfi/ list %s.main"%auth)==0 and \
 	self.run_in_guest("sfi.py -d /root/.sfi/ show %s.main"%auth)==0 and \
 	self.run_in_guest("sfi.py -d /root/.sfi/ slices")==0 and \
-	self.run_in_guest("sfi.py -d /root/.sfi/ resources -o my_resources")==0
+	self.run_in_guest("sfi.py -d /root/.sfi/ resources")==0
 
     @slice_mapper_options_sfa
     def check_slice_sfa(self): 

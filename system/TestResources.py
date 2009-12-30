@@ -208,12 +208,17 @@ class TestResources:
         return True
 
     def localize_rspec (self,plcs,options):
-        
-        utils.header ("Localize SFA Slice RSpec")
+       
+	utils.header ("Localize SFA Slice RSpec")
 
 	for plc in plcs:
 	    for site in plc['sites']:
 		for node in site['nodes']:
 	            plc['sfa']['sfa_slice_rspec']['part4'] = node['node_fields']['hostname']
+            plc['sfa']['SFA_REGISTRY_HOST'] = plc['PLC_DB_HOST']
+            plc['sfa']['SFA_AGGREGATE_HOST'] = plc['PLC_DB_HOST']
+            plc['sfa']['SFA_SM_HOST'] = plc['PLC_DB_HOST']
+            plc['sfa']['SFA_PLC_DB_HOST'] = plc['PLC_DB_HOST']
+	    plc['sfa']['SFA_PLC_URL'] = 'https://' + plc['PLC_API_HOST'] + ':443/PLCAPI/' 
 	
 	return plcs
