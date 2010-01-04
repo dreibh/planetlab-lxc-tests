@@ -954,7 +954,6 @@ class TestPlc:
         "run sfa-config-tty"
         tmpname='%s.sfa-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
-        fileconf.write ('u\n')
         for var in [ 'SFA_REGISTRY_ROOT_AUTH',
                      'SFA_REGISTRY_LEVEL1_AUTH',
 		     'SFA_REGISTRY_HOST',
@@ -966,7 +965,7 @@ class TestPlc:
                      'SFA_PLC_DB_USER',
                      'SFA_PLC_DB_PASSWORD',
 		     'SFA_PLC_URL']:
-            fileconf.write ('%s\n'%(self.plc_spec['sfa'][var]))
+            fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
         fileconf.write('w\n')
         fileconf.write('q\n')
         fileconf.close()
