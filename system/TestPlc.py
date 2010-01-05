@@ -979,7 +979,8 @@ class TestPlc:
         "sfa-import-plc"
 	auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         self.run_in_guest('sfa-import-plc.py')
-        self.run_in_guest('cp /etc/sfa/authorities/%s/%s.pkey /etc/sfa/authorities/server.key'%(auth,auth))
+# not needed anymore
+#        self.run_in_guest('cp /etc/sfa/authorities/%s/%s.pkey /etc/sfa/authorities/server.key'%(auth,auth))
         return True
 
     def start_sfa(self):
