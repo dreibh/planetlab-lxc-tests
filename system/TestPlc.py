@@ -967,6 +967,7 @@ class TestPlc:
 		     'SFA_PLC_URL']:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
         fileconf.write('w\n')
+        fileconf.write('R\n')
         fileconf.write('q\n')
         fileconf.close()
         utils.system('cat %s'%tmpname)
