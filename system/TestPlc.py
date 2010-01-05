@@ -944,11 +944,8 @@ class TestPlc:
             arch = "x86_64"
         else:
             raise Exception, "Unsupported personality %r"%self.options.personality
-        return \
-            self.run_in_guest("yum -y install sfa")==0 and \
-            self.run_in_guest("yum -y install sfa-client")==0 and \
-            self.run_in_guest("yum -y install sfa-plc")==0 and \
-            self.run_in_guest("yum -y install sfa-sfatables")==0
+        return self.run_in_guest("yum -y install sfa sfa-client sfa-plc sfa-sfatables")==0
+
     ###
     def configure_sfa(self):
         "run sfa-config-tty"
