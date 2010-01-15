@@ -105,7 +105,7 @@ class TestSlice:
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
                 command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
                 date = utils.system (command, silent=datetime.datetime.now() < graceout)
-                if date:
+                if date==0:
                     utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
                     tocheck.remove(hostname)
                 else:

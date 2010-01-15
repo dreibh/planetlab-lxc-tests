@@ -25,7 +25,9 @@ def system(command,background=False,silent=False):
         print 'dry_run:',command
         return 0
     
-    if silent :    command += " 2> /dev/null"
+    if silent :    
+        if command.find(';')>=0: command = "(%s) 2> /dev/null" % command
+        else: command += " 2> /dev/null"
     if background: command += " &"
     if silent:
         print '.',
