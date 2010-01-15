@@ -20,17 +20,22 @@ def pprint(message,spec,depth=2):
 
 
 
-def system(command,background=False):
-    if background: command += " &"
+def system(command,background=False,silent=False):
     if options.dry_run:
         print 'dry_run:',command
         return 0
+    
+    if silent :    command += "2> /dev/null"
+    if background: command += " &"
+    if silent:
+        print '.',
+        sys.stdout.flush()
     else:
         now=time.strftime("%H:%M:%S", time.localtime())
         # don't show in summary
         print "->",now,'--',
         sys.stdout.flush()
-        return os.system("set -x; " + command)
+    return os.system("set -x; " + command)
 
 ### WARNING : this ALWAYS does its job, even in dry_run mode
 def output_of (command):

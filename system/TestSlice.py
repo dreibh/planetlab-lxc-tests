@@ -1,3 +1,7 @@
+#
+# $Id$
+# $URL$
+#
 import utils
 import os, os.path
 import datetime
@@ -99,10 +103,8 @@ class TestSlice:
             for hostname in tocheck:
                 (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
-                if datetime.datetime.now() >= graceout:
-                    utils.header('Trying to enter into slice %s@%s'%(self.name(),hostname))
-                # this can be ran locally as we have the key
-                date = date_test_ssh.run("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")==0
+                command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
+                date = utils.system (command, silent=datetime.datetime.now() < graceout)
                 if date:
                     utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
                     tocheck.remove(hostname)

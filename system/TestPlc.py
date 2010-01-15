@@ -750,18 +750,7 @@ class TestPlc:
                 # try to run 'hostname' in the node
                 command = TestSsh (hostname,key=local_key).actual_command("hostname;uname -a")
                 # don't spam logs - show the command only after the grace period 
-                if datetime.datetime.now() > graceout:
-                    success=utils.system(command)
-                else:
-                    # truly silent, just print out a dot to show we're alive
-                    print '.',
-                    sys.stdout.flush()
-                    command += " 2>/dev/null"
-                    if self.options.dry_run:
-                        print 'dry_run',command
-                        success=0
-                    else:
-                        success=os.system(command)
+                success = utils.system ( command, silent=datetime.datetime.now() < graceout)
                 if success==0:
                     utils.header('Successfully entered root@%s (%s)'%(hostname,message))
                     # refresh tocheck
