@@ -728,9 +728,9 @@ class TestPlc:
         return True
 
     def nodes_booted(self):
-        return self.nodes_check_boot_state('boot',timeout_minutes=20,silent_minutes=15)
+        return self.nodes_check_boot_state('boot',timeout_minutes=30,silent_minutes=20)
 
-    def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period=20):
+    def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period=15):
         # compute timeout
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)

@@ -64,6 +64,7 @@ class Tracker:
         to_stop = self.tracks[:how_many]
         for track in to_stop:
             command = self.stop_command (track)
+            utils.header("Trackers.free track : %s"%command)
             utils.system(command)
         if not self.options.dry_run:
             self.tracks = self.tracks[how_many:]
@@ -72,6 +73,7 @@ class Tracker:
     def cleanup (self):
         for track in self.tracks:
             command=self.stop_command(track)
+            utils.header("Trackers.cleanup track : %s"%command)
             utils.system(command)
         if not self.options.dry_run:
             self.tracks=[]

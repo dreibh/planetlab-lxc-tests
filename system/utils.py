@@ -27,7 +27,8 @@ def system(command,background=False):
         return 0
     else:
         now=time.strftime("%H:%M:%S", time.localtime())
-        print "*",now,'--',
+        # don't show in summary
+        print "->",now,'--',
         sys.stdout.flush()
         return os.system("set -x; " + command)
 
