@@ -18,22 +18,22 @@ class TestResources:
         try:
             plcs = self.localize_qemus(plcs,options)
         except Exception, e:
-            print 'Could not localize qemus','--',e,'--','exiting'
+            print '* Could not localize qemus','--',e,'--','exiting'
             sys.exit(1)
         try:
             plcs = self.localize_nodes(plcs,options)
         except Exception,e:
-            print 'Could not localize nodes','--',e,'--','exiting'
+            print '* Could not localize nodes','--',e,'--','exiting'
             sys.exit(1)
         try:
             plcs = self.localize_plcs(plcs,options)
         except Exception,e:
-            print 'Could not localize plcs','--',e,'--','exiting'
+            print '* Could not localize plcs','--',e,'--','exiting'
             sys.exit(1)
         try:
             plcs = self.localize_rspec(plcs,options)
         except Exception,e:
-            print 'Could not localize RSpec','--',e,'--','exiting'
+            print '* Could not localize RSpec','--',e,'--','exiting'
             sys.exit(1)
         return plcs
 
