@@ -475,11 +475,12 @@ class TestPlc:
             arch = "x86_64"
         else:
             raise Exception, "Unsupported personality %r"%self.options.personality
+        
+        nodefamily="%s-%s-%s"%(self.options.pldistro,self.options.fcdistro,arch)
         return \
             self.run_in_guest("yum -y install myplc")==0 and \
-            nodefamily="%s-%s-%s"%(self.options.pldistro,self.options.fcdistro,arch)
             self.run_in_guest("yum -y install noderepo-%s"%nodefamily)==0 and \
-                self.run_in_guest("yum -y install bootstrapfs-%s-plain"%nodefamily)==0 
+            self.run_in_guest("yum -y install bootstrapfs-%s-plain"%nodefamily)==0 
 
     ### 
     def configure(self):
