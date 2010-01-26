@@ -1069,7 +1069,7 @@ class TestPlc:
 	self.run_in_guest("sfi.py -d /root/.sfi/ list %s.main"%auth)==0 and \
 	self.run_in_guest("sfi.py -d /root/.sfi/ show %s.main"%auth)==0 and \
 	self.run_in_guest("sfi.py -d /root/.sfi/ slices")==0 and \
-	self.run_in_guest("sfi.py -d /root/.sfi/ resources")==0
+	self.run_in_guest("sfi.py -d /root/.sfi/ resources -o resources")==0
 
     @slice_mapper_options_sfa
     def check_slice_sfa(self): 
