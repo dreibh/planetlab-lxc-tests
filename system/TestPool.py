@@ -39,10 +39,10 @@ class TestPool:
                 if busy:
                     self.busy.append(h)
                 return (h,i,u)
-        print 'TestPool.locate_entry: Could not locate entry for',hostname_or_ip
-        print 'in pool:'
+        print '* TestPool.locate_entry: Could not locate entry for',hostname_or_ip
+        print '* in pool:'
         for (h,i,u) in self.pool:
-            print "\t* ",i,"\t",h
+            print "* \t",i,"\t",h
         return None
 
     def next_free (self):
