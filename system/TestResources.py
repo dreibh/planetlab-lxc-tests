@@ -37,6 +37,13 @@ class TestResources:
             sys.exit(1)
         return plcs
 
+    def qemus_ip_pool(self):
+        return self.qemus_ip_pool_64()
+    def max_qemus(self):
+        return len(self.qemus_ip_pool())
+    def max_plcs(self):
+        return len(self.plcs_ip_pool())
+
     def localize_qemus (self,plcs,options):
 
         # all plcs on the same vserver box
@@ -173,13 +180,13 @@ class TestResources:
 
     ###
     def trplc_record (self,plc):
-        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
+        tracker = TrackerPlc(plc.options,instances=self.max_plcs()-1)
         tracker.record(plc.test_ssh.hostname,plc.vservername)
         tracker.store()
         return True
 
     def trplc_free (self,plc):
-        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
+        tracker = TrackerPlc(plc.options,instances=self.max_plcs()-1)
         tracker.free()
         tracker.store()
         return True
@@ -194,7 +201,7 @@ class TestResources:
         return True
 
     def trplc_cleanup (self,plc):
-        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
+        tracker = TrackerPlc(plc.options,instances=self.max_plcs()-1)
         tracker.cleanup()
         tracker.store()
         return True
@@ -204,7 +211,7 @@ class TestResources:
         return True
 
     def trplc_list (self,plc):
-        TrackerPlc(plc.options,instances=self.max_plcs()).list()
+        TrackerPlc(plc.options,instances=self.max_plcs()-1).list()
         return True
 
     def localize_rspec (self,plcs,options):
