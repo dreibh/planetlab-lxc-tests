@@ -1,4 +1,4 @@
-# -*-python-*-
+#
 # $Id$
 # 
 # this is only an example file
@@ -28,10 +28,11 @@ class OnelabTestResources (TestResources):
                  ("node-02.test.planet-lab.org", "128.112.139.66", "de:ad:be:ef:00:20"),
                  ]
     
-    def qemus_ip_pool_64 (self):
+    def qemus_ip_pool (self):
         return [  ( 'testqemu1.test.planet-lab.org', None, None ) ]
-    def qemus_ip_pool_32 (self):
-        return [ ]
+
+    def max_qemus (self):
+        return 1
 
     def plcs_ip_pool (self):
         return [ ("plc-01.test.planet-lab.org","128.112.139.34", "de:ad:be:ef:ff:01"),
@@ -40,5 +41,9 @@ class OnelabTestResources (TestResources):
                  ("plc-04.test.planet-lab.org","128.112.139.37", "de:ad:be:ef:ff:04"),
                  ("plc-05.test.planet-lab.org","128.112.139.41", "de:ad:be:ef:ff:05"),
                  ]
+
+    def max_plcs (self):
+        return 4
+
 
 local_resources = OnelabTestResources ()

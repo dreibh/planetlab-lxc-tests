@@ -1,4 +1,4 @@
-# -*-python-*-
+#
 # $Id$
 # 
 # this is only an example file
@@ -28,18 +28,19 @@ class OnelabTestResources (TestResources):
                    '138.96.255.%d'%(230+i), 
                    '02:34:56:00:00:%02d'%i) for i in range(1,10) ]
     
-    # 64-bits qemu boxes that can run any test
-    def qemus_ip_pool_64 (self):
-        return [ ( 'testqemu%d.onelab.eu'%i, None, None) for i in range(1,4) ] 
+    def qemus_ip_pool (self):
+        return [ ( 'testqemu%d.onelab.eu'%i, None, None) for i in range(1,4) ]
 
-    # 32-bits qemu boxes that can run only 32bits nodes
-    def qemus_ip_pool_32 (self):
-        return [ ( 'testqemu32-%d.onelab.eu'%i, None, 32) for i in range(1,6) ]
+    def max_qemus (self):
+        return 3
 
     def plcs_ip_pool (self):
         return [  ( 'vplc%02d.inria.fr'%i, 
                     '138.96.255.%d'%(200+i), 
                     '02:34:56:00:ee:%02d'%i) for i in range(1,16) ]
+
+    def max_plcs (self):
+        return 12
 
 
 local_resources = OnelabTestResources ()
