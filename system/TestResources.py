@@ -144,9 +144,10 @@ class TestResources:
     # as a plc step this should return a boolean
     def step_pre (self,plc):
         return self.trqemu_record (plc) and self.trqemu_free(plc)
+        return self.trplc_record (plc) and self.trplc_free(plc)
 
     def step_post (self,plc):
-        return self.trplc_record (plc) and self.trplc_free(plc)
+        pass
 
     def step_cleanup (self,plc):
         return self.trqemu_cleanup(plc) and self.trplc_cleanup(plc)
