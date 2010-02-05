@@ -682,12 +682,15 @@ class TestPlc:
                     overall=False
         return overall
 
-    def all_hostnames (self) :
-        hostnames = []
+    # return a list of tuples (nodename,qemuname)
+    def all_node_infos (self) :
+        node_infos = []
         for site_spec in self.plc_spec['sites']:
-            hostnames += [ node_spec['node_fields']['hostname'] \
+            node_infos += [ (node_spec['node_fields']['hostname'],node_spec['host_box']) \
                            for node_spec in site_spec['nodes'] ]
-        return hostnames
+        return node_infos
+    
+    def all_nodenames (self): return [ x[0] for x in self.all_node_infos() ]
 
     # silent_minutes : during the first <silent_minutes> minutes nothing gets printed
     def nodes_check_boot_state (self, target_boot_state, timeout_minutes, silent_minutes,period=15):
@@ -749,31 +752,34 @@ class TestPlc:
         else: 
             message="boot"
 	    local_key = "keys/key1.rsa"
-        tocheck = self.all_hostnames()
-        utils.header("checking ssh access (expected in %s mode) to nodes %r"%(message,tocheck))
+        node_infos = self.all_node_infos()
+        utils.header("checking ssh access (expected in %s mode) to nodes:"%message)
+        for (nodename,qemuname) in node_infos:
+            utils.header("hostname=%s -- qemubox=%s"%(nodename,qemuname))
         utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
                          (timeout_minutes,silent_minutes,period))
-        while tocheck:
-            for hostname in tocheck:
+        while node_infos:
+            for node_info in node_infos:
+                (hostname,qemuname) = node_info
                 # try to run 'hostname' in the node
                 command = TestSsh (hostname,key=local_key).actual_command("hostname;uname -a")
                 # don't spam logs - show the command only after the grace period 
                 success = utils.system ( command, silent=datetime.datetime.now() < graceout)
                 if success==0:
                     utils.header('Successfully entered root@%s (%s)'%(hostname,message))
-                    # refresh tocheck
-                    tocheck.remove(hostname)
+                    # refresh node_infos
+                    node_infos.remove(node_info)
                 else:
                     # we will have tried real nodes once, in case they're up - but if not, just skip
                     (site_spec,node_spec)=self.locate_hostname(hostname)
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
                         utils.header ("WARNING : check ssh access into real node %s - skipped"%hostname)
-			tocheck.remove(hostname)
-            if  not tocheck:
+			node_infos.remove(node_info)
+            if  not node_infos:
                 return True
             if datetime.datetime.now() > timeout:
-                for hostname in tocheck:
-                    utils.header("FAILURE to ssh into %s"%hostname)
+                for (hostname,qemuname) in node_infos:
+                    utils.header("FAILURE to ssh into %s (on %s)"%(hostname,qemuname))
                 return False
             # otherwise, sleep for a while
             time.sleep(period)
@@ -782,11 +788,11 @@ class TestPlc:
         
     def nodes_ssh_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
-        return self.check_nodes_ssh(debug=True,timeout_minutes=30,silent_minutes=10)
+        return self.check_nodes_ssh(debug=True,timeout_minutes=30,silent_minutes=5)
     
     def nodes_ssh_boot(self):
         "Tries to ssh into nodes in production mode with the root ssh key"
-        return self.check_nodes_ssh(debug=False,timeout_minutes=30,silent_minutes=10)
+        return self.check_nodes_ssh(debug=False,timeout_minutes=30,silent_minutes=15)
     
     @node_mapper
     def init_node (self): 

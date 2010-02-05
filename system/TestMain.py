@@ -309,7 +309,7 @@ steps refer to a method in TestPlc or to a step_* module
             trace=open(trace_file,"w")
 
         # do all steps on all plcs
-        TRACE_FORMAT="TRACE: time=%(time)s plc=%(plcname)s step=%(stepname)s status=%(status)s force=%(force)s\n"
+        TRACE_FORMAT="TRACE: time=%(time)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
         for (stepname,method,force) in all_step_infos:
             for (spec,obj) in all_plcs:
                 plcname=spec['name']
