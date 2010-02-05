@@ -375,6 +375,7 @@ steps refer to a method in TestPlc or to a step_* module
                     # duplicate on trace_file if provided
                     if self.options.trace_file:
                         trace.write(TRACE_FORMAT%locals())
+                        trace.flush()
 
         if self.options.trace_file and not self.options.dry_run:
             trace.close()
