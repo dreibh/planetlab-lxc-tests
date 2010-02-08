@@ -978,15 +978,13 @@ class TestPlc:
     def import_sfa(self):
         "sfa-import-plc"
 	auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-        self.run_in_guest('sfa-import-plc.py')
+        return self.run_in_guest('sfa-import-plc.py')==0
 # not needed anymore
 #        self.run_in_guest('cp /etc/sfa/authorities/%s/%s.pkey /etc/sfa/authorities/server.key'%(auth,auth))
-        return True
 
     def start_sfa(self):
         "service sfa start"
-        self.run_in_guest('service sfa start')
-        return True
+        return self.run_in_guest('service sfa start')==0
 
     def setup_sfa(self):
         "sfi client configuration"
