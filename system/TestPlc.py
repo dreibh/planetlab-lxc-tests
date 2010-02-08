@@ -1102,8 +1102,7 @@ class TestPlc:
 
     def stop_sfa(self):
         "service sfa stop"
-        self.run_in_guest('service sfa stop')
-        return True
+        return self.run_in_guest('service sfa stop')==0
 
     def populate (self):
         "creates random entries in the PLCAPI"
