@@ -58,9 +58,9 @@ start () {
     echo "Starting udev ..."
     /sbin/udevd restart
     if modprobe kqemu &> /dev/null ; then
-	echo "kqemu loadded"
+	echo "(bridge-init) kqemu loaded"
     else
-	echo "WARNING : Could not modprobe kqemu"
+	echo "(bridge-init) WARNING : Could not modprobe kqemu"
     fi
     #Loading the tun/tap model
     if modprobe tun ; then

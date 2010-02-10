@@ -59,7 +59,11 @@ else
 fi
 
 echo 'Trying to load the kqemu module'
-modprobe kqemu
+if modprobe kqemu &> /dev/null ; then
+    echo "kqemu loaded"
+else
+    echo "WARNING : Could not modprobe kqemu"
+fi
 
 echo 'Checking for a loaded kqemu module'
 lsmod | grep kqemu
