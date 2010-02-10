@@ -50,7 +50,7 @@ class TestSliceSfa:
 	return \
 	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.main.sfaslicea1"%auth)==0
 
-    def check_slice_sfa(self,options,timeout_minutes=40,silent_minutes=4,period=15):
+    def check_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # locate a key
@@ -74,11 +74,9 @@ class TestSliceSfa:
             for hostname in tocheck:
                 (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
-                if datetime.datetime.now() >= graceout:
-                    utils.header('Trying to enter into slice %s@%s'%(self.name(),hostname))
-                # this can be ran locally as we have the key
-                date = date_test_ssh.run("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")==0
-                if date:
+                command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
+                date = utils.system (command, silent=datetime.datetime.now() < graceout)
+                if date==0:
                     utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
                     tocheck.remove(hostname)
                 else:
