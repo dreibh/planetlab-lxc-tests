@@ -58,6 +58,9 @@ else
     echo "Done"
 fi
 
+echo 'Trying to load the kqemu module'
+modprobe kqemu
+
 echo 'Checking for a loaded kqemu module'
 lsmod | grep kqemu
 echo 'Checking for /dev/kqemu'
