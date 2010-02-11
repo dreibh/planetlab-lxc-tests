@@ -19,6 +19,8 @@ class TestResources:
             plcs = self.localize_qemus(plcs,options)
         except Exception, e:
             print '* Could not localize qemus','--',e,'--','exiting'
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
         try:
             plcs = self.localize_nodes(plcs,options)
@@ -54,7 +56,8 @@ class TestResources:
                 ip_or_hostname=options.ips_qemu.pop()
                 (hostname,ip,unused)=qemu_pool.locate_entry(ip_or_hostname)
             else:
-                (hostname,ip,unused) = qemu_pool.next_free()
+                tracker=TrackerQemu(options,instances=self.max_qemus()-1)
+                (hostname,ip,unused) = qemu_pool.next_free(tracker.hostnames())
 
             node_map += [ ('node%d'%index, {'host_box':hostname},) ]
 
@@ -86,7 +89,8 @@ class TestResources:
                 print 'debug','in',ip_or_hostname,'out',ip_pool.locate_entry(ip_or_hostname)
                 (hostname,ip,mac)=ip_pool.locate_entry(ip_or_hostname)
             else:
-                (hostname,ip,mac) = ip_pool.next_free()
+                tracker=TrackerQemu(options,instances=self.max_qemus()-1)
+                (hostname,ip,mac) = ip_pool.next_free(tracker.nodenames())
             utils.header('Attaching node %s to %s (%s)'%(nodename,hostname,ip))
             node_dict= {'node_fields:hostname':hostname,
                         'interface_fields:ip':ip, 
@@ -116,7 +120,8 @@ class TestResources:
                     utils.header("Using user-provided %s %s for plc %s"%(
                             hostname,ip_or_hostname,plc['name']))
             else:
-                (hostname,ip,mac)=ip_pool.next_free()
+                tracker = TrackerPlc(options,instances=self.max_plcs())
+                (hostname,ip,mac)=ip_pool.next_free(tracker.plcnames())
                 if options.verbose:
                     utils.header("Using auto-allocated %s %s for plc %s"%(
                             hostname,ip,plc['name']))

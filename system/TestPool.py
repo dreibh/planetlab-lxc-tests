@@ -33,22 +33,35 @@ class TestPool:
         self.message=message
 
     # let's be flexible
-    def locate_entry (self, hostname_or_ip, busy=True):
+    def match (self,triple,hostname_or_ip):
+        (h,i,u)=triple
+        return h.find(hostname_or_ip)>=0  or (i and i.find(hostname_or_ip)>=0)
+
+    def locate_entry (self, hostname_or_ip):
         for (h,i,u) in self.pool:
-            if h.find(hostname_or_ip)>=0  or (i and i.find(hostname_or_ip)>=0) :
-                if busy:
-                    self.busy.append(h)
+            if self.match ( (h,i,u,), hostname_or_ip):
+                self.busy.append(h)
                 return (h,i,u)
-        print '* TestPool.locate_entry: Could not locate entry for',hostname_or_ip
-        print '* in pool:'
-        for (h,i,u) in self.pool:
-            print "* \t",i,"\t",h
+        utils.header('TestPool.locate_entry: Could not locate entry for %r in pool:'%hostname_or_ip)
         return None
 
-    def next_free (self):
+    # the hostnames provided (from a tracker) are considered last
+    def next_free (self, tracker_hostnames):
         if self.options.quiet:
             print 'TestPool is looking for a %s'%self.message,
-        for (hostname,ip,user_data) in self.pool:
+        # create 2 lists of (h,i,u) entries, the ones not in the tracker, and the ones in the tracker
+        in_track_pool=[]
+        out_track_pool=[]
+        for (h,i,u) in self.pool:
+            in_tracker=False
+            for hostname in tracker_hostnames:
+                if self.match ( (h,i,u,) , hostname) : in_tracker = True
+            if in_tracker: in_track_pool.append  ( (h,i,u,) )
+            else:          out_track_pool.append ( (h,i,u,) )
+        # consider outsiders first
+        for (hostname,ip,user_data) in out_track_pool + in_track_pool:
+            utils.header ('* candidate %s' % hostname)
+        for (hostname,ip,user_data) in out_track_pool + in_track_pool:
             if hostname in self.busy:
                 continue
             if not self.options.quiet:

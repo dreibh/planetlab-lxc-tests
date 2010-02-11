@@ -96,6 +96,12 @@ class TrackerPlc (Tracker):
         (hostname,vservername) = track.split('@')
         return TestSsh(hostname).actual_command("vserver --silent %s stop"%vservername)
         
+    def plcnames (self):
+        return [ self.plcname(track) for track in self.tracks ]
+
+    def plcname (self, track):
+        (hostname,vservername) = track.split('@')
+        return vservername.rsplit('-',1)[1]
 
 class TrackerQemu (Tracker):
 
@@ -114,3 +120,18 @@ class TrackerQemu (Tracker):
     def stop_command (self, track):
         (hostname,buildname,nodename) = track.split('@')
         return TestSsh(hostname).actual_command("%s/qemu-%s/qemu-kill-node this"%(buildname,nodename))
+
+    def hostnames (self):
+        return [ self.hostname(track) for track in self.tracks ]
+
+    def hostname (self, track):
+        (hostname,buildname,nodename) = track.split('@')
+        return hostname
+
+    def nodenames (self):
+        return [ self.nodename(track) for track in self.tracks ]
+        
+    def nodename (self, track):
+        (hostname,buildname,nodename) = track.split('@')
+        return nodename
+
