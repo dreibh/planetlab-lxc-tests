@@ -116,8 +116,6 @@ steps refer to a method in TestPlc or to a step_* module
                            help="Used by db_dump and db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
-        parser.add_option("-q","--quiet", action="store_true", dest="quiet", default=False, 
-                          help="Run in quiet mode")
         parser.add_option("-i","--interactive",action="store_true",dest="interactive",default=False,
                           help="prompts before each step")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
@@ -128,8 +126,6 @@ steps refer to a method in TestPlc or to a step_* module
                           #default="logs/trace-@TIME@.txt",
                           help="Trace file location")
         (self.options, self.args) = parser.parse_args()
-        if self.options.quiet:
-            self.options.verbose=False
 
         # no step specified
         if len(self.args) == 0:

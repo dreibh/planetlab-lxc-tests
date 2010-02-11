@@ -95,18 +95,21 @@ class TestPlc:
 	'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEP,
         'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
+        # optionally run sfa later; takes longer, but checks more about nm 
+	# 'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEP,
+        # 'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEP,
         'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEP,
         'check_tcp',  'check_hooks',  SEP,
         'force_gather_logs', 'force_local_post',
         ]
     other_steps = [ 
-        'fresh_install', 'stop', 'vs_start', SEP,
+        'show_boxes', 'local_list','local_cleanup',SEP,
+        'stop', 'vs_start', SEP,
         'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
         'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
         'populate' , SEP,
-        'show_boxes', 'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
+        'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
         'db_dump' , 'db_restore', SEP,
-        'local_list','local_cleanup',SEP,
         'standby_1 through 20',
         ]
 
@@ -261,13 +264,14 @@ class TestPlc:
                     
     # a step for checking this stuff
     def show_boxes (self):
+        'print summary of nodes location'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             print box,":"," + ".join( [ node.name() for node in nodes ] )
         return True
 
     # make this a valid step
     def kill_all_qemus(self):
-        "all qemu boxes: kill all running qemus (even of former runs)"
+        'kill all qemu instances on the qemu boxes involved by this setup'
         # this is the brute force version, kill all qemus on that host box
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # pass the first nodename, as we don't push template-qemu on testboxes
@@ -277,6 +281,7 @@ class TestPlc:
 
     # make this a valid step
     def list_all_qemus(self):
+        'list all qemu instances on the qemu boxes involved by this setup'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # this is the brute force version, kill all qemus on that host box
             TestBox(box,self.options.buildname).list_all_qemus()
@@ -284,6 +289,7 @@ class TestPlc:
 
     # kill only the right qemus
     def list_qemus(self):
+        'list qemu instances for our nodes'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # the fine-grain version
             for node in nodes:
@@ -292,6 +298,7 @@ class TestPlc:
 
     # kill only the right qemus
     def kill_qemus(self):
+        'kill the qemu instances for our nodes'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # the fine-grain version
             for node in nodes:
@@ -324,7 +331,7 @@ class TestPlc:
                     for key in val:
                         self.display_key_spec (key)
             elif passno == 1:
-                if key not in ['sites','initscripts','slices','keys']:
+                if key not in ['sites','initscripts','slices','keys', 'sfa']:
                     print '+   ',key,':',val
 
     def display_site_spec (self,site):
@@ -526,6 +533,7 @@ class TestPlc:
         return True
         
     def vs_start (self):
+        "start the PLC vserver"
         self.start_guest()
         return True
 
@@ -537,6 +545,7 @@ class TestPlc:
         return True
 
     def clean_keys(self):
+        "removes keys cached in keys/"
         utils.system("rm -rf %s/keys/"%os.path(sys.argv[0]))
 
     # fetches the ssh keys in the plc's /etc/planetlab and stores them in keys/
@@ -579,6 +588,7 @@ class TestPlc:
         return True
 
     def clean_all_sites (self):
+        "Delete all sites in PLC, and related objects"
         print 'auth_root',self.auth_root()
         site_ids = [s['site_id'] for s in self.apiserver.GetSites(self.auth_root(), {}, ['site_id'])]
         for site_id in site_ids:
@@ -1194,19 +1204,21 @@ class TestPlc:
         return "/root/%s-%s.sql"%(database,name)
 
     def db_dump(self):
-        dump=self.dbfile("planetab4")
-        self.run_in_guest('pg_dump -U pgsqluser planetlab4 -f '+ dump)
-        utils.header('Dumped planetlab4 database in %s'%dump)
+        'dump the planetlab5 DB in /root in the PLC - filename has time'
+        dump=self.dbfile("planetab5")
+        self.run_in_guest('pg_dump -U pgsqluser planetlab5 -f '+ dump)
+        utils.header('Dumped planetlab5 database in %s'%dump)
         return True
 
     def db_restore(self):
-        dump=self.dbfile("planetab4")
+        'restore the planetlab5 DB - looks broken, but run -n might help'
+        dump=self.dbfile("planetab5")
         ##stop httpd service
         self.run_in_guest('service httpd stop')
         # xxx - need another wrapper
-        self.run_in_guest_piped('echo drop database planetlab4','psql --user=pgsqluser template1')
-        self.run_in_guest('createdb -U postgres --encoding=UNICODE --owner=pgsqluser planetlab4')
-        self.run_in_guest('psql -U pgsqluser planetlab4 -f '+dump)
+        self.run_in_guest_piped('echo drop database planetlab5','psql --user=pgsqluser template1')
+        self.run_in_guest('createdb -U postgres --encoding=UNICODE --owner=pgsqluser planetlab5')
+        self.run_in_guest('psql -U pgsqluser planetlab5 -f '+dump)
         ##starting httpd service
         self.run_in_guest('service httpd start')
 

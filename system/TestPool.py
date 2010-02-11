@@ -47,8 +47,7 @@ class TestPool:
 
     # the hostnames provided (from a tracker) are considered last
     def next_free (self, tracker_hostnames):
-        if self.options.quiet:
-            print 'TestPool is looking for a %s'%self.message,
+        utils.header('TestPool is looking for a %s'%self.message)
         # create 2 lists of (h,i,u) entries, the ones not in the tracker, and the ones in the tracker
         in_track_pool=[]
         out_track_pool=[]
@@ -64,15 +63,9 @@ class TestPool:
         for (hostname,ip,user_data) in out_track_pool + in_track_pool:
             if hostname in self.busy:
                 continue
-            if not self.options.quiet:
-                utils.header('TestPool : checking %s'%hostname)
-            else:
-                print '.',
+            utils.header('TestPool : checking %s'%hostname)
             if self.free_hostname(hostname):
-                if not self.options.quiet:
-                    utils.header('%s is available'%hostname)
-                else:
-                    print ''
+                utils.header('%s is available'%hostname)
                 self.busy.append(hostname)
                 return (hostname,ip,user_data)
             else:

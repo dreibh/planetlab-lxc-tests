@@ -3,6 +3,7 @@
 #
 
 import sys
+import traceback
 
 import utils
 from TestMapper import TestMapper
@@ -19,7 +20,6 @@ class TestResources:
             plcs = self.localize_qemus(plcs,options)
         except Exception, e:
             print '* Could not localize qemus','--',e,'--','exiting'
-            import traceback
             traceback.print_exc()
             sys.exit(1)
         try:
@@ -86,7 +86,6 @@ class TestResources:
         for nodename in all_nodenames:
             if options.ips_node:
                 ip_or_hostname=options.ips_node.pop()
-                print 'debug','in',ip_or_hostname,'out',ip_pool.locate_entry(ip_or_hostname)
                 (hostname,ip,mac)=ip_pool.locate_entry(ip_or_hostname)
             else:
                 tracker=TrackerQemu(options,instances=self.max_qemus()-1)
@@ -108,7 +107,6 @@ class TestResources:
 
     def localize_plcs (self,plcs,options):
         
-        utils.header ("Turning configuration into a vserver-based one for onelab")
         ip_pool = TestPoolIP (self.plcs_ip_pool(),options)
     
         plc_counter=0
