@@ -92,10 +92,10 @@ class TestPlc:
         'kill_all_qemus', 'start_node', SEP,
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
-        'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
 	'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEP,
-        'setup_sfa', 'add_sfa', 'update_sfa', SEP,
-        'view_sfa', 'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEP,
+        'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEP,
+        'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
+        'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEP,
         'check_tcp',  'check_hooks',  SEP,
         'force_gather_logs', 'force_local_post',
         ]
