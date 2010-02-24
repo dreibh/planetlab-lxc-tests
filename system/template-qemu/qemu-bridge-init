@@ -25,6 +25,7 @@ start () {
     hostname
     uname -a
     ifconfig
+    netstat -rn
     echo "========== $COMMAND: entering start - end"
 
     # take extra arg for ifname, if provided
@@ -92,6 +93,7 @@ start () {
 
     echo "========== $COMMAND: exiting start - beg"
     ifconfig
+    netstat -rn
     echo "========== $COMMAND: exiting start - end"
 }
 
@@ -103,6 +105,7 @@ add () {
 
     echo "========== $COMMAND: entering add - beg"
     ifconfig
+    netstat -rn
     echo "========== $COMMAND: entering add - end"
 
     echo "Activating link for $INTERFACE_LAN..."
@@ -127,6 +130,7 @@ add () {
     echo "========== $COMMAND: exiting add - beg"
 
     ifconfig
+    netstat -rn
 
     echo "Installed iptables"
     iptables-save
