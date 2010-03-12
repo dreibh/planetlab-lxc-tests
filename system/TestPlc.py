@@ -490,6 +490,10 @@ class TestPlc:
             raise Exception, "Unsupported personality %r"%self.options.personality
         
         nodefamily="%s-%s-%s"%(self.options.pldistro,self.options.fcdistro,arch)
+
+        # try to install slicerepo - not fatal yet
+        self.run_in_guest("yum -y install slicerepo-%s"%nodefamily)
+        
         return \
             self.run_in_guest("yum -y install myplc")==0 and \
             self.run_in_guest("yum -y install noderepo-%s"%nodefamily)==0 and \
