@@ -85,7 +85,7 @@ class TestPlc:
 
     default_steps = [
         'display', 'local_pre', SEP,
-        'delete','create','install', 'configure', 'start', SEP,
+        'delete_vs','create_vs','install', 'configure', 'start', SEP,
         'fetch_keys', 'store_keys', 'clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', SEP,
         'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu',
@@ -431,13 +431,13 @@ class TestPlc:
         from LocalTestResources import local_resources
         return local_resources.step_cleanup(self)
  
-    def delete(self):
+    def delete_vs(self):
         "vserver delete the test myplc"
         self.run_in_host("vserver --silent %s delete"%self.vservername)
         return True
 
     ### install
-    def create (self):
+    def create_vs (self):
         "vserver creation (no install done)"
         if self.is_local():
             # a full path for the local calls
