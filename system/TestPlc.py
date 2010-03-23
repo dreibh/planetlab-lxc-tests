@@ -469,7 +469,9 @@ class TestPlc:
             vserver_hostname=socket.gethostbyaddr(self.vserverip)[0]
             vserver_options += " --hostname %s"%vserver_hostname
         except:
-            pass
+            print "Cannot reverse lookup %s"%self.vserverip
+            print "This is considered fatal, as this might pollute the test results"
+            return False
         create_vserver="%(build_dir)s/%(script)s %(test_env_options)s %(vserver_name)s %(repo_url)s -- %(vserver_options)s"%locals()
         return self.run_in_host(create_vserver) == 0
 
