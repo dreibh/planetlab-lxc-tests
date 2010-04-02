@@ -79,7 +79,7 @@ def sites (options,index):
                                'login_base':'main',
                                'abbreviated_name':'PLanettest',
                                'max_slices':100,
-                               'url':'http://testbox.onelab.eu',
+                               'url':'http://test.onelab.eu',
                                },
               'address_fields' : {'line1':'route des lucioles',
                                   'city':'sophia',
