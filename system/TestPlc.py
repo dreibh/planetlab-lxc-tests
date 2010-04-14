@@ -84,7 +84,7 @@ SEP='<sep>'
 class TestPlc:
 
     default_steps = [
-        'display', 'local_pre', SEP,
+        'display', 'resources_pre', SEP,
         'delete_vs','create_vs','install', 'configure', 'start', SEP,
         'fetch_keys', 'store_keys', 'clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', SEP,
@@ -100,10 +100,10 @@ class TestPlc:
         # 'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEP,
         'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEP,
         'check_tcp',  'check_hooks',  SEP,
-        'force_gather_logs', 'force_local_post',
+        'force_gather_logs', 'force_resources_post',
         ]
     other_steps = [ 
-        'show_boxes', 'local_list','local_cleanup',SEP,
+        'show_boxes', 'resources_list','resources_release','resources_release_plc','resources_release_qemu',SEP,
         'stop', 'vs_start', SEP,
         'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
         'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
@@ -313,8 +313,10 @@ class TestPlc:
         return True
 
     # entry point
+    always_display_keys=['PLC_WWW_HOST','nodes','sites',]
     def display_pass (self,passno):
         for (key,val) in self.plc_spec.iteritems():
+            if not self.options.verbose and key not in TestPlc.always_display_keys: continue
             if passno == 2:
                 if key == 'sites':
                     for site in val:
@@ -337,6 +339,7 @@ class TestPlc:
     def display_site_spec (self,site):
         print '+ ======== site',site['site_fields']['name']
         for (k,v) in site.iteritems():
+            if not self.options.verbose and k not in TestPlc.always_display_keys: continue
             if k=='nodes':
                 if v: 
                     print '+       ','nodes : ',
@@ -411,25 +414,35 @@ class TestPlc:
         print '+\tqemu box %s'%node_spec['host_box']
         print '+\thostname=%s'%node_spec['node_fields']['hostname']
 
-    def local_pre (self):
+    def resources_pre (self):
         "run site-dependant pre-test script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_pre(self)
  
-    def local_post (self):
+    def resources_post (self):
         "run site-dependant post-test script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_post(self)
  
-    def local_list (self):
+    def resources_list (self):
         "run site-dependant list script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_list(self)
  
-    def local_cleanup (self):
-        "run site-dependant cleanup script as defined in LocalTestResources"
+    def resources_release (self):
+        "run site-dependant release script as defined in LocalTestResources"
         from LocalTestResources import local_resources
-        return local_resources.step_cleanup(self)
+        return local_resources.step_release(self)
+ 
+    def resources_release_plc (self):
+        "run site-dependant release script as defined in LocalTestResources"
+        from LocalTestResources import local_resources
+        return local_resources.step_release_plc(self)
+ 
+    def resources_release_qemu (self):
+        "run site-dependant release script as defined in LocalTestResources"
+        from LocalTestResources import local_resources
+        return local_resources.step_release_qemu(self)
  
     def delete_vs(self):
         "vserver delete the test myplc"

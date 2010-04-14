@@ -146,19 +146,48 @@ class TestResources:
 
     # as a plc step this should return a boolean
     def step_pre (self,plc):
-        return self.trqemu_record (plc) and self.trqemu_free(plc) \
-           and self.trplc_record (plc) and self.trplc_free(plc)
+        return self.trqemu_record (plc) and self.trqemu_make_space(plc) \
+           and self.trplc_record (plc) and self.trplc_make_space(plc)
 
     def step_post (self,plc):
         return True
 
-    def step_cleanup (self,plc):
-        return self.trqemu_cleanup(plc) and self.trplc_cleanup(plc)
+    def step_release (self,plc):
+        return self.trqemu_release(plc) and self.trplc_release(plc)
+
+    def step_release_plc (self,plc):
+        return self.trplc_release(plc) 
+
+    def step_release_qemu (self,plc):
+        return self.trqemu_release(plc) 
 
     def step_list (self,plc):
         return self.trqemu_list(plc) and self.trplc_list(plc)
 
     ####################
+    def trplc_record (self,plc):
+        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
+        tracker.record(plc.test_ssh.hostname,plc.vservername)
+        tracker.store()
+        return True
+
+    def trplc_release (self,plc):
+        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
+        tracker.release(plc.test_ssh.hostname,plc.vservername)
+        tracker.store()
+        return True
+
+    def trplc_make_space (self,plc):
+        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
+        tracker.make_space()
+        tracker.store()
+        return True
+
+    def trplc_list (self,plc):
+        TrackerPlc(plc.options,instances=self.max_plcs()).list()
+        return True
+
+    ###
     def trqemu_record (self,plc):
         tracker=TrackerQemu(plc.options,instances=self.max_qemus()-1)
         for site_spec in plc.plc_spec['sites']:
@@ -167,39 +196,19 @@ class TestResources:
         tracker.store()
         return True
 
-    def trqemu_free (self,plc):
+    def trqemu_release (self,plc):
         tracker=TrackerQemu(plc.options,instances=self.max_qemus()-1)
         for site_spec in plc.plc_spec['sites']:
             for node_spec in site_spec['nodes']:
-                tracker.free()
+                tracker.release(node_spec['host_box'],plc.options.buildname,node_spec['node_fields']['hostname'])
         tracker.store()
         return True
 
-    ###
-    def trplc_record (self,plc):
-        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
-        tracker.record(plc.test_ssh.hostname,plc.vservername)
-        tracker.store()
-        return True
-
-    def trplc_free (self,plc):
-        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
-        tracker.free()
-        tracker.store()
-        return True
-
-    ###
-    def trqemu_cleanup (self,plc):
+    def trqemu_make_space (self,plc):
         tracker=TrackerQemu(plc.options,instances=self.max_qemus()-1)
         for site_spec in plc.plc_spec['sites']:
             for node_spec in site_spec['nodes']:
-                tracker.cleanup()
-        tracker.store()
-        return True
-
-    def trplc_cleanup (self,plc):
-        tracker = TrackerPlc(plc.options,instances=self.max_plcs())
-        tracker.cleanup()
+                tracker.make_space()
         tracker.store()
         return True
 
@@ -207,10 +216,7 @@ class TestResources:
         TrackerQemu(plc.options,instances=self.max_qemus()-1).list()
         return True
 
-    def trplc_list (self,plc):
-        TrackerPlc(plc.options,instances=self.max_plcs()).list()
-        return True
-
+    ###
     def localize_rspec (self,plcs,options):
        
 	utils.header ("Localize SFA Slice RSpec")

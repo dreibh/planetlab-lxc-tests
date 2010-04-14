@@ -53,18 +53,33 @@ class Tracker:
         self.tracks.append( track )
         print "Recorded %s in tracker %s"%(track,self.filename)
 
+    # this stops the instances currently attached with this test session and release tracker
+    def release (self,track):
+        for already in self.tracks:
+            if already==track:
+                if self.options.dry_run:
+                    print 'dry_run: Tracker.release - skipping %s'%(track)
+                    return
+                self.tracks.remove(track)
+                print "Releasing %s in tracker %s"%(track,self.filename)
+                command = self.stop_command (track)
+                utils.header("Trackers.make_space track : %s"%command)
+                utils.system(command)
+        print '%s was not found in %s'%(track,self.filename)
+        return
+
     # this actually stops the old instances, so that the total fits in the number of instances 
-    def free (self):
+    def make_space (self):
         # number of instances to stop
         how_many=len(self.tracks)-self.instances
         # nothing todo until we have more than keep_vservers in the tracker
         if how_many <= 0:
-            print 'Tracker.free : limit %d not reached'%self.instances
+            print 'Tracker.make_space : limit %d not reached'%self.instances
             return
         to_stop = self.tracks[:how_many]
         for track in to_stop:
             command = self.stop_command (track)
-            utils.header("Trackers.free track : %s"%command)
+            utils.header("Trackers.make_space track : %s"%command)
             utils.system(command)
         if not self.options.dry_run:
             self.tracks = self.tracks[how_many:]
@@ -92,6 +107,9 @@ class TrackerPlc (Tracker):
     def record (self, hostname, vservername):
         Tracker.record (self,"%s@%s"%(hostname,vservername))
 
+    def release (self, hostname, vservername):
+        Tracker.release (self,"%s@%s"%(hostname,vservername))
+
     def stop_command (self, track):
         (hostname,vservername) = track.split('@')
         return TestSsh(hostname).actual_command("vserver --silent %s stop"%vservername)
@@ -116,6 +134,9 @@ class TrackerQemu (Tracker):
 
     def record (self, hostname, buildname, nodename):
         Tracker.record (self,"%s@%s@%s"%(hostname,buildname,nodename))
+
+    def release (self, hostname, buildname, nodename):
+        Tracker.release (self,"%s@%s@%s"%(hostname,buildname,nodename))
 
     def stop_command (self, track):
         (hostname,buildname,nodename) = track.split('@')

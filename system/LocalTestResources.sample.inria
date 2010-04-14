@@ -29,9 +29,18 @@ class OnelabTestResources (TestResources):
                    '02:34:56:00:00:%02d'%i) for i in range(1,8) ]
     
     # 32bits : qemu32-[1-5] + 64bits : qemu64-[1-3]
+    # removing qemu64-3 until it gets on the right IP segment again
     def qemus_ip_pool (self):
-        return [ ( 'qemu64-%d.pl.sophia.inria.fr'%i, None, None) for i in range(1,4) ] + \
-               [ ( 'qemu32-%d.pl.sophia.inria.fr'%i, None, None) for i in range(1,6) ]
+        return [
+            ('qemu64-1.pl.sophia.inria.fr', None, None),
+            ('qemu64-2.pl.sophia.inria.fr', None, None),
+#            ('qemu64-3.pl.sophia.inria.fr', None, None),
+            ('qemu32-1.pl.sophia.inria.fr', None, None),
+            ('qemu32-2.pl.sophia.inria.fr', None, None),
+            ('qemu32-3.pl.sophia.inria.fr', None, None),
+            ('qemu32-4.pl.sophia.inria.fr', None, None),
+            ('qemu32-5.pl.sophia.inria.fr', None, None),
+            ]
 
     def max_qemus (self):
         return len(self.qemus_ip_pool())-2
