@@ -197,7 +197,7 @@ def plc (options,index) :
         'PLC_ROOT_PASSWORD' : 'test++',
         'PLC_NAME' : 'Regression TestLab',
         'PLC_SHORTNAME' : 'Rlab',
-        'PLC_MAIL_ENABLED':'true',
+        'PLC_MAIL_ENABLED':'false',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
         'PLC_DB_HOST' : 'deferred-myplc-hostname',
         'PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
