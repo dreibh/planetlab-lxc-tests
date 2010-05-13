@@ -126,13 +126,21 @@ class TestResources:
     
             ### rewrite fields in plc
             # compute a helpful vserver name - remove domain in hostname
-            simplehostname=hostname.split('.')[0]
+            simplehostname = hostname.split('.')[0]
+            preferred_hostname = self.preferred_hostname()
             vservername = options.buildname
             if len(plcs) == 1 :
                 vservername = "%s-%s" % (vservername,simplehostname)
+                #ugly hack for "vuname: vc_set_vhi_name(): Arg list too long" errors
+                if len(vservername) > 38 and preferred_hostname is not None:
+                    vservername = "%s-%s" % (vservername,preferred_hostname)
             else:
                 plc_counter += 1
                 vservername = "%s-%d-%s" % (vservername,plc_counter,simplehostname)
+                #ugly hack for "vuname: vc_set_vhi_name(): Arg list too long" errors
+                if len(vservername) > 38 and preferred_hostname is not None:
+                    vservername = "%s-%d-%s" % (vservername,plc_counter,preferred_hostname)
+
             # apply
             plc['vservername']=vservername
             plc['vserverip']=ip

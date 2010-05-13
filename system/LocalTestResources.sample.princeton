@@ -8,7 +8,7 @@
 
 from TestResources import TestResources
 
-class OnelabTestResources (TestResources):
+class PlanetlabTestResources (TestResources):
     
     # we use only one for now but who knows
     def plc_boxes (self):
@@ -35,15 +35,17 @@ class OnelabTestResources (TestResources):
         return 1
 
     def plcs_ip_pool (self):
-        return [ ("plc-01.test.planet-lab.org","128.112.139.34", "de:ad:be:ef:ff:01"),
-                 ("plc-02.test.planet-lab.org","128.112.139.35", "de:ad:be:ef:ff:02"),
-                 ("plc-03.test.planet-lab.org","128.112.139.36", "de:ad:be:ef:ff:03"),
-                 ("plc-04.test.planet-lab.org","128.112.139.37", "de:ad:be:ef:ff:04"),
-                 ("plc-05.test.planet-lab.org","128.112.139.41", "de:ad:be:ef:ff:05"),
+        return [ ("pl-service-08.CS.Princeton.EDU","128.112.139.34", "de:ad:be:ef:ff:01"),
+                 ("pl-service-09.CS.Princeton.EDU","128.112.139.35", "de:ad:be:ef:ff:02"),
+                 ("pl-service-10.CS.Princeton.EDU","128.112.139.36", "de:ad:be:ef:ff:03"),
+                 ("pl-service-11.CS.Princeton.EDU","128.112.139.37", "de:ad:be:ef:ff:04"),
+                 ("pl-service-12.CS.Princeton.EDU","128.112.139.41", "de:ad:be:ef:ff:05"),
                  ]
 
     def max_plcs (self):
         return 4
 
+    def preferred_hostname (self):
+        return "plc"
 
-local_resources = OnelabTestResources ()
+local_resources = PlanetlabTestResources ()

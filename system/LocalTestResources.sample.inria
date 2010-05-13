@@ -54,4 +54,6 @@ class OnelabTestResources (TestResources):
     def max_plcs (self):
         return len(self.plcs_ip_pool())-2
 
+    def preferred_hostname (self):
+        return None
 local_resources = OnelabTestResources ()
