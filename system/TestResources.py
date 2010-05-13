@@ -133,13 +133,13 @@ class TestResources:
                 vservername = "%s-%s" % (vservername,simplehostname)
                 #ugly hack for "vuname: vc_set_vhi_name(): Arg list too long" errors
                 if len(vservername) > 38 and preferred_hostname is not None:
-                    vservername = "%s-%s" % (vservername,preferred_hostname)
+                    vservername = "%s-%s" % (options.buildname,preferred_hostname)
             else:
                 plc_counter += 1
                 vservername = "%s-%d-%s" % (vservername,plc_counter,simplehostname)
                 #ugly hack for "vuname: vc_set_vhi_name(): Arg list too long" errors
                 if len(vservername) > 38 and preferred_hostname is not None:
-                    vservername = "%s-%d-%s" % (vservername,plc_counter,preferred_hostname)
+                    vservername = "%s-%d-%s" % (options.buildname,plc_counter,preferred_hostname)
 
             # apply
             plc['vservername']=vservername
