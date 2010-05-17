@@ -494,7 +494,6 @@ class TestPlc:
 
         # workaround for getting pgsql8.2 on centos5
         if self.options.fcdistro == "centos5":
-            self.run_in_guest("rpm -Uvh http://yum.pgsqlrpms.org/8.2/pgdg-centos-8.2-5.noarch.rpm")
             self.run_in_guest("rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm")
 
         if self.options.personality == "linux32":
