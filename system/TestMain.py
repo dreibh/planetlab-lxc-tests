@@ -22,7 +22,7 @@ class TestMain:
 
     default_config = [ 'default' ] 
 
-    default_build_url = "http://svn.planet-lab.org/svn/build/trunk"
+    default_build_url = "git://git.onelab.eu/tests"
 
     def __init__ (self):
 	self.path=os.path.dirname(sys.argv[0]) or "."
@@ -70,15 +70,13 @@ class TestMain:
         usage = """usage: %%prog [options] steps
 arch-rpms-url defaults to the last value used, as stored in arg-arch-rpms-url,
    no default
-build-url defaults to the last value used, as stored in arg-build-url, 
-   or %s
 config defaults to the last value used, as stored in arg-config,
    or %r
 ips_node, ips_plc and ips_qemu defaults to the last value used, as stored in arg-ips-{node,plc,qemu},
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
 ===
-"""%(TestMain.default_build_url,TestMain.default_config)
+"""%(TestMain.default_config)
         usage += self.steps_message
         parser=OptionParser(usage=usage,version=self.subversion_id)
         parser.add_option("-u","--url",action="store", dest="arch_rpms_url", 
