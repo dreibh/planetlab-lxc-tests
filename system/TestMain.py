@@ -82,7 +82,7 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-u","--url",action="store", dest="arch_rpms_url", 
                           help="URL of the arch-dependent RPMS area - for locating what to test")
         parser.add_option("-b","--build",action="store", dest="build_url", 
-                          help="Build URL - for locating vtest-init-vserver.sh")
+                          help="ignored, for legacy only")
         parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
                           nargs=1,type="string",
                           help="Config module - can be set multiple times, or use quotes")
