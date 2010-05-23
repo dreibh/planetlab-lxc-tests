@@ -17,6 +17,7 @@
 
 import os.path
 import utils
+import shutil
 
 class TestSsh:
     
@@ -99,6 +100,17 @@ class TestSsh:
         else:
             dirname=self.buildname
         return self.run("mkdir -p %s"%dirname)
+
+    def rmdir (self,dirname=None):
+        if self.is_local():
+            if dirname:
+                return shutil.rmtree(dirname)
+            return 0
+        if dirname:
+            dirname="%s/%s"%(self.buildname,dirname)
+        else:
+            dirname=self.buildname
+        return self.run("rm -rf %s"%dirname)
 
     def create_buildname_once (self):
         if self.is_local():

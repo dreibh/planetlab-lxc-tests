@@ -455,6 +455,7 @@ class TestPlc:
     # so that the tests do not have to worry about extracting the build (svn, git, or whatever)
     def create_vs (self):
         "vserver creation (no install done)"
+        # push the local build/ dir to the testplc box 
         if self.is_local():
             # a full path for the local calls
             build_dir=os.path.dirname(sys.argv[0])
@@ -464,8 +465,8 @@ class TestPlc:
         else:
             # use a standard name - will be relative to remote buildname
             build_dir="build"
-            # push the local build/ dir to the testplc box 
-            self.test_ssh.mkdir(build_dir)
+            # remove for safety; do *not* mkdir first, otherwise we end up with build/build/
+            self.test_ssh.rmdir(build_dir)
             self.test_ssh.copy(build_dir,recursive=True)
         # the repo url is taken from arch-rpms-url 
         # with the last step (i386) removed
