@@ -450,6 +450,9 @@ class TestPlc:
         return True
 
     ### install
+    # historically the build was being fetched by the tests
+    # now the build pushes itself as a subdir of the tests workdir
+    # so that the tests do not have to worry about extracting the build (svn, git, or whatever)
     def create_vs (self):
         "vserver creation (no install done)"
         if self.is_local():
@@ -461,20 +464,9 @@ class TestPlc:
         else:
             # use a standard name - will be relative to remote buildname
             build_dir="build"
-
-        # historically the build was being fetched by the tests
-        # if we've got a build/ locally, we don't need to mess with the build url
-        if os.path.isdir('build'):
+            # push the local build/ dir to the testplc box 
             self.test_ssh.mkdir(build_dir)
-            self.test_ssh.copy_abs('build',build_dir,recursive=True)
-        else:
-	    # use old svn strategy run checkout in any case - would do an update if already exists
-            print "WARNING: The tests module no longer has the ability to pull the build module from svn"
-            print "Please extract a build module under 'build'"
-            return False
-            build_checkout = "svn checkout %s %s"%(self.options.build_url,build_dir)
-            if self.run_in_host(build_checkout) != 0:
-                return False
+            self.test_ssh.copy(build_dir,recursive=True)
         # the repo url is taken from arch-rpms-url 
         # with the last step (i386) removed
         repo_url = self.options.arch_rpms_url
