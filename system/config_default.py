@@ -145,7 +145,7 @@ def initscripts(options,index):
     return initscripts
 
 def slices (options,index):
-    return [ { 'slice_fields': {'name':'main_slicetest%d'%index,
+    return [ { 'slice_fields': {'name':'main_pslc%d'%index,
                                 'instantiation':'plc-instantiated',
                                 'url':'http://foo%d@foo.com'%index,
                                 'description':'testslice number %d'%index,
@@ -166,18 +166,18 @@ def tcp_tests (options,index):
         return [
             # local test
             { 'server_node': 'node1',
-              'server_slice' : 'main_slicetest1',
+              'server_slice' : 'main_pslc1',
               'client_node' : 'node1',
-              'client_slice' : 'main_slicetest1',
+              'client_slice' : 'main_pslc1',
               'port' : 2000,
               }]
     elif index == 2:
         return [
             # remote test
             { 'server_node': 'node1',
-              'server_slice' : 'main_slicetest1',
+              'server_slice' : 'main_pslc1',
               'client_node' : 'node2',
-              'client_slice' : 'main_slicetest2',
+              'client_slice' : 'main_pslc2',
               'port' : 4000,
               },
             ]
@@ -239,7 +239,7 @@ def sfa (options,index) :
     }
 
 def slices_sfa (options,index):
-    return [ { 'slice_fields': {'name':'main_sfaslicea1',
+    return [ { 'slice_fields': {'name':'main_fslc1',
                                 'url':'http://foo%d@foo.com'%index,
                                 'description':'SFA-testing',
                                 'max_nodes':2,
@@ -251,10 +251,10 @@ def slices_sfa (options,index):
 
 def sfa_slice_xml(options,index):
     if index==1:
-	hrn='plc.main.sfaslicea1'
+	hrn='plc.main.fslc1'
 	researcher='plc.main.fake-pi1'
     else:
-	hrn='ple.main.sfaslicea1'
+	hrn='ple.main.fslc1'
 	researcher='ple.main.fake-pi1'
 
     return  ["""<record hrn="%s" type="slice" description="SFA-testing" url="http://anil.onelab.eu/"><researcher>%s</researcher></record>"""%(hrn, researcher)]

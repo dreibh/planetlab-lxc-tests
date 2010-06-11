@@ -37,18 +37,18 @@ class TestSliceSfa:
     def create_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	return \
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.sfaslicea1 slice.rspec"%auth)==0
+	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 slice.rspec"%auth)==0
 
     def update_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	return \
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.sfaslicea1 slice.rspec"%auth)==0
+	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 slice.rspec"%auth)==0
 
     def delete_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.main.sfaslicea1"%auth)
+	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.main.fslc1"%auth)
 	return \
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.main.sfaslicea1"%auth)==0
+	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.main.fslc1"%auth)==0
 
     def check_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
