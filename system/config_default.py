@@ -206,6 +206,7 @@ def plc (options,index) :
         'PLC_BOOT_HOST' : 'deferred-myplc-hostname',
         'PLC_NET_DNS1' : 'deferred-dns-1',
         'PLC_NET_DNS2' : 'deferred-dns-2',
+        'PLC_RESERVATION_GRANULARITY':300,
         'sites' : sites(options,index),
         'keys' : keys(options,index),
         'initscripts': initscripts(options,index),
