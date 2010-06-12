@@ -120,6 +120,16 @@ class TestPlc:
     def valid_step (step):
         return step != SEP
 
+    # turn off the sfa-related steps when build has skipped SFA
+    # this is originally for centos5 as recent SFAs won't build on this platformb
+    @staticmethod
+    def check_build_has_sfa (rpms_url):
+        retcod=os.system ("curl --silent %s/ | grep -q sfa"%rpms_url)
+        # full builds are expected to return with 0 here
+        if retcod!=0:
+            TestPlc.default_steps = [ step for step in TestPlc.default_steps
+                                      if step.find('sfa') < 0 ]
+
     def __init__ (self,plc_spec,options):
 	self.plc_spec=plc_spec
         self.options=options
