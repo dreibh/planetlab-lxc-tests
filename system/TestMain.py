@@ -187,7 +187,7 @@ steps refer to a method in TestPlc or to a step_* module
                 utils.header('* Using %s = %s'%(recname,getattr(self.options,recname)))
 
         # hack : if sfa is not among the published rpms, skip these tests
-        TestPlc.check_whether_build_has_sfa(options.arch_rpms_url)
+        TestPlc.check_whether_build_has_sfa(self.options.arch_rpms_url)
 
         # steps
         if not self.options.steps:
