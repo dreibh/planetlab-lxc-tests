@@ -38,6 +38,8 @@ server_methods = [ ('GetNodes' ,  []),
                    ('AddPersonKey' , True),
                    ('GetPlcRelease', {'build': {'target-arch':'i386'}}),
                    ('GetSites', []),
+                   ('GetLeaseGranularity', 180),
+                   ('AddLeases', True),
                    ]
 
 class TestApiserver:

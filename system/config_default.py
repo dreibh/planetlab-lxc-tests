@@ -7,6 +7,8 @@
 
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
+reservation_granularity=180
+
 def nodes(options,index):
     return [{'name':'node%d'%index,
              'node_fields': {'hostname': 'deferred-nodename%d'%index,
@@ -145,18 +147,18 @@ def initscripts(options,index):
     return initscripts
 
 def slices (options,index):
-    return [ { 'slice_fields': {'name':'main_pslc%d'%index,
+    return [ { 'slice_fields': {'name':'main_pslc%d'%i,
                                 'instantiation':'plc-instantiated',
-                                'url':'http://foo%d@foo.com'%index,
-                                'description':'testslice number %d'%index,
+                                'url':'http://foo.com',
+                                'description':'testslice number %d'%i,
                                 'max_nodes':2,
                                 },
                'usernames' : [ 'pi','tech','techuser' ],
                'nodenames' : all_nodenames(options,index),
-               'initscriptname' : 'script%d'%index,
+               'initscriptname' : 'script%d'%i,
                'sitename' : 'main',
                'owner' : 'pi',
-               }]
+               } for i in range (2*index-1,2*index+1) ]
 
 def all_slicenames (options,index):
     return [ slice['slice_fields']['name'] for slice in slices(options,index)]
@@ -183,7 +185,21 @@ def tcp_tests (options,index):
             ]
     else:
         return []
-             
+
+# the semantic for 't_from' and 't_until' here is:
+# if they are smaller than one year, they are relative to the current time
+# otherwise they are absolute
+def leases (options, index):
+    leases=[]
+    counter=0
+    slices=all_slicenames(options,index)
+    slice_sequence = slices[:1] + slices + [None,]
+    for iterator in range(100):
+        for slice in slice_sequence:
+            leases += { 'slice' : slice, 't_from':counter,'t_until':counter+reservation_granularity}
+            counter += reservation_granularity
+    return leases
+
 def plc (options,index) :
     return { 
         'name' : 'onetest%d'%index,
@@ -206,13 +222,14 @@ def plc (options,index) :
         'PLC_BOOT_HOST' : 'deferred-myplc-hostname',
         'PLC_NET_DNS1' : 'deferred-dns-1',
         'PLC_NET_DNS2' : 'deferred-dns-2',
-        'PLC_RESERVATION_GRANULARITY':300,
+        'PLC_RESERVATION_GRANULARITY':reservation_granularity,
         'sites' : sites(options,index),
         'keys' : keys(options,index),
         'initscripts': initscripts(options,index),
         'slices' : slices(options,index),
         'tcp_test' : tcp_tests(options,index),
 	'sfa' : sfa(options,index),
+        'leases' : leases (options, index),
     }
 
 def sfa (options,index) :
@@ -284,5 +301,5 @@ def sfa_slice_rspec(options,index):
 def config (plc_specs,options):
     result=plc_specs
     for i in range (options.size):
-        result += [ plc(options,i+1) ]
+        result.append(plc(options,i+1))
     return result

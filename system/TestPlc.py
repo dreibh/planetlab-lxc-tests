@@ -87,7 +87,7 @@ class TestPlc:
         'display', 'resources_pre', SEP,
         'delete_vs','create_vs','install', 'configure', 'start', SEP,
         'fetch_keys', 'store_keys', 'clear_known_hosts', SEP,
-        'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', SEP,
+        'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
         'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu',
         'kill_all_qemus', 'start_node', SEP,
         # better use of time: do this now that the nodes are taking off
@@ -657,6 +657,39 @@ class TestPlc:
         "delete nodegroups with PLCAPI"
         return self.do_nodegroups("delete")
 
+    YEAR = 365*24*3600
+    @staticmethod
+    def translate_timestamp (start,timestamp):
+        if timestamp < TestPlc.YEAR:    return start+timestamp
+        else:                           return timestamp
+
+    @staticmethod
+    def timestamp_printable (timestamp):
+        return time.strftime('%m-%d %H:%M UTC',time.gmtime(timestamp))
+
+    def leases(self):
+        now=time.time()
+        grain=self.apiserver.GetLeaseGranularity(self.auth_root())
+        round=(int(now)/grain)*grain
+        start=round+grain
+        # find out all nodes that are reservable
+        nodes=self.all_reservable_nodenames()
+        if not nodes: 
+            utils.header ("No reservable node found - proceeding without leases")
+            return True
+        ok=True
+        # attach them to the leases as specified in plc_specs
+        # this is where the 'leases' field gets interpreted as relative of absolute
+        for lease_spec in self.plc_spec['leases']:
+            lease_spec['t_from']=TestPlc.translate_timestamp(start,lease_spec['t_from'])
+            lease_spec['t_until']=TestPlc.translate_timestamp(start,lease_spec['t_until'])
+            if self.apiserver.AddLeases(self.auth_root(),nodes,
+                                        lease_spec['slice'],lease_spec['t_from'],lease_spec['t_until']):
+                utils.header('Leases on nodes %r from %s until %s'%(nodes,lease_spec['t_from'],lease_spec['t_until']))
+            else:
+                ok=False
+        return ok
+
     # create nodegroups if needed, and populate
     def do_nodegroups (self, action="add"):
         # 1st pass to scan contents
@@ -728,10 +761,16 @@ class TestPlc:
         node_infos = []
         for site_spec in self.plc_spec['sites']:
             node_infos += [ (node_spec['node_fields']['hostname'],node_spec['host_box']) \
-                           for node_spec in site_spec['nodes'] ]
+                                for node_spec in site_spec['nodes'] ]
         return node_infos
     
     def all_nodenames (self): return [ x[0] for x in self.all_node_infos() ]
+    def all_reservable_nodenames (self): 
+        res=[]
+        for site_spec in self.plc_spec['sites']:
+            res += [ node_spec['hostname'] for node_spec in site_spec['nodes'] 
+                     if 'node_type' in node_spec and node_spec['node_type'] == 'reservable' ] 
+        return res
 
     # silent_minutes : during the first <silent_minutes> minutes nothing gets printed
     def nodes_check_boot_state (self, target_boot_state, timeout_minutes, silent_minutes,period=15):
