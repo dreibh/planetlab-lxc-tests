@@ -123,7 +123,7 @@ class TestPlc:
     # turn off the sfa-related steps when build has skipped SFA
     # this is originally for centos5 as recent SFAs won't build on this platformb
     @staticmethod
-    def check_build_has_sfa (rpms_url):
+    def check_whether_build_has_sfa (rpms_url):
         retcod=os.system ("curl --silent %s/ | grep -q sfa"%rpms_url)
         # full builds are expected to return with 0 here
         if retcod!=0:
