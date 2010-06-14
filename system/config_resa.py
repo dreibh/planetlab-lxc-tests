@@ -5,18 +5,17 @@
 #     (**) TestMain options field
 # (*) and that returns the new set of plc_specs
 
-# values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
+# this config is defined to run on top of another one 
+# and just sets the nodes as 'reservable'
+# 
+# use e.g. with
+# run -c default -c resa
 
 import config_default
 
 def config (plc_specs, options):
-    result=plc_specs
-    for i in range (options.size):
-        plc = config_default.plc(options,i+1)
-        for site in plc['sites']:
+    for plc_spec in plc_specs:
+        for site in plc_spec['sites']:
             for node in site['nodes']:
                 node['node_fields']['node_type']='reservable'
-        result.append(plc) 
-        
-    return result
-    
+    return plc_specs
