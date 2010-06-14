@@ -3,6 +3,7 @@
 # we dont want to have to depend on PLCAPI, so:
 import xmlrpclib
 
+# the default value is for the dry run mode
 server_methods = [ ('GetNodes' ,  []),
                    ('AddNode' , True),
                    ('SetNodePlainBootstrapfs', True),
@@ -40,6 +41,8 @@ server_methods = [ ('GetNodes' ,  []),
                    ('GetSites', []),
                    ('GetLeaseGranularity', 180),
                    ('AddLeases', True),
+                   ('GetLeases', []),
+                   ('DeleteLeases',True),
                    ]
 
 class TestApiserver:

@@ -194,9 +194,9 @@ def leases (options, index):
     counter=0
     slices=all_slicenames(options,index)
     slice_sequence = slices[:1] + slices + [None,]
-    for iterator in range(100):
+    for iterator in range(12):
         for slice in slice_sequence:
-            leases += { 'slice' : slice, 't_from':counter,'t_until':counter+reservation_granularity}
+            leases.append ( {'slice' : slice, 't_from':counter,'t_until':counter+reservation_granularity} )
             counter += reservation_granularity
     return leases
 

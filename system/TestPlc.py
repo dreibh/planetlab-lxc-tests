@@ -107,6 +107,7 @@ class TestPlc:
         'stop', 'vs_start', SEP,
         'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
         'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
+        'clean_leases', 'list_leases', SEP,
         'populate' , SEP,
         'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
         'db_dump' , 'db_restore', SEP,
@@ -367,8 +368,8 @@ class TestPlc:
             elif k == 'address_fields':
                 pass
             else:
-                print '+       ',k,
-                PrettyPrinter(indent=8,depth=2).pprint(v)
+                print '+       ',
+                utils.pprint(k,v)
         
     def display_initscript_spec (self,initscript):
         print '+ ======== initscript',initscript['initscript_fields']['name']
@@ -399,10 +400,11 @@ class TestPlc:
                 print '+       ',k,v
 
     def display_node_spec (self,node):
-        print "+           node",node['name'],"host_box=",node['host_box'],
+        print "+           node=%s host_box=%s"%(node['name'],node['host_box']),
         print "hostname=",node['node_fields']['hostname'],
         print "ip=",node['interface_fields']['ip']
-    
+        if self.options.verbose:
+            utils.pprint("node details",node,depth=3)
 
     # another entry point for just showing the boxes involved
     def display_mapping (self):
@@ -665,13 +667,14 @@ class TestPlc:
 
     @staticmethod
     def timestamp_printable (timestamp):
-        return time.strftime('%m-%d %H:%M UTC',time.gmtime(timestamp))
+        return time.strftime('%m-%d %H:%M:%S UTC',time.gmtime(timestamp))
 
     def leases(self):
-        now=time.time()
+        "create leases (on reservable nodes only, use e.g. run -c default -c resa)"
+        now=int(time.time())
         grain=self.apiserver.GetLeaseGranularity(self.auth_root())
-        round=(int(now)/grain)*grain
-        start=round+grain
+        round_time=(now/grain)*grain
+        start=round_time+grain
         # find out all nodes that are reservable
         nodes=self.all_reservable_nodenames()
         if not nodes: 
@@ -681,14 +684,38 @@ class TestPlc:
         # attach them to the leases as specified in plc_specs
         # this is where the 'leases' field gets interpreted as relative of absolute
         for lease_spec in self.plc_spec['leases']:
+            # skip the ones that come with a null slice id
+            if not lease_spec['slice']: continue
             lease_spec['t_from']=TestPlc.translate_timestamp(start,lease_spec['t_from'])
             lease_spec['t_until']=TestPlc.translate_timestamp(start,lease_spec['t_until'])
-            if self.apiserver.AddLeases(self.auth_root(),nodes,
-                                        lease_spec['slice'],lease_spec['t_from'],lease_spec['t_until']):
-                utils.header('Leases on nodes %r from %s until %s'%(nodes,lease_spec['t_from'],lease_spec['t_until']))
-            else:
+            lease_addition=self.apiserver.AddLeases(self.auth_root(),nodes,
+                                                    lease_spec['slice'],lease_spec['t_from'],lease_spec['t_until'])
+            if lease_addition['errors']:
+                utils.header("Cannot create leases, %s"%lease_addition['errors'])
                 ok=False
+            else:
+                utils.header('Leases on nodes %r for %s from %d (%s) until %d (%s)'%\
+                              (nodes,lease_spec['slice'],
+                               lease_spec['t_from'],TestPlc.timestamp_printable(lease_spec['t_from']),
+                               lease_spec['t_until'],TestPlc.timestamp_printable(lease_spec['t_until'])))
+                
         return ok
+
+    def clean_leases (self):
+        "remove all leases in the myplc side"
+        lease_ids= [ l['lease_id'] for l in self.apiserver.GetLeases(self.auth_root())]
+        utils.header("Cleaning leases %r"%lease_ids)
+        self.apiserver.DeleteLeases(self.auth_root(),lease_ids)
+        return True
+
+    def list_leases (self):
+        "list all leases known to the myplc"
+        leases = self.apiserver.GetLeases(self.auth_root())
+        for l in leases:
+            utils.header("%s %s from %s until %s"%(l['hostname'],l['name'],
+                                                   TestPlc.timestamp_printable(l['t_from']), 
+                                                   TestPlc.timestamp_printable(l['t_until'])))
+        return True
 
     # create nodegroups if needed, and populate
     def do_nodegroups (self, action="add"):
@@ -768,8 +795,10 @@ class TestPlc:
     def all_reservable_nodenames (self): 
         res=[]
         for site_spec in self.plc_spec['sites']:
-            res += [ node_spec['hostname'] for node_spec in site_spec['nodes'] 
-                     if 'node_type' in node_spec and node_spec['node_type'] == 'reservable' ] 
+            for node_spec in site_spec['nodes']:
+                node_fields=node_spec['node_fields']
+                if 'node_type' in node_fields and node_fields['node_type']=='reservable':
+                    res.append(node_fields['hostname'])
         return res
 
     # silent_minutes : during the first <silent_minutes> minutes nothing gets printed
