@@ -31,24 +31,26 @@ class TestSliceSfa:
         return (found,privatekey)
 
     def add_slice(self):
-	return \
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add slice.xml")==0
+	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add slice.xml")==0
 
     def create_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-	return \
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 slice.rspec"%auth)==0
+        self.test_plc_run_in_guest("sfi.py -d /root/.sfi/ resources > /root/.sfi/resources_in.rspec")
+        self.test_plc_run_in_guest("sfiListNodes.py -i resources_in.rspec -o all_nodes.txt")
+        self.test_plc_run_in_guest("sfiAddSliver.py -i resources_in.rspec -n all_nodes.txt -o resources_out.rspec")
+	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 resources_out.rspec"%auth)==0
 
     def update_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-	return \
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 slice.rspec"%auth)==0
+        self.test_plc_run_in_guest("sfi.py -d /root/.sfi/ resources > /root/.sfi/resources_in.rspec")
+        self.test_plc_run_in_guest("sfiListNodes.py -i resources_in.rspec -o all_nodes.txt")
+        self.test_plc_run_in_guest("sfiAddSliver.py -i resources_in.rspec -n all_nodes.txt -o resources_out.rspec")
+	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 resources_out.rspec"%auth)==0
 
     def delete_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.main.fslc1"%auth)
-	return \
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.main.fslc1"%auth)==0
+	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.main.fslc1"%auth)==0
 
     def check_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
