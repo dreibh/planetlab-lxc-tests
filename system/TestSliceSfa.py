@@ -35,14 +35,14 @@ class TestSliceSfa:
 
     def create_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-        self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources > /root/.sfi/resources_in.rspec")
+        self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")
         self.test_plc.run_in_guest("sfiListNodes.py -i resources_in.rspec -o all_nodes.txt")
         self.test_plc.run_in_guest("sfiAddSliver.py -i resources_in.rspec -n all_nodes.txt -o resources_out.rspec")
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 resources_out.rspec"%auth)==0
 
     def update_slice(self):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-        self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources > /root/.sfi/resources_in.rspec")
+        self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")
         self.test_plc.run_in_guest("sfiListNodes.py -i resources_in.rspec -o all_nodes.txt")
         self.test_plc.run_in_guest("sfiAddSliver.py -i resources_in.rspec -n all_nodes.txt -o resources_out.rspec")
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.main.fslc1 resources_out.rspec"%auth)==0
