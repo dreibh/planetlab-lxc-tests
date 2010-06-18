@@ -136,7 +136,12 @@ def initscripts(options,index):
     initscripts= [ { 'initscript_fields' : 
                      { 'enabled' : True,
                        'name':'script1',
-                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 1; date) > /tmp/script1.stamp \n ',
+                       'script' : """#! /bin/sh
+(echo Starting test initscript: script1; date) > /tmp/script1.stamp
+echo "This is the stdout of the sliver initscript" 
+exec 1>&2
+echo "This is the stderr of the sliver initscript" 
+""",
                        }},
                    { 'initscript_fields' : 
                      { 'enabled' : True,
