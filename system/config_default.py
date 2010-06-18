@@ -139,14 +139,20 @@ def initscripts(options,index):
                        'script' : """#! /bin/sh
 (echo Starting test initscript: script1; date) > /tmp/script1.stamp
 echo "This is the stdout of the sliver initscript" 
-exec 1>&2
-echo "This is the stderr of the sliver initscript" 
+echo "This is the stderr of the sliver initscript" 1>&2
 """,
                        }},
                    { 'initscript_fields' : 
                      { 'enabled' : True,
                        'name':'script2',
-                       'script' : '#! /bin/sh\n (echo Starting test initscript: Stage 2; date) > /tmp/script2.stamp \n ',
+                       'script' : """#! /bin/sh
+(echo Starting loop-forever test initscript: script2; date) > /tmp/script2.stamp
+while true; do
+echo "This is the stdout of the loop-for-ever sliver initscript" 
+echo "This is the stderr of the loop-for-ever sliver initscript" 1>&2
+sleep 10
+done
+""",
                        }},
                    ]
     return initscripts
