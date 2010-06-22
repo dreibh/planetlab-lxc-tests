@@ -80,6 +80,7 @@ def slice_mapper_options_sfa (method):
     return actual
 
 SEP='<sep>'
+SEPSFA='<sep_sfa>'
 
 class TestPlc:
 
@@ -92,15 +93,12 @@ class TestPlc:
         'kill_all_qemus', 'start_node', SEP,
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
-	'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEP,
-        'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEP,
-        'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
-        # optionally run sfa later; takes longer, but checks more about nm 
-	# 'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEP,
-        # 'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEP,
-        'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEP,
+	'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
+        'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEPSFA,
+        'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
+        'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEPSFA,
         'check_tcp',  'check_hooks',  SEP,
-        'force_gather_logs', 'force_resources_post',
+        'force_gather_logs', 'force_resources_post', SEP,
         ]
     other_steps = [ 
         'show_boxes', 'resources_list','resources_release','resources_release_plc','resources_release_qemu',SEP,
@@ -111,12 +109,13 @@ class TestPlc:
         'populate' , SEP,
         'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
         'db_dump' , 'db_restore', SEP,
-        'standby_1 through 20',
+        'standby_1 through 20',SEP,
         ]
 
     @staticmethod
     def printable_steps (list):
-        return " ".join(list).replace(" "+SEP+" "," \\\n")
+        single_line=" ".join(list)+" "
+        return single_line.replace(" "+SEP+" "," \\\n").replace(" "+SEPSFA+" "," \\\n")
     @staticmethod
     def valid_step (step):
         return step != SEP
@@ -128,8 +127,10 @@ class TestPlc:
         retcod=os.system ("curl --silent %s/ | grep -q sfa"%rpms_url)
         # full builds are expected to return with 0 here
         if retcod!=0:
-            TestPlc.default_steps = [ step for step in TestPlc.default_steps
-                                      if step.find('sfa') < 0 ]
+            # move all steps containing 'sfa' from default_steps to other_steps
+            sfa_steps= [ step for step in TestPlc.default_steps if step.find('sfa')>=0 ]
+            TestPlc.other_steps += sfa_steps
+            for step in sfa_steps: TestPlc.default_steps.remove(step)
 
     def __init__ (self,plc_spec,options):
 	self.plc_spec=plc_spec

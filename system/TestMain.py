@@ -34,12 +34,12 @@ class TestMain:
             utils.show_options("main options",options)
 
     def init_steps(self):
-        self.steps_message=20*'x'+" Defaut steps are\n"+TestPlc.printable_steps(TestPlc.default_steps)
-        self.steps_message += "\n"+20*'x'+" Other useful steps are\n"+TestPlc.printable_steps(TestPlc.other_steps)
+        self.steps_message  = 20*'x'+" Defaut steps are\n"+TestPlc.printable_steps(TestPlc.default_steps)
+        self.steps_message += 20*'x'+" Other useful steps are\n"+TestPlc.printable_steps(TestPlc.other_steps)
 
     def list_steps(self):
         if not self.options.verbose:
-            print self.steps_message
+            print self.steps_message,
         else:
             testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
             scopes = [("Default steps",TestPlc.default_steps)]
@@ -125,16 +125,6 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Trace file location")
         (self.options, self.args) = parser.parse_args()
 
-        # no step specified
-        if len(self.args) == 0:
-            self.options.steps=TestPlc.default_steps
-        else:
-            self.options.steps = self.args
-
-        if self.options.list_steps:
-            self.list_steps()
-            sys.exit(1)
-
         # handle defaults and option persistence
         for (recname,filename,default) in (
             ('build_url','arg-build-url',TestMain.default_build_url) ,
@@ -188,6 +178,17 @@ steps refer to a method in TestPlc or to a step_* module
 
         # hack : if sfa is not among the published rpms, skip these tests
         TestPlc.check_whether_build_has_sfa(self.options.arch_rpms_url)
+
+        # no step specified
+        if len(self.args) == 0:
+            self.options.steps=TestPlc.default_steps
+        else:
+            self.options.steps = self.args
+
+        if self.options.list_steps:
+            self.init_steps()
+            self.list_steps()
+            sys.exit(1)
 
         # steps
         if not self.options.steps:
