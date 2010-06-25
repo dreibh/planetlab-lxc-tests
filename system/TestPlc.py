@@ -546,7 +546,8 @@ class TestPlc:
                      'PLC_WWW_HOST',
                      'PLC_BOOT_HOST',
                      'PLC_NET_DNS1',
-                     'PLC_NET_DNS2']:
+                     'PLC_NET_DNS2',
+                     'PLC_RESERVATION_GRANULARITY',]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec[var]))
         fileconf.write('w\n')
         fileconf.write('q\n')
