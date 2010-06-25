@@ -308,7 +308,6 @@ steps refer to a method in TestPlc or to a step_* module
         # do all steps on all plcs
         TRACE_FORMAT="TRACE: time=%(time)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
         for (stepname,method,force) in all_step_infos:
-            print "Entering step %(stepname)s with overall=%(overall_result)r"%locals()
             for (spec,obj) in all_plcs:
                 plcname=spec['name']
 
@@ -375,7 +374,6 @@ steps refer to a method in TestPlc or to a step_* module
                         trace.write(TRACE_FORMAT%locals())
                         trace.flush()
 
-        print "After last step, overall=%(overall_result)r"%locals()
         if self.options.trace_file and not self.options.dry_run:
             trace.close()
 

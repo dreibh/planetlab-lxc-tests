@@ -118,7 +118,7 @@ class TestPlc:
         return single_line.replace(" "+SEP+" "," \\\n").replace(" "+SEPSFA+" "," \\\n")
     @staticmethod
     def valid_step (step):
-        return step != SEP
+        return step != SEP and step != SEPSFA
 
     # turn off the sfa-related steps when build has skipped SFA
     # this is originally for centos5 as recent SFAs won't build on this platformb
