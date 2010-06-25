@@ -713,10 +713,13 @@ class TestPlc:
     def list_leases (self):
         "list all leases known to the myplc"
         leases = self.apiserver.GetLeases(self.auth_root())
+        now=int(time.time())
         for l in leases:
-            utils.header("%s %s from %s until %s"%(l['hostname'],l['name'],
-                                                   TestPlc.timestamp_printable(l['t_from']), 
-                                                   TestPlc.timestamp_printable(l['t_until'])))
+            current=l['t_until']>=now
+            if self.options.verbose or current:
+                utils.header("%s %s from %s until %s"%(l['hostname'],l['name'],
+                                                       TestPlc.timestamp_printable(l['t_from']), 
+                                                       TestPlc.timestamp_printable(l['t_until'])))
         return True
 
     # create nodegroups if needed, and populate
