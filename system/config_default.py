@@ -137,19 +137,27 @@ def initscripts(options,index):
                      { 'enabled' : True,
                        'name':'script1',
                        'script' : """#! /bin/sh
-(echo Starting test initscript: script1; date) > /tmp/script1.stamp
-echo "This is the stdout of the sliver initscript" 
-echo "This is the stderr of the sliver initscript" 1>&2
+(echo Starting test initscript: script1; date) >> /tmp/script1.stamp
+# expected to be 'start'
+command=$1; shift
+# get slice name
+slicename=$1; shift
+echo "This is the stdout of the sliver $slicename initscript $command (exp. start) pid=$$" 
+echo "This is the stderr of the sliver $slicename initscript $command (exp. start) pid=$$" 1>&2
 """,
                        }},
                    { 'initscript_fields' : 
                      { 'enabled' : True,
                        'name':'script2',
                        'script' : """#! /bin/sh
-(echo Starting loop-forever test initscript: script2; date) > /tmp/script2.stamp
+(echo Starting loop-forever test initscript: script2; date) >> /tmp/script2.stamp
+# expected to be 'start'
+command=$1; shift
+# get slice name
+slicename=$1; shift
 while true; do
-echo "This is the stdout of the loop-for-ever sliver initscript" 
-echo "This is the stderr of the loop-for-ever sliver initscript" 1>&2
+echo "This is the stdout of the loop-for-ever sliver initscript $slicename $command (exp. start) $$" 
+echo "This is the stderr of the loop-for-ever sliver initscript $slicename $command (exp. start) $$" 1>&2
 sleep 10
 done
 """,

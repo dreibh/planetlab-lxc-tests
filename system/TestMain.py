@@ -388,6 +388,7 @@ steps refer to a method in TestPlc or to a step_* module
             else:
                 return 1 
         except SystemExit:
+            print 'Caught SystemExit'
             raise
         except:
             traceback.print_exc()

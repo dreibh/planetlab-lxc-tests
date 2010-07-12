@@ -215,8 +215,10 @@ class TestNode:
     def create_test_ssh(self):
         # get the plc's keys for entering the node
         vservername=self.test_plc.vservername
-        # assuming we've run testplc.fetch_keys()
-        key = "keys/%(vservername)s.rsa"%locals()
+###        # assuming we've run testplc.fetch_keys()
+###        key = "keys/%(vservername)s.rsa"%locals()
+        # fetch_keys doesn't grab the root key anymore
+        key = "keys/key1.rsa"
         return TestSsh(self.name(), buildname=self.buildname(), key=key)
 
     def check_hooks (self):

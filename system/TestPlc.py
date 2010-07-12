@@ -118,7 +118,7 @@ class TestPlc:
         return single_line.replace(" "+SEP+" "," \\\n").replace(" "+SEPSFA+" "," \\\n")
     @staticmethod
     def valid_step (step):
-        return step != SEP
+        return step != SEP and step != SEPSFA
 
     # turn off the sfa-related steps when build has skipped SFA
     # this is originally for centos5 as recent SFAs won't build on this platformb
@@ -546,7 +546,8 @@ class TestPlc:
                      'PLC_WWW_HOST',
                      'PLC_BOOT_HOST',
                      'PLC_NET_DNS1',
-                     'PLC_NET_DNS2']:
+                     'PLC_NET_DNS2',
+                     'PLC_RESERVATION_GRANULARITY',]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec[var]))
         fileconf.write('w\n')
         fileconf.write('q\n')
@@ -712,10 +713,13 @@ class TestPlc:
     def list_leases (self):
         "list all leases known to the myplc"
         leases = self.apiserver.GetLeases(self.auth_root())
+        now=int(time.time())
         for l in leases:
-            utils.header("%s %s from %s until %s"%(l['hostname'],l['name'],
-                                                   TestPlc.timestamp_printable(l['t_from']), 
-                                                   TestPlc.timestamp_printable(l['t_until'])))
+            current=l['t_until']>=now
+            if self.options.verbose or current:
+                utils.header("%s %s from %s until %s"%(l['hostname'],l['name'],
+                                                       TestPlc.timestamp_printable(l['t_from']), 
+                                                       TestPlc.timestamp_printable(l['t_until'])))
         return True
 
     # create nodegroups if needed, and populate
