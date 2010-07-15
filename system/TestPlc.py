@@ -904,11 +904,11 @@ class TestPlc:
         
     def nodes_ssh_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
-        return self.check_nodes_ssh(debug=True,timeout_minutes=30,silent_minutes=5)
+        return self.check_nodes_ssh(debug=True,timeout_minutes=10,silent_minutes=5)
     
     def nodes_ssh_boot(self):
         "Tries to ssh into nodes in production mode with the root ssh key"
-        return self.check_nodes_ssh(debug=False,timeout_minutes=30,silent_minutes=15)
+        return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=15)
     
     @node_mapper
     def init_node (self): 
