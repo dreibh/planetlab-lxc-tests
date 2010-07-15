@@ -306,13 +306,14 @@ steps refer to a method in TestPlc or to a step_* module
             trace=open(trace_file,"w")
 
         # do all steps on all plcs
-        TRACE_FORMAT="TRACE: time=%(time)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
+        TIME_FORMAT="%H-%M-%S"
+        TRACE_FORMAT="TRACE: beg=%(beg)s end=%(end)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
         for (stepname,method,force) in all_step_infos:
             for (spec,obj) in all_plcs:
                 plcname=spec['name']
 
                 # run the step
-                time=strftime("%Y-%m-%d-%H-%M")
+                beg=strftime(TIME_FORMAT)
                 if not spec['disabled'] or force or self.options.interactive:
                     skip_step=False
                     if self.options.interactive:
@@ -367,7 +368,8 @@ steps refer to a method in TestPlc or to a step_* module
                     utils.header("********** IGNORED Plc %s is disabled - skipping step %s"%(plcname,stepname))
                     status="UNDEF"
                 if not self.options.dry_run:
-                    # alwas do this on stdout
+                    end=strftime(TIME_FORMAT)
+                    # always do this on stdout
                     print TRACE_FORMAT%locals()
                     # duplicate on trace_file if provided
                     if self.options.trace_file:
