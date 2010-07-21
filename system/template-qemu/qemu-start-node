@@ -38,7 +38,7 @@ CONFIG=qemu.conf
 # make sure to check qemu-kill-node for consistency
 case $TARGET_ARCH in
     i386)		QEMU=qemu ; ARGS="" ;;
-    x86_64)		QEMU=qemu-system-x86_64 ; ARGS="-no-kqemu" ;;
+    x86_64)		QEMU=qemu-system-x86_64 ; ARGS="" ;;
     *)			echo "Cannot handle TARGET_ARCH=$TARGET_ARCH"; exit 1 ;;
 esac
 
