@@ -7,8 +7,6 @@
 
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
-reservation_granularity=180
-
 def nodes(options,index):
     return [{'name':'node%d'%index,
              'node_fields': {'hostname': 'deferred-nodename%d'%index,
@@ -206,7 +204,7 @@ def tcp_tests (options,index):
         return []
 
 # the semantic for 't_from' and 't_until' here is:
-# if they are smaller than one year, they are relative to the current time
+# if they are smaller than one year, they are relative to the current time, expressed in grains
 # otherwise they are absolute
 def leases (options, index):
     leases=[]
@@ -215,8 +213,8 @@ def leases (options, index):
     slice_sequence = slices[:1] + slices + [None,]
     for iterator in range(12):
         for slice in slice_sequence:
-            leases.append ( {'slice' : slice, 't_from':counter,'t_until':counter+reservation_granularity} )
-            counter += reservation_granularity
+            leases.append ( {'slice' : slice, 't_from':counter,'t_until':counter+1} )
+            counter += 1
     return leases
 
 def plc (options,index) :
@@ -241,7 +239,7 @@ def plc (options,index) :
         'PLC_BOOT_HOST' : 'deferred-myplc-hostname',
         'PLC_NET_DNS1' : 'deferred-dns-1',
         'PLC_NET_DNS2' : 'deferred-dns-2',
-        'PLC_RESERVATION_GRANULARITY':reservation_granularity,
+        'PLC_RESERVATION_GRANULARITY':1800,
         'PLC_OMF_ENABLED' : 'false',
         'sites' : sites(options,index),
         'keys' : keys(options,index),

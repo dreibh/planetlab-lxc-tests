@@ -665,8 +665,8 @@ class TestPlc:
 
     YEAR = 365*24*3600
     @staticmethod
-    def translate_timestamp (start,timestamp):
-        if timestamp < TestPlc.YEAR:    return start+timestamp
+    def translate_timestamp (start,grain,timestamp):
+        if timestamp < TestPlc.YEAR:    return start+timestamp*grain
         else:                           return timestamp
 
     @staticmethod
@@ -677,8 +677,9 @@ class TestPlc:
         "create leases (on reservable nodes only, use e.g. run -c default -c resa)"
         now=int(time.time())
         grain=self.apiserver.GetLeaseGranularity(self.auth_root())
-        round_time=(now/grain)*grain
-        start=round_time+grain
+        print 'API answered grain=',grain
+        start=(now/grain)*grain
+        start += grain
         # find out all nodes that are reservable
         nodes=self.all_reservable_nodenames()
         if not nodes: 
@@ -690,8 +691,8 @@ class TestPlc:
         for lease_spec in self.plc_spec['leases']:
             # skip the ones that come with a null slice id
             if not lease_spec['slice']: continue
-            lease_spec['t_from']=TestPlc.translate_timestamp(start,lease_spec['t_from'])
-            lease_spec['t_until']=TestPlc.translate_timestamp(start,lease_spec['t_until'])
+            lease_spec['t_from']=TestPlc.translate_timestamp(start,grain,lease_spec['t_from'])
+            lease_spec['t_until']=TestPlc.translate_timestamp(start,grain,lease_spec['t_until'])
             lease_addition=self.apiserver.AddLeases(self.auth_root(),nodes,
                                                     lease_spec['slice'],lease_spec['t_from'],lease_spec['t_until'])
             if lease_addition['errors']:
