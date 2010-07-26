@@ -34,11 +34,19 @@ CONFIG=qemu.conf
 [ -f "$CONFIG" ] || { echo "Config file for qemu $CONFIG not found in $(pwd)" ; exit 1 ; }
 . $CONFIG
 
+# NOTE: check if the machine supports 64bits. We'll add -no-kqemu only
+# if it does. On 32bits host, qemu-system-x86_64 doesn't accept this
+# parameter (although it's there in the man page)
+function is_64bits () {
+    return $(cat /proc/cpuinfo | grep "^flags" | grep " lm " > /dev/null)
+}
+
+
 # the launcher, depending on target arch
 # make sure to check qemu-kill-node for consistency
 case $TARGET_ARCH in
     i386)		QEMU=qemu ; ARGS="" ;;
-    x86_64)		QEMU=qemu-system-x86_64 ; ARGS="" ;;
+    x86_64)		QEMU=qemu-system-x86_64 ; if is_64bits; then ARGS="-no-kqemu"; else ARGS=""; fi ;;
     *)			echo "Cannot handle TARGET_ARCH=$TARGET_ARCH"; exit 1 ;;
 esac
 
