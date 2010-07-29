@@ -79,7 +79,7 @@ def randhostname(namelengths):
     hostname = 'a' + randstr(namelengths['hostname1'], letters + digits + '-') + '1.' + \
                'b' + randstr(namelengths['hostname1'], letters + digits + '-') + '2.' + \
                'c' + randstr(namelengths['hostname2'], letters)
-    return hostname
+    return hostname.lower()
 
 def randpath(length):
     parts = []
