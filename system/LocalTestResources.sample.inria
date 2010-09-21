@@ -1,5 +1,5 @@
 #
-# $Id$
+# $Id: LocalTestResources.sample.inria 17428 2010-03-22 11:56:23Z thierry $
 # 
 # this is only an example file
 # the actual file is installed in your testmaster box as /root/LocalTestResources.py
@@ -35,15 +35,14 @@ class OnelabTestResources (TestResources):
             ('qemu64-1.pl.sophia.inria.fr', None, None),
             ('qemu64-2.pl.sophia.inria.fr', None, None),
 #            ('qemu64-3.pl.sophia.inria.fr', None, None),
-            ('qemu32-1.pl.sophia.inria.fr', None, None),
+#            ('qemu32-1.pl.sophia.inria.fr', None, None),
             ('qemu32-2.pl.sophia.inria.fr', None, None),
             ('qemu32-3.pl.sophia.inria.fr', None, None),
-            ('qemu32-4.pl.sophia.inria.fr', None, None),
-            ('qemu32-5.pl.sophia.inria.fr', None, None),
+#            ('qemu32-4.pl.sophia.inria.fr', None, None),
             ]
 
     def max_qemus (self):
-        return len(self.qemus_ip_pool())-2
+        return len(self.qemus_ip_pool())-1
 
     # 1 to 15
     def plcs_ip_pool (self):
@@ -56,4 +55,5 @@ class OnelabTestResources (TestResources):
 
     def preferred_hostname (self):
         return None
+
 local_resources = OnelabTestResources ()
