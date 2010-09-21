@@ -537,8 +537,9 @@ class TestPlc:
         tmpname='%s.plc-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',
-                     'PLC_ROOT_PASSWORD',
                      'PLC_ROOT_USER',
+                     'PLC_ROOT_PASSWORD',
+                     'PLC_SLICE_PREFIX',
                      'PLC_MAIL_ENABLED',
                      'PLC_MAIL_SUPPORT_ADDRESS',
                      'PLC_DB_HOST',
@@ -1074,7 +1075,7 @@ class TestPlc:
         tmpname='%s.sfa-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'SFA_REGISTRY_ROOT_AUTH',
-                     'SFA_REGISTRY_LEVEL1_AUTH',
+#                     'SFA_REGISTRY_LEVEL1_AUTH',
 		     'SFA_REGISTRY_HOST',
 		     'SFA_AGGREGATE_HOST',
                      'SFA_SM_HOST',
@@ -1083,7 +1084,8 @@ class TestPlc:
                      'SFA_PLC_DB_HOST',
                      'SFA_PLC_DB_USER',
                      'SFA_PLC_DB_PASSWORD',
-		     'SFA_PLC_URL']:
+		     'SFA_PLC_URL',
+                     ]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
         fileconf.write('w\n')
         fileconf.write('R\n')

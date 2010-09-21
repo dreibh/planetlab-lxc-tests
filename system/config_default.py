@@ -10,6 +10,19 @@
 
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
+### for the sfa dual setup
+def login_base (index): 
+    if index==1: return 'inria'
+    elif index==2: return 'princeton'
+    # index=3=>'sitea'  4=>'siteb' 
+    else: return 'site%s'%chr(index+94)
+
+def sfa_root (index):
+    if index==1: return 'ple'
+    elif index==2: return 'plc'
+    else: return 'plx%s'%chr(index+94)
+    
+
 def nodes(options,index):
     return [{'name':'node%d'%index,
              'node_fields': {'hostname': 'deferred-nodename%d'%index,
@@ -78,9 +91,9 @@ def all_usernames (options):
     return [ user['name'] for user in users(options)]
 
 def sites (options,index):
-    return [ {'site_fields' : {'name':'mainsite',
-                               'login_base':'main',
-                               'abbreviated_name':'PLanettest',
+    return [ {'site_fields' : {'name':'main site for plc number %d'%index,
+                               'login_base':login_base(index),
+                               'abbreviated_name':'PlanetTest%d'%index,
                                'max_slices':100,
                                'url':'http://test.onelab.eu',
                                },
@@ -88,7 +101,7 @@ def sites (options,index):
                                   'city':'sophia',
                                   'state':'fr',
                                   'postalcode':'06600',
-                                  'country':'france',
+                                  'country':'France',
                                   },
               'users' : users(options),
               'nodes': nodes(options,index),
@@ -167,7 +180,7 @@ done
     return initscripts
 
 def slices (options,index):
-    return [ { 'slice_fields': {'name':'main_pslc%d'%i,
+    return [ { 'slice_fields': {'name':'%s_pslc%d'%(login_base(index),i),
                                 'instantiation':'plc-instantiated',
                                 'url':'http://foo.com',
                                 'description':'testslice number %d'%i,
@@ -175,8 +188,8 @@ def slices (options,index):
                                 },
                'usernames' : [ 'pi','tech','techuser' ],
                'nodenames' : all_nodenames(options,index),
-               'initscriptname' : 'script%d'%i,
-               'sitename' : 'main',
+               'initscriptname' : 'script%d'%(((i-1)%2)+1),
+               'sitename' : login_base(index),
                'owner' : 'pi',
                } for i in range (2*index-1,2*index+1) ]
 
@@ -188,18 +201,18 @@ def tcp_tests (options,index):
         return [
             # local test
             { 'server_node': 'node1',
-              'server_slice' : 'main_pslc1',
+              'server_slice' : '%s_pslc1'%login_base(index),
               'client_node' : 'node1',
-              'client_slice' : 'main_pslc1',
+              'client_slice' : '%s_pslc1'%login_base(index),
               'port' : 2000,
               }]
     elif index == 2:
         return [
             # remote test
             { 'server_node': 'node1',
-              'server_slice' : 'main_pslc1',
+              'server_slice' : '%s_pslc1'%login_base(index),
               'client_node' : 'node2',
-              'client_slice' : 'main_pslc2',
+              'client_slice' : '%s_pslc2'%login_base(index),
               'port' : 4000,
               },
             ]
@@ -229,9 +242,10 @@ def plc (options,index) :
         'vservername': 'deferred-vservername',
         'vserverip': 'deferred-vserverip',
         'role' : 'root',
+        'PLC_NAME' : 'Regression TestLab',
         'PLC_ROOT_USER' : 'root@test.onelab.eu',
         'PLC_ROOT_PASSWORD' : 'test++',
-        'PLC_NAME' : 'Regression TestLab',
+        'PLC_SLICE_PREFIX' : 'auto',
         'PLC_SHORTNAME' : 'Rlab',
         'PLC_MAIL_ENABLED':'false',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
@@ -254,13 +268,9 @@ def plc (options,index) :
     }
 
 def sfa (options,index) :
-    if index==1:
-	root_auth='plc'
-    else:
-	root_auth='ple'
     return { 
-        'SFA_REGISTRY_ROOT_AUTH' : root_auth,
-        'SFA_REGISTRY_LEVEL1_AUTH' : '',
+        'SFA_REGISTRY_ROOT_AUTH' : sfa_root(index),
+#        'SFA_REGISTRY_LEVEL1_AUTH' : '',
 	'SFA_REGISTRY_HOST' : 'deferred-myplc-hostname',
 	'SFA_AGGREGATE_HOST': 'deferred-myplc-hostname',
 	'SFA_SM_HOST': 'deferred-myplc-hostname',
@@ -277,44 +287,35 @@ def sfa (options,index) :
     }
 
 def slices_sfa (options,index):
-    return [ { 'slice_fields': {'name':'main_fslc1',
+    return [ { 'slice_fields': {'name':'%s_fslc1'%login_base(index),
                                 'url':'http://foo%d@foo.com'%index,
                                 'description':'SFA-testing',
                                 'max_nodes':2,
                                 },
                'usernames' : [ ('sfafakeuser1','key1') ],
                'nodenames' : all_nodenames(options,index),
-               'sitename' : 'main',
+               'sitename' : login_base(index),
                }]
 
 def sfa_slice_xml(options,index):
-    if index==1:
-	hrn='plc.main.fslc1'
-	researcher='plc.main.fake-pi1'
-    else:
-	hrn='ple.main.fslc1'
-	researcher='ple.main.fake-pi1'
+    prefix='%s.%s'%(sfa_root(index),login_base(index))
+    hrn=prefix+'.fslc1'
+    researcher=prefix+'.fake-pi1'
 
     return  ['<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/"><researcher>%s</researcher></record>'%(hrn, researcher)]
 
 def sfa_person_xml(options,index):
-    if index==1:
-        hrn='plc.main.sfafakeuser1'
-    else:
-        hrn='ple.main.sfafakeuser1'
+    prefix='%s.%s'%(sfa_root(index),login_base(index))
+    hrn=prefix+'.sfafakeuser1'
 
-    return ['<record email="sfafakeuser1@onelab.eu" enabled="True" first_name="Fake" hrn="%s" last_name="Sfa" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>plc.main</sites></record>'%(hrn,hrn,public_key)]
+    return ['<record email="sfafakeuser1@onelab.eu" enabled="True" first_name="Fake" hrn="%s" last_name="Sfa" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%s</sites></record>'%(hrn,hrn,public_key,prefix)]
 
 def sfa_slice_rspec(options,index):
     node_name='deferred'
-    if index==1:
-       netspec_name='\"plc\"'
-    else:
-       netspec_name='\"ple\"'
 
     return { 
         'part1' : '<?xml version="1.0" ?><Rspec><networks><NetSpec name=',
-        'part2' : '%s'%netspec_name,
+        'part2' : '%s'%sfa_root(index),
         'part3' : '><nodes><NodeSpec cpu_min="" cpu_pct="" cpu_share="" disk_max="" init_params="" name=\"',
         'part4' : '%s'%node_name,
         'part5' : '\" start_time="" type=""><net_if><IfSpec init_params="" ip_spoof="" max_kbyte="" max_rate="" min_rate="" name="True" type="ipv4"/></net_if></NodeSpec></nodes></NetSpec></networks></Rspec>',
