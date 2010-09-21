@@ -1,5 +1,7 @@
 #
-# Thierry Parmentelat - INRIA Sophia Antipolis 
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 #
 # pool class
 # 

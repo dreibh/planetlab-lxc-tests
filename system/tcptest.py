@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 import sys
 import time
 from optparse import OptionParser    

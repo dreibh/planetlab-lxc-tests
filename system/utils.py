@@ -1,4 +1,6 @@
-# $Id$
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 import time, os, re, glob, sys
 from pprint import PrettyPrinter
 

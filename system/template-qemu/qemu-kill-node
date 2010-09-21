@@ -1,5 +1,8 @@
 #!/bin/sh
-# $Id$
+#
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 COMMAND=$(basename $0)
 cd $(dirname $0)
 THISNODE=$(basename $(pwd -P) | sed -e s,qemu-,,)

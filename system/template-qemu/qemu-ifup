@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 # this is the script provided to the qemu command-line, that qemu invokes to init the net device
 # basically this adds the interface to the bridge
 

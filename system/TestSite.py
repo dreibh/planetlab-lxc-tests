@@ -1,3 +1,6 @@
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 import os.path
 import datetime
 import time

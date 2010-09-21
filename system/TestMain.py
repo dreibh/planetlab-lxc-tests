@@ -1,6 +1,8 @@
 #!/usr/bin/python -u
-# $Id$
 
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 import sys, os, os.path
 from optparse import OptionParser
 import traceback
@@ -18,7 +20,7 @@ import LocalTestResources
 
 class TestMain:
 
-    subversion_id = "$Id$"
+    subversion_id = "Now using git -- version tracker broken"
 
     default_config = [ 'default' ] 
 
@@ -58,13 +60,6 @@ class TestMain:
                     except:
                         print "*** no doc found"
 
-    @staticmethod
-    def optparse_list (option, opt, value, parser):
-        try:
-            setattr(parser.values,option.dest,getattr(parser.values,option.dest)+value.split())
-        except:
-            setattr(parser.values,option.dest,value.split())
-
     def run (self):
         self.init_steps()
         usage = """usage: %%prog [options] steps
@@ -83,8 +78,7 @@ steps refer to a method in TestPlc or to a step_* module
                           help="URL of the arch-dependent RPMS area - for locating what to test")
         parser.add_option("-b","--build",action="store", dest="build_url", 
                           help="ignored, for legacy only")
-        parser.add_option("-c","--config",action="callback", callback=TestMain.optparse_list, dest="config",
-                          nargs=1,type="string",
+        parser.add_option("-c","--config",action="append", dest="config", default=[],
                           help="Config module - can be set multiple times, or use quotes")
         parser.add_option("-p","--personality",action="store", dest="personality", 
                           help="personality - as in vbuild-nightly")
@@ -92,21 +86,17 @@ steps refer to a method in TestPlc or to a step_* module
                           help="pldistro - as in vbuild-nightly")
         parser.add_option("-f","--fcdistro",action="store", dest="fcdistro", 
                           help="fcdistro - as in vbuild-nightly")
-        parser.add_option("-x","--exclude",action="callback", callback=TestMain.optparse_list, dest="exclude",
-                          nargs=1,type="string",default=[],
+        parser.add_option("-x","--exclude",action="append", dest="exclude", default=[],
                           help="steps to exclude - can be set multiple times, or use quotes")
         parser.add_option("-a","--all",action="store_true",dest="all_steps", default=False,
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
                           help="List known steps")
-        parser.add_option("-N","--nodes",action="callback", callback=TestMain.optparse_list, dest="ips_node",
-                          nargs=1,type="string",
+        parser.add_option("-N","--nodes",action="append", dest="ips_node", default=[],
                           help="Specify the set of hostname/IP's to use for nodes")
-        parser.add_option("-P","--plcs",action="callback", callback=TestMain.optparse_list, dest="ips_plc",
-                          nargs=1,type="string",
+        parser.add_option("-P","--plcs",action="append", dest="ips_plc", default=[],
                           help="Specify the set of hostname/IP's to use for plcs")
-        parser.add_option("-Q","--qemus",action="callback", callback=TestMain.optparse_list, dest="ips_qemu",
-                          nargs=1,type="string",
+        parser.add_option("-Q","--qemus",action="append", dest="ips_qemu", default=[],
                           help="Specify the set of hostname/IP's to use for qemu boxes")
         parser.add_option("-s","--size",action="store",type="int",dest="size",default=1,
                           help="sets test size in # of plcs - default is 1")
@@ -124,6 +114,19 @@ steps refer to a method in TestPlc or to a step_* module
                           #default="logs/trace-@TIME@.txt",
                           help="Trace file location")
         (self.options, self.args) = parser.parse_args()
+
+        # allow things like "run -c 'c1 c2' -c c3"
+        def flatten (x):
+            result = []
+            for el in x:
+                if hasattr(el, "__iter__") and not isinstance(el, basestring):
+                    result.extend(flatten(el))
+                else:
+                    result.append(el)
+            return result
+        # flatten relevant options
+        for optname in ['config','exclude','ips_node','ips_plc','ips_qemu']:
+            setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
 
         # handle defaults and option persistence
         for (recname,filename,default) in (

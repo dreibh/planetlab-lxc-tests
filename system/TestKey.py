@@ -1,3 +1,6 @@
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 import utils
 import os, os.path
 from TestSsh import TestSsh

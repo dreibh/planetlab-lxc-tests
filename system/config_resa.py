@@ -1,3 +1,6 @@
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 # a configuration module is expected:
 # (*) to define a config method
 # (*) that takes two arguments

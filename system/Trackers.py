@@ -1,6 +1,8 @@
 #!/usr/bin/python
-# $Id$
 
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 import os
 
 import utils

@@ -1,5 +1,6 @@
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
 #
-# $Id: LocalTestResources.sample.inria 17428 2010-03-22 11:56:23Z thierry $
 # 
 # this is only an example file
 # the actual file is installed in your testmaster box as /root/LocalTestResources.py

@@ -1,3 +1,6 @@
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 from TestPlc import TestPlc
 
 def run01_uninstall (test_plc):

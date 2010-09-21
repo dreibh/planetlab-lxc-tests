@@ -1,3 +1,6 @@
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 # a configuration module is expected:
 # (*) to define a config method
 # (*) that takes two arguments
@@ -292,7 +295,7 @@ def sfa_slice_xml(options,index):
 	hrn='ple.main.fslc1'
 	researcher='ple.main.fake-pi1'
 
-    return  ["""<record hrn="%s" type="slice" description="SFA-testing" url="http://anil.onelab.eu/"><researcher>%s</researcher></record>"""%(hrn, researcher)]
+    return  ['<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/"><researcher>%s</researcher></record>'%(hrn, researcher)]
 
 def sfa_person_xml(options,index):
     if index==1:
@@ -300,7 +303,7 @@ def sfa_person_xml(options,index):
     else:
         hrn='ple.main.sfafakeuser1'
 
-    return ["""<record email="sfafakeuser1@onelab.eu" enabled="True" first_name="Anil" hrn="%s" last_name="Kumar" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>plc.main</sites></record>"""%(hrn,hrn,public_key)]
+    return ['<record email="sfafakeuser1@onelab.eu" enabled="True" first_name="Fake" hrn="%s" last_name="Sfa" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>plc.main</sites></record>'%(hrn,hrn,public_key)]
 
 def sfa_slice_rspec(options,index):
     node_name='deferred'
@@ -309,11 +312,12 @@ def sfa_slice_rspec(options,index):
     else:
        netspec_name='\"ple\"'
 
-    return { 'part1' : """<?xml version="1.0" ?><Rspec><networks><NetSpec name=""",
-             'part2' : "%s"%netspec_name,
-	     'part3' : """><nodes><NodeSpec cpu_min="" cpu_pct="" cpu_share="" disk_max="" init_params="" name=\"""",
-	     'part4' : "%s"%node_name,
-             'part5' : """\" start_time="" type=""><net_if><IfSpec init_params="" ip_spoof="" max_kbyte="" max_rate="" min_rate="" name="True" type="ipv4"/></net_if></NodeSpec></nodes></NetSpec></networks></Rspec>"""
+    return { 
+        'part1' : '<?xml version="1.0" ?><Rspec><networks><NetSpec name=',
+        'part2' : '%s'%netspec_name,
+        'part3' : '><nodes><NodeSpec cpu_min="" cpu_pct="" cpu_share="" disk_max="" init_params="" name=\"',
+        'part4' : '%s'%node_name,
+        'part5' : '\" start_time="" type=""><net_if><IfSpec init_params="" ip_spoof="" max_kbyte="" max_rate="" min_rate="" name="True" type="ipv4"/></net_if></NodeSpec></nodes></NetSpec></networks></Rspec>',
            }
              
 def config (plc_specs,options):

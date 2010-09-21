@@ -1,4 +1,6 @@
-# $Id$
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 # wrapper to xmlrpc server, that support dry-run commands
 # we dont want to have to depend on PLCAPI, so:
 import xmlrpclib

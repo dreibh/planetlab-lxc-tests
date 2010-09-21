@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 # Establishment of a runtime environment for a
 # virtual  machine  under QEMU, This script allows the host box
 # to share its network connection with qemu-based guests

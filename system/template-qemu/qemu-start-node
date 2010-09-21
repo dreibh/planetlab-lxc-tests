@@ -1,6 +1,8 @@
 #!/bin/bash
-# $Id$
 
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 # it does the following:
 # (*) close all file descriptors and redirect output to log.txt 
 #     this is because it is designed for use through ssh from a remote test master controller

@@ -1,4 +1,6 @@
-# $Id$
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
 # this models a box that hosts qemu nodes
 # could probably also be used for boxes that host plc instances
 import os.path

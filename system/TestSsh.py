@@ -1,5 +1,5 @@
-#
-# Thierry Parmentelat - INRIA
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
 #
 # class for issuing commands on a box, either local or remote
 #

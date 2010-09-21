@@ -5,8 +5,6 @@
 # Mark Huang <mlhuang@cs.princeton.edu>
 # Copyright (C) 2006 The Trustees of Princeton University
 #
-# $Id$
-#
 
 from pprint import pprint
 from string import letters, digits, punctuation, whitespace

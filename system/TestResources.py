@@ -1,7 +1,6 @@
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
 #
-# $Id$
-#
-
 import sys
 import traceback
 
