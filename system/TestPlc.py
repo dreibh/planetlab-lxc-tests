@@ -1108,6 +1108,7 @@ class TestPlc:
         return self.run_in_guest('service sfa start')==0
 
     def setup_sfa(self):
+        sfa_spec=self.plc_spec['sfa']
         "sfi client configuration"
 	dir_name=".sfi"
 	if os.path.exists(dir_name):
@@ -1120,23 +1121,23 @@ class TestPlc:
 
 	file_name=dir_name + os.sep + 'sfi_config'
         fileconf=open(file_name,'w')
-	SFI_AUTH=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']+".main"
+	SFI_AUTH="%s.%s"%(sfa_spec['SFA_REGISTRY_ROOT_AUTH'],sfa_spec['login_base'])
         fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
 	fileconf.write('\n')
 	SFI_USER=SFI_AUTH+'.fake-pi1'
         fileconf.write ("SFI_USER='%s'"%SFI_USER)
 	fileconf.write('\n')
-	SFI_REGISTRY='http://' + self.plc_spec['sfa']['SFA_PLC_DB_HOST'] + ':12345/'
+	SFI_REGISTRY='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12345/'
         fileconf.write ("SFI_REGISTRY='%s'"%SFI_REGISTRY)
 	fileconf.write('\n')
-	SFI_SM='http://' + self.plc_spec['sfa']['SFA_PLC_DB_HOST'] + ':12347/'
+	SFI_SM='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12347/'
         fileconf.write ("SFI_SM='%s'"%SFI_SM)
 	fileconf.write('\n')
         fileconf.close()
 
 	file_name=dir_name + os.sep + 'person.xml'
         fileconf=open(file_name,'w')
-	for record in self.plc_spec['sfa']['sfa_person_xml']:
+	for record in sfa_spec['sfa_person_xml']:
 	   person_record=record
 	fileconf.write(person_record)
 	fileconf.write('\n')
@@ -1144,9 +1145,9 @@ class TestPlc:
 
 	file_name=dir_name + os.sep + 'slice.xml'
         fileconf=open(file_name,'w')
-	for record in self.plc_spec['sfa']['sfa_slice_xml']:
+	for record in sfa_spec['sfa_slice_xml']:
 	    slice_record=record
-	#slice_record=self.plc_spec['sfa']['sfa_slice_xml']
+	#slice_record=sfa_spec['sfa_slice_xml']
 	fileconf.write(slice_record)
 	fileconf.write('\n')
         fileconf.close()
@@ -1154,7 +1155,7 @@ class TestPlc:
 	file_name=dir_name + os.sep + 'slice.rspec'
         fileconf=open(file_name,'w')
 	slice_rspec=''
-	for (key, value) in self.plc_spec['sfa']['sfa_slice_rspec'].items():
+	for (key, value) in sfa_spec['sfa_slice_rspec'].items():
 	    slice_rspec +=value 
 	fileconf.write(slice_rspec)
 	fileconf.write('\n')

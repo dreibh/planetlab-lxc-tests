@@ -283,7 +283,8 @@ def sfa (options,index) :
         'slices_sfa' : slices_sfa(options,index),
 	'sfa_slice_xml' : sfa_slice_xml(options,index),
 	'sfa_person_xml' : sfa_person_xml(options,index),
-	'sfa_slice_rspec' : sfa_slice_rspec(options,index)
+	'sfa_slice_rspec' : sfa_slice_rspec(options,index),
+        'login_base' : login_base(index),
     }
 
 def slices_sfa (options,index):
