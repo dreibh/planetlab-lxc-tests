@@ -267,14 +267,19 @@ steps refer to a method in TestPlc or to a step_* module
         for step in self.options.steps:
             if not TestPlc.valid_step(step):
                 continue
+            # some steps need to be done no regardless of the previous ones: we force them
             force=False
-            # is it a forced step
             if step.find("force_") == 0:
                 step=step.replace("force_","")
                 force=True
+            # a cross step will run a method on TestPlc that has a signature like
+            # def cross_foo (self, all_test_plcs)
+            cross=False
+            if step.find("cross_") == 0:
+                cross=True
             # try and locate a method in TestPlc
             if testplc_method_dict.has_key(step):
-                all_step_infos += [ (step, testplc_method_dict[step] , force)]
+                all_step_infos += [ (step, testplc_method_dict[step] , force, cross)]
             # otherwise search for the 'run' method in the step_<x> module
             else:
                 modulename='step_'+step
@@ -285,7 +290,7 @@ steps refer to a method in TestPlc or to a step_* module
                     if not names:
                         raise Exception,"No run* method in module %s"%modulename
                     names.sort()
-                    all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force) for name in names ]
+                    all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force,cross) for name in names ]
                 except :
                     print '********** step %s NOT FOUND -- ignored'%(step)
                     traceback.print_exc()
@@ -311,9 +316,10 @@ steps refer to a method in TestPlc or to a step_* module
         # do all steps on all plcs
         TIME_FORMAT="%H-%M-%S"
         TRACE_FORMAT="TRACE: beg=%(beg)s end=%(end)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
-        for (stepname,method,force) in all_step_infos:
-            for (spec,obj) in all_plcs:
+        for (stepname,method,force,cross) in all_step_infos:
+            for (spec,plc_obj) in all_plcs:
                 plcname=spec['name']
+                across_plcs = [ o for (s,o) in all_plcs if o!=plc_obj ]
 
                 # run the step
                 beg=strftime(TIME_FORMAT)
@@ -335,13 +341,14 @@ steps refer to a method in TestPlc or to a step_* module
                             elif answer in ['d']:       # dry_run
                                 dry_run=self.options.dry_run
                                 self.options.dry_run=True
-                                obj.options.dry_run=True
-                                obj.apiserver.set_dry_run(True)
-                                step_result=method(obj)
+                                plc_obj.options.dry_run=True
+                                plc_obj.apiserver.set_dry_run(True)
+                                if not cross:   step_result=method(plc_obj)
+                                else:           step_result=method(plc_obj,across_plcs)
                                 print 'dry_run step ->',step_result
                                 self.options.dry_run=dry_run
-                                obj.options.dry_run=dry_run
-                                obj.apiserver.set_dry_run(dry_run)
+                                plc_obj.options.dry_run=dry_run
+                                plc_obj.apiserver.set_dry_run(dry_run)
                             elif answer in ['r','y']:   # run/yes
                                 prompting=False
                     if skip_step:
@@ -350,7 +357,8 @@ steps refer to a method in TestPlc or to a step_* module
                         force_msg=""
                         if force: force_msg=" (forced)"
                         utils.header("********** RUNNING step %s%s on plc %s"%(stepname,force_msg,plcname))
-                        step_result = method(obj)
+                        if not cross:   step_result = method(plc_obj)
+                        else:           step_result = method(plc_obj,across_plcs)
                         if step_result:
                             utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
                             status="OK"

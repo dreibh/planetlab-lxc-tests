@@ -95,7 +95,7 @@ class TestPlc:
         'kill_all_qemus', 'start_node', SEP,
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
-	'install_sfa', 'configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
+	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
         'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEPSFA,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
         'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEPSFA,
@@ -1094,6 +1094,34 @@ class TestPlc:
         utils.system('cat %s'%tmpname)
         self.run_in_guest_piped('cat %s'%tmpname,'sfa-config-tty')
         utils.system('rm %s'%tmpname)
+        return True
+
+    def aggregate_xml_line(self):
+        return '<aggregate addr="%s" hrn="%s" port="12346"/>' % \
+            (self.vserverip,self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'])
+
+    def registry_xml_line(self):
+        return '<registry addr="%s" hrn="%s" port="12345"/>' % \
+            (self.vserverip,self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'])
+
+
+    # a cross step that takes all other plcs in argument
+    def cross_configure_sfa(self, other_plcs):
+        # of course with a single plc, other_plcs is an empty list
+        if other_plcs:
+            filename="%s-agg.xml"%self.name()
+            agg_file=file(filename,"w")
+            agg_file.write("<aggregates>%s</aggregates>\n" % \
+                               " ".join([ plc.aggregate_xml_line() for plc in other_plcs ]))
+            agg_file.close()
+            if self.test_ssh.copy_abs(filename,'/vservers/%s/etc/sfa/aggregates.xml'%self.vservername) !=0 : return False
+
+            filename="%s-reg.xml"%self.name()
+            agg_file=file(filename,"w")
+            agg_file.write("<registries>%s</registries>\n" % \
+                               " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
+            agg_file.close()
+            if self.test_ssh.copy_abs(filename,'/vservers/%s/etc/sfa/aggregates.xml'%self.vservername) !=0 : return False
         return True
 
     def import_sfa(self):
