@@ -71,7 +71,7 @@ def slice_mapper_options_sfa (method):
 	test_plc=self
         overall=True
         slice_method = TestSliceSfa.__dict__[method.__name__]
-        for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+        for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
             test_slice=TestSliceSfa(test_plc,test_site,slice_spec)
@@ -96,7 +96,7 @@ class TestPlc:
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
-        'setup_sfa', 'add_sfa', 'update_sfa', 'view_sfa', SEPSFA,
+        'configure_sfi', 'add_sfa', 'update_sfa', 'view_sfa', SEPSFA,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
         'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEPSFA,
         'check_tcp',  'check_hooks',  SEP,
@@ -110,6 +110,7 @@ class TestPlc:
         'clean_leases', 'list_leases', SEP,
         'populate' , SEP,
         'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
+        'plcclean_sfa', 'dbclean_sfa', 'uninstall_sfa', 'clean_sfi', SEP,
         'db_dump' , 'db_restore', SEP,
         'standby_1 through 20',SEP,
         ]
@@ -1061,13 +1062,33 @@ class TestPlc:
     ### install_sfa_rpm
     def install_sfa(self):
         "yum install sfa, sfa-plc and sfa-client"
-        if self.options.personality == "linux32":
-            arch = "i386"
-        elif self.options.personality == "linux64":
-            arch = "x86_64"
-        else:
-            raise Exception, "Unsupported personality %r"%self.options.personality
         return self.run_in_guest("yum -y install sfa sfa-client sfa-plc sfa-sfatables")==0
+
+    def dbclean_sfa(self):
+        "thoroughly wipes off the SFA database"
+        return self.run_in_guest("sfa-nuke-plc.py")==0
+
+    def plcclean_sfa(self):
+        "cleans the PLC entries that were created as a side effect of running the script"
+        # ignore result 
+        sfa_spec=self.plc_spec['sfa']
+
+        slicename='%s_%s'%(sfa_spec['login_base'],sfa_spec['slicename'])
+        try: self.apiserver.DeleteSlice(self.auth_root(),slicename)
+        except: print "Slice %s already absent from PLC db"%slicename
+
+        username="%s@%s"%(sfa_spec['regularuser'],sfa_spec['domain'])
+        try: self.apiserver.DeletePerson(self.auth_root(),username)
+        except: print "User %s already absent from PLC db"%username
+
+        print "REMEMBER TO RUN import_sfa AGAIN"
+        return True
+
+    def uninstall_sfa(self):
+        "uses rpm to uninstall sfa - ignore result"
+        self.run_in_guest("rpm -e sfa sfa-sfatables sfa-client sfa-plc")
+        self.run_in_guest("rm -rf /var/lib/sfa")
+        return True
 
     ###
     def configure_sfa(self):
@@ -1075,6 +1096,7 @@ class TestPlc:
         tmpname='%s.sfa-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'SFA_REGISTRY_ROOT_AUTH',
+                     'SFA_INTERFACE_HRN',
 #                     'SFA_REGISTRY_LEVEL1_AUTH',
 		     'SFA_REGISTRY_HOST',
 		     'SFA_AGGREGATE_HOST',
@@ -1135,14 +1157,14 @@ class TestPlc:
         "service sfa start"
         return self.run_in_guest('service sfa start')==0
 
-    def setup_sfa(self):
+    def configure_sfi(self):
         sfa_spec=self.plc_spec['sfa']
         "sfi client configuration"
 	dir_name=".sfi"
 	if os.path.exists(dir_name):
            utils.system('rm -rf %s'%dir_name)
 	utils.system('mkdir %s'%dir_name)
-	file_name=dir_name + os.sep + 'fake-pi1.pkey'
+	file_name=dir_name + os.sep + sfa_spec['piuser'] + '.pkey'
         fileconf=open(file_name,'w')
         fileconf.write (self.plc_spec['keys'][0]['private'])
         fileconf.close()
@@ -1152,7 +1174,7 @@ class TestPlc:
 	SFI_AUTH="%s.%s"%(sfa_spec['SFA_REGISTRY_ROOT_AUTH'],sfa_spec['login_base'])
         fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
 	fileconf.write('\n')
-	SFI_USER=SFI_AUTH+'.fake-pi1'
+	SFI_USER=SFI_AUTH + '.' + sfa_spec['piuser']
         fileconf.write ("SFI_USER='%s'"%SFI_USER)
 	fileconf.write('\n')
 	SFI_REGISTRY='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12345/'
@@ -1196,39 +1218,44 @@ class TestPlc:
         utils.system('rm -rf %s'%dir_name)
         return True
 
+    def clean_sfi (self):
+        self.run_in_guest("rm -rf /root/.sfi")
+        return True
+
     def add_sfa(self):
         "run sfi.py add (on Registry) and sfi.py create (on SM) to form new objects"
 	test_plc=self
         test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
-        success=test_user_sfa.add_user()
+        if not test_user_sfa.add_user(): return False
 
-	for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
 	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
-	    success1=test_slice_sfa.add_slice()
-	    success2=test_slice_sfa.create_slice()
-	return success and success1 and success2
+	    if not test_slice_sfa.add_slice(): return False
+	    if not test_slice_sfa.create_slice(): return False
+        return True
 
     def update_sfa(self):
         "run sfi.py update (on Registry) and sfi.py create (on SM) on existing objects"
 	test_plc=self
 	test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
-	success1=test_user_sfa.update_user()
+	if not test_user_sfa.update_user(): return False
 	
-	for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
 	    site_spec = self.locate_site (slice_spec['sitename'])
 	    test_site = TestSite(self,site_spec)
 	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
-	    success2=test_slice_sfa.update_slice()
-	return success1 and success2
+	    if not test_slice_sfa.update_slice(): return False
+        return True
 
     def view_sfa(self):
         "run sfi.py list and sfi.py show (both on Registry) and sfi.py slices and sfi.py resources (both on SM)"
-	auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+        sfa_spec=self.plc_spec['sfa']
+	auth=sfa_spec['SFA_REGISTRY_ROOT_AUTH']
 	return \
-	self.run_in_guest("sfi.py -d /root/.sfi/ list %s.main"%auth)==0 and \
-	self.run_in_guest("sfi.py -d /root/.sfi/ show %s.main"%auth)==0 and \
+	self.run_in_guest("sfi.py -d /root/.sfi/ list %s.%s"%(auth,sfa_spec['login_base']))==0 and \
+	self.run_in_guest("sfi.py -d /root/.sfi/ show %s.%s"%(auth,sfa_spec['login_base']))==0 and \
 	self.run_in_guest("sfi.py -d /root/.sfi/ slices")==0 and \
 	self.run_in_guest("sfi.py -d /root/.sfi/ resources -o resources")==0
 
@@ -1242,7 +1269,7 @@ class TestPlc:
 	test_plc=self
 	test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
 	success1=test_user_sfa.delete_user()
-	for slice_spec in self.plc_spec['sfa']['slices_sfa']:
+	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
 	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)

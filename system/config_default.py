@@ -10,6 +10,8 @@
 
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
+domain="onelab.eu"
+
 ### for the sfa dual setup
 def login_base (index): 
     if index==1: return 'inria'
@@ -46,7 +48,6 @@ def all_nodenames (options,index):
     return [ node['name'] for node in nodes(options,index)]
 
 def users (options) :
-    domain="onelab.eu"
     return [ {'name' : 'pi', 'keynames' : [ 'key1' ],
               'user_fields' : {'first_name':'PI', 'last_name':'PI',
                                'enabled':'True',
@@ -268,8 +269,12 @@ def plc (options,index) :
     }
 
 def sfa (options,index) :
+    piuser='fake-pi%d'%index
+    regularuser='sfafakeuser%d'%index
+    slicename='fslc%d'%index
     return { 
         'SFA_REGISTRY_ROOT_AUTH' : sfa_root(index),
+        'SFA_INTERFACE_HRN' : sfa_root(index),
 #        'SFA_REGISTRY_LEVEL1_AUTH' : '',
 	'SFA_REGISTRY_HOST' : 'deferred-myplc-hostname',
 	'SFA_AGGREGATE_HOST': 'deferred-myplc-hostname',
@@ -280,36 +285,42 @@ def sfa (options,index) :
         'SFA_PLC_DB_USER' : 'pgsqluser',
         'SFA_PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
-        'slices_sfa' : slices_sfa(options,index),
-	'sfa_slice_xml' : sfa_slice_xml(options,index),
-	'sfa_person_xml' : sfa_person_xml(options,index),
+        'sfa_slice_specs' : sfa_slice_specs(options,index,slicename,regularuser),
+	'sfa_slice_xml' : sfa_slice_xml(options,index,piuser,slicename),
+	'sfa_person_xml' : sfa_person_xml(options,index,regularuser),
 	'sfa_slice_rspec' : sfa_slice_rspec(options,index),
         'login_base' : login_base(index),
+        'piuser' : piuser,
+        'regularuser':regularuser,
+        'slicename' : slicename,
+        'domain':domain,
     }
 
-def slices_sfa (options,index):
-    return [ { 'slice_fields': {'name':'%s_fslc1'%login_base(index),
+def sfa_slice_specs (options,index,slicename,regularuser):
+    return [ { 'slice_fields': {'name':'%s_%s'%(login_base(index),slicename),
                                 'url':'http://foo%d@foo.com'%index,
                                 'description':'SFA-testing',
                                 'max_nodes':2,
                                 },
-               'usernames' : [ ('sfafakeuser1','key1') ],
+               'usernames' : [ (regularuser,'key1') ],
                'nodenames' : all_nodenames(options,index),
                'sitename' : login_base(index),
                }]
 
-def sfa_slice_xml(options,index):
+def sfa_slice_xml(options,index,piuser,slicename):
     prefix='%s.%s'%(sfa_root(index),login_base(index))
-    hrn=prefix+'.fslc1'
-    researcher=prefix+'.fake-pi1'
+    hrn=prefix+'.'+slicename
+    researcher=prefix+'.'+piuser
 
     return  ['<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/"><researcher>%s</researcher></record>'%(hrn, researcher)]
 
-def sfa_person_xml(options,index):
+def sfa_person_xml(options,index,regularuser):
     prefix='%s.%s'%(sfa_root(index),login_base(index))
-    hrn=prefix+'.sfafakeuser1'
+    hrn=prefix+'.'+regularuser
+    mail="%s@%s"%(regularuser,domain)
+    key=public_key
 
-    return ['<record email="sfafakeuser1@onelab.eu" enabled="True" first_name="Fake" hrn="%s" last_name="Sfa" name="%s" type="user"><keys>%s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%s</sites></record>'%(hrn,hrn,public_key,prefix)]
+    return ['<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(hrn)s" last_name="Sfa" name="%(hrn)s" type="user"><keys>%(key)s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%(prefix)s</sites></record>'%locals()]
 
 def sfa_slice_rspec(options,index):
     node_name='deferred'

@@ -191,7 +191,7 @@ steps refer to a method in TestPlc or to a step_* module
         if self.options.list_steps:
             self.init_steps()
             self.list_steps()
-            sys.exit(1)
+            return True
 
         # steps
         if not self.options.steps:
