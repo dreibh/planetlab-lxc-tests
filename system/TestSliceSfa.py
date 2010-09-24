@@ -16,7 +16,6 @@ class TestSliceSfa:
     def __init__ (self,test_plc,test_site,slice_spec):
 	self.test_plc=test_plc
 	self.test_site=test_site
-	#self.slice_spec=plc_spec_sfa['slices_sfa'][0]
 	self.slice_spec=slice_spec
         self.test_ssh=TestSsh(self.test_plc.test_ssh)
         # shortcuts

@@ -1224,28 +1224,26 @@ class TestPlc:
 
     def add_sfa(self):
         "run sfi.py add (on Registry) and sfi.py create (on SM) to form new objects"
-	test_plc=self
-        test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
+        test_user_sfa=TestUserSfa(self)
         if not test_user_sfa.add_user(): return False
 
 	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
-	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
+	    test_slice_sfa=TestSliceSfa(self,test_site,slice_spec)
 	    if not test_slice_sfa.add_slice(): return False
 	    if not test_slice_sfa.create_slice(): return False
         return True
 
     def update_sfa(self):
         "run sfi.py update (on Registry) and sfi.py create (on SM) on existing objects"
-	test_plc=self
-	test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
+	test_user_sfa=TestUserSfa(self)
 	if not test_user_sfa.update_user(): return False
 	
 	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
 	    site_spec = self.locate_site (slice_spec['sitename'])
 	    test_site = TestSite(self,site_spec)
-	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
+	    test_slice_sfa=TestSliceSfa(self,test_site,slice_spec)
 	    if not test_slice_sfa.update_slice(): return False
         return True
 
@@ -1266,13 +1264,12 @@ class TestPlc:
 
     def delete_sfa(self):
 	"run sfi.py delete (on SM), sfi.py remove (on Registry)"
-	test_plc=self
-	test_user_sfa=TestUserSfa(test_plc,self.plc_spec['sfa'])
+	test_user_sfa=TestUserSfa(self)
 	success1=test_user_sfa.delete_user()
 	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
-	    test_slice_sfa=TestSliceSfa(test_plc,test_site,slice_spec)
+	    test_slice_sfa=TestSliceSfa(self,test_site,slice_spec)
 	    success2=test_slice_sfa.delete_slice()
 
 	return success1 and success2
