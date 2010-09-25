@@ -516,22 +516,23 @@ class TestPlc:
         if self.options.fcdistro == "centos5":
             self.run_in_guest("rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm")
 
+        # compute nodefamily
         if self.options.personality == "linux32":
             arch = "i386"
         elif self.options.personality == "linux64":
             arch = "x86_64"
         else:
             raise Exception, "Unsupported personality %r"%self.options.personality
-        
         nodefamily="%s-%s-%s"%(self.options.pldistro,self.options.fcdistro,arch)
 
-        # try to install slicerepo - not fatal yet
-        self.run_in_guest("yum -y install slicerepo-%s"%nodefamily)
-        
-        return \
-            self.run_in_guest("yum -y install myplc")==0 and \
-            self.run_in_guest("yum -y install noderepo-%s"%nodefamily)==0 and \
-            self.run_in_guest("yum -y install bootstrapfs-%s-plain"%nodefamily)==0 
+        pkgs_list=[]
+        pkgs_list.append ("slicerepo-%s"%nodefamily)
+        pkgs_list.append ("myplc")
+        pkgs_list.append ("noderepo-%s"%nodefamily)
+        pkgs_list.append ("bootstrapfs-%s-plain"%nodefamily)
+        pkgs_string=" ".join(pkgs_list)
+        self.run_in_guest("yum -y install %s"%pkgs_string)
+        return self.run_in_guest("rpm -q %s"%pkgs_string)==0
 
     ### 
     def configure(self):
