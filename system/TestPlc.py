@@ -1063,7 +1063,10 @@ class TestPlc:
     ### install_sfa_rpm
     def install_sfa(self):
         "yum install sfa, sfa-plc and sfa-client"
-        return self.run_in_guest("yum -y install sfa sfa-client sfa-plc sfa-sfatables")==0
+        # ignore yum retcod
+        self.run_in_guest("yum -y install sfa sfa-client sfa-plc sfa-sfatables")
+        return  self.run_in_guest("rpm -q sfa sfa-client sfa-plc sfa-sfatables")==0
+        
 
     def dbclean_sfa(self):
         "thoroughly wipes off the SFA database"
