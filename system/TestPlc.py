@@ -127,7 +127,8 @@ class TestPlc:
     # this is originally for centos5 as recent SFAs won't build on this platformb
     @staticmethod
     def check_whether_build_has_sfa (rpms_url):
-        retcod=os.system ("curl --silent %s/ | grep -q sfa"%rpms_url)
+        # warning, we're now building 'sface' so let's be a bit more picky
+        retcod=os.system ("curl --silent %s/ | grep -q sfa-"%rpms_url)
         # full builds are expected to return with 0 here
         if retcod!=0:
             # move all steps containing 'sfa' from default_steps to other_steps
