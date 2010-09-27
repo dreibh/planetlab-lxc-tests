@@ -100,6 +100,8 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Specify the set of hostname/IP's to use for qemu boxes")
         parser.add_option("-s","--size",action="store",type="int",dest="size",default=1,
                           help="sets test size in # of plcs - default is 1")
+        parser.add_option("-q","--qualifier",action="store",type="int",dest="qualifier",default=None,
+                          help="run steps only on plc numbered <qualifier>, starting at 1")
         parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
                            help="Used by db_dump and db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
@@ -280,7 +282,7 @@ steps refer to a method in TestPlc or to a step_* module
             # allow for steps to specify an index like in 
             # run checkslice@2
             try:        (step,qualifier)=step.split('@')
-            except:     qualifier=None
+            except:     qualifier=self.options.qualifier
 
             # try and locate a method in TestPlc
             if testplc_method_dict.has_key(step):
