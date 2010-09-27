@@ -102,6 +102,8 @@ steps refer to a method in TestPlc or to a step_* module
                           help="sets test size in # of plcs - default is 1")
         parser.add_option("-q","--qualifier",action="store",type="int",dest="qualifier",default=None,
                           help="run steps only on plc numbered <qualifier>, starting at 1")
+        parser.add_option("-k","--keep-going",action="store",dest="keep_going",default=False,
+                          help="proceeds even if some steps are failing")
         parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
                            help="Used by db_dump and db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
@@ -335,7 +337,7 @@ steps refer to a method in TestPlc or to a step_* module
 
                 # run the step
                 beg=strftime(TIME_FORMAT)
-                if not spec['disabled'] or force or self.options.interactive:
+                if not spec['disabled'] or force or self.options.interactive or self.options.keep_going:
                     skip_step=False
                     if self.options.interactive:
                         prompting=True
