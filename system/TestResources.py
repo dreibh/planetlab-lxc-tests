@@ -49,8 +49,7 @@ class TestResources:
         node_map = []
         qemu_pool = TestPoolQemu (self.qemus_ip_pool(), options)
 
-        for index in range(options.size):
-            index += 1
+        for index in range(1,options.size+1):
             if options.ips_qemu:
                 ip_or_hostname=options.ips_qemu.pop()
                 (hostname,ip,unused)=qemu_pool.locate_entry(ip_or_hostname)
