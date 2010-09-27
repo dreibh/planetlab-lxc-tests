@@ -96,6 +96,8 @@ class TestPlc:
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
+# xxx tmp - working on focusing on one side only
+#       'configure_sfi@1', 'add_sfa@1', 'update_sfa', 'view_sfa', SEPSFA,
         'configure_sfi', 'add_sfa', 'update_sfa', 'view_sfa', SEPSFA,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
         'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEPSFA,
@@ -110,7 +112,7 @@ class TestPlc:
         'clean_leases', 'list_leases', SEP,
         'populate' , SEP,
         'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
-        'plcclean_sfa', 'dbclean_sfa', 'uninstall_sfa', 'clean_sfi', SEP,
+        'plcclean_sfa', 'dbclean_sfa', 'logclean_sfa', 'uninstall_sfa', 'clean_sfi', SEP,
         'db_dump' , 'db_restore', SEP,
         'standby_1 through 20',SEP,
         ]
@@ -1089,6 +1091,10 @@ class TestPlc:
         print "REMEMBER TO RUN import_sfa AGAIN"
         return True
 
+    def logclean_sfa(self):
+        self.run_in_guest("rm -rf /var/log/sfa_access.log /var/log/sfa_import_plc.log /var/log/sfa.daemon")
+        return True
+
     def uninstall_sfa(self):
         "uses rpm to uninstall sfa - ignore result"
         self.run_in_guest("rpm -e sfa sfa-sfatables sfa-client sfa-plc")
@@ -1096,9 +1102,34 @@ class TestPlc:
         return True
 
     ###
+    def confdir(self):
+        dirname="conf.%s"%self.plc_spec['name']
+        if not os.path.isdir(dirname):
+            utils.system("mkdir -p %s"%dirname)
+        if not os.path.isdir(dirname):
+            raise "Cannot create config dir for plc %s"%self.name()
+        return dirname
+
+    def conffile(self,filename):
+        return "%s/%s"%(self.confdir(),filename)
+    def confsubdir(self,dirname,clean):
+        subdirname="%s/%s"%(self.confdir(),dirname)
+        if clean:
+            utils.system("rm -rf %s"%subdirname)
+        if not os.path.isdir(subdirname): 
+            utils.system("mkdir -p %s"%subdirname)
+        if not os.path.isdir(subdirname):
+            raise "Cannot create config subdir %s for plc %s"%(dirname,self.name())
+        return subdirname
+        
+    def conffile_clean (self,filename):
+        filename=self.conffile(filename)
+        return utils.system("rm -rf %s"%filename)==0
+    
+    ###
     def configure_sfa(self):
         "run sfa-config-tty"
-        tmpname='%s.sfa-config-tty'%(self.name())
+        tmpname=self.conffile("sfa-config-tty")
         fileconf=open(tmpname,'w')
         for var in [ 'SFA_REGISTRY_ROOT_AUTH',
                      'SFA_INTERFACE_HRN',
@@ -1120,7 +1151,6 @@ class TestPlc:
         fileconf.close()
         utils.system('cat %s'%tmpname)
         self.run_in_guest_piped('cat %s'%tmpname,'sfa-config-tty')
-        utils.system('rm %s'%tmpname)
         return True
 
     def aggregate_xml_line(self):
@@ -1137,11 +1167,11 @@ class TestPlc:
         # of course with a single plc, other_plcs is an empty list
         if not other_plcs:
             return True
-        agg_fname="%s-agg.xml"%self.name()
+        agg_fname=self.conffile("agg.xml")
         file(agg_fname,"w").write("<aggregates>%s</aggregates>\n" % \
                                      " ".join([ plc.aggregate_xml_line() for plc in other_plcs ]))
         utils.header ("(Over)wrote %s"%agg_fname)
-        reg_fname="%s-reg.xml"%self.name()
+        reg_fname=self.conffile("reg.xml")
         file(reg_fname,"w").write("<registries>%s</registries>\n" % \
                                      " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
         utils.header ("(Over)wrote %s"%reg_fname)
@@ -1162,10 +1192,7 @@ class TestPlc:
     def configure_sfi(self):
         sfa_spec=self.plc_spec['sfa']
         "sfi client configuration"
-	dir_name=".sfi"
-	if os.path.exists(dir_name):
-           utils.system('rm -rf %s'%dir_name)
-	utils.system('mkdir %s'%dir_name)
+	dir_name=self.confsubdir("dot-sfi",clean=True)
 	file_name=dir_name + os.sep + sfa_spec['piuser'] + '.pkey'
         fileconf=open(file_name,'w')
         fileconf.write (self.plc_spec['keys'][0]['private'])
@@ -1212,12 +1239,10 @@ class TestPlc:
 	fileconf.write(slice_rspec)
 	fileconf.write('\n')
         fileconf.close()
-        location = "root/"
+        location = "root/.sfi"
         remote="/vservers/%s/%s"%(self.vservername,location)
 	self.test_ssh.copy_abs(dir_name, remote, recursive=True)
 
-        #utils.system('cat %s'%tmpname)
-        utils.system('rm -rf %s'%dir_name)
         return True
 
     def clean_sfi (self):

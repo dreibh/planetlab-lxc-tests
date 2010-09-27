@@ -183,7 +183,7 @@ done
 def slices (options,index):
     return [ { 'slice_fields': {'name':'%s_pslc%d'%(login_base(index),i),
                                 'instantiation':'plc-instantiated',
-                                'url':'http://foo.com',
+                                'url':'http://foo%d.com'%index,
                                 'description':'testslice number %d'%i,
                                 'max_nodes':2,
                                 },

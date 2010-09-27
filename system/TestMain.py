@@ -340,7 +340,7 @@ steps refer to a method in TestPlc or to a step_* module
                     if self.options.interactive:
                         prompting=True
                         while prompting:
-                            msg="Run step %s on %s [r](un)/d(ry_run)/s(kip)/q(uit) ? "%(stepname,plcname)
+                            msg="%d Run step %s on %s [r](un)/d(ry_run)/s(kip)/q(uit) ? "%(plc_counter,stepname,plcname)
                             answer=raw_input(msg).strip().lower() or "r"
                             answer=answer[0]
                             if answer in ['s','n']:     # skip/no/next
