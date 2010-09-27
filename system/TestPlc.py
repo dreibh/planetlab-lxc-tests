@@ -1135,21 +1135,18 @@ class TestPlc:
     # a cross step that takes all other plcs in argument
     def cross_configure_sfa(self, other_plcs):
         # of course with a single plc, other_plcs is an empty list
-        if other_plcs:
-            filename="%s-agg.xml"%self.name()
-            agg_file=file(filename,"w")
-            agg_file.write("<aggregates>%s</aggregates>\n" % \
-                               " ".join([ plc.aggregate_xml_line() for plc in other_plcs ]))
-            agg_file.close()
-            if self.test_ssh.copy_abs(filename,'/vservers/%s/etc/sfa/aggregates.xml'%self.vservername) !=0 : return False
-
-            filename="%s-reg.xml"%self.name()
-            agg_file=file(filename,"w")
-            agg_file.write("<registries>%s</registries>\n" % \
-                               " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
-            agg_file.close()
-            if self.test_ssh.copy_abs(filename,'/vservers/%s/etc/sfa/aggregates.xml'%self.vservername) !=0 : return False
-        return True
+        if not other_plcs:
+            return True
+        agg_fname="%s-agg.xml"%self.name()
+        file(agg_fname,"w").write("<aggregates>%s</aggregates>\n" % \
+                                     " ".join([ plc.aggregate_xml_line() for plc in other_plcs ]))
+        utils.header ("(Over)wrote %s"%agg_fname)
+        reg_fname="%s-reg.xml"%self.name()
+        file(reg_fname,"w").write("<registries>%s</registries>\n" % \
+                                     " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
+        utils.header ("(Over)wrote %s"%reg_fname)
+        return self.test_ssh.copy_abs(agg_fname,'/vservers/%s/etc/sfa/aggregates.xml'%self.vservername)==0 \
+            and  self.test_ssh.copy_abs(reg_fname,'/vservers/%s/etc/sfa/registries.xml'%self.vservername)==0
 
     def import_sfa(self):
         "sfa-import-plc"
