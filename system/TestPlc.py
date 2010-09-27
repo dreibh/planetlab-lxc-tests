@@ -1099,6 +1099,7 @@ class TestPlc:
         "uses rpm to uninstall sfa - ignore result"
         self.run_in_guest("rpm -e sfa sfa-sfatables sfa-client sfa-plc")
         self.run_in_guest("rm -rf /var/lib/sfa")
+        self.run_in_guest("rm -rf /etc/sfa")
         return True
 
     ###
