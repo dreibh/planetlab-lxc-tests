@@ -210,10 +210,10 @@ def tcp_tests (options,index):
     elif index == 2:
         return [
             # remote test
-            { 'server_node': 'node1',
-              'server_slice' : '%s_pslc1'%login_base(index),
+            { 'server_node': 'node2',
+              'server_slice' : '%s_pslc3'%login_base(index),
               'client_node' : 'node2',
-              'client_slice' : '%s_pslc2'%login_base(index),
+              'client_slice' : '%s_pslc4'%login_base(index),
               'port' : 4000,
               },
             ]
