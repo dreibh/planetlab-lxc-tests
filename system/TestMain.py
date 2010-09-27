@@ -267,7 +267,7 @@ steps refer to a method in TestPlc or to a step_* module
         for step in self.options.steps:
             if not TestPlc.valid_step(step):
                 continue
-            # some steps need to be done no regardless of the previous ones: we force them
+            # some steps need to be done regardless of the previous ones: we force them
             force=False
             if step.find("force_") == 0:
                 step=step.replace("force_","")
@@ -277,9 +277,14 @@ steps refer to a method in TestPlc or to a step_* module
             cross=False
             if step.find("cross_") == 0:
                 cross=True
+            # allow for steps to specify an index like in 
+            # run checkslice@2
+            try:        (step,qualifier)=step.split('@')
+            except:     qualifier=None
+
             # try and locate a method in TestPlc
             if testplc_method_dict.has_key(step):
-                all_step_infos += [ (step, testplc_method_dict[step] , force, cross)]
+                all_step_infos += [ (step, testplc_method_dict[step] , force, cross, qualifier)]
             # otherwise search for the 'run' method in the step_<x> module
             else:
                 modulename='step_'+step
@@ -290,7 +295,7 @@ steps refer to a method in TestPlc or to a step_* module
                     if not names:
                         raise Exception,"No run* method in module %s"%modulename
                     names.sort()
-                    all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force,cross) for name in names ]
+                    all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force,cross,qualifier) for name in names ]
                 except :
                     print '********** step %s NOT FOUND -- ignored'%(step)
                     traceback.print_exc()
@@ -316,8 +321,13 @@ steps refer to a method in TestPlc or to a step_* module
         # do all steps on all plcs
         TIME_FORMAT="%H-%M-%S"
         TRACE_FORMAT="TRACE: beg=%(beg)s end=%(end)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
-        for (stepname,method,force,cross) in all_step_infos:
+        for (stepname,method,force,cross,qualifier) in all_step_infos:
+            plc_counter=0
             for (spec,plc_obj) in all_plcs:
+                plc_counter+=1
+                # skip this step if we have specified a plc_explicit
+                if qualifier and plc_counter!=int(qualifier): continue
+
                 plcname=spec['name']
                 across_plcs = [ o for (s,o) in all_plcs if o!=plc_obj ]
 
@@ -356,27 +366,29 @@ steps refer to a method in TestPlc or to a step_* module
                     try:
                         force_msg=""
                         if force: force_msg=" (forced)"
-                        utils.header("********** RUNNING step %s%s on plc %s"%(stepname,force_msg,plcname))
+                        utils.header("********** %d RUNNING step %s%s on plc %s"%(plc_counter,stepname,force_msg,plcname))
                         if not cross:   step_result = method(plc_obj)
                         else:           step_result = method(plc_obj,across_plcs)
                         if step_result:
-                            utils.header('********** SUCCESSFUL step %s on %s'%(stepname,plcname))
+                            utils.header('********** %d SUCCESSFUL step %s on %s'%(plc_counter,stepname,plcname))
                             status="OK"
                         else:
                             overall_result = False
                             spec['disabled'] = True
-                            utils.header('********** FAILED Step %s on %s - discarding that plc from further steps'%(stepname,plcname))
+                            utils.header('********** %d FAILED Step %s on %s (discarded from further steps)'\
+                                             %(plc_counter,stepname,plcname))
                             status="KO"
                     except:
                         overall_result=False
                         spec['disabled'] = True
                         traceback.print_exc()
-                        utils.header ('********** FAILED (exception) Step %s on plc %s - discarding this plc from further steps'%(stepname,plcname))
+                        utils.header ('********** %d FAILED (exception) Step %s on %s (discarded from further steps)'\
+                                          %(plc_counter,stepname,plcname))
                         status="KO"
 
                 # do not run, just display it's skipped
                 else:
-                    utils.header("********** IGNORED Plc %s is disabled - skipping step %s"%(plcname,stepname))
+                    utils.header("********** %d IGNORED Plc %s is disabled - skipping step %s"%(plc_counter,plcname,stepname))
                     status="UNDEF"
                 if not self.options.dry_run:
                     end=strftime(TIME_FORMAT)
