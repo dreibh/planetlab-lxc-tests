@@ -38,10 +38,11 @@ class TestSliceSfa:
                     found=True
         return (found,privatekey)
 
-    def add_slice(self):
+    # those are step names exposed as methods of TestPlc, hence the _sfa
+    def add_sfa(self,options):
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add slice.xml")==0
 
-    def create_slice(self):
+    def create_sfa(self,options):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")
         return \
@@ -51,7 +52,7 @@ class TestSliceSfa:
                "sfiAddSliver.py -i /root/.sfi/resources_in.rspec -n /root/.sfi/all_nodes.txt -o /root/.sfi/resources_out.rspec")==0 and \
             self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.%s.%s resources_out.rspec"%(auth,self.login_base,self.slicename))==0
 
-    def update_slice(self):
+    def update_sfa(self,options):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")
         self.test_plc.run_in_guest(
@@ -60,11 +61,12 @@ class TestSliceSfa:
             "sfiAddSliver.py -i /root/.sfi/resources_in.rspec -n /root/.sfi/all_nodes.txt -o /root/.sfi/resources_out.rspec")
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.%s.%s resources_out.rspec"%(auth,self.login_base,self.slicename))==0
 
-    def delete_slice(self):
+    def delete_slice(self,options):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.%s.%s"%(auth,self.login_base,self.slicename))
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.%s.%s"%(auth,self.login_base,self.slicename))==0
 
+    # check the resulting sliver
     def check_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)

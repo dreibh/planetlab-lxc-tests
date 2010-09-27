@@ -52,7 +52,7 @@ def node_mapper (method):
     actual.__doc__=method.__doc__
     return actual
 
-def slice_mapper_options (method):
+def slice_mapper (method):
     def actual(self):
         overall=True
         slice_method = TestSlice.__dict__[method.__name__]
@@ -66,15 +66,14 @@ def slice_mapper_options (method):
     actual.__doc__=method.__doc__
     return actual
 
-def slice_mapper_options_sfa (method):
+def slice_sfa_mapper (method):
     def actual(self):
-	test_plc=self
         overall=True
         slice_method = TestSliceSfa.__dict__[method.__name__]
         for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
-            test_slice=TestSliceSfa(test_plc,test_site,slice_spec)
+            test_slice=TestSliceSfa(self,test_site,slice_spec)
             if not slice_method(test_slice,self.options): overall=False
         return overall
     # restore the doc text
@@ -96,11 +95,9 @@ class TestPlc:
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
-# xxx tmp - working on focusing on one side only
-#       'configure_sfi@1', 'add_sfa@1', 'update_sfa', 'view_sfa', SEPSFA,
-        'configure_sfi', 'add_sfa', 'update_sfa', 'view_sfa', SEPSFA,
+        'configure_sfi@1', 'add_sfa@1', 'create_sfa@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
-        'check_slice_sfa', 'delete_sfa', 'stop_sfa', SEPSFA,
+        'check_slice_sfa@1', 'delete_sfa_user@1', 'delete_sfa_slices@1', SEPSFA,
         'check_tcp',  'check_hooks',  SEP,
         'force_gather_logs', 'force_resources_post', SEP,
         ]
@@ -112,7 +109,7 @@ class TestPlc:
         'clean_leases', 'list_leases', SEP,
         'populate' , SEP,
         'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
-        'plcclean_sfa', 'dbclean_sfa', 'logclean_sfa', 'uninstall_sfa', 'clean_sfi', SEP,
+        'plcclean_sfa', 'dbclean_sfa', 'stop_sfa','uninstall_sfa', 'clean_sfi', SEP,
         'db_dump' , 'db_restore', SEP,
         'standby_1 through 20',SEP,
         ]
@@ -1014,7 +1011,7 @@ class TestPlc:
                 utils.header('Created Slice %s'%slice['slice_fields']['name'])
         return True
         
-    @slice_mapper_options
+    @slice_mapper
     def check_slice(self): 
         "tries to ssh-enter the slice with the user key, to ensure slice creation"
         pass
@@ -1091,15 +1088,12 @@ class TestPlc:
         print "REMEMBER TO RUN import_sfa AGAIN"
         return True
 
-    def logclean_sfa(self):
-        self.run_in_guest("rm -rf /var/log/sfa_access.log /var/log/sfa_import_plc.log /var/log/sfa.daemon")
-        return True
-
     def uninstall_sfa(self):
         "uses rpm to uninstall sfa - ignore result"
         self.run_in_guest("rpm -e sfa sfa-sfatables sfa-client sfa-plc")
         self.run_in_guest("rm -rf /var/lib/sfa")
         self.run_in_guest("rm -rf /etc/sfa")
+        self.run_in_guest("rm -rf /var/log/sfa_access.log /var/log/sfa_import_plc.log /var/log/sfa.daemon")
         return True
 
     ###
@@ -1198,6 +1192,7 @@ class TestPlc:
         fileconf=open(file_name,'w')
         fileconf.write (self.plc_spec['keys'][0]['private'])
         fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
 
 	file_name=dir_name + os.sep + 'sfi_config'
         fileconf=open(file_name,'w')
@@ -1214,6 +1209,7 @@ class TestPlc:
         fileconf.write ("SFI_SM='%s'"%SFI_SM)
 	fileconf.write('\n')
         fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
 
 	file_name=dir_name + os.sep + 'person.xml'
         fileconf=open(file_name,'w')
@@ -1222,6 +1218,7 @@ class TestPlc:
 	fileconf.write(person_record)
 	fileconf.write('\n')
         fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
 
 	file_name=dir_name + os.sep + 'slice.xml'
         fileconf=open(file_name,'w')
@@ -1230,6 +1227,7 @@ class TestPlc:
 	#slice_record=sfa_spec['sfa_slice_xml']
 	fileconf.write(slice_record)
 	fileconf.write('\n')
+        utils.header ("(Over)wrote %s"%file_name)
         fileconf.close()
 
 	file_name=dir_name + os.sep + 'slice.rspec'
@@ -1240,6 +1238,9 @@ class TestPlc:
 	fileconf.write(slice_rspec)
 	fileconf.write('\n')
         fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
+        
+        # push to the remote root's .sfi
         location = "root/.sfi"
         remote="/vservers/%s/%s"%(self.vservername,location)
 	self.test_ssh.copy_abs(dir_name, remote, recursive=True)
@@ -1250,30 +1251,20 @@ class TestPlc:
         self.run_in_guest("rm -rf /root/.sfi")
         return True
 
+    @slice_sfa_mapper
     def add_sfa(self):
-        "run sfi.py add (on Registry) and sfi.py create (on SM) to form new objects"
-        test_user_sfa=TestUserSfa(self)
-        if not test_user_sfa.add_user(): return False
+        "run sfi.py add (on Registry)"
+        pass
 
-	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
-            site_spec = self.locate_site (slice_spec['sitename'])
-            test_site = TestSite(self,site_spec)
-	    test_slice_sfa=TestSliceSfa(self,test_site,slice_spec)
-	    if not test_slice_sfa.add_slice(): return False
-	    if not test_slice_sfa.create_slice(): return False
-        return True
+    @slice_sfa_mapper
+    def create_sfa(self):
+        "run sfi.py create (on SM) for 1st-time creation"
+        pass
 
+    @slice_sfa_mapper
     def update_sfa(self):
-        "run sfi.py update (on Registry) and sfi.py create (on SM) on existing objects"
-	test_user_sfa=TestUserSfa(self)
-	if not test_user_sfa.update_user(): return False
-	
-	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
-	    site_spec = self.locate_site (slice_spec['sitename'])
-	    test_site = TestSite(self,site_spec)
-	    test_slice_sfa=TestSliceSfa(self,test_site,slice_spec)
-	    if not test_slice_sfa.update_slice(): return False
-        return True
+        "run sfi.py create (on SM) on existing object"
+        pass
 
     def view_sfa(self):
         "run sfi.py list and sfi.py show (both on Registry) and sfi.py slices and sfi.py resources (both on SM)"
@@ -1285,22 +1276,20 @@ class TestPlc:
 	self.run_in_guest("sfi.py -d /root/.sfi/ slices")==0 and \
 	self.run_in_guest("sfi.py -d /root/.sfi/ resources -o resources")==0
 
-    @slice_mapper_options_sfa
+    @slice_sfa_mapper
     def check_slice_sfa(self): 
 	"tries to ssh-enter the SFA slice"
         pass
 
-    def delete_sfa(self):
-	"run sfi.py delete (on SM), sfi.py remove (on Registry)"
+    def delete_sfa_user(self):
+	"run sfi.py delete (on SM) for user"
 	test_user_sfa=TestUserSfa(self)
-	success1=test_user_sfa.delete_user()
-	for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
-            site_spec = self.locate_site (slice_spec['sitename'])
-            test_site = TestSite(self,site_spec)
-	    test_slice_sfa=TestSliceSfa(self,test_site,slice_spec)
-	    success2=test_slice_sfa.delete_slice()
+	return test_user_sfa.delete_user()
 
-	return success1 and success2
+    @slice_sfa_mapper
+    def delete_sfa_slices(self):
+	"run sfi.py delete (on SM), sfi.py remove (on Registry) to clean slices"
+        pass
 
     def stop_sfa(self):
         "service sfa stop"
