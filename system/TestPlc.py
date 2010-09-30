@@ -1142,6 +1142,11 @@ class TestPlc:
 		     'SFA_PLC_URL',
                      ]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
+        # the way plc_config handles booleans just sucks..
+        for var in ['SFA_API_DEBUG']:
+            val='false'
+            if self.plc_spec['sfa'][var]: val='true'
+            fileconf.write ('e %s\n%s\n'%(var,val))
         fileconf.write('w\n')
         fileconf.write('R\n')
         fileconf.write('q\n')

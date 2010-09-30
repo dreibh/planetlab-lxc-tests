@@ -285,6 +285,7 @@ def sfa (options,index) :
         'SFA_PLC_DB_USER' : 'pgsqluser',
         'SFA_PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
+        'SFA_API_DEBUG': True,
         'sfa_slice_specs' : sfa_slice_specs(options,index,slicename,regularuser),
 	'sfa_slice_xml' : sfa_slice_xml(options,index,piuser,slicename),
 	'sfa_person_xml' : sfa_person_xml(options,index,regularuser),
