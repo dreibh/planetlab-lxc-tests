@@ -259,7 +259,7 @@ steps refer to a method in TestPlc or to a step_* module
         ips_qemu_file.close()
         # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
-            spec['disabled'] = False
+            spec['failed_step'] = False
         all_plcs = [ (x, TestPlc(x,self.options)) for x in all_plc_specs]
 
         # pass options to utils as well
@@ -337,7 +337,7 @@ steps refer to a method in TestPlc or to a step_* module
 
                 # run the step
                 beg=strftime(TIME_FORMAT)
-                if not spec['disabled'] or force or self.options.interactive or self.options.keep_going:
+                if not spec['failed_step'] or force or self.options.interactive or self.options.keep_going:
                     skip_step=False
                     if self.options.interactive:
                         prompting=True
@@ -369,7 +369,7 @@ steps refer to a method in TestPlc or to a step_* module
                         continue
                     try:
                         force_msg=""
-                        if force: force_msg=" (forced)"
+                        if force and spec['failed_step']: force_msg=" (forced after %s has failed)"
                         utils.header("********** %d RUNNING step %s%s on plc %s"%(plc_counter,stepname,force_msg,plcname))
                         if not cross:   step_result = method(plc_obj)
                         else:           step_result = method(plc_obj,across_plcs)
@@ -378,13 +378,13 @@ steps refer to a method in TestPlc or to a step_* module
                             status="OK"
                         else:
                             overall_result = False
-                            spec['disabled'] = True
+                            spec['failed_step'] = stepname
                             utils.header('********** %d FAILED Step %s on %s (discarded from further steps)'\
                                              %(plc_counter,stepname,plcname))
                             status="KO"
                     except:
                         overall_result=False
-                        spec['disabled'] = True
+                        spec['failed_step'] = stepname
                         traceback.print_exc()
                         utils.header ('********** %d FAILED (exception) Step %s on %s (discarded from further steps)'\
                                           %(plc_counter,stepname,plcname))
@@ -392,7 +392,8 @@ steps refer to a method in TestPlc or to a step_* module
 
                 # do not run, just display it's skipped
                 else:
-                    utils.header("********** %d IGNORED Plc %s is disabled - skipping step %s"%(plc_counter,plcname,stepname))
+                    why="has failed %s"%spec['failed_step']
+                    utils.header("********** %d SKIPPED Step %s on %s (%s)"%(plc_counter,stepname,plcname,why))
                     status="UNDEF"
                 if not self.options.dry_run:
                     end=strftime(TIME_FORMAT)

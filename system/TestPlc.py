@@ -90,12 +90,11 @@ class TestPlc:
         'delete_vs','create_vs','install', 'configure', 'start', SEP,
         'fetch_keys', 'store_keys', 'clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
-        'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu',
-        'kill_all_qemus', 'start_node', SEP,
-        # better use of time: do this now that the nodes are taking off
-        'plcsh_stress_test', SEP,
+        'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu', 'kill_all_qemus', 'start_node', SEP,
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
         'configure_sfi@1', 'add_sfa@1', 'create_sfa@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
+        # better use of time: do this now that the nodes are taking off
+        'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
         'check_slice_sfa@1', 'delete_sfa_user@1', 'delete_sfa_slices@1', SEPSFA,
         'check_tcp',  'check_hooks',  SEP,
@@ -1070,7 +1069,8 @@ class TestPlc:
 
     def dbclean_sfa(self):
         "thoroughly wipes off the SFA database"
-        return self.run_in_guest("sfa-nuke-plc.py")==0
+        self.run_in_guest("sfa-nuke-plc.py")==0
+        return True
 
     def plcclean_sfa(self):
         "cleans the PLC entries that were created as a side effect of running the script"
@@ -1094,6 +1094,8 @@ class TestPlc:
         self.run_in_guest("rm -rf /var/lib/sfa")
         self.run_in_guest("rm -rf /etc/sfa")
         self.run_in_guest("rm -rf /var/log/sfa_access.log /var/log/sfa_import_plc.log /var/log/sfa.daemon")
+        # xxx tmp 
+        self.run_in_guest("rpm -e --noscripts sfa-plc")
         return True
 
     ###
@@ -1293,7 +1295,8 @@ class TestPlc:
 
     def stop_sfa(self):
         "service sfa stop"
-        return self.run_in_guest('service sfa stop')==0
+        self.run_in_guest('service sfa stop')==0
+        return True
 
     def populate (self):
         "creates random entries in the PLCAPI"
