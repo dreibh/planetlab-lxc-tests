@@ -92,12 +92,12 @@ class TestPlc:
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
         'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu', 'kill_all_qemus', 'start_node', SEP,
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
-        'configure_sfi@1', 'add_sfa_user@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
+        'configure_sfi@1', 'add_user_sfa@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
         'update_sfa_user@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
-        'check_slice_sfa@1', 'delete_sfa_user@1', 'delete_sfa_slices@1', SEPSFA,
+        'check_slice_sfa@1', 'delete_sfa_user@1', 'delete_slice_sfa@1', SEPSFA,
         'check_tcp',  'check_hooks',  SEP,
         'force_gather_logs', 'force_resources_post', SEP,
         ]
@@ -1259,7 +1259,7 @@ class TestPlc:
         self.run_in_guest("rm -rf /root/.sfi")
         return True
 
-    def add_sfa_user(self):
+    def add_user_sfa(self):
         return TestUserSfa(self).add_user()
 
     @slice_sfa_mapper

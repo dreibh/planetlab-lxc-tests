@@ -61,7 +61,7 @@ class TestSliceSfa:
             "sfiAddSliver.py -i /root/.sfi/resources_in.rspec -n /root/.sfi/all_nodes.txt -o /root/.sfi/resources_out.rspec")
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.%s.%s resources_out.rspec"%(auth,self.login_base,self.slicename))==0
 
-    def delete_slice(self,options):
+    def delete_slice_sfa(self,options):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.%s.%s"%(auth,self.login_base,self.slicename))
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.%s.%s"%(auth,self.login_base,self.slicename))==0
