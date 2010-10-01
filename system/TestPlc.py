@@ -1301,7 +1301,7 @@ class TestPlc:
 	return test_user_sfa.delete_user()
 
     @slice_sfa_mapper
-    def delete_sfa_slices(self):
+    def delete_sfa_slice(self):
 	"run sfi.py delete (on SM), sfi.py remove (on Registry) to clean slices"
         pass
 
