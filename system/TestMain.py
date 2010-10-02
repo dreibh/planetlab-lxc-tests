@@ -324,7 +324,7 @@ steps refer to a method in TestPlc or to a step_* module
 
         # do all steps on all plcs
         TIME_FORMAT="%H-%M-%S"
-        TRACE_FORMAT="TRACE: beg=%(beg)s end=%(end)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
+        TRACE_FORMAT="TRACE: %(plc_counter)d %(beg)s->%(end)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
         for (stepname,method,force,cross,qualifier) in all_step_infos:
             plc_counter=0
             for (spec,plc_obj) in all_plcs:
