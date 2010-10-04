@@ -95,10 +95,10 @@ class TestPlc:
         'configure_sfi@1', 'add_user_sfa@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
         'update_sfa_user@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
         # better use of time: do this now that the nodes are taking off
-        'plcsh_stress_test', SEP,
+        'plcsh_stress_test@1', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
         'check_slice_sfa@1', 'delete_sfa_user@1', 'delete_slice_sfa@1', SEPSFA,
-        'check_tcp',  'check_hooks',  SEP,
+        'check_tcp',  'check_hooks@1',  SEP,
         'force_gather_logs', 'force_resources_post', SEP,
         ]
     other_steps = [ 
