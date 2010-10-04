@@ -301,7 +301,7 @@ steps refer to a method in TestPlc or to a step_* module
                     names.sort()
                     all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force,cross,qualifier) for name in names ]
                 except :
-                    print '********** step %s NOT FOUND -- ignored'%(step)
+                    utils.header("********** FAILED step %s (NOT FOUND) -- won't be run"%step)
                     traceback.print_exc()
                     overall_result = False
             

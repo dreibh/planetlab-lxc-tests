@@ -93,11 +93,11 @@ class TestPlc:
         'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu', 'kill_all_qemus', 'start_node', SEP,
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
         'configure_sfi@1', 'add_user_sfa@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
-        'update_sfa_user@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
+        'update_user_sfa@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
         # better use of time: do this now that the nodes are taking off
         'plcsh_stress_test@1', SEP,
         'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
-        'check_slice_sfa@1', 'delete_sfa_user@1', 'delete_slice_sfa@1', SEPSFA,
+        'check_slice_sfa@1', 'delete_slice_sfa@1', 'delete_user_sfa@1', SEPSFA,
         'check_tcp',  'check_hooks@1',  SEP,
         'force_gather_logs', 'force_resources_post', SEP,
         ]
@@ -1272,7 +1272,7 @@ class TestPlc:
         "run sfi.py create (on SM) for 1st-time creation"
         pass
 
-    def update_sfa_user(self):
+    def update_user_sfa(self):
         return TestUserSfa(self).update_user()
 
     @slice_sfa_mapper
@@ -1295,13 +1295,13 @@ class TestPlc:
 	"tries to ssh-enter the SFA slice"
         pass
 
-    def delete_sfa_user(self):
+    def delete_user_sfa(self):
 	"run sfi.py delete (on SM) for user"
 	test_user_sfa=TestUserSfa(self)
 	return test_user_sfa.delete_user()
 
     @slice_sfa_mapper
-    def delete_sfa_slice(self):
+    def delete_slice_sfa(self):
 	"run sfi.py delete (on SM), sfi.py remove (on Registry) to clean slices"
         pass
 
