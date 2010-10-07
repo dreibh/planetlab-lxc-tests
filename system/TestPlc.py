@@ -94,9 +94,10 @@ class TestPlc:
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
         'configure_sfi@1', 'add_user_sfa@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
         'update_user_sfa@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
-        # better use of time: do this now that the nodes are taking off
-        'plcsh_stress_test@1', SEP,
-        'nodes_ssh_debug', 'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEPSFA,
+        # we used to run plcsh_stress_test, and then nodes_ssh_debug and nodes_ssh_boot
+        # but as the stress test might take a while, we sometimes missed the debug mode..
+        'nodes_ssh_debug', 'plcsh_stress_test@1', SEP,
+        'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
         'check_slice_sfa@1', 'delete_slice_sfa@1', 'delete_user_sfa@1', SEPSFA,
         'check_tcp',  'check_hooks@1',  SEP,
         'force_gather_logs', 'force_resources_post', SEP,
