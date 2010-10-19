@@ -369,7 +369,7 @@ steps refer to a method in TestPlc or to a step_* module
                         continue
                     try:
                         force_msg=""
-                        if force and spec['failed_step']: force_msg=" (forced after %s has failed)"
+                        if force and spec['failed_step']: force_msg=" (forced after %s has failed)"%spec['failed_step']
                         utils.header("********** %d RUNNING step %s%s on plc %s"%(plc_counter,stepname,force_msg,plcname))
                         if not cross:   step_result = method(plc_obj)
                         else:           step_result = method(plc_obj,across_plcs)
