@@ -94,6 +94,7 @@ class TestPlc:
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
         'configure_sfi@1', 'add_user_sfa@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
         'update_user_sfa@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
+        'install_unittest_sfa','unittest_sfa',SEPSFA,
         # we used to run plcsh_stress_test, and then nodes_ssh_debug and nodes_ssh_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
         'nodes_ssh_debug', 'plcsh_stress_test@1', SEP,
@@ -1099,6 +1100,17 @@ class TestPlc:
         # xxx tmp 
         self.run_in_guest("rpm -e --noscripts sfa-plc")
         return True
+
+    ### install_sfa_rpm
+    def install_unittest_sfa(self):
+        "yum install sfa-tests"
+        # ignore yum retcod
+        self.run_in_guest("yum -y install sfa-tests")
+        return  self.run_in_guest("rpm -q sfa-tests")==0
+
+    def unittest_sfa(self):
+        "run SFA unittests"
+        return self.run_in_guest("/usr/share/sfa/tests/testAll.py")==0
 
     ###
     def confdir(self):
