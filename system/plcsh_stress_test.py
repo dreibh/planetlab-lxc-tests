@@ -160,7 +160,7 @@ def random_key(key_types,namelengths):
 def random_tag_type (role_ids):
     return  {'tagname': randstr(12,letters+digits),
              'category':randstr(4,letters+digits)+'/'+randstr(6,letters+digits),
-             'min_role_id': random.sample(role_ids, 1)[0],
+#             'min_role_id': random.sample(role_ids, 1)[0],
              'description' : randstr(128,letters+digits+whitespace+punctuation),
              }
 
