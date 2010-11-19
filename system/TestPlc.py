@@ -761,8 +761,7 @@ class TestPlc:
                     tag_type_id = self.apiserver.AddTagType(auth,
                                                             {'tagname':nodegroupname,
                                                              'description': 'for nodegroup %s'%nodegroupname,
-                                                             'category':'test',
-                                                             'min_role_id':10})
+                                                             'category':'test')
                 print 'located tag (type)',nodegroupname,'as',tag_type_id
                 # create nodegroup
                 nodegroups = self.apiserver.GetNodeGroups (auth, {'groupname':nodegroupname})
