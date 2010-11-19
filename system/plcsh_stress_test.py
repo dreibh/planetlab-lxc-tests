@@ -106,15 +106,10 @@ def random_peer():
         }
 
 def random_site(namelengths):
-    try:
-        sitename=randstr(namelengths['sitename'],namelengths['sitename_contents'])
-    except:
-        sitename=randstr(namelengths['sitename'])
-    try:
-        abbreviated_name=randstr(namelengths['abbreviated_name'],namelengths['abbreviated_name_contents'])
-    except:
-        abbreviated_name=randstr(namelengths['abbreviated_name'])
+    sitename=randstr(namelengths['sitename'],namelengths['sitename_contents'])
+    abbreviated_name=randstr(namelengths['abbreviated_name'],namelengths['abbreviated_name_contents'])
 
+    print 'nl[a] in random_site',namelengths['abbreviated_name'],'actual',len(abbreviated_name)
     return {
         'name': sitename,
         'abbreviated_name': abbreviated_name,
@@ -160,12 +155,15 @@ def random_key(key_types,namelengths):
 def random_tag_type (role_ids):
     return  {'tagname': randstr(12,letters+digits),
              'category':randstr(4,letters+digits)+'/'+randstr(6,letters+digits),
-#             'min_role_id': random.sample(role_ids, 1)[0],
              'description' : randstr(128,letters+digits+whitespace+punctuation),
              }
 
 def random_nodegroup():
     return {'groupname' : randstr(30, letters+digits+whitespace) }
+
+def random_roles(role_ids):
+    nb_roles=len(role_ids)
+    return random.sample(role_ids,random.choice(range(1,nb_roles+1)))
 
 tag_fields=['arch']
 def random_node(node_types,boot_states,namelengths):
@@ -311,7 +309,9 @@ class Test:
         'hostname2':5,
         'login_base':20,
         'sitename':254,
+        'sitename_contents':letters+digits,
         'abbreviated_name':50,
+        'abbreviated_name_contents':letters+digits+whitespace+punctuation,
         'model':255,
         'first_name':128,
         'last_name':128,
@@ -323,7 +323,7 @@ class Test:
         'hostname2':3,
         'login_base':8,
         'sitename':64,
-        'sitename_contents':letters+digits+whitespace+punctuation,
+        'sitename_contents':letters+digits,
         'abbreviated_name':24,
         'abbreviated_name_contents':letters+digits+whitespace+punctuation,
         'model':40,
@@ -1454,6 +1454,10 @@ class Test:
                 self.nodegroup_type_ids + \
                 self.ilink_type_ids
             
+            tt_role_ids=random_roles(role_ids)
+            for tt_role_id in tt_role_ids:
+                self.api.AddRoleToTagType(tt_role_id,tag_type_id)
+
             if i < n_sa:
                 self.slice_type_ids.append(tag_type_id)
             elif i < n_sa+n_ng :
@@ -1465,8 +1469,10 @@ class Test:
                 tag_type = self.api.GetTagTypes([tag_type_id])[0]
                 for field in tag_type_fields:
                     assert tag_type[field] == tag_type_fields[field]
+                for tt_role_id in tt_role_ids:
+                    assert tt_role_id in tag_type['role_ids']
             if self.verbose:
-                print "Updated slice attribute type", tag_type_id
+                print "Created tag type", tag_type_id
 
     def UpdateTagTypes(self):
         """
@@ -1489,7 +1495,7 @@ class Test:
                 for field in tag_type_fields:
                     assert tag_type[field] == tag_type_fields[field]
             if self.verbose:
-                print "Updated slice attribute type", tag_type_id
+                print "Updated tag type", tag_type_id
 
     def DeleteTagTypes(self):
         """
@@ -1503,7 +1509,7 @@ class Test:
                 assert not self.api.GetTagTypes([tag_type_id])
 
             if self.verbose:
-                print "Deleted slice attribute type", tag_type_id
+                print "Deleted tag type", tag_type_id
 
         if self.check:
             assert not self.api.GetTagTypes(self.slice_type_ids+self.nodegroup_type_ids+self.ilink_type_ids)
@@ -1690,6 +1696,17 @@ class Test:
 
         self.slice_tag_ids = []
 
+    # convenience for cleaning up
+    # not exactly accurate -- use on test plcs only
+    def WipeSitesFromLength(self):
+        for site in self.api.GetSites():
+            abbrev=site['abbreviated_name']
+#            print 'matching',len(abbrev),'against',self.namelengths['abbreviated_name']
+            if len(abbrev)==self.namelengths['abbreviated_name']:
+#            if len(abbrev)==17:
+                print 'wiping site %d (%s)'%(site['site_id'],site['name'])
+                self.api.DeleteSite(site['site_id'])
+
 def main():
     parser = OptionParser()
     parser.add_option("-c", "--check", action = "store_true", default = False, 
@@ -1708,6 +1725,8 @@ def main():
                       help = "Generate smaller names for checking UI rendering")
     parser.add_option ("-f", "--foreign", action="store_true", dest="federating", default = False,
                        help = "Create a fake peer and add items in it (no update, no delete)")
+    parser.add_option ("-w", "--wipe", action="store_true", dest="wipe", default = False,
+                       help = "Wipe sites whose abbrev matches what the tests created")
     (options, args) = parser.parse_args()
 
     test = Test(api = Shell(),
@@ -1721,6 +1740,10 @@ def main():
     else:
         test.namelengths = Test.namelengths_default
 
+    if options.wipe:
+        test.WipeSitesFromLength()
+        return
+
     if options.tiny:
         sizes = Test.sizes_tiny
     elif options.large:
@@ -1729,7 +1752,6 @@ def main():
         sizes = Test.sizes_xlarge
     else:
         sizes = Test.sizes_default
-
     test.Run(**sizes)
 
 if __name__ == "__main__":
