@@ -1,11 +1,14 @@
+#!/usr/bin/python
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
-# 
 # this is only an example file
 # the actual file is installed in your testmaster box as /root/LocalTestResources.py
 # 
-# 
+
+if __name__ == '__main__':
+   import sys, os.path
+   sys.path.append(os.path.expanduser("~/git-tests/system"))
 
 from TestResources import TestResources
 
@@ -35,11 +38,12 @@ class OnelabTestResources (TestResources):
         return [
             ('qemu64-1.pl.sophia.inria.fr', None, None),
             ('qemu64-2.pl.sophia.inria.fr', None, None),
-#            ('qemu64-3.pl.sophia.inria.fr', None, None),
+            ('qemu64-3.pl.sophia.inria.fr', None, None),
 #            ('qemu32-1.pl.sophia.inria.fr', None, None),
             ('qemu32-2.pl.sophia.inria.fr', None, None),
             ('qemu32-3.pl.sophia.inria.fr', None, None),
-#            ('qemu32-4.pl.sophia.inria.fr', None, None),
+            ('qemu32-4.pl.sophia.inria.fr', None, None),
+#            ('qemu32-5.pl.sophia.inria.fr', None, None),
             ]
 
     def max_qemus (self):
@@ -58,3 +62,6 @@ class OnelabTestResources (TestResources):
         return None
 
 local_resources = OnelabTestResources ()
+
+if __name__ == '__main__':
+   for (h,_,__) in local_resources.qemus_ip_pool(): print h
