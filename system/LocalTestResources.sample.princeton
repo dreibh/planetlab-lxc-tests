@@ -1,10 +1,14 @@
+#!/usr/bin/python
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
 #
-# $Id$
+# this is the file that gets installed at onelab
+# in our testmaster box as /root/LocalTestResources.py
 # 
-# this is only an example file
-# the actual file is installed in your testmaster box as /root/LocalTestResources.py
-# 
-# 
+
+if __name__ == '__main__':
+   import sys, os.path
+   sys.path.append(os.path.expanduser("~/git-tests/system"))
 
 from TestResources import TestResources
 
@@ -49,3 +53,6 @@ class PlanetlabTestResources (TestResources):
         return "plc"
 
 local_resources = PlanetlabTestResources ()
+
+if __name__ == '__main__':
+   for (h,_,__) in local_resources.qemus_ip_pool(): print h

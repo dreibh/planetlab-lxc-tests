@@ -2,8 +2,8 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
-# this is only an example file
-# the actual file is installed in your testmaster box as /root/LocalTestResources.py
+# this is the file that gets installed at onelab
+# in our testmaster box as /root/LocalTestResources.py
 # 
 
 if __name__ == '__main__':
