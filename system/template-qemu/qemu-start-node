@@ -48,8 +48,9 @@ function is_64bits () {
 # make sure to check qemu-kill-node for consistency
 
 # use kvm if available, but unless we find /root/no-kvm as this is broken on some h/w
+has_kvm=""
 [ -f /root/no-kvm ] || has_kvm=$(type -p qemu-kvm)
-if [ -n "has_kvm" ] ; then
+if [ -n "$has_kvm" ] ; then
     QEMU="qemu-kvm" ; ARGS=""
 else
     case $TARGET_ARCH in
