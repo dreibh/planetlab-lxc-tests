@@ -31,6 +31,8 @@ start () {
     netstat -rn
     echo "========== $COMMAND: entering start - end"
 
+# -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT 
+
     # take extra arg for ifname, if provided
     [ -n "$1" ] && { INTERFACE_LAN=$1; shift ; }
 
