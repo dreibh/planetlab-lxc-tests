@@ -31,7 +31,13 @@ start () {
     netstat -rn
     echo "========== $COMMAND: entering start - end"
 
-# -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT 
+    # disable netfilter calls for bridge interface (they cause panick on 2.6.35 anyway)
+    #
+    # another option would be to accept the all forward packages for
+    # bridged interface like: -A FORWARD -m physdev --physdev-is-bridged -j ACCEPT
+    sysctl net.bridge.bridge-nf-call-iptables=0
+    sysctl net.bridge.bridge-nf-call-ip6tables=0
+    sysctl net.bridge.bridge-nf-call-arptables=0
 
     # take extra arg for ifname, if provided
     [ -n "$1" ] && { INTERFACE_LAN=$1; shift ; }
