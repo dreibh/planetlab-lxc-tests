@@ -9,7 +9,7 @@ THISNODE=$(basename $(pwd -P) | sed -e s,qemu-,,)
 cd ..
 
 # somehow qemu-system-x86_64 show up in pgrep as qemu-system-x86
-COMMANDS_TO_KILL="qemu qemu-system-x86_64 qemu-system-x86"
+COMMANDS_TO_KILL="qemu qemu-system-x86_64 qemu-system-x86 qemu-kvm"
 
 function usage () {
     echo "Usage: $COMMAND -l"
