@@ -110,7 +110,7 @@ class TestPlc:
         'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
         'clean_leases', 'list_leases', SEP,
         'populate' , SEP,
-        'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
+        'safeboot_node','list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
         'plcclean_sfa', 'dbclean_sfa', 'stop_sfa','uninstall_sfa', 'clean_sfi', SEP,
         'db_dump' , 'db_restore', SEP,
         'standby_1 through 20',SEP,
@@ -932,6 +932,10 @@ class TestPlc:
     @node_mapper
     def reinstall_node (self): 
         "all nodes: mark PLCAPI boot_state as reinstall"
+        pass
+    @node_mapper
+    def safeboot_node (self): 
+        "all nodes: mark PLCAPI boot_state as safeboot"
         pass
     @node_mapper
     def export_qemu (self): 

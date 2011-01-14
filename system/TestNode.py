@@ -140,6 +140,11 @@ class TestNode:
                                            self.name(),{'boot_state':'reinstall'})
         return True
     
+    def safeboot_node (self):
+        self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
+                                           self.name(),{'boot_state':'safeboot'})
+        return True
+    
     def configure_qemu(self):
         if not self.is_qemu():
             return
