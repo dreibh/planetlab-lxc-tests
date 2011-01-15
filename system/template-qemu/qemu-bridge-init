@@ -7,8 +7,6 @@
 # virtual  machine  under QEMU, This script allows the host box
 # to share its network connection with qemu-based guests
 #
-# Author: Amine chaoui
-#
 
 COMMAND=$(basename $0)
 cd $(dirname $0)
@@ -18,11 +16,22 @@ set -x
 
 # constant
 INTERFACE_BRIDGE=br0
-# Default Value
-INTERFACE_LAN=eth0
+
+# Default Value for INTERFACE_LAN
+# let's try to figure out the interface to use - try these in order
+IFNAMES="eth0 eth1 eth2 eth3"
+function discover_interface () {
+    for ifname in $IFNAMES; do
+	ip link show $ifname | grep -q UP && { INTERFACE_LAN=$ifname; return; }
+    done
+    # still not found ? that's bad
+    INTERFACE_LAN=unknown
+}
+discover_interface
+echo $INTERFACE_LAN
 
 # Fonction de mise en place du pont
-start () {
+function start () {
 
     echo "========== $COMMAND: entering start - beg"
     hostname
@@ -109,7 +118,7 @@ start () {
 }
 
 #Adding a new interface to the bridge: this is used by qemu-ifup 
-add () {
+function add () {
 
     [[ -z "$@" ]] && { echo "Usage: $COMMAND add ifname" ; exit 1 ; }
     INTERFACE_LAN=$1; shift
@@ -150,7 +159,7 @@ add () {
 }
 
 #Stop the bridge and restore the original setting
-stop () {
+function stop () {
     # take extra arg for ifname, if provided
     [ -n "$1" ] && { INTERFACE_LAN=$1; shift ; }
 
