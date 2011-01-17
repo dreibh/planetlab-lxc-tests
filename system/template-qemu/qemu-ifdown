@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2010 INRIA 
+#
+# since qemu seems to be looking for this script..
+# do nothing as there might be several qemu instances on the same box
+
+COMMAND=$(basename $0)
+cd $(dirname $0)
+echo "Dummy $COMMAND"
