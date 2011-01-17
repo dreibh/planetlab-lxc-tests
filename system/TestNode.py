@@ -145,9 +145,14 @@ class TestNode:
                                            self.name(),{'boot_state':'safeboot'})
         return True
     
-    def nodestate_safeboot (self):
+    def nodestate_boot (self):
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
                                            self.name(),{'boot_state':'boot'})
+        return True
+
+    def nodestate_show (self):
+        state=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), self.name(), ['boot_state'])[0]['boot_state']
+        print self.name(),':',state
         return True
     
     def configure_qemu(self):
