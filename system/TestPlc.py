@@ -90,7 +90,7 @@ class TestPlc:
         'delete_vs','create_vs','install', 'configure', 'start', SEP,
         'fetch_keys', 'store_keys', 'clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
-        'reinstall_node', 'init_node','bootcd', 'configure_qemu', 'export_qemu', 'kill_all_qemus', 'start_node', SEP,
+        'nodestate_reinstall', 'init_node','bootcd', 'configure_qemu', 'export_qemu', 'kill_all_qemus', 'start_node', SEP,
 	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
         'configure_sfi@1', 'add_user_sfa@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
         'update_user_sfa@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
@@ -110,7 +110,7 @@ class TestPlc:
         'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
         'clean_leases', 'list_leases', SEP,
         'populate' , SEP,
-        'safeboot_node','list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
+        'nodestate_safeboot','nodestate_boot','list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
         'plcclean_sfa', 'dbclean_sfa', 'stop_sfa','uninstall_sfa', 'clean_sfi', SEP,
         'db_dump' , 'db_restore', SEP,
         'standby_1 through 20',SEP,
@@ -930,11 +930,15 @@ class TestPlc:
         "all nodes: compute qemu config qemu.conf and store it locally"
         pass
     @node_mapper
-    def reinstall_node (self): 
+    def nodestate_reinstall (self): 
         "all nodes: mark PLCAPI boot_state as reinstall"
         pass
     @node_mapper
-    def safeboot_node (self): 
+    def nodestate_safeboot (self): 
+        "all nodes: mark PLCAPI boot_state as safeboot"
+        pass
+    @node_mapper
+    def nodestate_boot (self): 
         "all nodes: mark PLCAPI boot_state as safeboot"
         pass
     @node_mapper

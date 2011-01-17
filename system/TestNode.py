@@ -135,14 +135,19 @@ class TestNode:
             file(filename,'w').write(base64.b64decode(encoded))
             return True
 
-    def reinstall_node (self):
+    def nodestate_reinstall (self):
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
                                            self.name(),{'boot_state':'reinstall'})
         return True
     
-    def safeboot_node (self):
+    def nodestate_safeboot (self):
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
                                            self.name(),{'boot_state':'safeboot'})
+        return True
+    
+    def nodestate_safeboot (self):
+        self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
+                                           self.name(),{'boot_state':'boot'})
         return True
     
     def configure_qemu(self):
