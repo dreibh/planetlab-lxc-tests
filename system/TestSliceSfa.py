@@ -39,35 +39,35 @@ class TestSliceSfa:
         return (found,privatekey)
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
-    def add_sfa(self,options):
+    def sfa_add_slice(self,options):
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add slice.xml")==0
 
-    def create_sfa(self,options):
+    def sfa_discover(self,options):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-        self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")
-        return \
-            self.test_plc.run_in_guest(
-               "sfiListNodes.py -i /root/.sfi/resources_in.rspec -o /root/.sfi/all_nodes.txt")==0 and \
-            self.test_plc.run_in_guest(
-               "sfiAddSliver.py -i /root/.sfi/resources_in.rspec -n /root/.sfi/all_nodes.txt -o /root/.sfi/resources_out.rspec")==0 and \
-            self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.%s.%s resources_out.rspec"%(auth,self.login_base,self.slicename))==0
+        return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")==0
 
-    def update_sfa(self,options):
+    def sfa_create_slice(self,options):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-        self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")
-        self.test_plc.run_in_guest(
-            "sfiListNodes.py -i /root/.sfi/resources_in.rspec -o /root/.sfi/all_nodes.txt")
-        self.test_plc.run_in_guest(
-            "sfiAddSliver.py -i /root/.sfi/resources_in.rspec -n /root/.sfi/all_nodes.txt -o /root/.sfi/resources_out.rspec")
-	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ create %s.%s.%s resources_out.rspec"%(auth,self.login_base,self.slicename))==0
+        commands=[
+            "sfiListNodes.py -i /root/.sfi/resources_in.rspec -o /root/.sfi/all_nodes.txt",
+            "sfiAddSliver.py -i /root/.sfi/resources_in.rspec -n /root/.sfi/all_nodes.txt -o /root/.sfi/resources_out.rspec",
+            "sfi.py -d /root/.sfi/ create %s.%s.%s resources_out.rspec"%(auth,self.login_base,self.slicename),
+            ]
+        for command in commands:
+            if self.test_plc.run_in_guest(command)!=0: return False
+        return True
 
-    def delete_slice_sfa(self,options):
+    # actually the same for now
+    def sfa_update_slice(self,options):
+        return self.sfa_create_slice(options)
+
+    def sfa_delete_slice(self,options):
 	auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.%s.%s"%(auth,self.login_base,self.slicename))
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.%s.%s"%(auth,self.login_base,self.slicename))==0
 
     # check the resulting sliver
-    def check_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
+    def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # locate a key

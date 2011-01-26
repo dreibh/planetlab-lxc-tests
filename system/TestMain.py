@@ -50,15 +50,18 @@ class TestMain:
             for (scope,steps) in scopes:
                 print '--------------------',scope
                 for step in [step for step in steps if TestPlc.valid_step(step)]:
+                    try:        (step,qualifier)=step.split('@')
+                    except:     pass
                     stepname=step
-                    if step.find("force_") == 0:
-                        stepname=step.replace("force_","")
-                        force=True
+                    for special in ['force']:
+                        stepname = stepname.replace(special+'_',"")
                     print '*',step,"\r",4*"\t",
                     try:
-                        print testplc_method_dict[stepname].__doc__
+                        doc=testplc_method_dict[stepname].__doc__
                     except:
-                        print "*** no doc found"
+                        doc=None
+                    if doc: print doc
+                    else:   print "*** no doc found"
 
     def run (self):
         self.init_steps()
@@ -105,7 +108,7 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-k","--keep-going",action="store",dest="keep_going",default=False,
                           help="proceeds even if some steps are failing")
         parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
-                           help="Used by db_dump and db_restore")
+                           help="Used by plc_db_dump and plc_db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
         parser.add_option("-i","--interactive",action="store_true",dest="interactive",default=False,
@@ -113,7 +116,7 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
         parser.add_option("-r","--restart-nm", action="store_true", dest="forcenm", default=False, 
-                          help="Force the NM to restart in check_slices step")
+                          help="Force the NM to restart in ssh_slices step")
         parser.add_option("-t","--trace", action="store", dest="trace_file", default=None,
                           #default="logs/trace-@TIME@.txt",
                           help="Trace file location")

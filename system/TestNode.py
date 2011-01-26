@@ -108,7 +108,7 @@ class TestNode:
         self.test_plc.apiserver.DeleteNode(auth,self.name())
 
     # Do most of the stuff locally - will be pushed on host_box - *not* the plc - later if needed
-    def init_node(self):
+    def qemu_local_init(self):
         utils.system("rm -rf %s"%self.nodedir())
         utils.system("mkdir %s"%self.nodedir())
         if not self.is_qemu():
@@ -151,11 +151,14 @@ class TestNode:
         return True
 
     def nodestate_show (self):
+        if self.test_plc.options.dry_run:
+            print "Dry_run: skipped getting current node state"
+            return True
         state=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), self.name(), ['boot_state'])[0]['boot_state']
         print self.name(),':',state
         return True
     
-    def configure_qemu(self):
+    def qemu_local_config(self):
         if not self.is_qemu():
             return
         mac=self.node_spec['interface_fields']['mac']
@@ -177,7 +180,7 @@ class TestNode:
         file.close()
         return True
 
-    def export_qemu (self):
+    def qemu_export (self):
         # if relevant, push the qemu area onto the host box
         if self.test_box().is_local():
             return True
@@ -186,13 +189,13 @@ class TestNode:
         utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
         return self.test_box().copy(self.nodedir(),recursive=True)==0
             
-    def start_node (self):
+    def qemu_start (self):
         model=self.node_spec['node_fields']['model']
         #starting the Qemu nodes before 
         if self.is_qemu():
             self.start_qemu()
         else:
-            utils.header("TestNode.start_node : %s model %s taken as real node"%(self.name(),model))
+            utils.header("TestNode.qemu_start : %s model %s taken as real node"%(self.name(),model))
         return True
 
     def start_qemu (self):
@@ -226,7 +229,7 @@ class TestNode:
         local_log="logs/node.qemu.%s.txt"%self.name()
         self.test_box().test_ssh.fetch(remote_log,local_log)
 
-    def clear_known_hosts (self):
+    def keys_clear_known_hosts (self):
         TestSsh(self.name()).clear_known_hosts()
         return True
 

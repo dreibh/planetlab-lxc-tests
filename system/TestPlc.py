@@ -86,34 +86,34 @@ SEPSFA='<sep_sfa>'
 class TestPlc:
 
     default_steps = [
-        'display', 'resources_pre', SEP,
-        'delete_vs','create_vs','install', 'configure', 'start', SEP,
-        'fetch_keys', 'store_keys', 'clear_known_hosts', SEP,
+        'show', 'local_pre', SEP,
+        'vs_delete','vs_create','plc_install', 'plc_configure', 'plc_start', SEP,
+        'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
-        'nodestate_reinstall', 'init_node','bootcd', 'configure_qemu', 'export_qemu', 'kill_all_qemus', 'start_node', SEP,
-	'install_sfa', 'configure_sfa', 'cross_configure_sfa', 'import_sfa', 'start_sfa', SEPSFA,
-        'configure_sfi@1', 'add_user_sfa@1', 'add_sfa@1', 'create_sfa@1', SEPSFA, 
-        'update_user_sfa@1', 'update_sfa@1', 'view_sfa@1', SEPSFA,
-        'install_unittest_sfa@1','unittest_sfa@1',SEPSFA,
-        # we used to run plcsh_stress_test, and then nodes_ssh_debug and nodes_ssh_boot
+        'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 'qemu_export', 'qemu_kill_all', 'qemu_start', SEP,
+	'sfa_install', 'sfa_configure', 'cross_sfa_configure', 'sfa_import', 'sfa_start', SEPSFA,
+        'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', 'sfa_create_slice@1', SEPSFA, 
+        'sfa_update_user@1', 'sfa_update_slice@1', 'sfa_view@1', SEPSFA,
+        'sfa_utest_install@1','sfa_utest_run@1',SEPSFA,
+        # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
-        'nodes_ssh_debug', 'plcsh_stress_test@1', SEP,
-        'nodes_ssh_boot', 'check_slice', 'check_initscripts', SEP,
-        'check_slice_sfa@1', 'delete_slice_sfa@1', 'delete_user_sfa@1', SEPSFA,
+        'ssh_node_debug', 'plcsh_stress_test@1', SEP,
+        'ssh_node_boot', 'ssh_slice', 'check_initscripts', SEP,
+        'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'check_tcp',  'check_hooks@1',  SEP,
-        'force_gather_logs', 'force_resources_post', SEP,
+        'force_gather_logs', 'force_local_post', SEP,
         ]
     other_steps = [ 
-        'show_boxes', 'resources_list','resources_release','resources_release_plc','resources_release_qemu',SEP,
-        'stop', 'vs_start', SEP,
-        'clean_initscripts', 'clean_nodegroups','clean_all_sites', SEP,
-        'clean_sites', 'clean_nodes', 'clean_slices', 'clean_keys', SEP,
-        'clean_leases', 'list_leases', SEP,
+        'show_boxes', 'local_list','local_rel','local_rel_plc','local_rel_qemu',SEP,
+        'plc_stop', 'vs_start', SEP,
+        'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
+        'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
+        'delete_leases', 'list_leases', SEP,
         'populate' , SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
-        'list_all_qemus', 'list_qemus', 'kill_qemus', SEP,
-        'plcclean_sfa', 'dbclean_sfa', 'stop_sfa','uninstall_sfa', 'clean_sfi', SEP,
-        'db_dump' , 'db_restore', SEP,
+        'qemu_list_all', 'qemu_list_mine', 'qemu_kill_mine', SEP,
+        'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEP,
+        'plc_db_dump' , 'plc_db_restore', SEP,
         'standby_1 through 20',SEP,
         ]
 
@@ -288,25 +288,25 @@ class TestPlc:
         return True
 
     # make this a valid step
-    def kill_all_qemus(self):
+    def qemu_kill_all(self):
         'kill all qemu instances on the qemu boxes involved by this setup'
         # this is the brute force version, kill all qemus on that host box
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # pass the first nodename, as we don't push template-qemu on testboxes
             nodedir=nodes[0].nodedir()
-            TestBox(box,self.options.buildname).kill_all_qemus(nodedir)
+            TestBox(box,self.options.buildname).qemu_kill_all(nodedir)
         return True
 
     # make this a valid step
-    def list_all_qemus(self):
+    def qemu_list_all(self):
         'list all qemu instances on the qemu boxes involved by this setup'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # this is the brute force version, kill all qemus on that host box
-            TestBox(box,self.options.buildname).list_all_qemus()
+            TestBox(box,self.options.buildname).qemu_list_all()
         return True
 
     # kill only the right qemus
-    def list_qemus(self):
+    def qemu_list_mine(self):
         'list qemu instances for our nodes'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # the fine-grain version
@@ -315,7 +315,7 @@ class TestPlc:
         return True
 
     # kill only the right qemus
-    def kill_qemus(self):
+    def qemu_kill_mine(self):
         'kill the qemu instances for our nodes'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # the fine-grain version
@@ -324,7 +324,7 @@ class TestPlc:
         return True
 
     #################### display config
-    def display (self):
+    def show (self):
         "show test configuration after localization"
         self.display_pass (1)
         self.display_pass (2)
@@ -433,37 +433,37 @@ class TestPlc:
         print '+\tqemu box %s'%node_spec['host_box']
         print '+\thostname=%s'%node_spec['node_fields']['hostname']
 
-    def resources_pre (self):
+    def local_pre (self):
         "run site-dependant pre-test script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_pre(self)
  
-    def resources_post (self):
+    def local_post (self):
         "run site-dependant post-test script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_post(self)
  
-    def resources_list (self):
+    def local_list (self):
         "run site-dependant list script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_list(self)
  
-    def resources_release (self):
+    def local_rel (self):
         "run site-dependant release script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_release(self)
  
-    def resources_release_plc (self):
+    def local_rel_plc (self):
         "run site-dependant release script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_release_plc(self)
  
-    def resources_release_qemu (self):
+    def local_rel_qemu (self):
         "run site-dependant release script as defined in LocalTestResources"
         from LocalTestResources import local_resources
         return local_resources.step_release_qemu(self)
  
-    def delete_vs(self):
+    def vs_delete(self):
         "vserver delete the test myplc"
         self.run_in_host("vserver --silent %s delete"%self.vservername)
         return True
@@ -472,7 +472,7 @@ class TestPlc:
     # historically the build was being fetched by the tests
     # now the build pushes itself as a subdir of the tests workdir
     # so that the tests do not have to worry about extracting the build (svn, git, or whatever)
-    def create_vs (self):
+    def vs_create (self):
         "vserver creation (no install done)"
         # push the local build/ dir to the testplc box 
         if self.is_local():
@@ -511,7 +511,7 @@ class TestPlc:
         return self.run_in_host(create_vserver) == 0
 
     ### install_rpm 
-    def install(self):
+    def plc_install(self):
         "yum install myplc, noderepo, and the plain bootstrapfs"
 
         # workaround for getting pgsql8.2 on centos5
@@ -537,7 +537,7 @@ class TestPlc:
         return self.run_in_guest("rpm -q %s"%pkgs_string)==0
 
     ### 
-    def configure(self):
+    def plc_configure(self):
         "run plc-config-tty"
         tmpname='%s.plc-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
@@ -567,12 +567,12 @@ class TestPlc:
         utils.system('rm %s'%tmpname)
         return True
 
-    def start(self):
+    def plc_start(self):
         "service plc start"
         self.run_in_guest('service plc start')
         return True
 
-    def stop(self):
+    def plc_stop(self):
         "service plc stop"
         self.run_in_guest('service plc stop')
         return True
@@ -583,19 +583,20 @@ class TestPlc:
         return True
 
     # stores the keys from the config for further use
-    def store_keys(self):
+    def keys_store(self):
         "stores test users ssh keys in keys/"
         for key_spec in self.plc_spec['keys']:
 		TestKey(self,key_spec).store_key()
         return True
 
-    def clean_keys(self):
+    def keys_clean(self):
         "removes keys cached in keys/"
-        utils.system("rm -rf %s/keys/"%os.path(sys.argv[0]))
+        utils.system("rm -rf ./keys")
+        return True
 
     # fetches the ssh keys in the plc's /etc/planetlab and stores them in keys/
     # for later direct access to the nodes
-    def fetch_keys(self):
+    def keys_fetch(self):
         "gets ssh keys in /etc/planetlab/ and stores them locally in keys/"
         dir="./keys"
         if not os.path.isdir(dir):
@@ -613,7 +614,7 @@ class TestPlc:
         "create sites with PLCAPI"
         return self.do_sites()
     
-    def clean_sites (self):
+    def delete_sites (self):
         "delete sites with PLCAPI"
         return self.do_sites(action="delete")
     
@@ -632,18 +633,19 @@ class TestPlc:
                 test_site.create_users()
         return True
 
-    def clean_all_sites (self):
+    def delete_all_sites (self):
         "Delete all sites in PLC, and related objects"
         print 'auth_root',self.auth_root()
         site_ids = [s['site_id'] for s in self.apiserver.GetSites(self.auth_root(), {}, ['site_id'])]
         for site_id in site_ids:
             print 'Deleting site_id',site_id
             self.apiserver.DeleteSite(self.auth_root(),site_id)
+        return True
 
     def nodes (self):
         "create nodes with PLCAPI"
         return self.do_nodes()
-    def clean_nodes (self):
+    def delete_nodes (self):
         "delete nodes with PLCAPI"
         return self.do_nodes(action="delete")
 
@@ -667,7 +669,7 @@ class TestPlc:
     def nodegroups (self):
         "create nodegroups with PLCAPI"
         return self.do_nodegroups("add")
-    def clean_nodegroups (self):
+    def delete_nodegroups (self):
         "delete nodegroups with PLCAPI"
         return self.do_nodegroups("delete")
 
@@ -714,7 +716,7 @@ class TestPlc:
                 
         return ok
 
-    def clean_leases (self):
+    def delete_leases (self):
         "remove all leases in the myplc side"
         lease_ids= [ l['lease_id'] for l in self.apiserver.GetLeases(self.auth_root())]
         utils.header("Cleaning leases %r"%lease_ids)
@@ -910,16 +912,16 @@ class TestPlc:
         # only useful in empty plcs
         return True
         
-    def nodes_ssh_debug(self):
+    def ssh_node_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
         return self.check_nodes_ssh(debug=True,timeout_minutes=10,silent_minutes=5)
     
-    def nodes_ssh_boot(self):
+    def ssh_node_boot(self):
         "Tries to ssh into nodes in production mode with the root ssh key"
         return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=15)
     
     @node_mapper
-    def init_node (self): 
+    def qemu_local_init (self): 
         "all nodes : init a clean local directory for holding node-dep stuff like iso image..."
         pass
     @node_mapper
@@ -927,7 +929,7 @@ class TestPlc:
         "all nodes: invoke GetBootMedium and store result locally"
         pass
     @node_mapper
-    def configure_qemu (self): 
+    def qemu_local_config (self): 
         "all nodes: compute qemu config qemu.conf and store it locally"
         pass
     @node_mapper
@@ -947,7 +949,7 @@ class TestPlc:
         "all nodes: show PLCAPI boot_state"
         pass
     @node_mapper
-    def export_qemu (self): 
+    def qemu_export (self): 
         "all nodes: push local node-dep directory on the qemu box"
         pass
         
@@ -990,7 +992,7 @@ class TestPlc:
             self.apiserver.AddInitScript(self.auth_root(),initscript['initscript_fields'])
         return True
 
-    def clean_initscripts (self):
+    def delete_initscripts (self):
         "delete initscripts with PLCAPI"
         for initscript in self.plc_spec['initscripts']:
             initscript_name = initscript['initscript_fields']['name']
@@ -1007,7 +1009,7 @@ class TestPlc:
         "create slices with PLCAPI"
         return self.do_slices()
 
-    def clean_slices (self):
+    def delete_slices (self):
         "delete slices with PLCAPI"
         return self.do_slices("delete")
 
@@ -1026,17 +1028,17 @@ class TestPlc:
         return True
         
     @slice_mapper
-    def check_slice(self): 
+    def ssh_slice(self): 
         "tries to ssh-enter the slice with the user key, to ensure slice creation"
         pass
 
     @node_mapper
-    def clear_known_hosts (self): 
+    def keys_clear_known_hosts (self): 
         "remove test nodes entries from the local known_hosts file"
         pass
     
     @node_mapper
-    def start_node (self) : 
+    def qemu_start (self) : 
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         pass
 
@@ -1074,20 +1076,20 @@ class TestPlc:
     # in particular runs with --preserve (dont cleanup) and without --check
     # also it gets run twice, once with the --foreign option for creating fake foreign entries
 
-    ### install_sfa_rpm
-    def install_sfa(self):
+    ### sfa_install_rpm
+    def sfa_install(self):
         "yum install sfa, sfa-plc and sfa-client"
         # ignore yum retcod
         self.run_in_guest("yum -y install sfa sfa-client sfa-plc sfa-sfatables")
         return  self.run_in_guest("rpm -q sfa sfa-client sfa-plc sfa-sfatables")==0
         
 
-    def dbclean_sfa(self):
+    def sfa_dbclean(self):
         "thoroughly wipes off the SFA database"
         self.run_in_guest("sfa-nuke-plc.py")==0
         return True
 
-    def plcclean_sfa(self):
+    def sfa_plcclean(self):
         "cleans the PLC entries that were created as a side effect of running the script"
         # ignore result 
         sfa_spec=self.plc_spec['sfa']
@@ -1100,10 +1102,10 @@ class TestPlc:
         try: self.apiserver.DeletePerson(self.auth_root(),username)
         except: print "User %s already absent from PLC db"%username
 
-        print "REMEMBER TO RUN import_sfa AGAIN"
+        print "REMEMBER TO RUN sfa_import AGAIN"
         return True
 
-    def uninstall_sfa(self):
+    def sfa_uninstall(self):
         "uses rpm to uninstall sfa - ignore result"
         self.run_in_guest("rpm -e sfa sfa-sfatables sfa-client sfa-plc")
         self.run_in_guest("rm -rf /var/lib/sfa")
@@ -1113,14 +1115,14 @@ class TestPlc:
         self.run_in_guest("rpm -e --noscripts sfa-plc")
         return True
 
-    ### install_sfa_rpm
-    def install_unittest_sfa(self):
+    ### sfa_install_rpm
+    def sfa_utest_install(self):
         "yum install sfa-tests"
         # ignore yum retcod
         self.run_in_guest("yum -y install sfa-tests")
         return  self.run_in_guest("rpm -q sfa-tests")==0
 
-    def unittest_sfa(self):
+    def sfa_utest_run(self):
         "run SFA unittests"
         return self.run_in_guest("/usr/share/sfa/tests/testAll.py")==0
 
@@ -1150,7 +1152,7 @@ class TestPlc:
         return utils.system("rm -rf %s"%filename)==0
     
     ###
-    def configure_sfa(self):
+    def sfa_configure(self):
         "run sfa-config-tty"
         tmpname=self.conffile("sfa-config-tty")
         fileconf=open(tmpname,'w')
@@ -1191,7 +1193,8 @@ class TestPlc:
 
 
     # a cross step that takes all other plcs in argument
-    def cross_configure_sfa(self, other_plcs):
+    def cross_sfa_configure(self, other_plcs):
+        "writes aggregates.xml and registries.xml that point to all other PLCs in the test"
         # of course with a single plc, other_plcs is an empty list
         if not other_plcs:
             return True
@@ -1206,18 +1209,19 @@ class TestPlc:
         return self.test_ssh.copy_abs(agg_fname,'/vservers/%s/etc/sfa/aggregates.xml'%self.vservername)==0 \
             and  self.test_ssh.copy_abs(reg_fname,'/vservers/%s/etc/sfa/registries.xml'%self.vservername)==0
 
-    def import_sfa(self):
+    def sfa_import(self):
         "sfa-import-plc"
 	auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         return self.run_in_guest('sfa-import-plc.py')==0
 # not needed anymore
 #        self.run_in_guest('cp /etc/sfa/authorities/%s/%s.pkey /etc/sfa/authorities/server.key'%(auth,auth))
 
-    def start_sfa(self):
+    def sfa_start(self):
         "service sfa start"
         return self.run_in_guest('service sfa start')==0
 
-    def configure_sfi(self):
+    def sfi_configure(self):
+        "Create /root/.sfi on the plc side"
         sfa_spec=self.plc_spec['sfa']
         "sfi client configuration"
 	dir_name=self.confsubdir("dot-sfi",clean=True)
@@ -1280,32 +1284,40 @@ class TestPlc:
 
         return True
 
-    def clean_sfi (self):
+    def sfi_clean (self):
+        "clean up /root/.sfi on the plc side"
         self.run_in_guest("rm -rf /root/.sfi")
         return True
 
-    def add_user_sfa(self):
+    def sfa_add_user(self):
+        "run sfi.py add using person.xml"
         return TestUserSfa(self).add_user()
 
-    @slice_sfa_mapper
-    def add_sfa(self):
-        "run sfi.py add (on Registry)"
-        pass
-
-    @slice_sfa_mapper
-    def create_sfa(self):
-        "run sfi.py create (on SM) for 1st-time creation"
-        pass
-
-    def update_user_sfa(self):
+    def sfa_update_user(self):
+        "run sfi.py update using person.xml"
         return TestUserSfa(self).update_user()
 
     @slice_sfa_mapper
-    def update_sfa(self):
+    def sfa_add_slice(self):
+        "run sfi.py add (on Registry) from slice.xml"
+        pass
+
+    @slice_sfa_mapper
+    def sfa_discover(self):
+        "discover resources into resouces_in.rspec"
+        pass
+
+    @slice_sfa_mapper
+    def sfa_create_slice(self):
+        "run sfi.py create (on SM) - 1st time"
+        pass
+
+    @slice_sfa_mapper
+    def sfa_update_slice(self):
         "run sfi.py create (on SM) on existing object"
         pass
 
-    def view_sfa(self):
+    def sfa_view(self):
         "run sfi.py list and sfi.py show (both on Registry) and sfi.py slices and sfi.py resources (both on SM)"
         sfa_spec=self.plc_spec['sfa']
 	auth=sfa_spec['SFA_REGISTRY_ROOT_AUTH']
@@ -1316,21 +1328,21 @@ class TestPlc:
 	self.run_in_guest("sfi.py -d /root/.sfi/ resources -o resources")==0
 
     @slice_sfa_mapper
-    def check_slice_sfa(self): 
+    def ssh_slice_sfa(self): 
 	"tries to ssh-enter the SFA slice"
         pass
 
-    def delete_user_sfa(self):
+    def sfa_delete_user(self):
 	"run sfi.py delete (on SM) for user"
 	test_user_sfa=TestUserSfa(self)
 	return test_user_sfa.delete_user()
 
     @slice_sfa_mapper
-    def delete_slice_sfa(self):
+    def sfa_delete_slice(self):
 	"run sfi.py delete (on SM), sfi.py remove (on Registry) to clean slices"
         pass
 
-    def stop_sfa(self):
+    def sfa_stop(self):
         "service sfa stop"
         self.run_in_guest('service sfa stop')==0
         return True
@@ -1424,14 +1436,14 @@ class TestPlc:
             name=str(d)
         return "/root/%s-%s.sql"%(database,name)
 
-    def db_dump(self):
+    def plc_db_dump(self):
         'dump the planetlab5 DB in /root in the PLC - filename has time'
         dump=self.dbfile("planetab5")
         self.run_in_guest('pg_dump -U pgsqluser planetlab5 -f '+ dump)
         utils.header('Dumped planetlab5 database in %s'%dump)
         return True
 
-    def db_restore(self):
+    def plc_db_restore(self):
         'restore the planetlab5 DB - looks broken, but run -n might help'
         dump=self.dbfile("planetab5")
         ##stop httpd service

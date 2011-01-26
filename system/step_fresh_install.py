@@ -11,4 +11,4 @@ def run03_configure (test_plc):
     return test_plc.configure()
 def run04_dump_just_installed (test_plc):
     options.dbname='just-installed'
-    return test_plc.db_dump()
+    return test_plc.plc_db_dump()

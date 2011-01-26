@@ -78,7 +78,7 @@ class TestSlice:
                     found=True
         return (found,privatekey)
 
-    def check_slice(self,options,timeout_minutes=20,silent_minutes=10,period=15):
+    def ssh_slice(self,options,timeout_minutes=20,silent_minutes=10,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # locate a key
