@@ -249,7 +249,7 @@ def plc (options,index) :
         'PLC_SLICE_PREFIX' : 'auto',
         'PLC_SHORTNAME' : 'Rlab',
         'PLC_MAIL_ENABLED':'false',
-        'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
+        'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@inria.fr',
         'PLC_DB_HOST' : 'deferred-myplc-hostname',
         'PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
         'PLC_API_HOST' : 'deferred-myplc-hostname',

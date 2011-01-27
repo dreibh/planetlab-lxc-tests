@@ -246,7 +246,7 @@ def plc () :
         'PLC_ROOT_PASSWORD' : 'test++',
         'PLC_NAME' : 'WifiLab',
         'PLC_MAIL_ENABLED':'true',
-        'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@sophia.inria.fr',
+        'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@inria.fr',
         'PLC_DB_HOST' : 'wlab24.inria.fr',
         'PLC_API_HOST' : 'wlab24.inria.fr',
         'PLC_WWW_HOST' : 'wlab24.inria.fr',
