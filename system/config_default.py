@@ -258,7 +258,7 @@ def plc (options,index) :
         'PLC_NET_DNS1' : 'deferred-dns-1',
         'PLC_NET_DNS2' : 'deferred-dns-2',
         'PLC_RESERVATION_GRANULARITY':1800,
-        'PLC_OMF_ENABLED' : 'false',
+        'PLC_OMF_ENABLED' : 'true',
         'sites' : sites(options,index),
         'keys' : keys(options,index),
         'initscripts': initscripts(options,index),
