@@ -104,8 +104,9 @@ class TestPlc:
         'force_gather_logs', 'force_local_post', SEP,
         ]
     other_steps = [ 
+        'free_all',
         'show_boxes', 'local_list','local_rel','local_rel_plc','local_rel_qemu',SEP,
-        'plc_stop', 'vs_start', SEP,
+        'plc_stop', 'vs_start', 'vs_stop', SEP,
         'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
         'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
         'delete_leases', 'list_leases', SEP,
@@ -172,6 +173,9 @@ class TestPlc:
     def start_guest (self):
       return utils.system(self.test_ssh.actual_command(self.start_guest_in_host()))
     
+    def stop_guest (self):
+      return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host()))
+    
     def run_in_guest (self,command):
         return utils.system(self.actual_command_in_guest(command))
     
@@ -182,9 +186,12 @@ class TestPlc:
     def host_to_guest(self,command):
         return "vserver %s exec %s"%(self.vservername,command)
     
-    #command gets run in the vserver
+    #start/stop the vserver
     def start_guest_in_host(self):
         return "vserver %s start"%(self.vservername)
+    
+    def stop_guest_in_host(self):
+        return "vserver %s stop"%(self.vservername)
     
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
@@ -580,6 +587,11 @@ class TestPlc:
     def vs_start (self):
         "start the PLC vserver"
         self.start_guest()
+        return True
+
+    def vs_stop (self):
+        "stop the PLC vserver"
+        self.stop_guest()
         return True
 
     # stores the keys from the config for further use

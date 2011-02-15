@@ -59,7 +59,12 @@ class TestMain:
                     try:
                         doc=testplc_method_dict[stepname].__doc__
                     except:
-                        doc=None
+                        try:
+                            # locate the step_<name> module
+                            modulename='step_'+stepname
+                            doc = __import__(modulename).__doc__
+                        except:
+                            doc=None
                     if doc: print doc
                     else:   print "*** no doc found"
 
