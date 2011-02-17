@@ -564,6 +564,7 @@ class TestPlc:
                      'PLC_NET_DNS2',
                      'PLC_RESERVATION_GRANULARITY',
                      'PLC_OMF_ENABLED',
+                     'PLC_OMF_XMPP_SERVER',
                      ]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec[var]))
         fileconf.write('w\n')
