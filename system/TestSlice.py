@@ -55,9 +55,14 @@ class TestSlice:
             hostnames += [test_node.name()]
         utils.header("Adding %r in %s"%(hostnames,slice_name))
         self.test_plc.apiserver.AddSliceToNodes(auth, slice_name, hostnames)
-        if self.slice_spec.has_key('initscriptname'):
+        # add initscript body or name as appropriate
+        if self.slice_spec.has_key('initscriptbody'):
+            isbody=self.slice_spec['initscriptbody']
+            utils.header("Adding initscript body %s in %s"%(isbody,slice_name))
+            self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,'initscript_body',body)
+        elif self.slice_spec.has_key('initscriptname'):
             isname=self.slice_spec['initscriptname']
-            utils.header("Adding initscript %s in %s"%(isname,slice_name))
+            utils.header("Adding initscript name %s in %s"%(isname,slice_name))
             self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,'initscript',isname)
         if self.slice_spec.has_key ('vref'):
             vref_value=self.slice_spec['vref']

@@ -980,9 +980,9 @@ class TestPlc:
     def do_check_initscripts(self):
         overall = True
         for slice_spec in self.plc_spec['slices']:
-            if not slice_spec.has_key('initscriptname'):
+            if not slice_spec.has_key('initscriptstamp'):
                 continue
-            initscript=slice_spec['initscriptname']
+            stamp=slice_spec['initscriptstamp']
             for nodename in slice_spec['nodenames']:
                 (site,node) = self.locate_node (nodename)
                 # xxx - passing the wrong site - probably harmless
@@ -990,7 +990,7 @@ class TestPlc:
                 test_slice = TestSlice (self,test_site,slice_spec)
                 test_node = TestNode (self,test_site,node)
                 test_sliver = TestSliver (self, test_node, test_slice)
-                if not test_sliver.check_initscript(initscript):
+                if not test_sliver.check_initscript_stamp(stamp):
                     overall = False
         return overall
 	    

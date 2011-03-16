@@ -147,52 +147,64 @@ def keys (options,index):
                               'key': public_key}}
              ]
 
-def initscripts(options,index): 
-    initscripts= [ { 'initscript_fields' : 
-                     { 'enabled' : True,
-                       'name':'script1',
-                       'script' : """#! /bin/sh
-(echo Starting test initscript: script1; date) >> /tmp/script1.stamp
-# expected to be 'start'
-command=$1; shift
-# get slice name
-slicename=$1; shift
-echo "This is the stdout of the sliver $slicename initscript $command (exp. start) pid=$$" 
-echo "This is the stderr of the sliver $slicename initscript $command (exp. start) pid=$$" 1>&2
-""",
-                       }},
-                   { 'initscript_fields' : 
-                     { 'enabled' : True,
-                       'name':'script2',
-                       'script' : """#! /bin/sh
-(echo Starting loop-forever test initscript: script2; date) >> /tmp/script2.stamp
-# expected to be 'start'
-command=$1; shift
-# get slice name
-slicename=$1; shift
-while true; do
-echo "This is the stdout of the loop-for-ever sliver initscript $slicename $command (exp. start) $$" 
-echo "This is the stderr of the loop-for-ever sliver initscript $slicename $command (exp. start) $$" 1>&2
-sleep 10
-done
-""",
-                       }},
-                   ]
-    return initscripts
 
+############################## initscripts
+initscript_by_name="""#! /bin/sh
+builtin="the_script_name"
+stamp=/tmp/$builtin.stamp
+command=$1; shift
+slicename=$1; shift
+case $command in 
+start)
+  (echo Starting test initscript: $builtin on slicename $slicename ; date) >> $stamp
+  echo "This is the stdout of the sliver $slicename initscript $command (exp. start) pid=$$" 
+  echo "This is the stderr of the sliver $slicename initscript $command (exp. start) pid=$$" 1>&2
+;;
+stop)
+  rm $stamp
+;;
+restart)
+  echo "Dummy restart"
+;;
+*)
+  echo "Unknown command in initscript $command"
+;;
+esac
+"""
+
+initscript_by_body=initscript_by_name.replace("the_script_name","the_script_body")
+
+# one single initscript in the InitScripts table
+def initscripts(options,index): 
+    return [ { 'initscript_fields' : { 'enabled' : True,
+                                       'name':'the_script_name',
+                                       'script' : initscript_by_name,
+                                       }},
+             ]
+
+# always return 2 slices
+# one has an initscript body, the other one an initscript name
 def slices (options,index):
-    return [ { 'slice_fields': {'name':'%s_pslc%d'%(login_base(index),i),
-                                'instantiation':'plc-instantiated',
-                                'url':'http://foo%d.com'%index,
-                                'description':'testslice number %d'%i,
-                                'max_nodes':2,
-                                },
-               'usernames' : [ 'pi','tech','techuser' ],
-               'nodenames' : all_nodenames(options,index),
-               'initscriptname' : 'script%d'%(((i-1)%2)+1),
-               'sitename' : login_base(index),
-               'owner' : 'pi',
-               } for i in range (2*index-1,2*index+1) ]
+    def theslice (i):
+        slice_spec = { 'slice_fields': {'name':'%s_pslc%d'%(login_base(index),i),
+                                        'instantiation':'plc-instantiated',
+                                        'url':'http://foo%d.com'%index,
+                                        'description':'testslice number %d'%i,
+                                        'max_nodes':2,
+                                        },
+                       'usernames' : [ 'pi','tech','techuser' ],
+                       'nodenames' : all_nodenames(options,index),
+                       'sitename' : login_base(index),
+                       'owner' : 'pi',
+                       }
+        # odd one has an initscript_body
+        if i%2==1:
+            slice_spec['initscriptbody']=initscript_by_body
+            slice_spec['initscriptstamp']='the_script_body'
+        else:
+            slice_spec['initscriptname']='the_script_name'
+            slice_spec['initscriptstamp']='the_script_name'
+    return [ theslice(1) for i in range (2*index-1,2*index+1) ]
 
 def all_slicenames (options,index):
     return [ slice['slice_fields']['name'] for slice in slices(options,index)]
