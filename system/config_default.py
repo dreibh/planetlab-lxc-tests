@@ -201,9 +201,11 @@ def slices (options,index):
         if i%2==1:
             slice_spec['initscriptbody']=initscript_by_body
             slice_spec['initscriptstamp']='the_script_body'
+        # even one has an initscript (name)
         else:
             slice_spec['initscriptname']='the_script_name'
             slice_spec['initscriptstamp']='the_script_name'
+        return slice_spec
     return [ theslice(1) for i in range (2*index-1,2*index+1) ]
 
 def all_slicenames (options,index):
