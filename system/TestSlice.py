@@ -59,7 +59,7 @@ class TestSlice:
         if self.slice_spec.has_key('initscriptbody'):
             isbody=self.slice_spec['initscriptbody']
             utils.header("Adding initscript body %s in %s"%(isbody,slice_name))
-            self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,'initscript_body',body)
+            self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,'initscript_body',isbody)
         elif self.slice_spec.has_key('initscriptname'):
             isname=self.slice_spec['initscriptname']
             utils.header("Adding initscript name %s in %s"%(isname,slice_name))

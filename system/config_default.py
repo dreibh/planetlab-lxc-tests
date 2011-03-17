@@ -206,7 +206,7 @@ def slices (options,index):
             slice_spec['initscriptname']='the_script_name'
             slice_spec['initscriptstamp']='the_script_name'
         return slice_spec
-    return [ theslice(1) for i in range (2*index-1,2*index+1) ]
+    return [ theslice(i) for i in range (2*index-1,2*index+1) ]
 
 def all_slicenames (options,index):
     return [ slice['slice_fields']['name'] for slice in slices(options,index)]
