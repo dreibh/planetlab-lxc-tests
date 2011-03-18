@@ -150,25 +150,31 @@ def keys (options,index):
 
 ############################## initscripts
 initscript_by_name="""#! /bin/sh
-builtin="the_script_name"
-stamp=/tmp/$builtin.stamp
 command=$1; shift
 slicename=$1; shift
-case $command in 
-start)
-  (echo Starting test initscript: $builtin on slicename $slicename ; date) >> $stamp
+stamp="the_script_name"
+stampfile=/tmp/$stamp.stamp
+
+echo "Running initscript with command=$command and slicename=$slicename"
+
+function start () {
+  (echo Starting test initscript: $stamp on slicename $slicename ; date) >> $stampfile
   echo "This is the stdout of the sliver $slicename initscript $command (exp. start) pid=$$" 
   echo "This is the stderr of the sliver $slicename initscript $command (exp. start) pid=$$" 1>&2
-;;
-stop)
-  rm $stamp
-;;
-restart)
-  echo "Dummy restart"
-;;
-*)
-  echo "Unknown command in initscript $command"
-;;
+}
+function stop () {
+  echo "Removing stamp $stampfile"
+  rm -f $stampfile
+}
+function restart () {
+  stop
+  start
+}
+case $command in 
+start) start ;;
+stop) stop ;;
+restart) restart ;;
+*) echo "Unknown command in initscript $command" ;;
 esac
 """
 
