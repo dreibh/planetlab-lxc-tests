@@ -149,7 +149,7 @@ def keys (options,index):
 
 
 ############################## initscripts
-initscript_by_name="""#! /bin/sh
+initscript_by_name="""#!/bin/bash
 command=$1; shift
 slicename=$1; shift
 stamp="the_script_name"
