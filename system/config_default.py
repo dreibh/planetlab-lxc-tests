@@ -178,7 +178,7 @@ restart) restart ;;
 esac
 """
 
-initscript_by_body=initscript_by_name.replace("the_script_name","the_script_body")
+initscript_by_code=initscript_by_name.replace("the_script_name","the_script_code")
 
 # one single initscript in the InitScripts table
 def initscripts(options,index): 
@@ -189,7 +189,7 @@ def initscripts(options,index):
              ]
 
 # always return 2 slices
-# one has an initscript body, the other one an initscript name
+# one has an initscript code, the other one an initscript name
 def slices (options,index):
     def theslice (i):
         slice_spec = { 'slice_fields': {'name':'%s_pslc%d'%(login_base(index),i),
@@ -203,10 +203,10 @@ def slices (options,index):
                        'sitename' : login_base(index),
                        'owner' : 'pi',
                        }
-        # odd one has an initscript_body
+        # odd one has an initscript_code
         if i%2==1:
-            slice_spec['initscriptbody']=initscript_by_body
-            slice_spec['initscriptstamp']='the_script_body'
+            slice_spec['initscriptcode']=initscript_by_code
+            slice_spec['initscriptstamp']='the_script_code'
         # even one has an initscript (name)
         else:
             slice_spec['initscriptname']='the_script_name'
