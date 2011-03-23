@@ -198,7 +198,7 @@ def slices (options,index):
                                         'description':'testslice number %d'%i,
                                         'max_nodes':2,
                                         },
-                       'usernames' : [ 'pi','tech','techuser' ],
+                       'usernames' : [ 'pi','user','techuser' ],
                        'nodenames' : all_nodenames(options,index),
                        'sitename' : login_base(index),
                        'owner' : 'pi',
