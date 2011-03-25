@@ -1206,8 +1206,9 @@ class TestPlc:
         return True
 
     def aggregate_xml_line(self):
-        return '<aggregate addr="%s" hrn="%s" port="12347"/>' % \
-            (self.vserverip,self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'])
+        port=self.plc_spec['sfa']['neighbours-port']
+        return '<aggregate addr="%s" hrn="%s" port="%r"/>' % \
+            (self.vserverip,self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'],port)
 
     def registry_xml_line(self):
         return '<registry addr="%s" hrn="%s" port="12345"/>' % \

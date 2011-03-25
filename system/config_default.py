@@ -317,6 +317,9 @@ def sfa (options,index) :
         'regularuser':regularuser,
         'slicename' : slicename,
         'domain':domain,
+        # the default is to use AMs in the various aggregates.xml
+        # stack config_sfamesh to point to SMs instead
+        'neighbours-port':12346,
     }
 
 def sfa_slice_specs (options,index,slicename,regularuser):
