@@ -100,10 +100,11 @@ class TestPlc:
         'ssh_node_debug', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'check_tcp',  'check_hooks@1',  SEP,
+        'check_tcp',  SEP,
         'force_gather_logs', 'force_local_post', SEP,
         ]
     other_steps = [ 
+        'check_hooks',  
         'free_all',
         'show_boxes', 'local_list','local_rel','local_rel_plc','local_rel_qemu',SEP,
         'plc_stop', 'vs_start', 'vs_stop', SEP,
