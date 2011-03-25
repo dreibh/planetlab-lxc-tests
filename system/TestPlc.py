@@ -93,7 +93,7 @@ class TestPlc:
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 'qemu_export', 'qemu_kill_all', 'qemu_start', SEP,
 	'sfa_install', 'sfa_configure', 'cross_sfa_configure', 'sfa_import', 'sfa_start', SEPSFA,
         'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
-        'sfa_create_slice@1', 'sfa_check_slice_plc', SEPSFA, 
+        'sfa_create_slice@1', 'sfa_check_slice_plc@1', SEPSFA, 
         'sfa_update_user@1', 'sfa_update_slice@1', 'sfa_view@1', 'sfa_utest@1',SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
