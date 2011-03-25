@@ -92,7 +92,8 @@ class TestPlc:
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 'qemu_export', 'qemu_kill_all', 'qemu_start', SEP,
 	'sfa_install', 'sfa_configure', 'cross_sfa_configure', 'sfa_import', 'sfa_start', SEPSFA,
-        'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', 'sfa_create_slice@1', SEPSFA, 
+        'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
+        'sfa_create_slice@1', 'sfa_check_slice_plc', SEPSFA, 
         'sfa_update_user@1', 'sfa_update_slice@1', 'sfa_view@1', 'sfa_utest@1',SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
@@ -1204,7 +1205,7 @@ class TestPlc:
         return True
 
     def aggregate_xml_line(self):
-        return '<aggregate addr="%s" hrn="%s" port="12346"/>' % \
+        return '<aggregate addr="%s" hrn="%s" port="12347"/>' % \
             (self.vserverip,self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'])
 
     def registry_xml_line(self):
@@ -1330,6 +1331,11 @@ class TestPlc:
     @slice_sfa_mapper
     def sfa_create_slice(self):
         "run sfi.py create (on SM) - 1st time"
+        pass
+
+    @slice_sfa_mapper
+    def sfa_check_slice_plc(self):
+        "check sfa_create_slice at the plcs - all local nodes should be in slice"
         pass
 
     @slice_sfa_mapper
