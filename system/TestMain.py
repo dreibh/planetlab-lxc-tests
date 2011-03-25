@@ -141,16 +141,16 @@ steps refer to a method in TestPlc or to a step_* module
             setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
 
         # handle defaults and option persistence
-        for (recname,filename,default) in (
-            ('build_url','arg-build-url',TestMain.default_build_url) ,
-            ('ips_node','arg-ips-node',[]) , 
-            ('ips_plc','arg-ips-plc',[]) , 
-            ('ips_qemu','arg-ips-qemu',[]) , 
-            ('config','arg-config',TestMain.default_config) , 
-            ('arch_rpms_url','arg-arch-rpms-url',"") , 
-            ('personality','arg-personality',"linux32"),
-            ('pldistro','arg-pldistro',"planetlab"),
-            ('fcdistro','arg-fcdistro','centos5'),
+        for (recname,filename,default,need_reverse) in (
+            ('build_url','arg-build-url',TestMain.default_build_url,None) ,
+            ('ips_node','arg-ips-node',[],True) , 
+            ('ips_plc','arg-ips-plc',[],True) , 
+            ('ips_qemu','arg-ips-qemu',[],True) , 
+            ('config','arg-config',TestMain.default_config,False) , 
+            ('arch_rpms_url','arg-arch-rpms-url',"",None) , 
+            ('personality','arg-personality',"linux32",None),
+            ('pldistro','arg-pldistro',"planetlab",None),
+            ('fcdistro','arg-fcdistro','centos5',None),
             ) :
 #            print 'handling',recname
             path=filename
@@ -185,7 +185,8 @@ steps refer to a method in TestPlc or to a step_* module
 #            utils.header('Saved %s into %s'%(recname,filename))
 
             # lists need be reversed
-            if isinstance(getattr(self.options,recname),list):
+            # I suspect this is useful for the various pools but for config, it's painful
+            if isinstance(getattr(self.options,recname),list) and need_reverse:
                 getattr(self.options,recname).reverse()
 
             if self.options.verbose:
