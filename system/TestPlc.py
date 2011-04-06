@@ -1159,13 +1159,13 @@ class TestPlc:
 
     def conffile(self,filename):
         return "%s/%s"%(self.confdir(),filename)
-    def confsubdir(self,dirname,clean):
+    def confsubdir(self,dirname,clean,dry_run=False):
         subdirname="%s/%s"%(self.confdir(),dirname)
         if clean:
             utils.system("rm -rf %s"%subdirname)
         if not os.path.isdir(subdirname): 
             utils.system("mkdir -p %s"%subdirname)
-        if not os.path.isdir(subdirname):
+        if not dry_run and not os.path.isdir(subdirname):
             raise "Cannot create config subdir %s for plc %s"%(dirname,self.name())
         return subdirname
         
@@ -1244,10 +1244,10 @@ class TestPlc:
         return self.run_in_guest('service sfa start')==0
 
     def sfi_configure(self):
-        "Create /root/.sfi on the plc side"
+        "Create /root/.sfi on the plc side for sfi client configuration"
         sfa_spec=self.plc_spec['sfa']
-        "sfi client configuration"
-	dir_name=self.confsubdir("dot-sfi",clean=True)
+	dir_name=self.confsubdir("dot-sfi",clean=True,dry_run=self.options.dry_run)
+        if self.options.dry_run: return True
 	file_name=dir_name + os.sep + sfa_spec['piuser'] + '.pkey'
         fileconf=open(file_name,'w')
         fileconf.write (self.plc_spec['keys'][0]['private'])
