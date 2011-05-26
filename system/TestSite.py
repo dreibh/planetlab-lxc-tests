@@ -23,9 +23,9 @@ class TestSite:
     def create_site (self):
         print self.test_plc.auth_root()
         self.test_plc.apiserver.AddSite(self.test_plc.auth_root(),
-                                                    self.site_spec['site_fields'])
+                                        self.site_spec['site_fields'])
         self.test_plc.apiserver.AddSiteAddress(self.test_plc.auth_root(),self.name(),
-                                            self.site_spec['address_fields'])
+                                               self.site_spec['address_fields'])
             
     def create_users (self):
         for user_spec in self.site_spec['users']:

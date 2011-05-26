@@ -92,11 +92,15 @@ def all_usernames (options):
     return [ user['name'] for user in users(options)]
 
 def sites (options,index):
+    latitude= -90 + (index*10)
+    longitude= -180 + (index*20)
     return [ {'site_fields' : {'name':'main site for plc number %d'%index,
                                'login_base':login_base(index),
                                'abbreviated_name':'PlanetTest%d'%index,
                                'max_slices':100,
                                'url':'http://test.onelab.eu',
+                               'latitude':float(latitude),
+                               'longitude':float(longitude),
                                },
               'address_fields' : {'line1':'route des lucioles',
                                   'city':'sophia',
