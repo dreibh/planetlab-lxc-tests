@@ -2,8 +2,8 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
-# this is the file that gets installed at onelab
-# in our testmaster box as /root/LocalTestResources.py
+# this is only an example file
+# the actual file is installed in your testmaster box as /root/LocalTestResources.py
 # 
 
 if __name__ == '__main__':
@@ -36,18 +36,17 @@ class OnelabTestResources (TestResources):
     # removing qemu64-3 until it gets on the right IP segment again
     def qemus_ip_pool (self):
         return [
-            ('qemu64-1.pl.sophia.inria.fr', None, None),
-            ('qemu64-2.pl.sophia.inria.fr', None, None),
-            ('qemu64-3.pl.sophia.inria.fr', None, None),
-#            ('qemu32-1.pl.sophia.inria.fr', None, None),
-            ('qemu32-2.pl.sophia.inria.fr', None, None),
-            ('qemu32-3.pl.sophia.inria.fr', None, None),
-            ('qemu32-4.pl.sophia.inria.fr', None, None),
-#            ('qemu32-5.pl.sophia.inria.fr', None, None),
+            ('kvm64-1.pl.sophia.inria.fr', None, None),
+            ('kvm64-2.pl.sophia.inria.fr', None, None),
+            ('kvm64-3.pl.sophia.inria.fr', None, None),
+            ('kvm64-4.pl.sophia.inria.fr', None, None),
+            ('kvm64-5.pl.sophia.inria.fr', None, None),
+            ('kvm64-6.pl.sophia.inria.fr', None, None),
             ]
 
     def max_qemus (self):
-        return len(self.qemus_ip_pool())-1
+       # let's be tight; nighlty builds.sh wipes it clean beforehand
+        return len(self.qemus_ip_pool())
 
     # 1 to 15
     def plcs_ip_pool (self):
@@ -56,7 +55,8 @@ class OnelabTestResources (TestResources):
                     '02:34:56:00:ee:%02d'%i) for i in range(1,16) ]
 
     def max_plcs (self):
-        return len(self.plcs_ip_pool())-2
+       # leave space for the triangle setups
+        return len(self.plcs_ip_pool())-3
 
     def preferred_hostname (self):
         return None
