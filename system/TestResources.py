@@ -88,6 +88,8 @@ class TestResources:
             else:
                 tracker=TrackerQemu(options,instances=self.max_qemus()-1)
                 (hostname,ip,mac) = ip_pool.next_free(tracker.nodenames())
+            # myplc needs a fqdn or whines otherwise
+            if hostname.find('.')<0: hostname += "." + self.domain()
             utils.header('Attaching node %s to %s (%s)'%(nodename,hostname,ip))
             node_dict= {'node_fields:hostname':hostname,
                         'interface_fields:ip':ip, 
