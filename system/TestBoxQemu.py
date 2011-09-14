@@ -8,7 +8,7 @@ import utils
 from TestSsh import TestSsh
 
 # xxx this should probably inherit TestSsh
-class TestBox:
+class TestBoxQemu:
 
     def __init__(self,hostname,buildname,key=None):
         self.hostname_value=hostname

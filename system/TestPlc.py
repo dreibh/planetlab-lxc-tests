@@ -16,7 +16,7 @@ from TestUser import TestUser
 from TestKey import TestKey
 from TestSlice import TestSlice
 from TestSliver import TestSliver
-from TestBox import TestBox
+from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
 from TestApiserver import TestApiserver
 from TestSliceSfa import TestSliceSfa
@@ -302,7 +302,7 @@ class TestPlc:
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # pass the first nodename, as we don't push template-qemu on testboxes
             nodedir=nodes[0].nodedir()
-            TestBox(box,self.options.buildname).qemu_kill_all(nodedir)
+            TestBoxQemu(box,self.options.buildname).qemu_kill_all(nodedir)
         return True
 
     # make this a valid step
@@ -310,7 +310,7 @@ class TestPlc:
         'list all qemu instances on the qemu boxes involved by this setup'
         for (box,nodes) in self.gather_hostBoxes().iteritems():
             # this is the brute force version, kill all qemus on that host box
-            TestBox(box,self.options.buildname).qemu_list_all()
+            TestBoxQemu(box,self.options.buildname).qemu_list_all()
         return True
 
     # kill only the right qemus

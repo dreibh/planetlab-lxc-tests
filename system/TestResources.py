@@ -11,7 +11,7 @@ from Trackers import TrackerPlc, TrackerQemu
 
 class TestResources:
 
-    # need more specialization, see an example in OnelabTestResources
+    # need more specialization, see an example in LocalTestResources.sample.inria
 
     ########## 
     def localize (self,plcs,options):

@@ -6,7 +6,7 @@ import xmlrpclib
 
 import utils
 from TestUser import TestUser
-from TestBox import TestBox
+from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
 
 class TestNode:
@@ -51,12 +51,12 @@ class TestNode:
                 utils.header("WARNING : qemu nodes need a host box")
                 return 'localhost'
 
-    # this returns a TestBox instance - cached in .test_box_value
+    # this returns a TestBoxQemu instance - cached in .test_box_value
     def test_box (self):
         try:
             return self.test_box_value
         except:
-            self.test_box_value = TestBox (self.host_box(),self.buildname())
+            self.test_box_value = TestBoxQemu (self.host_box(),self.buildname())
             return self.test_box_value
 
     def create_node (self):
