@@ -37,7 +37,7 @@ class TestPool:
     # let's be flexible
     def match (self,triple,hostname_or_ip):
         (h,i,u)=triple
-        return h.find(hostname_or_ip)>=0  or (i and i.find(hostname_or_ip)>=0)
+        return h.find(hostname_or_ip)>=0  or (i and i.find(hostname_or_ip)>=0) or hostname_or_ip.find(h)==0
 
     def locate_entry (self, hostname_or_ip):
         for (h,i,u) in self.pool:
