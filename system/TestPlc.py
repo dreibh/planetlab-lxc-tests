@@ -86,7 +86,7 @@ SEPSFA='<sep_sfa>'
 class TestPlc:
 
     default_steps = [
-        'show', 'local_pre', SEP,
+        'show', 'timestamp_plc', 'timestamp_qemu', SEP,
         'vs_delete','vs_create','plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
@@ -441,6 +441,12 @@ class TestPlc:
         print '+\tqemu box %s'%node_spec['host_box']
         print '+\thostname=%s'%node_spec['node_fields']['hostname']
 
+    # write a timestamp in /vservers/<>/
+    def timestamp_plc (self):
+        now=int(time.time())
+        utils.system(self.test_ssh.actual_command("mkdir -p /vservers/%s"%self.vservername))
+        return utils.system(self.test_ssh.actual_command("echo %d > /vservers/%s/timestamp"%(now,self.vservername)))==0
+        
     def local_pre (self):
         "run site-dependant pre-test script as defined in LocalTestResources"
         from LocalTestResources import local_resources
@@ -1053,6 +1059,11 @@ class TestPlc:
     
     @node_mapper
     def qemu_start (self) : 
+        "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
+        pass
+
+    @node_mapper
+    def timestamp_qemu (self) : 
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         pass
 

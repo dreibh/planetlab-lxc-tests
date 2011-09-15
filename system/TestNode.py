@@ -198,8 +198,13 @@ class TestNode:
             utils.header("TestNode.qemu_start : %s model %s taken as real node"%(self.name(),model))
         return True
 
+    def timestamp_qemu (self):
+        test_box = self.test_box()
+        test_box.run_in_buildname("mkdir -p %s"%self.nodedir())
+        now=int(time.time())
+        return test_box.run_in_buildname("echo %d > %s/timestamp"%(now,self.nodedir()))==0
+
     def start_qemu (self):
-        options = self.test_plc.options
         test_box = self.test_box()
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 

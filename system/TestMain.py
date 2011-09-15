@@ -14,9 +14,9 @@ from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
 
-# add $HOME in PYTHONPATH so we can import LocalTestResources.py
+# add $HOME in PYTHONPATH so we can import LocalSubstrate.py
 sys.path.append(os.environ['HOME'])
-import LocalTestResources
+import LocalSubstrate
 
 class TestMain:
 
@@ -75,7 +75,7 @@ arch-rpms-url defaults to the last value used, as stored in arg-arch-rpms-url,
    no default
 config defaults to the last value used, as stored in arg-config,
    or %r
-ips_node, ips_plc and ips_qemu defaults to the last value used, as stored in arg-ips-{node,plc,qemu},
+ips_vnode, ips_vplc and ips_qemu defaults to the last value used, as stored in arg-ips-{node,vplc,qemu},
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
 ===
@@ -100,9 +100,9 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
                           help="List known steps")
-        parser.add_option("-N","--nodes",action="append", dest="ips_node", default=[],
+        parser.add_option("-N","--nodes",action="append", dest="ips_vnode", default=[],
                           help="Specify the set of hostname/IP's to use for nodes")
-        parser.add_option("-P","--plcs",action="append", dest="ips_plc", default=[],
+        parser.add_option("-P","--plcs",action="append", dest="ips_vplc", default=[],
                           help="Specify the set of hostname/IP's to use for plcs")
         parser.add_option("-Q","--qemus",action="append", dest="ips_qemu", default=[],
                           help="Specify the set of hostname/IP's to use for qemu boxes")
@@ -137,20 +137,20 @@ steps refer to a method in TestPlc or to a step_* module
                     result.append(el)
             return result
         # flatten relevant options
-        for optname in ['config','exclude','ips_node','ips_plc','ips_qemu']:
+        for optname in ['config','exclude','ips_vnode','ips_vplc','ips_qemu']:
             setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
 
         # handle defaults and option persistence
         for (recname,filename,default,need_reverse) in (
             ('build_url','arg-build-url',TestMain.default_build_url,None) ,
-            ('ips_node','arg-ips-node',[],True) , 
-            ('ips_plc','arg-ips-plc',[],True) , 
+            ('ips_vnode','arg-ips-vnode',[],True) , 
+            ('ips_vplc','arg-ips-vplc',[],True) , 
             ('ips_qemu','arg-ips-qemu',[],True) , 
             ('config','arg-config',TestMain.default_config,False) , 
             ('arch_rpms_url','arg-arch-rpms-url',"",None) , 
-            ('personality','arg-personality',"linux32",None),
-            ('pldistro','arg-pldistro',"planetlab",None),
-            ('fcdistro','arg-fcdistro','centos5',None),
+            ('personality','arg-personality',"linux64",None),
+            ('pldistro','arg-pldistro',"onelab",None),
+            ('fcdistro','arg-fcdistro','f14',None),
             ) :
 #            print 'handling',recname
             path=filename
@@ -245,20 +245,20 @@ steps refer to a method in TestPlc or to a step_* module
                 raise
 
         # run localize as defined by local_resources
-        all_plc_specs = LocalTestResources.local_resources.localize(all_plc_specs,self.options)
+        all_plc_specs = LocalSubstrate.local_substrate.provision(all_plc_specs,self.options)
 
         # remember plc IP address(es) if not specified
-        ips_plc_file=open('arg-ips-plc','w')
+        ips_vplc_file=open('arg-ips-vplc','w')
         for plc_spec in all_plc_specs:
-            ips_plc_file.write("%s\n"%plc_spec['PLC_API_HOST'])
-        ips_plc_file.close()
+            ips_vplc_file.write("%s\n"%plc_spec['PLC_API_HOST'])
+        ips_vplc_file.close()
         # ditto for nodes
-        ips_node_file=open('arg-ips-node','w')
+        ips_vnode_file=open('arg-ips-vnode','w')
         for plc_spec in all_plc_specs:
             for site_spec in plc_spec['sites']:
                 for node_spec in site_spec['nodes']:
-                    ips_node_file.write("%s\n"%node_spec['node_fields']['hostname'])
-        ips_node_file.close()
+                    ips_vnode_file.write("%s\n"%node_spec['node_fields']['hostname'])
+        ips_vnode_file.close()
         # ditto for qemu boxes
         ips_qemu_file=open('arg-ips-qemu','w')
         for plc_spec in all_plc_specs:

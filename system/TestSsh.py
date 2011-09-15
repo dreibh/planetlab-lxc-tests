@@ -47,16 +47,18 @@ class TestSsh:
             utils.header("WARNING : something wrong in is_local_hostname with hostname=%s"%hostname)
             return False
 
-    def __init__(self,hostname,buildname=None,key=None, username=None):
+    def __init__(self,hostname,buildname=None,key=None, username=None,unknown_host=True):
         self.hostname=hostname
         self.buildname=buildname
         self.key=key
         self.username=username
+        self.unknown_host=unknown_host
 
     def is_local(self):
         return TestSsh.is_local_hostname(self.hostname)
      
-    std_options="-o BatchMode=yes -o StrictHostKeyChecking=no -o CheckHostIP=no -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null "
+    std_options="-o BatchMode=yes -o StrictHostKeyChecking=no -o CheckHostIP=no -o ConnectTimeout=5 "
+    unknown_option="-o UserKnownHostsFile=/dev/null "
     
     def key_part (self):
         if not self.key:
@@ -77,12 +79,33 @@ class TestSsh:
         if not keep_stdin:
             ssh_command += "-n "
         ssh_command += TestSsh.std_options
+        if self.unknown_host: ssh_command += TestSsh.unknown_option
         ssh_command += self.key_part()
         ssh_command += "%s %s" %(self.hostname_part(),TestSsh.backslash_shell_specials(command))
         return ssh_command
 
-    def run(self, command,background=False):
+    # same in argv form
+    def actual_argv (self, argv,keep_stdin=False):
+        if self.is_local():
+            return argv
+        ssh_argv=[]
+        ssh_argv.append('ssh')
+        if not keep_stdin: ssh_argv.append('-n')
+        ssh_argv += TestSsh.std_options.split()
+        if self.unknown_host: ssh_argv += TestSsh.unknown_option.split()
+        ssh_argv += self.key_part().split()
+        ssh_argv.append(self.hostname_part())
+        ssh_argv += argv
+        return ssh_argv
+
+    def header (self,message):
+        if not message: return
+        print "===============",message
+        sys.stdout.flush()
+
+    def run(self, command,message=None,background=False):
         local_command = self.actual_command(command)
+        self.header(message)
         return utils.system(local_command,background)
 
     def clean_dir (self,dirname):

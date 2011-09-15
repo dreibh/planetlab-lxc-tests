@@ -260,6 +260,7 @@ def leases (options, index):
 
 def plc (options,index) :
     return { 
+        'index' : index,
         'name' : 'onetest%d'%index,
         # as of yet, not sure we can handle foreign hosts, but this is required though
         'hostname' : 'deferred-myplc-hostbox-%d'%index,

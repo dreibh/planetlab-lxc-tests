@@ -6,8 +6,7 @@
 # mapper class
 # 
 # this works on a spec as defined in a config file
-# and allows to remap various fields, typically to another testbox 
-# see an example in config_onelab_testbox32.py
+# and allows to remap various fields on the local substrate
 # 
 
 import utils
@@ -58,6 +57,9 @@ class TestMapper:
                             utils.header ("WARNING : inserting key %s for path %s on %s %s"%(
                                     step,path,type,name))
                     # apply formatting if '%s' found in the value
+                    if v is None:
+                        if self.options.verbose: print "TestMapper WARNING - None value - ignored, key=",k
+                        continue
                     if v.find('%s')>=0:
                         v=v%obj[k]
                     if self.options.verbose:
