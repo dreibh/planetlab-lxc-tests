@@ -21,7 +21,7 @@ class OnelabSubstrate (Substrate):
 
    # the vs-capable box for PLCs
    def plc_boxes_spec (self):
-      return [ ('vs64-1', 10),  # how many plcs max in this box
+      return [ ('vs64-1', 20),  # how many plcs max in this box
                ]  
 
    # vplc01 to 15
@@ -29,16 +29,16 @@ class OnelabSubstrate (Substrate):
       return [  ( 'vplc%02d'%i,                 # DNS name
 #                  '02:34:56:00:ee:%02d'%i)     # MAC address 
                   'unused')                     # MAC address 
-                for i in range(1,5) ] # 21
+                for i in range(1,20) ] # 21
 
    def qemu_boxes_spec (self):
       return [
-#         ('kvm64-1', 3), # how many plcs max in this box
+         ('kvm64-1', 3), # how many plcs max in this box
          ('kvm64-2', 3),
-#         ('kvm64-3', 3),
-#         ('kvm64-4', 3),
-#         ('kvm64-5', 3),
-#         ('kvm64-6', 3),
+         ('kvm64-3', 3),
+         ('kvm64-4', 3),
+         ('kvm64-5', 3),
+         ('kvm64-6', 3),
          ]
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
