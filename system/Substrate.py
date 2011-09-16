@@ -161,7 +161,7 @@ class Pool:
         return status == 0
 
     # the place were other test instances tell about their not-yet-started
-    # instances
+    # instances, that go undetected through sensing
     starting='/root/starting'
     def add_starting (self, name):
         try:    items=[line.strip() for line in file(Pool.starting).readlines()]
@@ -180,7 +180,6 @@ class Pool:
 
     def release_my_fakes (self):
         for i in self.pool:
-            print 'releasing-scanning','hostname',i.hostname,'status',i.status
             if i.status=='mine': 
                 self.del_starting(i.hostname)
                 i.status=None
@@ -194,8 +193,6 @@ class Pool:
                 if item != name: f.write(item+'\n')
             f.close()
     
-    
-        
 ####################
 class Box:
     def __init__ (self,hostname):
@@ -407,8 +404,9 @@ class PlcBox (Box):
 #            print self.margin_outline(self.vplcname(longname)),"%(vserver_line)s [=%(longname)s]"%locals()
 
         # scan timestamps
+        running_ctx_ids = [ i.ctxid for i in self.plc_instances ]
         command=   ['grep','.']
-        command += ['/vservers/%s/timestamp'%b for b in ctx_dict.values()]
+        command += ['/vservers/%s/timestamp'%b for b in running_ctx_ids]
         command += ['/dev/null']
         ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for ts_line in ts_lines:
@@ -421,6 +419,7 @@ class PlcBox (Box):
                 q=self.plc_instance_by_vservername(vservername)
                 if not q: 
                     print 'WARNING unattached plc instance',ts_line
+                    print 'was expeting to find',vservername,'in',[i.vservername for i in self.plc_instances]
                     continue
                 q.set_timestamp(timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
@@ -598,9 +597,6 @@ class Substrate:
         self.vplc_pool = Pool (self.vplc_ips(),"for vplcs")
         self.vnode_pool = Pool (self.vnode_ips(),"for vnodes")
 
-        self.vnode_pool.list()
-
-
 #    def build_box_names (self):
 #        return [ h for h in self.build_boxes_spec() ]
 #    def plc_boxes (self):
@@ -732,12 +728,10 @@ class Substrate:
             if options.ips_vnode:
                 vnode_hostname=options.ips_vnode.pop()
                 mac=self.vnode_pool.retrieve_userdata(vnode_hostname)
-                print 'case 1 hostname',vnode_hostname,'mac',mac
             else:
                 self.vnode_pool.load_starting()
                 self.vnode_pool.sense()
                 (vnode_hostname,mac)=self.vnode_pool.next_free()
-                print 'case 2 hostname',vnode_hostname,'mac',mac
             ip=self.vnode_pool.get_ip (vnode_hostname)
             self.vnode_pool.add_starting(vnode_hostname)
 
