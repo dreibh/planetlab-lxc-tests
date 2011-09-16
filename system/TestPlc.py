@@ -86,11 +86,13 @@ SEPSFA='<sep_sfa>'
 class TestPlc:
 
     default_steps = [
-        'show', 'timestamp_plc', 'timestamp_qemu', SEP,
-        'vs_delete','vs_create','plc_install', 'plc_configure', 'plc_start', SEP,
+        'show', SEP,
+        'vs_delete','vs_create','timestamp_vs', SEP,
+        'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
-        'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 'qemu_export', 'qemu_kill_all', 'qemu_start', SEP,
+        'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
+        'qemu_export', 'qemu_kill_all', 'qemu_start', 'timestamp_qemu', SEP,
 	'sfa_install', 'sfa_configure', 'cross_sfa_configure', 'sfa_import', 'sfa_start', SEPSFA,
         'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
         'sfa_create_slice@1', 'sfa_check_slice_plc@1', SEPSFA, 
@@ -442,7 +444,7 @@ class TestPlc:
         print '+\thostname=%s'%node_spec['node_fields']['hostname']
 
     # write a timestamp in /vservers/<>/
-    def timestamp_plc (self):
+    def timestamp_vs (self):
         now=int(time.time())
         utils.system(self.test_ssh.actual_command("mkdir -p /vservers/%s"%self.vservername))
         return utils.system(self.test_ssh.actual_command("echo %d > /vservers/%s/timestamp"%(now,self.vservername)))==0
