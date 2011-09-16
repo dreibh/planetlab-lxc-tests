@@ -141,9 +141,9 @@ class Pool:
             return (i.hostname,i.userdata)
         raise Exception,"No IP address available in pool %s"%self.message
 
-# OS-dependent ping option (support for macos, for convenience)
+    # OS-dependent ping option (support for macos, for convenience)
     ping_timeout_option = None
-# checks whether a given hostname/ip responds to ping
+    # checks whether a given hostname/ip responds to ping
     def check_ping (self,hostname):
         if not Pool.ping_timeout_option:
             (status,osname) = commands.getstatusoutput("uname -s")
@@ -660,8 +660,8 @@ class Substrate:
         if options.ips_vplc:
             vplc_hostname=options.ips_vplc.pop()
         else:
-            self.vplc_pool.load_starting()
             self.vplc_pool.sense()
+            self.vplc_pool.load_starting()
             (vplc_hostname,unused)=self.vplc_pool.next_free()
         vplc_ip = self.vplc_pool.get_ip(vplc_hostname)
         self.vplc_pool.add_starting(vplc_hostname)
@@ -729,8 +729,8 @@ class Substrate:
                 vnode_hostname=options.ips_vnode.pop()
                 mac=self.vnode_pool.retrieve_userdata(vnode_hostname)
             else:
-                self.vnode_pool.load_starting()
                 self.vnode_pool.sense()
+                self.vnode_pool.load_starting()
                 (vnode_hostname,mac)=self.vnode_pool.next_free()
             ip=self.vnode_pool.get_ip (vnode_hostname)
             self.vnode_pool.add_starting(vnode_hostname)
