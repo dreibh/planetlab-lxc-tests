@@ -29,7 +29,7 @@ class OnelabSubstrate (Substrate):
       return [  ( 'vplc%02d'%i,                 # DNS name
 #                  '02:34:56:00:ee:%02d'%i)     # MAC address 
                   'unused')                     # MAC address 
-                for i in range(1,20) ] # 21
+                for i in range(1,21) ] 
 
    def qemu_boxes_spec (self):
       return [
@@ -45,7 +45,7 @@ class OnelabSubstrate (Substrate):
    def vnode_ips (self):
       return [ ( 'vnode%02d'%i,                 # DNS name               
                  '02:34:56:00:00:%02d'%i)       # MAC address
-               for i in range(1,5) ] # 21
+               for i in range(1,21) ] 
    
    # local network settings
    def domain (self):

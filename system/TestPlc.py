@@ -103,7 +103,7 @@ class TestPlc:
         'ssh_node_boot', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'check_tcp',  SEP,
-        'force_gather_logs', 'force_local_post', SEP,
+        'force_gather_logs', SEP,
         ]
     other_steps = [ 
         'check_hooks',  
