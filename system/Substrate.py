@@ -31,6 +31,17 @@
 # .  and their admissible load (max # of myplcs)
 # . the pool of DNS-names and IP-addresses available for nodes
 # 
+# #################### implem. note
+# 
+# this model relies on 'sensing' the substrate, 
+# i.e. probing all the boxes for their running instances of vservers and qemu
+# this is how we get rid of tracker inconsistencies 
+# however there is a 'black hole' between the time where a given address is 
+# allocated and when it actually gets used/pingable
+# this is why we still need a shared knowledge among running tests
+# in a file named /root/starting
+# this is connected to the Pool class 
+# 
 # ####################
 
 import os.path, sys
@@ -78,7 +89,8 @@ class PoolItem:
     def __init__ (self,hostname,userdata):
         self.hostname=hostname
         self.userdata=userdata
-        # slot holds 'busy' or 'free' or 'fake' or None
+        # slot holds 'busy' or 'free' or 'mine' or 'starting' or None
+        # 'mine' is for our own stuff, 'starting' from the concurrent tests
         self.status=None
         self.ip=None
 
@@ -95,15 +107,16 @@ class Pool:
     def __init__ (self, tuples,message):
         self.pool= [ PoolItem (h,u) for (h,u) in tuples ] 
         self.message=message
-        self._sensed=False
 
     def sense (self):
-        if self._sensed: return
         print 'Checking IP pool',self.message,
         for item in self.pool:
-            if self.check_ping (item.hostname): item.status='busy'
-            else:                               item.status='free'
-        self._sensed=True
+            if item.status is not None: 
+                continue
+            if self.check_ping (item.hostname): 
+                item.status='busy'
+            else:
+                item.status='free'
         print 'Done'
 
     def list (self):
@@ -123,8 +136,8 @@ class Pool:
 
     def next_free (self):
         for i in self.pool:
-            if i.status in ['busy','fake']: continue
-            i.status='fake'
+            if i.status in ['busy','mine','starting' ]: continue
+            i.status='mine'
             return (i.hostname,i.userdata)
         raise Exception,"No IP address available in pool %s"%self.message
 
@@ -147,6 +160,42 @@ class Pool:
         else:           print '-',
         return status == 0
 
+    # the place were other test instances tell about their not-yet-started
+    # instances
+    starting='/root/starting'
+    def add_starting (self, name):
+        try:    items=[line.strip() for line in file(Pool.starting).readlines()]
+        except: items=[]
+        if not name in items:
+            file(Pool.starting,'a').write(name+'\n')
+        for i in self.pool:
+            if i.hostname==name: i.status='mine'
+            
+    def load_starting (self):
+        try:    items=[line.strip() for line in file(Pool.starting).readlines()]
+        except: items=[]
+        for item in items:
+            for i in self.pool:
+                if i.hostname==item: i.status='starting'
+
+    def release_my_fakes (self):
+        for i in self.pool:
+            print 'releasing-scanning','hostname',i.hostname,'status',i.status
+            if i.status=='mine': 
+                self.del_starting(i.hostname)
+                i.status=None
+
+    def del_starting (self, name):
+        try:    items=[line.strip() for line in file(Pool.starting).readlines()]
+        except: items=[]
+        if name in items:
+            f=file(Pool.starting,'w')
+            for item in items: 
+                if item != name: f.write(item+'\n')
+            f.close()
+    
+    
+        
 ####################
 class Box:
     def __init__ (self,hostname):
@@ -292,10 +341,10 @@ class PlcBox (Box):
         self.plc_instances.remove(plc_instance)
 
     # fill one slot even though this one is not started yet
-    def add_fake (self, plcname):
-        fake=PlcInstance('fake_'+plcname,0,self)
-        fake.set_now()
-        self.plc_instances.append(fake)
+    def add_dummy (self, plcname):
+        dummy=PlcInstance('dummy_'+plcname,0,self)
+        dummy.set_now()
+        self.plc_instances.append(dummy)
 
     def line(self): 
         msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_plcs,self.free_spots(),self.uname())
@@ -429,10 +478,10 @@ class QemuBox (Box):
         self.qemu_instances.remove(qemu_instance)
 
     # fill one slot even though this one is not started yet
-    def add_fake (self, nodename):
-        fake=QemuInstance('fake_'+nodename,0,self)
-        fake.set_now()
-        self.qemu_instances.append(fake)
+    def add_dummy (self, nodename):
+        dummy=QemuInstance('dummy_'+nodename,0,self)
+        dummy.set_now()
+        self.qemu_instances.append(dummy)
 
     def line (self):
         msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_qemus,self.free_spots(),self.driver())
@@ -609,15 +658,17 @@ class Substrate:
                                              plc_instance_to_kill.plc_box.hostname)
 
         utils.header( 'plc %s -> box %s'%(plc['name'],plc_box.line()))
-        plc_box.add_fake(plc['name'])
+        plc_box.add_dummy(plc['name'])
         #### OK we have a box to run in, let's find an IP address
         # look in options
         if options.ips_vplc:
             vplc_hostname=options.ips_vplc.pop()
         else:
+            self.vplc_pool.load_starting()
             self.vplc_pool.sense()
             (vplc_hostname,unused)=self.vplc_pool.next_free()
         vplc_ip = self.vplc_pool.get_ip(vplc_hostname)
+        self.vplc_pool.add_starting(vplc_hostname)
 
         #### compute a helpful vserver name
         # remove domain in hostname
@@ -675,29 +726,32 @@ class Substrate:
                                                  qemu_instance_to_kill.qemu_box.hostname)
 
             utils.header( 'node %s -> qemu box %s'%(nodename,qemu_box.line()))
-            qemu_box.add_fake(nodename)
+            qemu_box.add_dummy(nodename)
             #### OK we have a box to run in, let's find an IP address
             # look in options
             if options.ips_vnode:
-                qemu_hostname=options.ips_vnode.pop()
-                mac=self.vnode_pool.retrieve_userdata(qemu_hostname)
-                print 'case 1 hostname',qemu_hostname,'mac',mac
+                vnode_hostname=options.ips_vnode.pop()
+                mac=self.vnode_pool.retrieve_userdata(vnode_hostname)
+                print 'case 1 hostname',vnode_hostname,'mac',mac
             else:
+                self.vnode_pool.load_starting()
                 self.vnode_pool.sense()
-                (qemu_hostname,mac)=self.vnode_pool.next_free()
-                print 'case 2 hostname',qemu_hostname,'mac',mac
-            ip=self.vnode_pool.get_ip (qemu_hostname)
-            utils.header("Attaching %s on IP %s MAC %s"%(plc['name'],qemu_hostname,mac))
+                (vnode_hostname,mac)=self.vnode_pool.next_free()
+                print 'case 2 hostname',vnode_hostname,'mac',mac
+            ip=self.vnode_pool.get_ip (vnode_hostname)
+            self.vnode_pool.add_starting(vnode_hostname)
 
-            if qemu_hostname.find('.')<0:
-                qemu_hostname += "."+self.domain()
+            if vnode_hostname.find('.')<0:
+                vnode_hostname += "."+self.domain()
             nodemap={'host_box':qemu_box.hostname,
-                     'node_fields:hostname':qemu_hostname,
+                     'node_fields:hostname':vnode_hostname,
                      'interface_fields:ip':ip, 
                      'interface_fields:mac':mac,
                      }
             nodemap.update(self.network_settings())
             maps.append ( (nodename, nodemap) )
+
+            utils.header("Attaching %s on IP %s MAC %s"%(plc['name'],vnode_hostname,mac))
 
         return test_mapper.map({'node':maps})[0]
 
@@ -712,6 +766,12 @@ class Substrate:
             for node in site['nodes']:
                 plc['sfa']['sfa_slice_rspec']['part4'] = node['node_fields']['hostname']
 	return plc
+
+    #################### release:
+    def release (self,options):
+        self.vplc_pool.release_my_fakes()
+        self.vnode_pool.release_my_fakes()
+        pass
 
     #################### show results for interactive mode
     def list_all (self):

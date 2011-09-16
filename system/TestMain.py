@@ -244,7 +244,7 @@ steps refer to a method in TestPlc or to a step_* module
                 print 'Cannot load config %s -- ignored'%modulename
                 raise
 
-        # run localize as defined by local_resources
+        # provision on local substrate
         all_plc_specs = LocalSubstrate.local_substrate.provision(all_plc_specs,self.options)
 
         # remember plc IP address(es) if not specified
@@ -257,7 +257,8 @@ steps refer to a method in TestPlc or to a step_* module
         for plc_spec in all_plc_specs:
             for site_spec in plc_spec['sites']:
                 for node_spec in site_spec['nodes']:
-                    ips_vnode_file.write("%s\n"%node_spec['node_fields']['hostname'])
+                    stripped=node_spec['node_fields']['hostname'].split('.')[0]
+                    ips_vnode_file.write("%s\n"%stripped)
         ips_vnode_file.close()
         # ditto for qemu boxes
         ips_qemu_file=open('arg-ips-qemu','w')
@@ -416,6 +417,9 @@ steps refer to a method in TestPlc or to a step_* module
         if self.options.trace_file and not self.options.dry_run:
             trace.close()
 
+        # free local substrate
+        LocalSubstrate.local_substrate.release(self.options)
+        
         return overall_result
 
     # wrapper to run, returns a shell-compatible result
