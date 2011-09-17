@@ -136,9 +136,9 @@ class Pool:
 
     def next_free (self):
         for i in self.pool:
-            if i.status in ['busy','mine','starting' ]: continue
-            i.status='mine'
-            return (i.hostname,i.userdata)
+            if i.status == 'free':
+                i.status='mine'
+                return (i.hostname,i.userdata)
         raise Exception,"No IP address available in pool %s"%self.message
 
     # OS-dependent ping option (support for macos, for convenience)
@@ -176,9 +176,9 @@ class Pool:
         except: items=[]
         for item in items:
             for i in self.pool:
-                if i.hostname==item: i.status='starting'
+                if i.hostname==item and i.status==None: i.status='starting'
 
-    def release_my_fakes (self):
+    def release_my_starting (self):
         for i in self.pool:
             if i.status=='mine': 
                 self.del_starting(i.hostname)
@@ -763,8 +763,8 @@ class Substrate:
 
     #################### release:
     def release (self,options):
-        self.vplc_pool.release_my_fakes()
-        self.vnode_pool.release_my_fakes()
+        self.vplc_pool.release_my_starting()
+        self.vnode_pool.release_my_starting()
         pass
 
     #################### show results for interactive mode
