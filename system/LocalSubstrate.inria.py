@@ -27,7 +27,6 @@ class OnelabSubstrate (Substrate):
    # vplc01 to 15
    def vplc_ips (self):
       return [  ( 'vplc%02d'%i,                 # DNS name
-#                  '02:34:56:00:ee:%02d'%i)     # MAC address 
                   'unused')                     # MAC address 
                 for i in range(1,21) ] 
 
