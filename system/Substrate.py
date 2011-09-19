@@ -248,9 +248,10 @@ class Box:
 
     def backquote (self, argv, trash_err=False):
         if not trash_err:
-            return subprocess.Popen(argv,stdout=subprocess.PIPE).communicate()[0]
+            result= subprocess.Popen(argv,stdout=subprocess.PIPE).communicate()[0]
         else:
-            return subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=file('/dev/null','w')).communicate()[0]
+            result= subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=file('/dev/null','w')).communicate()[0]
+        return result
 
     def backquote_ssh (self, argv, trash_err=False):
         # first probe the ssh link
@@ -336,7 +337,7 @@ class PlcInstance:
         msg="== %s == (ctx=%s)"%(self.vservername,self.ctxid)
         if self.timestamp: msg += " @ %s"%self.pretty_timestamp()
         else:              msg += " *unknown timestamp*"
-        if self.ctxid==0: msg+=" not (yet?) running"
+        if self.ctxid==0:  msg+=" not (yet?) running"
         return msg
 
     def kill (self):
@@ -427,10 +428,10 @@ class PlcBox (Box):
             self.add_vserver(longname,context)
 #            print self.margin_outline(self.vplcname(longname)),"%(vserver_line)s [=%(longname)s]"%locals()
 
-        # scan timestamps
-        running_ctx_ids = [ i.ctxid for i in self.plc_instances ]
+        # scan timestamps 
+        running_vsnames = [ i.vservername for i in self.plc_instances ]
         command=   ['grep','.']
-        command += ['/vservers/%s/timestamp'%b for b in running_ctx_ids]
+        command += ['/vservers/%s/timestamp'%vs for vs in running_vsnames]
         command += ['/dev/null']
         ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for ts_line in ts_lines:
@@ -440,12 +441,12 @@ class PlcBox (Box):
                 (_,__,vservername,tail)=ts_line.split('/')
                 (_,timestamp)=tail.split(':')
                 timestamp=int(timestamp)
-                q=self.plc_instance_by_vservername(vservername)
-                if not q: 
+                p=self.plc_instance_by_vservername(vservername)
+                if not p: 
                     print 'WARNING unattached plc instance',ts_line
-                    print 'was expeting to find',vservername,'in',[i.vservername for i in self.plc_instances]
+                    print 'was expecting to find',vservername,'in',[i.vservername for i in self.plc_instances]
                     continue
-                q.set_timestamp(timestamp)
+                p.set_timestamp(timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
         
 
@@ -472,7 +473,7 @@ class QemuInstance:
         else:              msg += " *unknown build*"
         if self.timestamp: msg += " @ %s"%self.pretty_timestamp()
         else:              msg += " *unknown timestamp*"
-        if self.pid:       msg += "pid=%s"%self.pid
+        if self.pid:       msg += " pid=%s"%self.pid
         else:              msg += " not (yet?) running"
         return msg
     
@@ -881,7 +882,11 @@ class Substrate:
     # can be run as a utility to manage the local infrastructure
     def main (self):
         parser=OptionParser()
+        parser.add_option ('-v',"--verbose",action='store_true',dest='verbose',default=False,
+                           help='verbose mode')
         (options,args)=parser.parse_args()
+        if options.verbose:
+            self.options.verbose=True
         if not args:
             self.list_all()
         else:
