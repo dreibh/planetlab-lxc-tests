@@ -261,7 +261,7 @@ def leases (options, index):
 def plc (options,index) :
     return { 
         'index' : index,
-        'name' : 'onetest%d'%index,
+        'name' : 'plctest%d'%index,
         # as of yet, not sure we can handle foreign hosts, but this is required though
         'host_box' : 'deferred-myplc-hostbox-%d'%index,
         # set these two items to run within a vserver
