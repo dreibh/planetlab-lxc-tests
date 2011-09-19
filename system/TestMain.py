@@ -75,7 +75,7 @@ arch-rpms-url defaults to the last value used, as stored in arg-arch-rpms-url,
    no default
 config defaults to the last value used, as stored in arg-config,
    or %r
-ips_vnode, ips_vplc and ips_qemu defaults to the last value used, as stored in arg-ips-{node,vplc,qemu},
+ips_vnode, ips_vplc and ips_qemu defaults to the last value used, as stored in arg-ips-{bplc,vplc,bnode,vnode},
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
 ===
@@ -100,12 +100,14 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
                           help="List known steps")
-        parser.add_option("-N","--nodes",action="append", dest="ips_vnode", default=[],
-                          help="Specify the set of hostname/IP's to use for nodes")
+        parser.add_option("-V","--vserver",action="append", dest="ips_bplc", default=[],
+                          help="Specify the set of hostnames for the boxes that host the plcs")
         parser.add_option("-P","--plcs",action="append", dest="ips_vplc", default=[],
-                          help="Specify the set of hostname/IP's to use for plcs")
-        parser.add_option("-Q","--qemus",action="append", dest="ips_qemu", default=[],
-                          help="Specify the set of hostname/IP's to use for qemu boxes")
+                          help="Specify the set of hostname/IP's to use for vplcs")
+        parser.add_option("-Q","--qemus",action="append", dest="ips_bnode", default=[],
+                          help="Specify the set of hostnames for the boxes that host the nodes")
+        parser.add_option("-N","--nodes",action="append", dest="ips_vnode", default=[],
+                          help="Specify the set of hostname/IP's to use for vnodes")
         parser.add_option("-s","--size",action="store",type="int",dest="size",default=1,
                           help="sets test size in # of plcs - default is 1")
         parser.add_option("-q","--qualifier",action="store",type="int",dest="qualifier",default=None,
@@ -137,15 +139,16 @@ steps refer to a method in TestPlc or to a step_* module
                     result.append(el)
             return result
         # flatten relevant options
-        for optname in ['config','exclude','ips_vnode','ips_vplc','ips_qemu']:
+        for optname in ['config','exclude','ips_bplc','ips_vplc','ips_bnode','ips_vnode']:
             setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
 
         # handle defaults and option persistence
         for (recname,filename,default,need_reverse) in (
             ('build_url','arg-build-url',TestMain.default_build_url,None) ,
-            ('ips_vnode','arg-ips-vnode',[],True) , 
+            ('ips_bplc','arg-ips-bplc',[],True),
             ('ips_vplc','arg-ips-vplc',[],True) , 
-            ('ips_qemu','arg-ips-qemu',[],True) , 
+            ('ips_bnode','arg-ips-bnode',[],True),
+            ('ips_vnode','arg-ips-vnode',[],True) , 
             ('config','arg-config',TestMain.default_config,False) , 
             ('arch_rpms_url','arg-arch-rpms-url',"",None) , 
             ('personality','arg-personality',"linux64",None),
@@ -247,26 +250,31 @@ steps refer to a method in TestPlc or to a step_* module
         # provision on local substrate
         all_plc_specs = LocalSubstrate.local_substrate.provision(all_plc_specs,self.options)
 
-        # remember plc IP address(es) if not specified
+        # remember substrate IP address(es) for next run
+        ips_bplc_file=open('arg-ips-bplc','w')
+        for plc_spec in all_plc_specs:
+            ips_bplc_file.write("%s\n"%plc_spec['host_box'])
+        ips_bplc_file.close()
         ips_vplc_file=open('arg-ips-vplc','w')
         for plc_spec in all_plc_specs:
             ips_vplc_file.write("%s\n"%plc_spec['PLC_API_HOST'])
         ips_vplc_file.close()
         # ditto for nodes
+        ips_bnode_file=open('arg-ips-bnode','w')
+        for plc_spec in all_plc_specs:
+            for site_spec in plc_spec['sites']:
+                for node_spec in site_spec['nodes']:
+                    ips_bnode_file.write("%s\n"%node_spec['host_box'])
+        ips_bnode_file.close()
         ips_vnode_file=open('arg-ips-vnode','w')
         for plc_spec in all_plc_specs:
             for site_spec in plc_spec['sites']:
                 for node_spec in site_spec['nodes']:
+                    # back to normal (unqualified) form
                     stripped=node_spec['node_fields']['hostname'].split('.')[0]
                     ips_vnode_file.write("%s\n"%stripped)
         ips_vnode_file.close()
-        # ditto for qemu boxes
-        ips_qemu_file=open('arg-ips-qemu','w')
-        for plc_spec in all_plc_specs:
-            for site_spec in plc_spec['sites']:
-                for node_spec in site_spec['nodes']:
-                    ips_qemu_file.write("%s\n"%node_spec['host_box'])
-        ips_qemu_file.close()
+
         # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
             spec['failed_step'] = False

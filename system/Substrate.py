@@ -96,6 +96,14 @@ class PoolItem:
 
     def line(self):
         return "Pooled %s (%s) -> %s"%(self.hostname,self.userdata, self.status)
+
+    def char (self):
+        if   self.status==None:       return '?'
+        elif self.status=='busy':     return '*'
+        elif self.status=='free':     return '.'
+        elif self.status=='mine':     return 'M'
+        elif self.status=='starting': return 'S'
+
     def get_ip(self):
         if self.ip: return self.ip
         ip=socket.gethostbyname(self.hostname)
@@ -108,57 +116,35 @@ class Pool:
         self.pool= [ PoolItem (h,u) for (h,u) in tuples ] 
         self.message=message
 
-    def sense (self):
-        print 'Checking IP pool',self.message,
-        for item in self.pool:
-            if item.status is not None: 
-                continue
-            if self.check_ping (item.hostname): 
-                item.status='busy'
-            else:
-                item.status='free'
-        print 'Done'
-
     def list (self):
         for i in self.pool: print i.line()
 
-    def retrieve_userdata (self, hostname):
+    def line (self):
+        line=self.message
+        for i in self.pool: line += ' ' + i.char()
+        return line
+
+    def _item (self, hostname):
         for i in self.pool: 
-            if i.hostname==hostname: return i.userdata
-        return None
+            if i.hostname==hostname: return i
+        raise Exception ("Could not locate hostname %s in pool %s"%(hostname,self.message))
+
+    def retrieve_userdata (self, hostname): 
+        return self._item(hostname).userdata
 
     def get_ip (self, hostname):
-        # use cached if in pool
-        for i in self.pool: 
-            if i.hostname==hostname: return i.get_ip()
-        # otherwise just ask dns again
-        return socket.gethostbyname(hostname)
+        try:    return self._item(hostname).get_ip()
+        except: return socket.gethostbyname(hostname)
+        
+    def set_mine (self, hostname):
+        self._item(hostname).status='mine'
 
     def next_free (self):
         for i in self.pool:
             if i.status == 'free':
                 i.status='mine'
                 return (i.hostname,i.userdata)
-        raise Exception,"No IP address available in pool %s"%self.message
-
-    # OS-dependent ping option (support for macos, for convenience)
-    ping_timeout_option = None
-    # checks whether a given hostname/ip responds to ping
-    def check_ping (self,hostname):
-        if not Pool.ping_timeout_option:
-            (status,osname) = commands.getstatusoutput("uname -s")
-            if status != 0:
-                raise Exception, "TestPool: Cannot figure your OS name"
-            if osname == "Linux":
-                Pool.ping_timeout_option="-w"
-            elif osname == "Darwin":
-                Pool.ping_timeout_option="-t"
-
-        command="ping -c 1 %s 1 %s"%(Pool.ping_timeout_option,hostname)
-        (status,output) = commands.getstatusoutput(command)
-        if status==0:   print '+',
-        else:           print '-',
-        return status == 0
+        return None
 
     # the place were other test instances tell about their not-yet-started
     # instances, that go undetected through sensing
@@ -171,12 +157,13 @@ class Pool:
         for i in self.pool:
             if i.hostname==name: i.status='mine'
             
+    # we load this after actual sensing; 
     def load_starting (self):
         try:    items=[line.strip() for line in file(Pool.starting).readlines()]
         except: items=[]
-        for item in items:
-            for i in self.pool:
-                if i.hostname==item and i.status==None: i.status='starting'
+        for i in self.pool:
+            if i.hostname in items:
+                if i.status=='free' : i.status='starting'
 
     def release_my_starting (self):
         for i in self.pool:
@@ -193,6 +180,43 @@ class Pool:
                 if item != name: f.write(item+'\n')
             f.close()
     
+    ##########
+    def _sense (self):
+        for item in self.pool:
+            if item.status is not None: 
+                continue
+            if self.check_ping (item.hostname): 
+                item.status='busy'
+            else:
+                item.status='free'
+    
+    def sense (self):
+        print 'Sensing IP pool',self.message,
+        self._sense()
+        print 'Done'
+        self.load_starting()
+        print 'After starting: IP pool'
+        print self.line()
+
+    # OS-dependent ping option (support for macos, for convenience)
+    ping_timeout_option = None
+    # returns True when a given hostname/ip responds to ping
+    def check_ping (self,hostname):
+        if not Pool.ping_timeout_option:
+            (status,osname) = commands.getstatusoutput("uname -s")
+            if status != 0:
+                raise Exception, "TestPool: Cannot figure your OS name"
+            if osname == "Linux":
+                Pool.ping_timeout_option="-w"
+            elif osname == "Darwin":
+                Pool.ping_timeout_option="-t"
+
+        command="ping -c 1 %s 1 %s"%(Pool.ping_timeout_option,hostname)
+        (status,output) = commands.getstatusoutput(command)
+        if status==0:   print '*',
+        else:           print '.',
+        return status == 0
+
 ####################
 class Box:
     def __init__ (self,hostname):
@@ -604,18 +628,27 @@ class Substrate:
 #    def qemu_boxes (self):
 #        return [ h for (h,m) in self.qemu_boxes_spec() ]
 
+    # return True if actual sensing takes place
     def sense (self,force=False):
-        if self._sensed and not force: return
+        if self._sensed and not force: return False
         print 'Sensing local substrate...',
         for b in self.all_boxes: b.sense()
         print 'Done'
         self._sensed=True
+        return True
+
+    def add_dummy_plc (self, plc_boxname, plcname):
+        for pb in self.plc_boxes:
+            if pb.hostname==plc_boxname:
+                pb.add_dummy(plcname)
+    def add_dummy_qemu (self, qemu_boxname, qemuname):
+        for qb in self.qemu_boxes:
+            if qb.hostname==qemu_boxname:
+                qb.add_dummy(qemuname)
 
     ########## 
     def provision (self,plcs,options):
         try:
-            self.sense()
-            self.list_all()
             # attach each plc to a plc box and an IP address
             plcs = [ self.provision_plc (plc,options) for plc in plcs ]
             # attach each node/qemu to a qemu box with an IP address
@@ -628,41 +661,75 @@ class Substrate:
             traceback.print_exc()
             sys.exit(1)
 
+    # it is expected that a couple of options like ips_bplc and ips_vplc 
+    # are set or unset together
+    @staticmethod
+    def check_options (x,y):
+        if not x and not y: return True
+        return len(x)==len(y)
+
     # find an available plc box (or make space)
     # and a free IP address (using options if present)
     def provision_plc (self, plc, options):
-        #### we need to find one plc box that still has a slot
-        plc_box=None
-        max_free=0
-        # use the box that has max free spots for load balancing
-        for pb in self.plc_boxes:
-            free=pb.free_spots()
-            if free>max_free:
-                plc_box=pb
-                max_free=free
-        # everything is already used
-        if not plc_box:
-            # find the oldest of all our instances
-            all_plc_instances=reduce(lambda x, y: x+y, 
-                                     [ pb.plc_instances for pb in self.plc_boxes ],
-                                     [])
-            all_plc_instances.sort(timestamp_sort)
-            plc_instance_to_kill=all_plc_instances[0]
-            plc_box=plc_instance_to_kill.plc_box
-            plc_instance_to_kill.kill()
-            print 'killed oldest = %s on %s'%(plc_instance_to_kill.line(),
-                                             plc_instance_to_kill.plc_box.hostname)
+        
+        assert Substrate.check_options (options.ips_bplc, options.ips_vplc)
 
-        utils.header( 'plc %s -> box %s'%(plc['name'],plc_box.line()))
-        plc_box.add_dummy(plc['name'])
-        #### OK we have a box to run in, let's find an IP address
-        # look in options
+        #### let's find an IP address for that plc
+        # look in options 
         if options.ips_vplc:
+            # this is a rerun
+            # we don't check anything here, 
+            # it is the caller's responsability to cleanup and make sure this makes sense
+            plc_boxname = options.ips_bplc.pop()
             vplc_hostname=options.ips_vplc.pop()
         else:
+            if self.sense(): self.list_all()
+            plc_boxname=None
+            vplc_hostname=None
+            # try to find an available IP 
             self.vplc_pool.sense()
-            self.vplc_pool.load_starting()
-            (vplc_hostname,unused)=self.vplc_pool.next_free()
+            couple=self.vplc_pool.next_free()
+            if couple:
+                (vplc_hostname,unused)=couple
+            #### we need to find one plc box that still has a slot
+            max_free=0
+            # use the box that has max free spots for load balancing
+            for pb in self.plc_boxes:
+                free=pb.free_spots()
+                if free>max_free:
+                    plc_boxname=pb.hostname
+                    max_free=free
+            # if there's no available slot in the plc_boxes, or we need a free IP address
+            # make space by killing the oldest running instance
+            if not plc_boxname or not vplc_hostname:
+                # find the oldest of all our instances
+                all_plc_instances=reduce(lambda x, y: x+y, 
+                                         [ pb.plc_instances for pb in self.plc_boxes ],
+                                         [])
+                all_plc_instances.sort(timestamp_sort)
+                try:
+                    plc_instance_to_kill=all_plc_instances[0]
+                except:
+                    msg=""
+                    if not plc_boxname: msg += " PLC boxes are full"
+                    if not vplc_hostname: msg += " vplc IP pool exhausted" 
+                    raise Exception,"Could not make space for a PLC instance:"+msg
+                freed_plc_boxname=plc_instance_to_kill.plc_box.hostname
+                freed_vplc_hostname=plc_instance_to_kill.vservername
+                plc_instance_to_kill.kill()
+                print 'killed oldest plc instance = %s on %s'%(plc_instance_to_kill.line(),
+                                                               plc_instance_to_kill.freed_plc_boxname)
+                # use this new plcbox if that was the problem
+                if not plc_boxname:
+                    plc_boxname=freed_plc_boxname
+                # ditto for the IP address
+                if not vplc_hostname:
+                    vplc_hostname=freed_vplc_hostname
+                    # record in pool as mine
+                    self.vplc_pool.set_mine(vplc_hostname)
+
+        # 
+        self.add_dummy_plc(plc_boxname,plc['name'])
         vplc_ip = self.vplc_pool.get_ip(vplc_hostname)
         self.vplc_pool.add_starting(vplc_hostname)
 
@@ -672,10 +739,13 @@ class Substrate:
         vservername = "%s-%d-%s" % (options.buildname,plc['index'],vplc_simple)
         plc_name = "%s_%s"%(plc['name'],vplc_simple)
 
+        utils.header( 'PROVISION plc %s in box %s at IP %s as %s'%\
+                          (plc['name'],plc_boxname,vplc_hostname,vservername))
+
         #### apply in the plc_spec
         # # informative
         # label=options.personality.replace("linux","")
-        mapper = {'plc': [ ('*' , {'host_box':plc_box.hostname,
+        mapper = {'plc': [ ('*' , {'host_box':plc_boxname,
                                    # 'name':'%s-'+label,
                                    'name': plc_name,
                                    'vservername':vservername,
@@ -689,63 +759,86 @@ class Substrate:
                                    } ) ]
                   }
 
-        utils.header("Attaching %s on IP %s in vserver %s"%(plc['name'],vplc_hostname,vservername))
+
         # mappers only work on a list of plcs
         return TestMapper([plc],options).map(mapper)[0]
 
     ##########
     def provision_qemus (self, plc, options):
+
+        assert Substrate.check_options (options.ips_bnode, options.ips_vnode)
+
         test_mapper = TestMapper ([plc], options)
         nodenames = test_mapper.node_names()
         maps=[]
         for nodename in nodenames:
-            #### similarly we want to find a qemu box that can host us
-            qemu_box=None
-            max_free=0
-            # use the box that has max free spots for load balancing
-            for qb in self.qemu_boxes:
-                free=qb.free_spots()
-            if free>max_free:
-                qemu_box=qb
-                max_free=free
-            # everything is already used
-            if not qemu_box:
-                # find the oldest of all our instances
-                all_qemu_instances=reduce(lambda x, y: x+y, 
-                                         [ qb.qemu_instances for qb in self.qemu_boxes ],
-                                         [])
-                all_qemu_instances.sort(timestamp_sort)
-                qemu_instance_to_kill=all_qemu_instances[0]
-                qemu_box=qemu_instance_to_kill.qemu_box
-                qemu_instance_to_kill.kill()
-                print 'killed oldest = %s on %s'%(qemu_instance_to_kill.line(),
-                                                 qemu_instance_to_kill.qemu_box.hostname)
 
-            utils.header( 'node %s -> qemu box %s'%(nodename,qemu_box.line()))
-            qemu_box.add_dummy(nodename)
-            #### OK we have a box to run in, let's find an IP address
-            # look in options
             if options.ips_vnode:
+                # as above, it's a rerun, take it for granted
+                qemu_boxname=options.ips_bnode.pop()
                 vnode_hostname=options.ips_vnode.pop()
-                mac=self.vnode_pool.retrieve_userdata(vnode_hostname)
             else:
+                if self.sense(): self.list_all()
+                qemu_boxname=None
+                vnode_hostname=None
+                # try to find an available IP 
                 self.vnode_pool.sense()
-                self.vnode_pool.load_starting()
-                (vnode_hostname,mac)=self.vnode_pool.next_free()
+                couple=self.vnode_pool.next_free()
+                if couple:
+                    (vnode_hostname,unused)=couple
+                # find a physical box
+                max_free=0
+                # use the box that has max free spots for load balancing
+                for qb in self.qemu_boxes:
+                    free=qb.free_spots()
+                    if free>max_free:
+                        qemu_boxname=qb.hostname
+                        max_free=free
+                # if we miss the box or the IP, kill the oldest instance
+                if not qemu_boxname or not vnode_hostname:
+                # find the oldest of all our instances
+                    all_qemu_instances=reduce(lambda x, y: x+y, 
+                                              [ qb.qemu_instances for qb in self.qemu_boxes ],
+                                              [])
+                    all_qemu_instances.sort(timestamp_sort)
+                    try:
+                        qemu_instance_to_kill=all_qemu_instances[0]
+                    except:
+                        msg=""
+                        if not qemu_boxname: msg += " QEMU boxes are full"
+                        if not vnode_hostname: msg += " vnode IP pool exhausted" 
+                        raise Exception,"Could not make space for a QEMU instance:"+msg
+                    freed_qemu_boxname=qemu_instance_to_kill.qemu_box.hostname
+                    freed_vnode_hostname=qemu_instance_to_kill.nodename
+                    # kill it
+                    qemu_instance_to_kill.kill()
+                    print 'killed oldest qemu node = %s on %s'%(qemu_instance_to_kill.line(),
+                                                                qemu_instance_to_kill.qemu_boxname.hostname)
+                    # use these freed resources where needed
+                    if not qemu_boxname:
+                        qemu_boxname=freed_qemu_boxname
+                    if not vnode_hostname:
+                        vnode_hostname=freed_vnode_hostname
+                        self.vnode_pool.set_mine(vnode_hostname)
+
+            self.add_dummy_qemu (qemu_boxname,nodename)
+            mac=self.vnode_pool.retrieve_userdata(vnode_hostname)
             ip=self.vnode_pool.get_ip (vnode_hostname)
             self.vnode_pool.add_starting(vnode_hostname)
 
-            if vnode_hostname.find('.')<0:
-                vnode_hostname += "."+self.domain()
-            nodemap={'host_box':qemu_box.hostname,
-                     'node_fields:hostname':vnode_hostname,
+            vnode_fqdn = vnode_hostname
+            if vnode_fqdn.find('.')<0:
+                vnode_fqdn += "."+self.domain()
+            nodemap={'host_box':qemu_boxname,
+                     'node_fields:hostname':vnode_fqdn,
                      'interface_fields:ip':ip, 
                      'interface_fields:mac':mac,
                      }
             nodemap.update(self.network_settings())
             maps.append ( (nodename, nodemap) )
 
-            utils.header("Attaching %s on IP %s MAC %s"%(plc['name'],vnode_hostname,mac))
+            utils.header("PROVISION node %s in box %s at IP %s with MAC %s"%\
+                             (nodename,qemu_boxname,vnode_hostname,mac))
 
         return test_mapper.map({'node':maps})[0]
 
