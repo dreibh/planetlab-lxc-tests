@@ -675,7 +675,7 @@ class Substrate:
         #### apply in the plc_spec
         # # informative
         # label=options.personality.replace("linux","")
-        mapper = {'plc': [ ('*' , {'hostname':plc_box.hostname,
+        mapper = {'plc': [ ('*' , {'host_box':plc_box.hostname,
                                    # 'name':'%s-'+label,
                                    'name': plc_name,
                                    'vservername':vservername,

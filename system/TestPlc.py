@@ -145,7 +145,7 @@ class TestPlc:
     def __init__ (self,plc_spec,options):
 	self.plc_spec=plc_spec
         self.options=options
-	self.test_ssh=TestSsh(self.plc_spec['hostname'],self.options.buildname)
+	self.test_ssh=TestSsh(self.plc_spec['host_box'],self.options.buildname)
         try:
             self.vserverip=plc_spec['vserverip']
             self.vservername=plc_spec['vservername']
@@ -160,7 +160,7 @@ class TestPlc:
         return "%s.%s"%(name,self.vservername)
 
     def hostname(self):
-        return self.plc_spec['hostname']
+        return self.plc_spec['host_box']
 
     def is_local (self):
         return self.test_ssh.is_local()
@@ -431,7 +431,7 @@ class TestPlc:
     @staticmethod
     def display_mapping_plc (plc_spec):
         print '+ MyPLC',plc_spec['name']
-        print '+\tvserver address = root@%s:/vservers/%s'%(plc_spec['hostname'],plc_spec['vservername'])
+        print '+\tvserver address = root@%s:/vservers/%s'%(plc_spec['host_box'],plc_spec['vservername'])
         print '+\tIP = %s/%s'%(plc_spec['PLC_API_HOST'],plc_spec['vserverip'])
         for site_spec in plc_spec['sites']:
             for node_spec in site_spec['nodes']:
