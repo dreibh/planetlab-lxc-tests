@@ -4,6 +4,8 @@
 #
 # #################### history
 #
+# see also Substrate.readme
+#
 # This is a complete rewrite of TestResources/Tracker/Pool
 # we don't use trackers anymore and just probe/sense the running 
 # boxes to figure out where we are
