@@ -719,12 +719,6 @@ class Substrate:
                 freed_vplc_hostname=plc_instance_to_kill.vplcname()
                 message='killing oldest plc instance = %s on %s'%(plc_instance_to_kill.line(),
                                                                   freed_plc_boxname)
-                print '--------------------'
-                for instance in all_plc_instances: print instance.line()
-                print '--------------------'
-                import readline
-                raw_input (message+ " ? ")
-                
                 plc_instance_to_kill.kill()
                 # use this new plcbox if that was the problem
                 if not plc_boxname:
@@ -820,8 +814,6 @@ class Substrate:
                     # kill it
                     message='killing oldest qemu node = %s on %s'%(qemu_instance_to_kill.line(),
                                                                    freed_qemu_boxname)
-                    import readline
-                    raw_input(message+ " ? ")
                     qemu_instance_to_kill.kill()
                     # use these freed resources where needed
                     if not qemu_boxname:
