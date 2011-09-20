@@ -235,6 +235,7 @@ def slices ():
 
 def plc () :
     return { 
+        'index' : index,
         'name' : 'wifilab',
         # as of yet, not sure we can handle foreign hosts, but this is required though
         'hostname' : 'wlab24.inria.fr',
