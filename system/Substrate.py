@@ -63,10 +63,7 @@ def header (message,banner=True):
     print message
     sys.stdout.flush()
 
-def timestamp_sort(o1,o2): 
-    if not o1.timestamp:        return -1
-    elif not o2.timestamp:      return 1
-    else:                       return o2.timestamp-o1.timestamp
+def timestamp_sort(o1,o2): return o1.timestamp-o2.timestamp
 
 ####################
 # pool class
@@ -137,7 +134,10 @@ class Pool:
         except: return socket.gethostbyname(hostname)
         
     def set_mine (self, hostname):
-        self._item(hostname).status='mine'
+        try:
+            self._item(hostname).status='mine'
+        except:
+            print 'WARNING: host %s not found in IP pool %s'%(hostname,self.message)
 
     def next_free (self):
         for i in self.pool:
@@ -221,7 +221,7 @@ class Pool:
 class Box:
     def __init__ (self,hostname):
         self.hostname=hostname
-    def simple_hostname (self):
+    def short_hostname (self):
         return self.hostname.split('.')[0]
     def test_ssh (self): return TestSsh(self.hostname,username='root',unknown_host=False)
     def reboot (self):
@@ -327,11 +327,14 @@ class PlcInstance:
         self.ctxid=ctxid
         self.plc_box=plcbox
         # unknown yet
-        self.timestamp=None
+        self.timestamp=0
 
     def set_timestamp (self,timestamp): self.timestamp=timestamp
     def set_now (self): self.timestamp=int(time.time())
     def pretty_timestamp (self): return time.strftime("%Y-%m-%d:%H-%M",time.localtime(self.timestamp))
+
+    def vplcname (self):
+        return self.vservername.split('-')[-1]
 
     def line (self):
         msg="== %s == (ctx=%s)"%(self.vservername,self.ctxid)
@@ -460,7 +463,7 @@ class QemuInstance:
         self.qemu_box=qemubox
         # not known yet
         self.buildname=None
-        self.timestamp=None
+        self.timestamp=0
         
     def set_buildname (self,buildname): self.buildname=buildname
     def set_timestamp (self,timestamp): self.timestamp=timestamp
@@ -478,7 +481,9 @@ class QemuInstance:
         return msg
     
     def kill(self):
-        if self.pid==0: print "cannot kill qemu %s with pid==0"%self.nodename
+        if self.pid==0: 
+            print "cannot kill qemu %s with pid==0"%self.nodename
+            return
         msg="Killing qemu %s with pid=%s on box %s"%(self.nodename,self.pid,self.qemu_box.hostname)
         self.qemu_box.run_ssh(['kill',"%s"%self.pid],msg)
         self.qemu_box.forget(self)
@@ -604,9 +609,6 @@ class Options: pass
 
 class Substrate:
 
-    def test (self): 
-        self.sense()
-
     def __init__ (self):
         self.options=Options()
         self.options.dry_run=False
@@ -622,12 +624,10 @@ class Substrate:
         self.vplc_pool = Pool (self.vplc_ips(),"for vplcs")
         self.vnode_pool = Pool (self.vnode_ips(),"for vnodes")
 
-#    def build_box_names (self):
-#        return [ h for h in self.build_boxes_spec() ]
-#    def plc_boxes (self):
-#        return [ h for (h,m) in self.plc_boxes_spec() ]
-#    def qemu_boxes (self):
-#        return [ h for (h,m) in self.qemu_boxes_spec() ]
+    def fqdn (self, hostname):
+        if hostname.find('.')<0: return "%s.%s"%(hostname,self.domain())
+    def short_hostname (self, hostname):
+        if hostname.find('.')>=0: return hostname.split('.')[0]
 
     # return True if actual sensing takes place
     def sense (self,force=False):
@@ -716,10 +716,16 @@ class Substrate:
                     if not vplc_hostname: msg += " vplc IP pool exhausted" 
                     raise Exception,"Could not make space for a PLC instance:"+msg
                 freed_plc_boxname=plc_instance_to_kill.plc_box.hostname
-                freed_vplc_hostname=plc_instance_to_kill.vservername
+                freed_vplc_hostname=plc_instance_to_kill.vplcname()
+                message='killing oldest plc instance = %s on %s'%(plc_instance_to_kill.line(),
+                                                                  freed_plc_boxname)
+                print '--------------------'
+                for instance in all_plc_instances: print instance.line()
+                print '--------------------'
+                import readline
+                raw_input (message+ " ? ")
+                
                 plc_instance_to_kill.kill()
-                print 'killed oldest plc instance = %s on %s'%(plc_instance_to_kill.line(),
-                                                               plc_instance_to_kill.freed_plc_boxname)
                 # use this new plcbox if that was the problem
                 if not plc_boxname:
                     plc_boxname=freed_plc_boxname
@@ -736,9 +742,9 @@ class Substrate:
 
         #### compute a helpful vserver name
         # remove domain in hostname
-        vplc_simple = vplc_hostname.split('.')[0]
-        vservername = "%s-%d-%s" % (options.buildname,plc['index'],vplc_simple)
-        plc_name = "%s_%s"%(plc['name'],vplc_simple)
+        vplc_short = self.short_hostname(vplc_hostname)
+        vservername = "%s-%d-%s" % (options.buildname,plc['index'],vplc_short)
+        plc_name = "%s_%s"%(plc['name'],vplc_short)
 
         utils.header( 'PROVISION plc %s in box %s at IP %s as %s'%\
                           (plc['name'],plc_boxname,vplc_hostname,vservername))
@@ -810,11 +816,13 @@ class Substrate:
                         if not vnode_hostname: msg += " vnode IP pool exhausted" 
                         raise Exception,"Could not make space for a QEMU instance:"+msg
                     freed_qemu_boxname=qemu_instance_to_kill.qemu_box.hostname
-                    freed_vnode_hostname=qemu_instance_to_kill.nodename
+                    freed_vnode_hostname=self.short_hostname(qemu_instance_to_kill.nodename)
                     # kill it
+                    message='killing oldest qemu node = %s on %s'%(qemu_instance_to_kill.line(),
+                                                                   freed_qemu_boxname)
+                    import readline
+                    raw_input(message+ " ? ")
                     qemu_instance_to_kill.kill()
-                    print 'killed oldest qemu node = %s on %s'%(qemu_instance_to_kill.line(),
-                                                                qemu_instance_to_kill.qemu_boxname.hostname)
                     # use these freed resources where needed
                     if not qemu_boxname:
                         qemu_boxname=freed_qemu_boxname
@@ -827,9 +835,7 @@ class Substrate:
             ip=self.vnode_pool.get_ip (vnode_hostname)
             self.vnode_pool.add_starting(vnode_hostname)
 
-            vnode_fqdn = vnode_hostname
-            if vnode_fqdn.find('.')<0:
-                vnode_fqdn += "."+self.domain()
+            vnode_fqdn = self.fqdn(vnode_hostname)
             nodemap={'host_box':qemu_boxname,
                      'node_fields:hostname':vnode_fqdn,
                      'interface_fields:ip':ip, 
@@ -868,7 +874,7 @@ class Substrate:
 
     def get_box (self,box):
         for b in self.build_boxes + self.plc_boxes + self.qemu_boxes:
-            if b.simple_hostname()==box:
+            if b.short_hostname()==box:
                 return b
         print "Could not find box %s"%box
         return None
