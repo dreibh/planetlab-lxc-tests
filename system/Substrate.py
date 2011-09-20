@@ -304,8 +304,8 @@ class BuildBox (Box):
 
     # inspect box and find currently running builds
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
-    def sense(self,reboot=False,verbose=True):
-        if reboot:
+    def sense(self,options):
+        if options.reboot:
             self.reboot(box)
             return
         print 'b',
@@ -405,12 +405,12 @@ class PlcBox (Box):
             if p.vservername==vservername: return p
         return None
 
-    def sense (self, reboot=False, soft=False):
-        if reboot:
+    def sense (self, options):
+        if options.reboot:
             # remove mark for all running servers to avoid resurrection
             stop_command=['rm','-rf','/etc/vservers/*/apps/init/mark']
             self.run_ssh(stop_command,"Removing all vserver marks on %s"%self.hostname)
-            if not soft:
+            if not options.soft:
                 self.reboot()
                 return
             else:
@@ -553,9 +553,9 @@ class QemuBox (Box):
         return None
 
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-cdrom\s+(?P<nodename>[^\s]+)\.iso")
-    def sense(self, reboot=False, soft=False):
-        if reboot:
-            if not soft:
+    def sense(self, options):
+        if options.reboot:
+            if not options.soft:
                 self.reboot()
             else:
                 self.run_ssh(box,['pkill','qemu'],"Killing qemu instances")
@@ -623,8 +623,8 @@ class Substrate:
         self.options=Options()
         self.options.dry_run=False
         self.options.verbose=False
-        self.options.probe=True
-        self.options.soft=True
+        self.options.reboot=False
+        self.options.soft=False
         self.build_boxes = [ BuildBox(h) for h in self.build_boxes_spec() ]
         self.plc_boxes = [ PlcBox (h,m) for (h,m) in self.plc_boxes_spec ()]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
@@ -645,7 +645,7 @@ class Substrate:
     def sense (self,force=False):
         if self._sensed and not force: return False
         print 'Sensing local substrate...',
-        for b in self.all_boxes: b.sense()
+        for b in self.all_boxes: b.sense(self.options)
         print 'Done'
         self._sensed=True
         return True
@@ -872,10 +872,6 @@ class Substrate:
         pass
 
     #################### show results for interactive mode
-    def list_all (self):
-        self.sense()
-        for b in self.all_boxes: b.list()
-
     def get_box (self,box):
         for b in self.build_boxes + self.plc_boxes + self.qemu_boxes:
             if b.short_hostname()==box:
@@ -883,22 +879,41 @@ class Substrate:
         print "Could not find box %s"%box
         return None
 
+    def list_all (self):
+        self.sense()
+        for b in self.all_boxes: b.list()
+
     def list_box(self,box):
         b=self.get_box(box)
         if not b: return
-        b.sense()
+        b.sense(self.options)
         b.list()
 
+    ####################
     # can be run as a utility to manage the local infrastructure
     def main (self):
         parser=OptionParser()
         parser.add_option ('-v',"--verbose",action='store_true',dest='verbose',default=False,
                            help='verbose mode')
-        (options,args)=parser.parse_args()
-        if options.verbose:
-            self.options.verbose=True
-        if not args:
+        parser.add_option ('-r',"--reboot",action='store_true',dest='reboot',default=False,
+                           help='reboot mode (use shutdown -r)')
+        parser.add_option ('-s',"--soft",action='store_true',dest='soft',default=False,
+                           help='soft mode for reboot (vserver stop or kill qemus)')
+        parser.add_option ('-b',"--build",action='store_true',dest='builds',default=False,
+                           help='add build boxes')
+        parser.add_option ('-p',"--plc",action='store_true',dest='plcs',default=False,
+                           help='add plc boxes')
+        parser.add_option ('-q',"--qemu",action='store_true',dest='qemus',default=False,
+                           help='add qemu boxes')
+        (self.options,args)=parser.parse_args()
+
+        nodes=args
+        if self.options.builds: nodes += [b.hostname for b in self.build_boxes]
+        if self.options.plcs: nodes += [b.hostname for b in self.plc_boxes]
+        if self.options.qemus: nodes += [b.hostname for b in self.qemu_boxes]
+
+        if not nodes:
             self.list_all()
         else:
-            for box in args:
+            for box in nodes:
                 self.list_box(box)
