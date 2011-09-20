@@ -301,6 +301,7 @@ class BuildBox (Box):
         return '*undef* uptime'
 
     # inspect box and find currently running builds
+    matcher_exclude=re.compile(".*builds\.sh.*")
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
     def sense(self,reboot=False,verbose=True):
         if reboot:
@@ -316,6 +317,7 @@ class BuildBox (Box):
         ps_lines=self.backquote_ssh (command).split('\n')
         for line in ps_lines:
             if not line.strip() or line.find('PID')>=0: continue
+            if BuildBox.matcher_exclude.match(line): continue
             m=BuildBox.matcher.match(line)
             if m: 
                 date=time.strftime('%Y-%m-%d',time.localtime(time.time()))
