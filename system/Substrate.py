@@ -633,8 +633,10 @@ class Substrate:
 
     def fqdn (self, hostname):
         if hostname.find('.')<0: return "%s.%s"%(hostname,self.domain())
+        return hostname
     def short_hostname (self, hostname):
         if hostname.find('.')>=0: return hostname.split('.')[0]
+        return hostname
 
     # return True if actual sensing takes place
     def sense (self,force=False):
