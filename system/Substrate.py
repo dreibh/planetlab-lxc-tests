@@ -340,12 +340,16 @@ class PlcInstance:
 
     def vplcname (self):
         return self.vservername.split('-')[-1]
+    def buildname (self):
+        return self.vservername.rsplit('-',2)[0]
 
     def line (self):
-        msg="== %s == (ctx=%s)"%(self.vservername,self.ctxid)
+        msg="== %s =="%(self.vplcname())
+        msg += " [=%s]"%self.vservername
+        if self.ctxid==0:  msg+=" not (yet?) running"
+        else:              msg+=" (ctx=%s)"%self.ctxid     
         if self.timestamp: msg += " @ %s"%self.pretty_timestamp()
         else:              msg += " *unknown timestamp*"
-        if self.ctxid==0:  msg+=" not (yet?) running"
         return msg
 
     def kill (self):
@@ -385,6 +389,7 @@ class PlcBox (Box):
             header ('No vserver running on %s'%(self.line()))
         else:
             header ("Active plc VMs on %s"%self.line())
+            self.plc_instances.sort(timestamp_sort)
             for p in self.plc_instances: 
                 header (p.line(),banner=False)
 
@@ -476,13 +481,12 @@ class QemuInstance:
     def pretty_timestamp (self): return time.strftime("%Y-%m-%d:%H-%M",time.localtime(self.timestamp))
     
     def line (self):
-        msg = "== %s == (pid=%s)"%(self.nodename,self.pid)
-        if self.buildname: msg += " <--> %s"%self.buildname
-        else:              msg += " *unknown build*"
+        msg = "== %s =="%(self.nodename)
+        msg += " [=%s]"%self.buildname
+        if self.pid:       msg += " (pid=%s)"%self.pid
+        else:              msg += " not (yet?) running"
         if self.timestamp: msg += " @ %s"%self.pretty_timestamp()
         else:              msg += " *unknown timestamp*"
-        if self.pid:       msg += " pid=%s"%self.pid
-        else:              msg += " not (yet?) running"
         return msg
     
     def kill(self):
@@ -526,6 +530,7 @@ class QemuBox (Box):
             header ('No qemu process on %s'%(self.line()))
         else:
             header ("Active qemu processes on %s"%(self.line()))
+            self.qemu_instances.sort(timestamp_sort)
             for q in self.qemu_instances: 
                 header (q.line(),banner=False)
 
