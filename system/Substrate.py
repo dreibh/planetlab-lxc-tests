@@ -317,7 +317,10 @@ class BuildBox (Box):
         for line in ps_lines:
             if not line.strip() or line.find('PID')>=0: continue
             m=BuildBox.matcher.match(line)
-            if m: self.add_build (m.group('buildname'),m.group('pid'))
+            if m: 
+                date=time.strftime('%Y-%m-%d',time.localtime(time.time()))
+                buildname=m.group('buildname').replace('@DATE@',date)
+                self.add_build (buildname,m.group('pid'))
             else: header('command %r returned line that failed to match'%command)
 
 ############################################################
