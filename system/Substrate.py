@@ -226,8 +226,9 @@ class Box:
     def short_hostname (self):
         return self.hostname.split('.')[0]
     def test_ssh (self): return TestSsh(self.hostname,username='root',unknown_host=False)
-    def reboot (self):
-        self.test_ssh().run("shutdown -r now",message="Rebooting %s"%self.hostname)
+    def reboot (self, options):
+        self.test_ssh().run("shutdown -r now",message="Rebooting %s"%self.hostname,
+                            dry_run=options.dry_run)
 
     def run(self,argv,message=None,trash_err=False,dry_run=False):
         if dry_run:
@@ -241,9 +242,9 @@ class Box:
             else:
                 return subprocess.call(argv,stderr=file('/dev/null','w'))
                 
-    def run_ssh (self, argv, message, trash_err=False):
+    def run_ssh (self, argv, message, trash_err=False, dry_run=False):
         ssh_argv = self.test_ssh().actual_argv(argv)
-        result=self.run (ssh_argv, message, trash_err)
+        result=self.run (ssh_argv, message, trash_err, dry_run=dry_run)
         if result!=0:
             print "WARNING: failed to run %s on %s"%(" ".join(argv),self.hostname)
         return result
@@ -306,7 +307,11 @@ class BuildBox (Box):
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
     def sense(self,options):
         if options.reboot:
-            self.reboot(box)
+            if not options.soft:
+                self.reboot(options)
+            else:
+                command=['pkill','vbuild']
+                self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
             return
         print 'b',
         command=['uptime']
@@ -407,14 +412,12 @@ class PlcBox (Box):
 
     def sense (self, options):
         if options.reboot:
-            # remove mark for all running servers to avoid resurrection
-            stop_command=['rm','-rf','/etc/vservers/*/apps/init/mark']
-            self.run_ssh(stop_command,"Removing all vserver marks on %s"%self.hostname)
             if not options.soft:
-                self.reboot()
+                self.reboot(options)
                 return
             else:
-                self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers")
+                self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers",
+                             dry_run=options.dry_run)
             return
         print 'p',
         self._uname=self.backquote_ssh(['uname','-r']).strip()
@@ -556,9 +559,10 @@ class QemuBox (Box):
     def sense(self, options):
         if options.reboot:
             if not options.soft:
-                self.reboot()
+                self.reboot(options)
             else:
-                self.run_ssh(box,['pkill','qemu'],"Killing qemu instances")
+                self.run_ssh(box,['pkill','qemu'],"Killing qemu instances",
+                             dry_run=options.dry_run)
             return
         print 'q',
         modules=self.backquote_ssh(['lsmod']).split('\n')
@@ -883,18 +887,22 @@ class Substrate:
         self.sense()
         for b in self.all_boxes: b.list()
 
-    def list_box(self,box):
-        b=self.get_box(box)
-        if not b: return
-        b.sense(self.options)
-        b.list()
+    def list_boxes(self,boxes):
+        print 'Partial Sensing',
+        for box in boxes:
+            b=self.get_box(box)
+            if not b: continue
+            b.sense(self.options)
+        print 'Done'
+        for box in boxes:
+            b=self.get_box(box)
+            if not b: continue
+            b.list()
 
     ####################
     # can be run as a utility to manage the local infrastructure
     def main (self):
         parser=OptionParser()
-        parser.add_option ('-v',"--verbose",action='store_true',dest='verbose',default=False,
-                           help='verbose mode')
         parser.add_option ('-r',"--reboot",action='store_true',dest='reboot',default=False,
                            help='reboot mode (use shutdown -r)')
         parser.add_option ('-s',"--soft",action='store_true',dest='soft',default=False,
@@ -905,15 +913,19 @@ class Substrate:
                            help='add plc boxes')
         parser.add_option ('-q',"--qemu",action='store_true',dest='qemus',default=False,
                            help='add qemu boxes')
+        parser.add_option ('-v',"--verbose",action='store_true',dest='verbose',default=False,
+                           help='verbose mode')
+        parser.add_option ('-n',"--dry_run",action='store_true',dest='dry_run',default=False,
+                           help='dry run mode')
         (self.options,args)=parser.parse_args()
 
-        nodes=args
-        if self.options.builds: nodes += [b.hostname for b in self.build_boxes]
-        if self.options.plcs: nodes += [b.hostname for b in self.plc_boxes]
-        if self.options.qemus: nodes += [b.hostname for b in self.qemu_boxes]
-
-        if not nodes:
+        boxes=args
+        if self.options.builds: boxes += [b.hostname for b in self.build_boxes]
+        if self.options.plcs: boxes += [b.hostname for b in self.plc_boxes]
+        if self.options.qemus: boxes += [b.hostname for b in self.qemu_boxes]
+        boxes=list(set(boxes))
+        
+        if not boxes:
             self.list_all()
         else:
-            for box in nodes:
-                self.list_box(box)
+            self.list_boxes (boxes)

@@ -103,10 +103,14 @@ class TestSsh:
         print "===============",message
         sys.stdout.flush()
 
-    def run(self, command,message=None,background=False):
+    def run(self, command,message=None,background=False,dry_run=False):
         local_command = self.actual_command(command)
-        self.header(message)
-        return utils.system(local_command,background)
+        if dry_run:
+            utils.header("DRY RUN " + local_command)
+            return 0
+        else:
+            self.header(message)
+            return utils.system(local_command,background)
 
     def clean_dir (self,dirname):
         if self.is_local():
