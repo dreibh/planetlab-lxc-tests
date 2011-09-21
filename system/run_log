@@ -2,13 +2,17 @@
 cd $(dirname $0)
 mkdir -p logs
 time=$(date +%H-%M)
-logfile=logs/run-${time}.log
-tracefile=logs/trace-${time}.txt
+runfile=run-${time}.txt
+runlast=run
+tracefile=trace-${time}.txt
+tracelast=trace
 
 # figure if TestMain succeeds, as the retcod gets lost in the pipe
 rm -f logs/success
-python -u TestMain.py -t $tracefile "$@" &> $logfile && touch logs/success
-cat $logfile
+rm -f logs/$runlast; (cd logs; ln -s $runfile $runlast)
+rm -f logs/$tracelast; (cd logs; ln -s $tracefile $tracelast)
+python -u TestMain.py -t $tracefile "$@" &> logs/$runfile && touch logs/success
+cat $runfile
 
 if [ -f logs/success ] ; then
     exit 0
