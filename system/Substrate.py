@@ -233,6 +233,14 @@ class Box:
         self.test_ssh().run("shutdown -r now",message="Rebooting %s"%self.hostname,
                             dry_run=options.dry_run)
 
+    def uptime(self):
+        if hasattr(self,'_uptime') and self._uptime: return self._uptime
+        return '*undef* uptime'
+    def sense_uptime (self):
+        command=['uptime']
+        self._uptime=self.backquote_ssh(command,trash_err=True).strip()
+        if not self._uptime: self._uptime='unreachable'
+
     def run(self,argv,message=None,trash_err=False,dry_run=False):
         if dry_run:
             print 'DRY_RUN:',
@@ -302,24 +310,18 @@ class BuildBox (Box):
             for b in self.build_instances: 
                 header (b.line(),banner=False)
 
-    def uptime(self):
-        if hasattr(self,'_uptime') and self._uptime: return self._uptime
-        return '*undef* uptime'
+    def reboot (self, options):
+        if not options.soft:
+            self.reboot(options)
+        else:
+            command=['pkill','vbuild']
+            self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
 
     # inspect box and find currently running builds
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
     def sense(self,options):
-        if options.reboot:
-            if not options.soft:
-                self.reboot(options)
-            else:
-                command=['pkill','vbuild']
-                self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
-            return
         print 'b',
-        command=['uptime']
-        self._uptime=self.backquote_ssh(command,trash_err=True).strip()
-        if not self._uptime: self._uptime='unreachable'
+        self.sense_uptime()
         pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
         if not pids: return
         command=['ps','-o','pid,command'] + [ pid for pid in pids.split("\n") if pid]
@@ -413,15 +415,14 @@ class PlcBox (Box):
             if p.vservername==vservername: return p
         return None
 
+    def reboot (self, options):
+        if not options.soft:
+            self.reboot(options)
+        else:
+            self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers",
+                         dry_run=options.dry_run)
+
     def sense (self, options):
-        if options.reboot:
-            if not options.soft:
-                self.reboot(options)
-                return
-            else:
-                self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers",
-                             dry_run=options.dry_run)
-            return
         print 'p',
         self._uname=self.backquote_ssh(['uname','-r']).strip()
         # try to find fullname (vserver_stat truncates to a ridiculously short name)
@@ -463,8 +464,8 @@ class PlcBox (Box):
                 timestamp=int(timestamp)
                 p=self.plc_instance_by_vservername(vservername)
                 if not p: 
-                    print 'WARNING unattached plc instance',ts_line
-                    print 'was expecting to find',vservername,'in',[i.vservername for i in self.plc_instances]
+                    print 'WARNING zombie plc',self.hostname,ts_line
+                    print '... was expecting',vservername,'in',[i.vservername for i in self.plc_instances]
                     continue
                 p.set_timestamp(timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
@@ -559,15 +560,15 @@ class QemuBox (Box):
                 return q
         return None
 
+    def reboot (self, options):
+        if not options.soft:
+            self.reboot(options)
+        else:
+            self.run_ssh(['pkill','qemu'],"Killing qemu instances",
+                         dry_run=options.dry_run)
+
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-cdrom\s+(?P<nodename>[^\s]+)\.iso")
     def sense(self, options):
-        if options.reboot:
-            if not options.soft:
-                self.reboot(options)
-            else:
-                self.run_ssh(['pkill','qemu'],"Killing qemu instances",
-                             dry_run=options.dry_run)
-            return
         print 'q',
         modules=self.backquote_ssh(['lsmod']).split('\n')
         self._driver='*NO kqemu/kmv_intel MODULE LOADED*'
@@ -617,10 +618,117 @@ class QemuBox (Box):
                 timestamp=int(timestamp)
                 q=self.qemu_instance_by_nodename_buildname(nodename,buildname)
                 if not q: 
-                    print 'WARNING unattached qemu instance',ts_line,nodename,buildname
+                    print 'WARNING zombie qemu',self.hostname,ts_line
+                    print '... was expecting (',short_hostname(nodename),buildname,') in',\
+                        [ (short_hostname(i.nodename),i.buildname) for i in self.qemu_instances ]
                     continue
                 q.set_timestamp(timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
+
+####################
+class TestInstance:
+    def __init__ (self, pid, buildname):
+        self.pids=[pid]
+        self.buildname=buildname
+        # latest trace line
+        self.trace=''
+        # has a KO test
+        self.broken_steps=[]
+    def add_pid (self,pid):
+        self.pids.append(pid)
+    def set_broken (self,plcindex, step): 
+        self.broken_steps.append ( (plcindex, step,) )
+
+    def line (self):
+        msg = " == %s =="%self.buildname
+        msg += " (pid=%s)"%(self.pids)
+        if self.broken_steps:
+            msg += "\n BROKEN IN STEPS "
+            for (i,s) in self.broken_steps: msg += "step=%s,plc=%s"%(s,i)
+        return msg
+
+class TestBox (Box):
+    def __init__ (self,hostname):
+        Box.__init__(self,hostname)
+        self.starting_ips=[]
+        self.test_instances=[]
+
+    def reboot (self, options):
+        # can't reboot a vserver VM
+        self.run_ssh (['pkill','run_log'],"Terminating current runs",
+                      dry_run=options.dry_run)
+        self.run_ssh (['rm','-f','/root/starting'],"Cleaning /root/starting",
+                      dry_run=options.dry_run)
+
+    def get_test (self, buildname):
+        for i in self.test_instances:
+            if i.buildname==buildname: return i
+
+    def add_test (self, pid, buildname):
+        i=self.get_test(buildname)
+        if i:
+            print "WARNING: 2 concurrent tests run on same build %s"%buildname
+            i.add_pid (pid)
+            return
+        self.test_instances.append (TestInstance (pid,buildname))
+
+    matcher_proc=re.compile (".*/proc/(?P<pid>[0-9]+)/cwd.*/root/(?P<buildname>[^/]+)$")
+    matcher_grep=re.compile ("/root/(?P<buildname>[^/]+)/logs/trace:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
+    def sense (self, options):
+        print 't',
+        self.sense_uptime()
+        self.starting_ips=self.backquote_ssh(['cat','/root/starting']).strip().split('\n')
+        pids = self.backquote_ssh (['pgrep','run_log'],trash_err=True)
+        if not pids: return
+        command=['ls','-ld'] + ["/proc/%s/cwd"%pid for pid in pids.split("\n") if pid]
+        ps_lines=self.backquote_ssh (command).split('\n')
+        for line in ps_lines:
+            if not line.strip(): continue
+            m=TestBox.matcher_proc.match(line)
+            if m: 
+                pid=m.group('pid')
+                buildname=m.group('buildname')
+                self.add_test(pid, buildname)
+            else: header("command %r returned line that failed to match\n%s"%(command,line))
+        buildnames=[i.buildname for i in self.test_instances]
+        if not buildnames: return
+
+# messy - tail has different output if one or several args
+#        command=['tail','-n','1'] + [ "/root/%s/logs/trace"%b for b in buildnames ]
+#        trace_lines=self.backquote_ssh (command).split('\n\n')
+#        header('TAIL')
+#        for line in trace_lines:
+#            if not line.strip(): continue
+#            print 'line [[[%s]]]'%line
+        command=['grep','KO'] + [ "/root/%s/logs/trace"%b for b in buildnames ] + [ "/dev/null" ]
+        trace_lines=self.backquote_ssh (command).split('\n')
+        for line in trace_lines:
+            if not line.strip(): continue
+            m=TestBox.matcher_grep.match(line)
+            if m: 
+                buildname=m.group('buildname')
+                plcindex=m.group('plcindex')
+                step=m.group('step')
+                self.get_test(buildname).set_broken (plcindex, step)
+            else: header("command %r returned line that failed to match\n%s"%(command,line))
+            
+        
+        
+    def line (self):
+        return "%s (%s)"%(self.hostname,self.uptime())
+
+    def list (self):
+        if not self.starting_ips:
+            header ("No starting IP addresses on %s"%self.line())
+        else:
+            header ("IP addresses currently starting up on %s"%self.line())
+            self.starting_ips.sort()
+            for starting in self.starting_ips: print starting
+        if not self.test_instances:
+            header ("No running tests on %s"%self.line())
+        else:
+            header ("Running tests on %s"%self.line())
+            for i in self.test_instances: print i.line()
 
 ############################################################
 class Options: pass
@@ -633,10 +741,11 @@ class Substrate:
         self.options.verbose=False
         self.options.reboot=False
         self.options.soft=False
+        self.test_box = TestBox (self.test_box_spec())
         self.build_boxes = [ BuildBox(h) for h in self.build_boxes_spec() ]
         self.plc_boxes = [ PlcBox (h,m) for (h,m) in self.plc_boxes_spec ()]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
-        self.all_boxes = self.build_boxes + self.plc_boxes + self.qemu_boxes
+        self.all_boxes = self.plc_boxes + self.qemu_boxes
         self._sensed=False
 
         self.vplc_pool = Pool (self.vplc_ips(),"for vplcs")
@@ -877,19 +986,15 @@ class Substrate:
         pass
 
     #################### show results for interactive mode
-    def get_box (self,box):
-        for b in self.build_boxes + self.plc_boxes + self.qemu_boxes:
-            if b.shortname()==box:
+    def get_box (self,boxname):
+        for b in self.build_boxes + self.plc_boxes + self.qemu_boxes + [self.test_box] :
+            if b.shortname()==boxname:
                 return b
-        print "Could not find box %s"%box
+        print "Could not find box %s"%boxname
         return None
 
-    def list_all (self):
-        self.sense()
-        for b in self.all_boxes: b.list()
-
     def list_boxes(self,boxes):
-        print 'Partial Sensing',
+        print 'Sensing',
         for box in boxes:
             b=self.get_box(box)
             if not b: continue
@@ -900,6 +1005,12 @@ class Substrate:
             if not b: continue
             b.list()
 
+    def reboot_boxes(self,boxes):
+        for box in boxes:
+            b=self.get_box(box)
+            if not b: continue
+            b.reboot(self.options)
+
     ####################
     # can be run as a utility to manage the local infrastructure
     def main (self):
@@ -908,12 +1019,14 @@ class Substrate:
                            help='reboot mode (use shutdown -r)')
         parser.add_option ('-s',"--soft",action='store_true',dest='soft',default=False,
                            help='soft mode for reboot (vserver stop or kill qemus)')
+        parser.add_option ('-t',"--testbox",action='store_true',dest='testbox',default=False,
+                           help='add test box') 
         parser.add_option ('-b',"--build",action='store_true',dest='builds',default=False,
                            help='add build boxes')
         parser.add_option ('-p',"--plc",action='store_true',dest='plcs',default=False,
                            help='add plc boxes')
         parser.add_option ('-q',"--qemu",action='store_true',dest='qemus',default=False,
-                           help='add qemu boxes')
+                           help='add qemu boxes') 
         parser.add_option ('-v',"--verbose",action='store_true',dest='verbose',default=False,
                            help='verbose mode')
         parser.add_option ('-n',"--dry_run",action='store_true',dest='dry_run',default=False,
@@ -921,12 +1034,17 @@ class Substrate:
         (self.options,args)=parser.parse_args()
 
         boxes=args
+        if self.options.testbox: boxes += [self.test_box.hostname]
         if self.options.builds: boxes += [b.hostname for b in self.build_boxes]
         if self.options.plcs: boxes += [b.hostname for b in self.plc_boxes]
         if self.options.qemus: boxes += [b.hostname for b in self.qemu_boxes]
         boxes=list(set(boxes))
         
+        # default scope
         if not boxes:
-            self.list_all()
-        else:
-            self.list_boxes (boxes)
+            boxes = [ b.hostname for b in \
+                          self.build_boxes + [ self.test_box ] + \
+                          self.plc_boxes + self.qemu_boxes ]
+
+        if self.options.reboot: self.reboot_boxes (boxes)
+        else:                   self.list_boxes (boxes)

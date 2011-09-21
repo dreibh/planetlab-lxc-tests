@@ -15,6 +15,9 @@ from Substrate import Substrate
 # domain name .pl.sophia.inria.fr is implicit on our network
 class OnelabSubstrate (Substrate):
 
+   def test_box_spec (self):
+      return 'testmaster'
+
    # the build boxes we use 
    def build_boxes_spec (self):
       return [ 'liquid', 'reed', 'velvet', ]
