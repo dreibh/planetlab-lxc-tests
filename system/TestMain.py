@@ -360,7 +360,7 @@ steps refer to a method in TestPlc or to a step_* module
                     if self.options.interactive:
                         prompting=True
                         while prompting:
-                            msg="%d Run step %s on %s [r](un)/d(ry_run)/s(kip)/q(uit) ? "%(plc_counter,stepname,plcname)
+                            msg="%d Run step %s on %s [r](un)/d(ry_run)/p(roceed)/s(kip)/q(uit) ? "%(plc_counter,stepname,plcname)
                             answer=raw_input(msg).strip().lower() or "r"
                             answer=answer[0]
                             if answer in ['s','n']:     # skip/no/next
@@ -381,6 +381,10 @@ steps refer to a method in TestPlc or to a step_* module
                                 self.options.dry_run=dry_run
                                 plc_obj.options.dry_run=dry_run
                                 plc_obj.apiserver.set_dry_run(dry_run)
+                            elif answer in ['p']:
+                                # take it as a yes and leave interactive mode
+                                prompting=False
+                                self.options.interactive=False
                             elif answer in ['r','y']:   # run/yes
                                 prompting=False
                     if skip_step:
