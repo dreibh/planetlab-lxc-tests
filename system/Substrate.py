@@ -657,7 +657,7 @@ class TestBox (Box):
         # can't reboot a vserver VM
         self.run_ssh (['pkill','run_log'],"Terminating current runs",
                       dry_run=options.dry_run)
-        self.run_ssh (['rm','-f','/root/starting'],"Cleaning /root/starting",
+        self.run_ssh (['rm','-f',Pool.starting],"Cleaning /root/starting",
                       dry_run=options.dry_run)
 
     def get_test (self, buildname):
@@ -677,7 +677,7 @@ class TestBox (Box):
     def sense (self, options):
         print 't',
         self.sense_uptime()
-        self.starting_ips=self.backquote_ssh(['cat','/root/starting']).strip().split('\n')
+        self.starting_ips=self.backquote_ssh(['cat',Pool.starting], trash_err=True).strip().split('\n')
         pids = self.backquote_ssh (['pgrep','run_log'],trash_err=True)
         if not pids: return
         command=['ls','-ld'] + ["/proc/%s/cwd"%pid for pid in pids.split("\n") if pid]
