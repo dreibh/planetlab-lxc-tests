@@ -450,7 +450,7 @@ class PlcBox (Box):
         # scan timestamps 
         running_vsnames = [ i.vservername for i in self.plc_instances ]
         command=   ['grep','.']
-        command += ['/vservers/%s/timestamp'%vs for vs in running_vsnames]
+        command += ['/vservers/%s.timestamp'%vs for vs in running_vsnames]
         command += ['/dev/null']
         ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for ts_line in ts_lines:

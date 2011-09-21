@@ -443,11 +443,11 @@ class TestPlc:
         print '+\tqemu box %s'%node_spec['host_box']
         print '+\thostname=%s'%node_spec['node_fields']['hostname']
 
-    # write a timestamp in /vservers/<>/
+    # write a timestamp in /vservers/<>.timestamp
+    # cannot be inside the vserver, that causes vserver .. build to cough
     def timestamp_vs (self):
         now=int(time.time())
-        utils.system(self.test_ssh.actual_command("mkdir -p /vservers/%s"%self.vservername))
-        return utils.system(self.test_ssh.actual_command("echo %d > /vservers/%s/timestamp"%(now,self.vservername)))==0
+        return utils.system(self.test_ssh.actual_command("echo %d > /vservers/%s.timestamp"%(now,self.vservername)))==0
         
     def local_pre (self):
         "run site-dependant pre-test script as defined in LocalTestResources"
@@ -482,6 +482,7 @@ class TestPlc:
     def vs_delete(self):
         "vserver delete the test myplc"
         self.run_in_host("vserver --silent %s delete"%self.vservername)
+        self.run_in_host("rm -f /vservers/%s.timestamp"%self.vservername)
         return True
 
     ### install
