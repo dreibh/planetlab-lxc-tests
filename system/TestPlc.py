@@ -87,7 +87,7 @@ class TestPlc:
 
     default_steps = [
         'show', SEP,
-        'vs_delete','vs_create','timestamp_vs', SEP,
+        'vs_delete','timestamp_vs','vs_create', SEP,
         'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
