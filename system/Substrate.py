@@ -455,10 +455,11 @@ class PlcBox (Box):
         ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for ts_line in ts_lines:
             if not ts_line.strip(): continue
-            # expect /vservers/<vservername>/timestamp:<timestamp>
+            # expect /vservers/<vservername>.timestamp:<timestamp>
             try:
-                (_,__,vservername,tail)=ts_line.split('/')
-                (_,timestamp)=tail.split(':')
+                (ts_file,timestamp)=ts_line.split(':')
+                ts_file=os.path.basename(ts_file)
+                (vservername,_)=os.path.splitext(ts_file)
                 timestamp=int(timestamp)
                 p=self.plc_instance_by_vservername(vservername)
                 if not p: 
