@@ -112,19 +112,19 @@ class PoolItem:
 class Pool:
 
     def __init__ (self, tuples,message):
-        self.pool= [ PoolItem (h,u) for (h,u) in tuples ] 
+        self.pool_items= [ PoolItem (hostname,userdata) for (hostname,userdata) in tuples ] 
         self.message=message
 
     def list (self):
-        for i in self.pool: print i.line()
+        for i in self.pool_items: print i.line()
 
     def line (self):
         line=self.message
-        for i in self.pool: line += ' ' + i.char()
+        for i in self.pool_items: line += ' ' + i.char()
         return line
 
     def _item (self, hostname):
-        for i in self.pool: 
+        for i in self.pool_items: 
             if i.hostname==hostname: return i
         raise Exception ("Could not locate hostname %s in pool %s"%(hostname,self.message))
 
@@ -142,7 +142,7 @@ class Pool:
             print 'WARNING: host %s not found in IP pool %s'%(hostname,self.message)
 
     def next_free (self):
-        for i in self.pool:
+        for i in self.pool_items:
             if i.status == 'free':
                 i.status='mine'
                 return (i.hostname,i.userdata)
@@ -156,19 +156,19 @@ class Pool:
         except: items=[]
         if not name in items:
             file(Pool.starting,'a').write(name+'\n')
-        for i in self.pool:
+        for i in self.pool_items:
             if i.hostname==name: i.status='mine'
             
     # we load this after actual sensing; 
     def load_starting (self):
         try:    items=[line.strip() for line in file(Pool.starting).readlines()]
         except: items=[]
-        for i in self.pool:
+        for i in self.pool_items:
             if i.hostname in items:
                 if i.status=='free' : i.status='starting'
 
     def release_my_starting (self):
-        for i in self.pool:
+        for i in self.pool_items:
             if i.status=='mine': 
                 self.del_starting(i.hostname)
                 i.status=None
@@ -184,7 +184,7 @@ class Pool:
     
     ##########
     def _sense (self):
-        for item in self.pool:
+        for item in self.pool_items:
             if item.status is not None: 
                 print item.char(),
                 continue
