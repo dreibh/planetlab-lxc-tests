@@ -98,8 +98,8 @@ class PoolItem:
 
     def char (self):
         if   self.status==None:       return '?'
-        elif self.status=='busy':     return '*'
-        elif self.status=='free':     return '.'
+        elif self.status=='busy':     return '+'
+        elif self.status=='free':     return '-'
         elif self.status=='mine':     return 'M'
         elif self.status=='starting': return 'S'
 
@@ -186,11 +186,14 @@ class Pool:
     def _sense (self):
         for item in self.pool:
             if item.status is not None: 
+                print item.char(),
                 continue
             if self.check_ping (item.hostname): 
                 item.status='busy'
+                print '*',
             else:
                 item.status='free'
+                print '.',
     
     def sense (self):
         print 'Sensing IP pool',self.message,
@@ -215,8 +218,6 @@ class Pool:
 
         command="ping -c 1 %s 1 %s"%(Pool.ping_timeout_option,hostname)
         (status,output) = commands.getstatusoutput(command)
-        if status==0:   print '*',
-        else:           print '.',
         return status == 0
 
 ####################
