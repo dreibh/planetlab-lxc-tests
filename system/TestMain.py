@@ -125,7 +125,6 @@ steps refer to a method in TestPlc or to a step_* module
         parser.add_option("-r","--restart-nm", action="store_true", dest="forcenm", default=False, 
                           help="Force the NM to restart in ssh_slices step")
         parser.add_option("-t","--trace", action="store", dest="trace_file", default=None,
-                          #default="logs/trace-@TIME@.txt",
                           help="Trace file location")
         (self.options, self.args) = parser.parse_args()
 
@@ -328,17 +327,11 @@ steps refer to a method in TestPlc or to a step_* module
         
         # init & open trace file if provided
         if self.options.trace_file and not self.options.dry_run:
-            time=strftime("%H-%M")
-            date=strftime("%Y-%m-%d")
-            trace_file=self.options.trace_file
-            trace_file=trace_file.replace("@TIME@",time)
-            trace_file=trace_file.replace("@DATE@",date)
-            self.options.trace_file=trace_file
             # create dir if needed
-            trace_dir=os.path.dirname(trace_file)
+            trace_dir=os.path.dirname(self.options.trace_file)
             if trace_dir and not os.path.isdir(trace_dir):
                 os.makedirs(trace_dir)
-            trace=open(trace_file,"w")
+            trace=open(self.options.trace_file,"w")
 
         # do all steps on all plcs
         TIME_FORMAT="%H-%M-%S"
