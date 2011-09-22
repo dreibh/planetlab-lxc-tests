@@ -716,7 +716,7 @@ class TestBox (Box):
     def sense (self, options):
         print 't',
         self.sense_uptime()
-        self.starting_ips=self.backquote_ssh(['cat',Pool.starting], trash_err=True).strip().split('\n')
+        self.starting_ips=[x for x in self.backquote_ssh(['cat',Pool.starting], trash_err=True).strip().split('\n') if x]
 
         # scan timestamps on all tests
         # this is likely to not invoke ssh so we need to be a bit smarter to get * expanded
@@ -1093,8 +1093,7 @@ class Substrate:
         # default scope
         if not boxes:
             boxes = [ b.hostname for b in \
-                          self.build_boxes + [ self.test_box ] + \
-                          self.plc_boxes + self.qemu_boxes ]
+                          self.build_boxes + self.plc_boxes + self.qemu_boxes ]
 
         if self.options.reboot: self.reboot_boxes (boxes)
         else:                   self.list_boxes (boxes)
