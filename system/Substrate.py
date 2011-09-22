@@ -697,12 +697,9 @@ class TestBox (Box):
         if not i:
             self.test_instances.append (TestInstance (buildname,pid))
             return
-        if i.pid!=0:
+        if i.pids:
             print "WARNING: 2 concurrent tests run on same build %s"%buildname
-            i.add_pid (pid)
-            return
-        else:
-            i.pid=pid
+        i.add_pid (pid)
 
     def add_broken (self, buildname, plcindex, step):
         i=self.get_test(buildname)
