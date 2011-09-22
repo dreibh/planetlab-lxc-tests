@@ -1045,23 +1045,23 @@ class Substrate:
         print "Could not find box %s"%boxname
         return None
 
-    def list_boxes(self,boxnames):
+    def list_boxes(self,box_or_names):
         print 'Sensing',
-        for boxname in boxnames:
-            b=self.get_box(boxname)
-            if not b: continue
-            b.sense(self.options)
+        for box in box_or_names:
+            if not isinstance(box,Box): box=self.get_box(box)
+            if not box: continue
+            box.sense(self.options)
         print 'Done'
-        for boxname in boxnames:
-            b=self.get_box(boxname)
-            if not b: continue
-            b.list()
+        for box in box_or_names:
+            if not isinstance(box,Box): box=self.get_box(box)
+            if not box: continue
+            box.list()
 
-    def reboot_boxes(self,boxnames):
-        for boxname in boxnames:
-            b=self.get_box(boxname)
-            if not b: continue
-            b.reboot(self.options)
+    def reboot_boxes(self,box_or_names):
+        for box in box_or_names:
+            if not isinstance(box,Box): box=self.get_box(box)
+            if not box: continue
+            box.reboot(self.options)
 
     ####################
     # can be run as a utility to manage the local infrastructure
@@ -1088,17 +1088,15 @@ class Substrate:
         (self.options,args)=parser.parse_args()
 
         boxes=args
-        if self.options.testbox: boxes += [self.test_box.hostname]
-        if self.options.builds: boxes += [b.hostname for b in self.build_boxes]
-        if self.options.plcs: boxes += [b.hostname for b in self.plc_boxes]
-        if self.options.qemus: boxes += [b.hostname for b in self.qemu_boxes]
-        if self.options.all: boxes += [b.hostname for b in self.all_boxes]
-        boxes=list(set(boxes))
+        if self.options.testbox: boxes += [self.test_box]
+        if self.options.builds: boxes += self.build_boxes
+        if self.options.plcs: boxes += self.plc_boxes
+        if self.options.qemus: boxes += self.qemu_boxes
+        if self.options.all: boxes += self.all_boxes
         
         # default scope is -b -p -q
         if not boxes:
-            boxes = [ b.hostname for b in \
-                          self.build_boxes + self.plc_boxes + self.qemu_boxes ]
+            boxes = self.build_boxes + self.plc_boxes + self.qemu_boxes
 
         if self.options.reboot: self.reboot_boxes (boxes)
         else:                   self.list_boxes (boxes)
