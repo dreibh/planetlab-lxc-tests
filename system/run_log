@@ -1,5 +1,6 @@
 #!/bin/bash
 cd $(dirname $0)
+python -c "import time; print int(time.time())" > timestamp
 mkdir -p logs
 time=$(date +%H-%M)
 runfile=run-${time}.txt

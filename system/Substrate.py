@@ -226,6 +226,7 @@ class Pool:
 class Box:
     def __init__ (self,hostname):
         self.hostname=hostname
+        self._probed=None
     def shortname (self):
         return short_hostname(self.hostname)
     def test_ssh (self): return TestSsh(self.hostname,username='root',unknown_host=False)
@@ -261,21 +262,24 @@ class Box:
         return result
 
     def backquote (self, argv, trash_err=False):
+        # print 'running backquote',argv
         if not trash_err:
             result= subprocess.Popen(argv,stdout=subprocess.PIPE).communicate()[0]
         else:
             result= subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=file('/dev/null','w')).communicate()[0]
         return result
 
-    def backquote_ssh (self, argv, trash_err=False):
+    def probe (self):
+        if self._probed is not None: return self._probed
         # first probe the ssh link
         probe_argv=self.test_ssh().actual_argv(['hostname'])
-        hostname=self.backquote ( probe_argv, trash_err=True )
-        if not hostname:
-            print "root@%s unreachable"%self.hostname
-            return ''
-        else:
-            return self.backquote( self.test_ssh().actual_argv(argv), trash_err)
+        self._probed=self.backquote ( probe_argv, trash_err=True )
+        if not self._probed: print "root@%s unreachable"%self.hostname
+        return self._probed
+
+    def backquote_ssh (self, argv, trash_err=False):
+        if not self.probe(): return ''
+        return self.backquote( self.test_ssh().actual_argv(argv), trash_err)
 
 ############################################################
 class BuildInstance:
@@ -319,7 +323,7 @@ class BuildBox (Box):
 
     # inspect box and find currently running builds
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
-    def sense(self,options):
+    def sense(self, options):
         print 'b',
         self.sense_uptime()
         pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
@@ -627,24 +631,38 @@ class QemuBox (Box):
 
 ####################
 class TestInstance:
-    def __init__ (self, pid, buildname):
-        self.pids=[pid]
+    def __init__ (self, buildname, pid=0):
+        self.pids=[]
+        if pid!=0: self.pid.append(pid)
         self.buildname=buildname
         # latest trace line
         self.trace=''
         # has a KO test
         self.broken_steps=[]
+        self.timestamp = 0
+
+    def set_timestamp (self,timestamp): self.timestamp=timestamp
+    def set_now (self): self.timestamp=int(time.time())
+    def pretty_timestamp (self): return time.strftime("%Y-%m-%d:%H-%M",time.localtime(self.timestamp))
+
+
     def add_pid (self,pid):
         self.pids.append(pid)
     def set_broken (self,plcindex, step): 
         self.broken_steps.append ( (plcindex, step,) )
 
     def line (self):
-        msg = " == %s =="%self.buildname
-        msg += " (pid=%s)"%(self.pids)
+        double='=='
+        if self.pids: double='*'+double[1]
+        if self.broken_steps: double=double[0]+'B'
+        msg = " %s %s =="%(double,self.buildname)
+        if not self.pids:       pass
+        elif len(self.pids)==1: msg += " (pid=%s)"%self.pids[0]
+        else:                   msg += " !!!pids=%s!!!"%self.pids
+        msg += " @%s"%self.pretty_timestamp()
         if self.broken_steps:
             msg += "\n BROKEN IN STEPS "
-            for (i,s) in self.broken_steps: msg += "step=%s,plc=%s"%(s,i)
+            for (i,s) in self.broken_steps: msg += "%s@%s"%(s,i)
         return msg
 
 class TestBox (Box):
@@ -657,27 +675,78 @@ class TestBox (Box):
         # can't reboot a vserver VM
         self.run_ssh (['pkill','run_log'],"Terminating current runs",
                       dry_run=options.dry_run)
-        self.run_ssh (['rm','-f',Pool.starting],"Cleaning /root/starting",
+        self.run_ssh (['rm','-f',Pool.starting],"Cleaning %s"%Pool.starting,
                       dry_run=options.dry_run)
 
     def get_test (self, buildname):
         for i in self.test_instances:
             if i.buildname==buildname: return i
 
-    def add_test (self, pid, buildname):
+    # we scan ALL remaining test results, even the ones not running
+    def add_timestamp (self, buildname, timestamp):
         i=self.get_test(buildname)
-        if i:
+        if i:   
+            i.set_timestamp(timestamp)
+        else:   
+            i=TestInstance(buildname,0)
+            i.set_timestamp(timestamp)
+            self.test_instances.append(i)
+
+    def add_running_test (self, pid, buildname):
+        i=self.get_test(buildname)
+        if not i:
+            self.test_instances.append (TestInstance (buildname,pid))
+            return
+        if i.pid!=0:
             print "WARNING: 2 concurrent tests run on same build %s"%buildname
             i.add_pid (pid)
             return
-        self.test_instances.append (TestInstance (pid,buildname))
+        else:
+            i.pid=pid
+
+    def add_broken (self, buildname, plcindex, step):
+        i=self.get_test(buildname)
+        if not i:
+            i=TestInstance(buildname)
+            self.test_instances.append(i)
+        i.set_broken(plcindex, step)
 
     matcher_proc=re.compile (".*/proc/(?P<pid>[0-9]+)/cwd.*/root/(?P<buildname>[^/]+)$")
-    matcher_grep=re.compile ("/root/(?P<buildname>[^/]+)/logs/trace:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
+    matcher_grep=re.compile ("/root/(?P<buildname>[^/]+)/logs/trace.*:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
     def sense (self, options):
         print 't',
         self.sense_uptime()
         self.starting_ips=self.backquote_ssh(['cat',Pool.starting], trash_err=True).strip().split('\n')
+
+        # scan timestamps on all tests
+        # this is likely to not invoke ssh so we need to be a bit smarter to get * expanded
+        # xxx would make sense above too
+        command=['bash','-c',"grep . /root/*/timestamp /dev/null"]
+        #ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
+        ts_lines=self.backquote_ssh(command).split('\n')
+        for ts_line in ts_lines:
+            if not ts_line.strip(): continue
+            # expect /root/<buildname>/timestamp:<timestamp>
+            try:
+                (ts_file,timestamp)=ts_line.split(':')
+                ts_file=os.path.dirname(ts_file)
+                buildname=os.path.basename(ts_file)
+                timestamp=int(timestamp)
+                t=self.add_timestamp(buildname,timestamp)
+            except:  print 'WARNING, could not parse ts line',ts_line
+
+        command=['bash','-c',"grep KO /root/*/logs/trace* /dev/null" ]
+        trace_lines=self.backquote_ssh (command).split('\n')
+        for line in trace_lines:
+            if not line.strip(): continue
+            m=TestBox.matcher_grep.match(line)
+            if m: 
+                buildname=m.group('buildname')
+                plcindex=m.group('plcindex')
+                step=m.group('step')
+                self.add_broken(buildname,plcindex, step)
+            else: header("command %r returned line that failed to match\n%s"%(command,line))
+
         pids = self.backquote_ssh (['pgrep','run_log'],trash_err=True)
         if not pids: return
         command=['ls','-ld'] + ["/proc/%s/cwd"%pid for pid in pids.split("\n") if pid]
@@ -688,47 +757,24 @@ class TestBox (Box):
             if m: 
                 pid=m.group('pid')
                 buildname=m.group('buildname')
-                self.add_test(pid, buildname)
+                self.add_running_test(pid, buildname)
             else: header("command %r returned line that failed to match\n%s"%(command,line))
-        buildnames=[i.buildname for i in self.test_instances]
-        if not buildnames: return
-
-# messy - tail has different output if one or several args
-#        command=['tail','-n','1'] + [ "/root/%s/logs/trace"%b for b in buildnames ]
-#        trace_lines=self.backquote_ssh (command).split('\n\n')
-#        header('TAIL')
-#        for line in trace_lines:
-#            if not line.strip(): continue
-#            print 'line [[[%s]]]'%line
-        command=['grep','KO'] + [ "/root/%s/logs/trace"%b for b in buildnames ] + [ "/dev/null" ]
-        trace_lines=self.backquote_ssh (command).split('\n')
-        for line in trace_lines:
-            if not line.strip(): continue
-            m=TestBox.matcher_grep.match(line)
-            if m: 
-                buildname=m.group('buildname')
-                plcindex=m.group('plcindex')
-                step=m.group('step')
-                self.get_test(buildname).set_broken (plcindex, step)
-            else: header("command %r returned line that failed to match\n%s"%(command,line))
-            
         
         
     def line (self):
         return "%s (%s)"%(self.hostname,self.uptime())
 
     def list (self):
-        if not self.starting_ips:
-            header ("No starting IP addresses on %s"%self.line())
+        if not self.test_instances:
+            header ("No known tests on %s"%self.line())
         else:
-            header ("IP addresses currently starting up on %s"%self.line())
+            header ("Known tests on %s"%self.line())
+            self.test_instances.sort(timestamp_sort)
+            for i in self.test_instances: print i.line()
+        if self.starting_ips:
+            header ("Starting IP addresses on %s"%self.line())
             self.starting_ips.sort()
             for starting in self.starting_ips: print starting
-        if not self.test_instances:
-            header ("No running tests on %s"%self.line())
-        else:
-            header ("Running tests on %s"%self.line())
-            for i in self.test_instances: print i.line()
 
 ############################################################
 class Options: pass
@@ -763,6 +809,10 @@ class Substrate:
         print 'Done'
         self._sensed=True
         return True
+
+    def list (self):
+        for b in self.all_boxes:
+            b.list()
 
     def add_dummy_plc (self, plc_boxname, plcname):
         for pb in self.plc_boxes:
@@ -810,7 +860,7 @@ class Substrate:
             plc_boxname = options.ips_bplc.pop()
             vplc_hostname=options.ips_vplc.pop()
         else:
-            if self.sense(): self.list_all()
+            if self.sense(): self.list()
             plc_boxname=None
             vplc_hostname=None
             # try to find an available IP 
@@ -905,7 +955,7 @@ class Substrate:
                 qemu_boxname=options.ips_bnode.pop()
                 vnode_hostname=options.ips_vnode.pop()
             else:
-                if self.sense(): self.list_all()
+                if self.sense(): self.list()
                 qemu_boxname=None
                 vnode_hostname=None
                 # try to find an available IP 
@@ -993,21 +1043,21 @@ class Substrate:
         print "Could not find box %s"%boxname
         return None
 
-    def list_boxes(self,boxes):
+    def list_boxes(self,boxnames):
         print 'Sensing',
-        for box in boxes:
-            b=self.get_box(box)
+        for boxname in boxnames:
+            b=self.get_box(boxname)
             if not b: continue
             b.sense(self.options)
         print 'Done'
-        for box in boxes:
-            b=self.get_box(box)
+        for boxname in boxnames:
+            b=self.get_box(boxname)
             if not b: continue
             b.list()
 
-    def reboot_boxes(self,boxes):
-        for box in boxes:
-            b=self.get_box(box)
+    def reboot_boxes(self,boxnames):
+        for boxname in boxnames:
+            b=self.get_box(boxname)
             if not b: continue
             b.reboot(self.options)
 
