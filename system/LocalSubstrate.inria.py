@@ -37,7 +37,7 @@ class OnelabSubstrate (Substrate):
       return [
          ('kvm64-1', 3), # how many plcs max in this box
          ('kvm64-2', 3),
-         ('kvm64-3', 3),
+         ('kvm64-3', 2),
          ('kvm64-4', 3),
          ('kvm64-5', 3),
          ('kvm64-6', 3),
