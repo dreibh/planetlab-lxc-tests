@@ -204,7 +204,6 @@ class Pool:
         self.load_starting()
         print 'After starting: IP pool'
         print self.line()
-
     # OS-dependent ping option (support for macos, for convenience)
     ping_timeout_option = None
     # returns True when a given hostname/ip responds to ping
@@ -277,6 +276,9 @@ class Box:
         if not self._probed: print "root@%s unreachable"%self.hostname
         return self._probed
 
+    # use argv=['bash','-c',"the command line"]
+    # if you have any shell-expanded arguments like *
+    # and if there's any chance the command is adressed to the local host
     def backquote_ssh (self, argv, trash_err=False):
         if not self.probe(): return ''
         return self.backquote( self.test_ssh().actual_argv(argv), trash_err)
@@ -448,9 +450,11 @@ class PlcBox (Box):
             if not vserver_line: continue
             context=vserver_line.split()[0]
             if context=="CTX": continue
-            longname=ctx_dict[context]
-            self.add_vserver(longname,context)
-#            print self.margin_outline(self.vplcname(longname)),"%(vserver_line)s [=%(longname)s]"%locals()
+            try:
+                longname=ctx_dict[context]
+                self.add_vserver(longname,context)
+            except:
+                print 'WARNING: found ctx %s in vserver_stat but was unable to figure a corresp. vserver'%context
 
         # scan timestamps 
         running_vsnames = [ i.vservername for i in self.plc_instances ]
@@ -608,6 +612,7 @@ class QemuBox (Box):
                 live_builds.append(buildname)
             except: print 'WARNING, could not parse pid line',pid_line
         # retrieve timestamps
+        if not live_builds: return
         command=   ['grep','.']
         command += ['%s/*/timestamp'%b for b in live_builds]
         command += ['/dev/null']
@@ -719,8 +724,7 @@ class TestBox (Box):
         # this is likely to not invoke ssh so we need to be a bit smarter to get * expanded
         # xxx would make sense above too
         command=['bash','-c',"grep . /root/*/timestamp /dev/null"]
-        #ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
-        ts_lines=self.backquote_ssh(command).split('\n')
+        ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for ts_line in ts_lines:
             if not ts_line.strip(): continue
             # expect /root/<buildname>/timestamp:<timestamp>
@@ -788,7 +792,8 @@ class Substrate:
         self.build_boxes = [ BuildBox(h) for h in self.build_boxes_spec() ]
         self.plc_boxes = [ PlcBox (h,m) for (h,m) in self.plc_boxes_spec ()]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
-        self.all_boxes = self.plc_boxes + self.qemu_boxes
+        self.default_boxes = self.plc_boxes + self.qemu_boxes
+        self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
         self._sensed=False
 
         self.vplc_pool = Pool (self.vplc_ips(),"for vplcs")
@@ -802,13 +807,13 @@ class Substrate:
     def sense (self,force=False):
         if self._sensed and not force: return False
         print 'Sensing local substrate...',
-        for b in self.all_boxes: b.sense(self.options)
+        for b in self.default_boxes: b.sense(self.options)
         print 'Done'
         self._sensed=True
         return True
 
     def list (self):
-        for b in self.all_boxes:
+        for b in self.default_boxes:
             b.list()
 
     def add_dummy_plc (self, plc_boxname, plcname):
@@ -1074,6 +1079,8 @@ class Substrate:
                            help='add plc boxes')
         parser.add_option ('-q',"--qemu",action='store_true',dest='qemus',default=False,
                            help='add qemu boxes') 
+        parser.add_option ('-a',"--all",action='store_true',dest='all',default=False,
+                           help='address all known  boxes, like -b -t -p -q')
         parser.add_option ('-v',"--verbose",action='store_true',dest='verbose',default=False,
                            help='verbose mode')
         parser.add_option ('-n',"--dry_run",action='store_true',dest='dry_run',default=False,
@@ -1085,9 +1092,10 @@ class Substrate:
         if self.options.builds: boxes += [b.hostname for b in self.build_boxes]
         if self.options.plcs: boxes += [b.hostname for b in self.plc_boxes]
         if self.options.qemus: boxes += [b.hostname for b in self.qemu_boxes]
+        if self.options.all: boxes += [b.hostname for b in self.all_boxes]
         boxes=list(set(boxes))
         
-        # default scope
+        # default scope is -b -p -q
         if not boxes:
             boxes = [ b.hostname for b in \
                           self.build_boxes + self.plc_boxes + self.qemu_boxes ]
