@@ -34,13 +34,13 @@ class OnelabSubstrate (Substrate):
                 for i in range(1,21) ] 
 
    def qemu_boxes_spec (self):
-      return [
-         ('kvm64-1', 3), # how many plcs max in this box
-         ('kvm64-2', 3),
-         ('kvm64-3', 2),
-         ('kvm64-4', 3),
-         ('kvm64-5', 3),
-         ('kvm64-6', 3),
+      return [ # how many plcs max in this box
+         ('kvm64-1', 3), # 4 cores, 4Gb
+         ('kvm64-2', 3), # 4 cores, 4Gb
+         ('kvm64-3', 2), # 2 cores, 4Gb
+         ('kvm64-4', 3), # 4 cores, 8Gb
+         ('kvm64-5', 2), # 2 cores, 4Gb
+         ('kvm64-6', 2), # 2 cores, 4Gb
          ]
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
