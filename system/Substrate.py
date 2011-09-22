@@ -661,8 +661,8 @@ class TestInstance:
         else:                   msg += " !!!pids=%s!!!"%self.pids
         msg += " @%s"%self.pretty_timestamp()
         if self.broken_steps:
-            msg += "\n BROKEN IN STEPS "
-            for (i,s) in self.broken_steps: msg += "%s@%s"%(s,i)
+            msg += "\n BROKEN IN STEPS"
+            for (i,s) in self.broken_steps: msg += " %s@%s"%(s,i)
         return msg
 
 class TestBox (Box):
