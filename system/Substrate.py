@@ -69,6 +69,37 @@ def timestamp_sort(o1,o2): return o1.timestamp-o2.timestamp
 
 def short_hostname (hostname):
     return hostname.split('.')[0]
+
+####################
+# the place were other test instances tell about their not-yet-started
+# instances, that go undetected through sensing
+class Starting:
+
+    location='/root/starting'
+    def __init__ (self):
+        self.tuples=[]
+
+    def load (self):
+        try:    self.tuples=[line.strip().split('@') 
+                             for line in file(Starting.location).readlines()]
+        except: self.tuples=[]
+
+    def vnames (self) : 
+        self.load()
+        return [ x for (x,_) in self.tuples ]
+
+    def add (self, vname, bname):
+        if not vname in self.vnames():
+            file(Starting.location,'a').write("%s@%s\n"%(vname,bname))
+            
+    def delete_vname (self, vname):
+        self.load()
+        if vname in self.vnames():
+            f=file(Starting.location,'w')
+            for (v,b) in self.tuples: 
+                if v != vname: f.write("%s@%s\n"%(v,b))
+            f.close()
+    
 ####################
 # pool class
 # allows to pick an available IP among a pool
@@ -113,9 +144,11 @@ class PoolItem:
 
 class Pool:
 
-    def __init__ (self, tuples,message):
+    def __init__ (self, tuples,message, substrate):
         self.pool_items= [ PoolItem (hostname,userdata) for (hostname,userdata) in tuples ] 
         self.message=message
+        # where to send notifications upon load_starting
+        self.substrate=substrate
 
     def list (self):
         for i in self.pool_items: print i.line()
@@ -150,40 +183,34 @@ class Pool:
                 return (i.hostname,i.userdata)
         return None
 
-    # the place were other test instances tell about their not-yet-started
-    # instances, that go undetected through sensing
-    starting='/root/starting'
-    def add_starting (self, name):
-        try:    items=[line.strip() for line in file(Pool.starting).readlines()]
-        except: items=[]
-        if not name in items:
-            file(Pool.starting,'a').write(name+'\n')
+    ####################
+    # we have a starting instance of our own
+    def add_starting (self, vname, bname):
+        Starting().add(vname,bname)
         for i in self.pool_items:
-            if i.hostname==name: i.status='mine'
-            
-    # we load this after actual sensing; 
+            if i.hostname==vname: i.status='mine'
+
+    # load the starting instances from the common file
+    # remember that might be ours
+    # return the list of (vname,bname) that are not ours
     def load_starting (self):
-        try:    items=[line.strip() for line in file(Pool.starting).readlines()]
-        except: items=[]
-        for i in self.pool_items:
-            if i.hostname in items:
-                if i.status=='free' : i.status='starting'
+        starting=Starting()
+        starting.load()
+        new_tuples=[]
+        for (v,b) in starting.tuples:
+            for i in self.pool_items:
+                if i.hostname==v and i.status=='free':
+                    i.status='starting'
+                    new_tuples.append( (v,b,) )
+        return new_tuples
 
     def release_my_starting (self):
         for i in self.pool_items:
-            if i.status=='mine': 
-                self.del_starting(i.hostname)
+            if i.status=='mine':
+                Starting().delete_vname (i.hostname)
                 i.status=None
 
-    def del_starting (self, name):
-        try:    items=[line.strip() for line in file(Pool.starting).readlines()]
-        except: items=[]
-        if name in items:
-            f=file(Pool.starting,'w')
-            for item in items: 
-                if item != name: f.write(item+'\n')
-            f.close()
-    
+
     ##########
     def _sense (self):
         for item in self.pool_items:
@@ -201,7 +228,8 @@ class Pool:
         print 'Sensing IP pool',self.message,
         self._sense()
         print 'Done'
-        self.load_starting()
+        for (vname,bname) in self.load_starting():
+            self.substrate.add_starting_dummy (bname, vname)
         print 'After starting: IP pool'
         print self.line()
     # OS-dependent ping option (support for macos, for convenience)
@@ -680,7 +708,7 @@ class TestBox (Box):
         # can't reboot a vserver VM
         self.run_ssh (['pkill','run_log'],"Terminating current runs",
                       dry_run=options.dry_run)
-        self.run_ssh (['rm','-f',Pool.starting],"Cleaning %s"%Pool.starting,
+        self.run_ssh (['rm','-f',Starting.location],"Cleaning %s"%Starting.location,
                       dry_run=options.dry_run)
 
     def get_test (self, buildname):
@@ -718,7 +746,7 @@ class TestBox (Box):
     def sense (self, options):
         print 't',
         self.sense_uptime()
-        self.starting_ips=[x for x in self.backquote_ssh(['cat',Pool.starting], trash_err=True).strip().split('\n') if x]
+        self.starting_ips=[x for x in self.backquote_ssh(['cat',Starting.location], trash_err=True).strip().split('\n') if x]
 
         # scan timestamps on all tests
         # this is likely to not invoke ssh so we need to be a bit smarter to get * expanded
@@ -796,8 +824,8 @@ class Substrate:
         self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
         self._sensed=False
 
-        self.vplc_pool = Pool (self.vplc_ips(),"for vplcs")
-        self.vnode_pool = Pool (self.vnode_ips(),"for vnodes")
+        self.vplc_pool = Pool (self.vplc_ips(),"for vplcs",self)
+        self.vnode_pool = Pool (self.vnode_ips(),"for vnodes",self)
 
     def fqdn (self, hostname):
         if hostname.find('.')<0: return "%s.%s"%(hostname,self.domain())
@@ -820,10 +848,15 @@ class Substrate:
         for pb in self.plc_boxes:
             if pb.hostname==plc_boxname:
                 pb.add_dummy(plcname)
+                return True
     def add_dummy_qemu (self, qemu_boxname, qemuname):
         for qb in self.qemu_boxes:
             if qb.hostname==qemu_boxname:
                 qb.add_dummy(qemuname)
+                return True
+
+    def add_starting_dummy (self, bname, vname):
+        return self.add_dummy_plc (bname, vname) or self.add_dummy_qemu (bname, vname)
 
     ########## 
     def provision (self,plcs,options):
@@ -834,6 +867,7 @@ class Substrate:
             plcs = [ self.provision_qemus (plc,options) for plc in plcs ]
             # update the SFA spec accordingly
             plcs = [ self.localize_sfa_rspec(plc,options) for plc in plcs ]
+            self.list()
             return plcs
         except Exception, e:
             print '* Could not provision this test on current substrate','--',e,'--','exiting'
@@ -910,7 +944,7 @@ class Substrate:
         # 
         self.add_dummy_plc(plc_boxname,plc['name'])
         vplc_ip = self.vplc_pool.get_ip(vplc_hostname)
-        self.vplc_pool.add_starting(vplc_hostname)
+        self.vplc_pool.add_starting(vplc_hostname, plc_boxname)
 
         #### compute a helpful vserver name
         # remove domain in hostname
@@ -1000,10 +1034,10 @@ class Substrate:
                         vnode_hostname=freed_vnode_hostname
                         self.vnode_pool.set_mine(vnode_hostname)
 
-            self.add_dummy_qemu (qemu_boxname,nodename)
+            self.add_dummy_qemu (qemu_boxname,vnode_hostname)
             mac=self.vnode_pool.retrieve_userdata(vnode_hostname)
             ip=self.vnode_pool.get_ip (vnode_hostname)
-            self.vnode_pool.add_starting(vnode_hostname)
+            self.vnode_pool.add_starting(vnode_hostname,qemu_boxname)
 
             vnode_fqdn = self.fqdn(vnode_hostname)
             nodemap={'host_box':qemu_boxname,
