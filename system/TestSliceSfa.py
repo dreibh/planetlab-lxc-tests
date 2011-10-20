@@ -106,7 +106,7 @@ class TestSliceSfa:
         return self.sfa_create_slice(options)
 
     def sfa_delete_slice(self,options):
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.%s.%s"%(root_auth,self.login_base,self.slicename))
+	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s"%(self.hrn()))
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s"%(self.hrn()))==0
 
     # check the resulting sliver
