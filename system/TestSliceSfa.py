@@ -71,7 +71,7 @@ class TestSliceSfa:
         
     # those are step names exposed as methods of TestPlc, hence the _sfa
     def sfa_add_slice(self,options):
-	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add slice.xml")==0
+	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add %s"%(self.addslicefile()))==0
 
     def sfa_discover(self,options):
         return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ %s resources -o /root/.sfi/%s"%(self.discover_option(),self.adfile()))==0
