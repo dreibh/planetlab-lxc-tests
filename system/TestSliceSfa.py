@@ -34,10 +34,10 @@ class TestSliceSfa:
 	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         return "%s.%s.%s"%(root_auth,self.login_base,self.slicename)
     def addslicefile (self):
-        return self.resname("addslice","xml")
+        return self.resname("addslice","rspec")
     def resname (self,name,ext): return "%s_%s.%s"%(self.slicename,name,ext)
-    def adfile (self): return self.resname("ad","xml")
-    def reqfile (self): return self.resname("req","xml")
+    def adfile (self): return self.resname("ad","rspec")
+    def reqfile (self): return self.resname("req","rspec")
     def nodefile (self): return self.resname("nodes","txt")
     def discover_option(self):
         if self.mode()=='pg': return "-r protogeni"
