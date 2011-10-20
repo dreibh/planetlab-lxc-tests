@@ -22,12 +22,27 @@ class TestSliceSfa:
         self.sfa_spec=test_plc.plc_spec['sfa']
         self.piuser=self.sfa_spec['piuser']
         self.regularuser=self.sfa_spec['regularuser']
-        self.slicename=self.sfa_spec['slicename']
+        self.slicename=self.slice_spec['slicename']
         self.login_base=self.sfa_spec['login_base']
         
     def name(self):
         return self.slice_spec['slice_fields']['name']
     
+    def mode (self): return self.slice_spec['mode']
+
+    def hrn(self): 
+	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+        return "%s.%s.%s"%(root_auth,self.login_base,self.slicename)
+    def addslicefile (self):
+        return self.resname("addslice","xml")
+    def resname (self,name,ext): return "%s_%s.%s"%(self.slicename,name,ext)
+    def adfile (self): return self.resname("ad","xml")
+    def reqfile (self): return self.resname("req","xml")
+    def nodefile (self): return self.resname("nodes","txt")
+    def discover_option(self):
+        if self.mode()=='pg': return "-r protogeni"
+        else: return ""
+
     def locate_key(self):
         for username,keyname in self.slice_spec['usernames']:
                 key_spec=self.test_plc.locate_key(keyname)
@@ -38,19 +53,34 @@ class TestSliceSfa:
                     found=True
         return (found,privatekey)
 
+    # dir_name is local and will be pushed later on
+    def sfi_config (self,dir_name):
+        # TODO this needs to be done remotely
+	file_name=dir_name + os.sep + self.addslicefile()
+        fileconf=open(file_name,'w')
+	fileconf.write(self.slice_spec['slice_add_xml'])
+	fileconf.write('\n')
+        utils.header ("(Over)wrote %s"%file_name)
+        fileconf.close()
+	file_name=dir_name + os.sep + 'person.xml'
+        fileconf=open(file_name,'w')
+	fileconf.write(self.slice_spec['slice_person_xml'])
+	fileconf.write('\n')
+        fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
+        
     # those are step names exposed as methods of TestPlc, hence the _sfa
     def sfa_add_slice(self,options):
 	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add slice.xml")==0
 
     def sfa_discover(self,options):
-        return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ resources -o /root/.sfi/resources_in.rspec")==0
+        return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ %s resources -o /root/.sfi/%s"%(self.discover_option(),self.adfile()))==0
 
     def sfa_create_slice(self,options):
-	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         commands=[
-            "sfiListNodes.py -i /root/.sfi/resources_in.rspec -o /root/.sfi/all_nodes.txt",
-            "sfiAddSliver.py -i /root/.sfi/resources_in.rspec -n /root/.sfi/all_nodes.txt -o /root/.sfi/resources_out.rspec",
-            "sfi.py -d /root/.sfi/ create %s.%s.%s resources_out.rspec"%(root_auth,self.login_base,self.slicename),
+            "sfiListNodes.py -i /root/.sfi/%s -o /root/.sfi/%s"%(self.adfile(),self.nodefile()),
+            "sfiAddSliver.py -i /root/.sfi/%s -n /root/.sfi/%s -o /root/.sfi/%s"%(self.adfile(),self.nodefile(),self.reqfile()),
+            "sfi.py -d /root/.sfi/ create %s %s"%(self.hrn(),self.reqfile()),
             ]
         for command in commands:
             if self.test_plc.run_in_guest(command)!=0: return False
@@ -76,9 +106,8 @@ class TestSliceSfa:
         return self.sfa_create_slice(options)
 
     def sfa_delete_slice(self,options):
-	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s.%s.%s"%(root_auth,self.login_base,self.slicename))
-	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s.%s.%s"%(root_auth,self.login_base,self.slicename))==0
+	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s"%(self.hrn()))==0
 
     # check the resulting sliver
     def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):

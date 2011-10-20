@@ -196,7 +196,7 @@ def initscripts(options,index):
 # one has an initscript code, the other one an initscript name
 def slices (options,index):
     def theslice (i):
-        slice_spec = { 'slice_fields': {'name':'%s_pslc%d'%(login_base(index),i),
+        slice_spec = { 'slice_fields': {'name':'%s_slcpl%d'%(login_base(index),i),
                                         'instantiation':'plc-instantiated',
                                         'url':'http://foo%d.com'%index,
                                         'description':'testslice number %d'%i,
@@ -226,18 +226,18 @@ def tcp_tests (options,index):
         return [
             # local test
             { 'server_node': 'node1',
-              'server_slice' : '%s_pslc1'%login_base(index),
+              'server_slice' : '%s_slcpl1'%login_base(index),
               'client_node' : 'node1',
-              'client_slice' : '%s_pslc1'%login_base(index),
+              'client_slice' : '%s_slcpl1'%login_base(index),
               'port' : 2000,
               }]
     elif index == 2:
         return [
             # remote test
             { 'server_node': 'node2',
-              'server_slice' : '%s_pslc3'%login_base(index),
+              'server_slice' : '%s_slcpl3'%login_base(index),
               'client_node' : 'node2',
-              'client_slice' : '%s_pslc4'%login_base(index),
+              'client_slice' : '%s_slcpl4'%login_base(index),
               'port' : 4000,
               },
             ]
@@ -298,7 +298,6 @@ def plc (options,index) :
 def sfa (options,index) :
     piuser='fake-pi%d'%index
     regularuser='sfafakeuser%d'%index
-    slicename='fslc%d'%index
     return { 
         'SFA_REGISTRY_ROOT_AUTH' : sfa_root(index),
         'SFA_INTERFACE_HRN' : sfa_root(index),
@@ -313,45 +312,51 @@ def sfa (options,index) :
         'SFA_PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_API_DEBUG': True,
-        'sfa_slice_specs' : sfa_slice_specs(options,index,slicename,regularuser),
-	'sfa_slice_xml' : sfa_slice_xml(options,index,piuser,slicename),
-	'sfa_person_xml' : sfa_person_xml(options,index,regularuser),
+        'sfa_slice_specs' : [ sfa_slice_spec(options,index,piuser,regularuser,i) for i in [0,1]],
 	'sfa_slice_rspec' : sfa_slice_rspec(options,index),
         'login_base' : login_base(index),
         'piuser' : piuser,
         'regularuser':regularuser,
-        'slicename' : slicename,
         'domain':domain,
         # the default is to use AMs in the various aggregates.xml
         # stack config_sfamesh to point to SMs instead
         'neighbours-port':12346,
     }
 
-def sfa_slice_specs (options,index,slicename,regularuser):
-    return [ { 'slice_fields': {'name':'%s_%s'%(login_base(index),slicename),
-                                'url':'http://foo%d@foo.com'%index,
-                                'description':'SFA-testing',
-                                'max_nodes':2,
-                                },
-               'usernames' : [ (regularuser,'key1') ],
-               'nodenames' : all_nodenames(options,index),
-               'sitename' : login_base(index),
-               }]
-
-def sfa_slice_xml(options,index,piuser,slicename):
+# subindex is 0 (pl slice) or 1 (pg slice)
+def sfa_slice_spec (options,index,piuser,regularuser,subindex):
+    if subindex==0:
+        mode='pl'
+    else:
+        mode='pg'
+    slicename='slcsfa%d%s'%(index,mode)
     prefix='%s.%s'%(sfa_root(index),login_base(index))
     hrn=prefix+'.'+slicename
     researcher=prefix+'.'+piuser
+    slice_add_xml = '''<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/">
+<researcher>%s</researcher></record>'''%(hrn, researcher)
 
-    return  ['<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/"><researcher>%s</researcher></record>'%(hrn, researcher)]
-
-def sfa_person_xml(options,index,regularuser):
-    prefix='%s.%s'%(sfa_root(index),login_base(index))
-    hrn=prefix+'.'+regularuser
     mail="%s@%s"%(regularuser,domain)
     key=public_key
+    slice_person_xml ='''<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(hrn)s" 
+last_name="Sfa" name="%(hrn)s" type="user">
+<keys>%(key)s</keys><role_ids>20</role_ids><role_ids>10</role_ids>
+<site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%(prefix)s</sites></record>'''%locals()
 
-    return ['<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(hrn)s" last_name="Sfa" name="%(hrn)s" type="user"><keys>%(key)s</keys><role_ids>20</role_ids><role_ids>10</role_ids><site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%(prefix)s</sites></record>'%locals()]
+    return { 'slice_fields': {'name':'%s_%s'%(login_base(index),slicename),
+                              'url':'http://foo%d@foo.com'%index,
+                              'description':'SFA-testing',
+                              'max_nodes':2,
+                              },
+             'usernames' : [ (regularuser,'key1') ],
+             'nodenames' : all_nodenames(options,index),
+             'sitename' : login_base(index),
+             'slicename' : slicename,
+             'slice_add_xml' : slice_add_xml,
+             'slice_person_xml' : slice_person_xml,
+             'mode':mode,
+             } 
+
 
 def sfa_slice_rspec(options,index):
     node_name='deferred'

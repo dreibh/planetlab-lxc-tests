@@ -1122,9 +1122,10 @@ class TestPlc:
         # ignore result 
         sfa_spec=self.plc_spec['sfa']
 
-        slicename='%s_%s'%(sfa_spec['login_base'],sfa_spec['slicename'])
-        try: self.apiserver.DeleteSlice(self.auth_root(),slicename)
-        except: print "Slice %s already absent from PLC db"%slicename
+        for sfa_slice_spec in sfa_spec['sfa_slice_specs']:
+            slicename='%s_%s'%(sfa_spec['login_base'],sfa_slice_spec['slicename'])
+            try: self.apiserver.DeleteSlice(self.auth_root(),slicename)
+            except: print "Slice %s already absent from PLC db"%slicename
 
         username="%s@%s"%(sfa_spec['regularuser'],sfa_spec['domain'])
         try: self.apiserver.DeletePerson(self.auth_root(),username)
@@ -1285,24 +1286,12 @@ class TestPlc:
         fileconf.close()
         utils.header ("(Over)wrote %s"%file_name)
 
-	file_name=dir_name + os.sep + 'person.xml'
-        fileconf=open(file_name,'w')
-	for record in sfa_spec['sfa_person_xml']:
-	   person_record=record
-	fileconf.write(person_record)
-	fileconf.write('\n')
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
-
-	file_name=dir_name + os.sep + 'slice.xml'
-        fileconf=open(file_name,'w')
-	for record in sfa_spec['sfa_slice_xml']:
-	    slice_record=record
-	#slice_record=sfa_spec['sfa_slice_xml']
-	fileconf.write(slice_record)
-	fileconf.write('\n')
-        utils.header ("(Over)wrote %s"%file_name)
-        fileconf.close()
+        # cannot use sfa_slice_mapper to pass dir_name
+        for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
+            site_spec = self.locate_site (slice_spec['sitename'])
+            test_site = TestSite(self,site_spec)
+            test_slice=TestSliceSfa(self,test_site,slice_spec)
+            test_slice.sfi_config(dir_name)
 
 	file_name=dir_name + os.sep + 'slice.rspec'
         fileconf=open(file_name,'w')

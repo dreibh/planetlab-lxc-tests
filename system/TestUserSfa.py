@@ -14,7 +14,6 @@ class TestUserSfa:
         self.sfa_spec=test_plc.plc_spec['sfa']
         self.piuser=self.sfa_spec['piuser']
         self.regularuser=self.sfa_spec['regularuser']
-        self.slicename=self.sfa_spec['slicename']
         self.login_base=self.sfa_spec['login_base']
 
     def add_user (self):
