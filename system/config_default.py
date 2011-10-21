@@ -312,8 +312,9 @@ def sfa (options,index) :
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_API_DEBUG': True,
         # details of the slices to create
+        # xxx framework is ready to use pg rspecs, but code is not yet
         'sfa_slice_specs' : [ sfa_slice_spec(options,index,mode) 
-                              for mode in ['pl','pg']],
+                              for mode in ['pl']],
     }
 
 # subindex is 0 (pl slice) or 1 (pg slice)
