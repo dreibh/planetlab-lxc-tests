@@ -299,9 +299,16 @@ def sfa (options,index) :
     piuser='fake-pi%d'%index
     regularuser='sfafakeuser%d'%index
     return { 
+        'login_base' : login_base(index),
+        'piuser' : piuser,
+        'regularuser':regularuser,
+        'domain':domain,
+        # the default is to use AMs in the various aggregates.xml
+        # stack config_sfamesh to point to SMs instead
+        'neighbours-port':12346,
+        ## global sfa-config-tty stuff
         'SFA_REGISTRY_ROOT_AUTH' : sfa_root(index),
         'SFA_INTERFACE_HRN' : sfa_root(index),
-#        'SFA_REGISTRY_LEVEL1_AUTH' : '',
 	'SFA_REGISTRY_HOST' : 'deferred-myplc-hostname',
 	'SFA_AGGREGATE_HOST': 'deferred-myplc-hostname',
 	'SFA_SM_HOST': 'deferred-myplc-hostname',
@@ -312,16 +319,8 @@ def sfa (options,index) :
         'SFA_PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_API_DEBUG': True,
-#        'sfa_slice_specs' : [ sfa_slice_spec(options,index,piuser,regularuser,i) for i in [0,1]],
+        # details of the slices to create
         'sfa_slice_specs' : [ sfa_slice_spec(options,index,piuser,regularuser,i) for i in [0]],
-	'sfa_slice_rspec' : sfa_slice_rspec(options,index),
-        'login_base' : login_base(index),
-        'piuser' : piuser,
-        'regularuser':regularuser,
-        'domain':domain,
-        # the default is to use AMs in the various aggregates.xml
-        # stack config_sfamesh to point to SMs instead
-        'neighbours-port':12346,
     }
 
 # subindex is 0 (pl slice) or 1 (pg slice)
@@ -359,17 +358,6 @@ last_name="Sfa" name="%(hrn)s" type="user">
              } 
 
 
-def sfa_slice_rspec(options,index):
-    node_name='deferred'
-
-    return { 
-        'part1' : '<?xml version="1.0" ?><Rspec><networks><NetSpec name=',
-        'part2' : '%s'%sfa_root(index),
-        'part3' : '><nodes><NodeSpec cpu_min="" cpu_pct="" cpu_share="" disk_max="" init_params="" name=\"',
-        'part4' : '%s'%node_name,
-        'part5' : '\" start_time="" type=""><net_if><IfSpec init_params="" ip_spoof="" max_kbyte="" max_rate="" min_rate="" name="True" type="ipv4"/></net_if></NodeSpec></nodes></NetSpec></networks></Rspec>',
-           }
-             
 def config (plc_specs,options):
     result=plc_specs
     for i in range (options.size):

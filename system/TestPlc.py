@@ -1293,16 +1293,6 @@ class TestPlc:
             test_slice=TestSliceSfa(self,test_site,slice_spec)
             test_slice.sfi_config(dir_name)
 
-	file_name=dir_name + os.sep + 'slice.rspec'
-        fileconf=open(file_name,'w')
-	slice_rspec=''
-	for (key, value) in sfa_spec['sfa_slice_rspec'].items():
-	    slice_rspec +=value 
-	fileconf.write(slice_rspec)
-	fileconf.write('\n')
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
-        
         # push to the remote root's .sfi
         location = "root/.sfi"
         remote="/vservers/%s/%s"%(self.vservername,location)

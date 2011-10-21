@@ -1060,9 +1060,6 @@ class Substrate:
         plc['sfa']['SFA_SM_HOST'] = plc['PLC_DB_HOST']
         plc['sfa']['SFA_PLC_DB_HOST'] = plc['PLC_DB_HOST']
         plc['sfa']['SFA_PLC_URL'] = 'https://' + plc['PLC_API_HOST'] + ':443/PLCAPI/' 
-        for site in plc['sites']:
-            for node in site['nodes']:
-                plc['sfa']['sfa_slice_rspec']['part4'] = node['node_fields']['hostname']
 	return plc
 
     #################### release:
