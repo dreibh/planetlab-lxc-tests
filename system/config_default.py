@@ -14,16 +14,14 @@ domain="onelab.eu"
 
 ### for the sfa dual setup
 def login_base (index): 
-    if index==1: return 'inria'
-    elif index==2: return 'princeton'
+    if index==1: return 'inri'
+    elif index==2: return 'princ'
     # index=3=>'sitea'  4=>'siteb' 
     else: return 'site%s'%chr(index+94)
 
 def sfa_root (index):
-    if index==1: return 'ple'
-    elif index==2: return 'plc'
-    else: return 'plx%s'%chr(index+94)
-    
+    # pla, plb, ...
+    return 'pl%s'%chr(index+96)
 
 def nodes(options,index):
     return [{'name':'node%d'%index,
@@ -196,7 +194,7 @@ def initscripts(options,index):
 # one has an initscript code, the other one an initscript name
 def slices (options,index):
     def theslice (i):
-        slice_spec = { 'slice_fields': {'name':'%s_slcpl%d'%(login_base(index),i),
+        slice_spec = { 'slice_fields': {'name':'%s_slpl%d'%(login_base(index),i),
                                         'instantiation':'plc-instantiated',
                                         'url':'http://foo%d.com'%index,
                                         'description':'testslice number %d'%i,
@@ -226,18 +224,18 @@ def tcp_tests (options,index):
         return [
             # local test
             { 'server_node': 'node1',
-              'server_slice' : '%s_slcpl1'%login_base(index),
+              'server_slice' : '%s_slpl1'%login_base(index),
               'client_node' : 'node1',
-              'client_slice' : '%s_slcpl1'%login_base(index),
+              'client_slice' : '%s_slpl1'%login_base(index),
               'port' : 2000,
               }]
     elif index == 2:
         return [
             # remote test
             { 'server_node': 'node2',
-              'server_slice' : '%s_slcpl3'%login_base(index),
+              'server_slice' : '%s_slpl3'%login_base(index),
               'client_node' : 'node2',
-              'client_slice' : '%s_slcpl4'%login_base(index),
+              'client_slice' : '%s_slpl4'%login_base(index),
               'port' : 4000,
               },
             ]
@@ -296,13 +294,7 @@ def plc (options,index) :
     }
 
 def sfa (options,index) :
-    piuser='fake-pi%d'%index
-    regularuser='sfafakeuser%d'%index
     return { 
-        'login_base' : login_base(index),
-        'piuser' : piuser,
-        'regularuser':regularuser,
-        'domain':domain,
         # the default is to use AMs in the various aggregates.xml
         # stack config_sfamesh to point to SMs instead
         'neighbours-port':12346,
@@ -320,17 +312,17 @@ def sfa (options,index) :
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_API_DEBUG': True,
         # details of the slices to create
-        'sfa_slice_specs' : [ sfa_slice_spec(options,index,piuser,regularuser,i) for i in [0]],
+        'sfa_slice_specs' : [ sfa_slice_spec(options,index,mode) 
+                              for mode in ['pl','pg']],
     }
 
 # subindex is 0 (pl slice) or 1 (pg slice)
-def sfa_slice_spec (options,index,piuser,regularuser,subindex):
-    if subindex==0:
-        mode='pl'
-    else:
-        mode='pg'
-    slicename='slcsfa%d%s'%(index,mode)
-    prefix='%s.%s'%(sfa_root(index),login_base(index))
+def sfa_slice_spec (options,index,mode):
+    the_login_base=login_base(index)
+    piuser='fake-pi%d'%index
+    regularuser='sfauser%d%s'%(index,mode)
+    slicename='slsfa%d%s'%(index,mode)
+    prefix='%s.%s'%(sfa_root(index),the_login_base)
     hrn=prefix+'.'+slicename
     researcher=prefix+'.'+piuser
     slice_add_xml = '''<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/">
@@ -343,14 +335,18 @@ last_name="Sfa" name="%(hrn)s" type="user">
 <keys>%(key)s</keys><role_ids>20</role_ids><role_ids>10</role_ids>
 <site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%(prefix)s</sites></record>'''%locals()
 
-    return { 'slice_fields': {'name':'%s_%s'%(login_base(index),slicename),
+    return { 'slice_fields': {'name':'%s_%s'%(the_login_base,slicename),
                               'url':'http://foo%d@foo.com'%index,
                               'description':'SFA-testing',
                               'max_nodes':2,
                               },
+             'login_base' : the_login_base,
+             'piuser' : piuser,
+             'regularuser':regularuser,
+             'domain':domain,
              'usernames' : [ (regularuser,'key1') ],
              'nodenames' : all_nodenames(options,index),
-             'sitename' : login_base(index),
+             'sitename' : the_login_base,
              'slicename' : slicename,
              'slice_add_xml' : slice_add_xml,
              'slice_person_xml' : slice_person_xml,

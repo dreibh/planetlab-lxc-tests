@@ -20,7 +20,6 @@ from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
 from TestApiserver import TestApiserver
 from TestSliceSfa import TestSliceSfa
-from TestUserSfa import TestUserSfa
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
@@ -1123,13 +1122,13 @@ class TestPlc:
         sfa_spec=self.plc_spec['sfa']
 
         for sfa_slice_spec in sfa_spec['sfa_slice_specs']:
-            slicename='%s_%s'%(sfa_spec['login_base'],sfa_slice_spec['slicename'])
+            slicename='%s_%s'%(sfa_slice_spec['login_base'],sfa_slice_spec['slicename'])
             try: self.apiserver.DeleteSlice(self.auth_root(),slicename)
             except: print "Slice %s already absent from PLC db"%slicename
 
-        username="%s@%s"%(sfa_spec['regularuser'],sfa_spec['domain'])
-        try: self.apiserver.DeletePerson(self.auth_root(),username)
-        except: print "User %s already absent from PLC db"%username
+            username="%s@%s"%(sfa_slice_spec['regularuser'],sfa_slice_spec['domain'])
+            try: self.apiserver.DeletePerson(self.auth_root(),username)
+            except: print "User %s already absent from PLC db"%username
 
         print "REMEMBER TO RUN sfa_import AGAIN"
         return True
@@ -1259,59 +1258,40 @@ class TestPlc:
         return self.run_in_guest('service sfa start')==0
 
     def sfi_configure(self):
-        "Create /root/.sfi on the plc side for sfi client configuration"
+        "Create /root/sfi on the plc side for sfi client configuration"
+        if self.options.dry_run: 
+            utils.header("DRY RUN - skipping step")
+            return True
         sfa_spec=self.plc_spec['sfa']
-	dir_name=self.confsubdir("dot-sfi",clean=True,dry_run=self.options.dry_run)
-        if self.options.dry_run: return True
-	file_name=dir_name + os.sep + sfa_spec['piuser'] + '.pkey'
-        fileconf=open(file_name,'w')
-        fileconf.write (self.plc_spec['keys'][0]['private'])
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
-
-	file_name=dir_name + os.sep + 'sfi_config'
-        fileconf=open(file_name,'w')
-	SFI_AUTH="%s.%s"%(sfa_spec['SFA_REGISTRY_ROOT_AUTH'],sfa_spec['login_base'])
-        fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
-	fileconf.write('\n')
-	SFI_USER=SFI_AUTH + '.' + sfa_spec['piuser']
-        fileconf.write ("SFI_USER='%s'"%SFI_USER)
-	fileconf.write('\n')
-	SFI_REGISTRY='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12345/'
-        fileconf.write ("SFI_REGISTRY='%s'"%SFI_REGISTRY)
-	fileconf.write('\n')
-	SFI_SM='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12347/'
-        fileconf.write ("SFI_SM='%s'"%SFI_SM)
-	fileconf.write('\n')
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
-
         # cannot use sfa_slice_mapper to pass dir_name
         for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             site_spec = self.locate_site (slice_spec['sitename'])
             test_site = TestSite(self,site_spec)
             test_slice=TestSliceSfa(self,test_site,slice_spec)
+            dir_name=self.confsubdir("dot-sfi/%s"%slice_spec['slicename'],clean=True,dry_run=self.options.dry_run)
             test_slice.sfi_config(dir_name)
-
-        # push to the remote root's .sfi
-        location = "root/.sfi"
-        remote="/vservers/%s/%s"%(self.vservername,location)
-	self.test_ssh.copy_abs(dir_name, remote, recursive=True)
+            # push into the remote /root/sfi area
+            location = test_slice.sfi_path()
+            remote="/vservers/%s/%s"%(self.vservername,location)
+            self.test_ssh.mkdir(remote,abs=True)
+            # need to strip last level or remote otherwise we get an extra dir level
+            self.test_ssh.copy_abs(dir_name, os.path.dirname(remote), recursive=True)
 
         return True
 
     def sfi_clean (self):
-        "clean up /root/.sfi on the plc side"
-        self.run_in_guest("rm -rf /root/.sfi")
+        "clean up /root/sfi on the plc side"
+        self.run_in_guest("rm -rf /root/sfi")
         return True
 
+    @slice_sfa_mapper
     def sfa_add_user(self):
-        "run sfi.py add using person.xml"
-        return TestUserSfa(self).add_user()
+        "run sfi.py add"
+        pass
 
+    @slice_sfa_mapper
     def sfa_update_user(self):
-        "run sfi.py update using person.xml"
-        return TestUserSfa(self).update_user()
+        "run sfi.py update"
 
     @slice_sfa_mapper
     def sfa_add_slice(self):
@@ -1338,25 +1318,20 @@ class TestPlc:
         "run sfi.py create (on SM) on existing object"
         pass
 
+    @slice_sfa_mapper
     def sfa_view(self):
-        "run sfi.py list and sfi.py show (both on Registry) and sfi.py slices and sfi.py resources (both on SM)"
-        sfa_spec=self.plc_spec['sfa']
-	auth=sfa_spec['SFA_REGISTRY_ROOT_AUTH']
-	return \
-	self.run_in_guest("sfi.py -d /root/.sfi/ list %s.%s"%(auth,sfa_spec['login_base']))==0 and \
-	self.run_in_guest("sfi.py -d /root/.sfi/ show %s.%s"%(auth,sfa_spec['login_base']))==0 and \
-	self.run_in_guest("sfi.py -d /root/.sfi/ slices")==0 and \
-	self.run_in_guest("sfi.py -d /root/.sfi/ resources -o resources")==0
+        "various registry-related calls"
+        pass
 
     @slice_sfa_mapper
     def ssh_slice_sfa(self): 
 	"tries to ssh-enter the SFA slice"
         pass
 
+    @slice_sfa_mapper
     def sfa_delete_user(self):
-	"run sfi.py delete (on SM) for user"
-	test_user_sfa=TestUserSfa(self)
-	return test_user_sfa.delete_user()
+	"run sfi.py delete"
+        pass
 
     @slice_sfa_mapper
     def sfa_delete_slice(self):

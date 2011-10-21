@@ -117,15 +117,16 @@ class TestSsh:
             return 0
         return self.run("rm -rf %s"%dirname)
 
-    def mkdir (self,dirname=None):
+    def mkdir (self,dirname=None,abs=False):
         if self.is_local():
             if dirname:
                 return os.path.mkdir(dirname)
             return 0
-        if dirname:
-            dirname="%s/%s"%(self.buildname,dirname)
-        else:
-            dirname=self.buildname
+        if not abs:
+            if dirname:
+                dirname="%s/%s"%(self.buildname,dirname)
+            else:
+                dirname=self.buildname
         return self.run("mkdir -p %s"%dirname)
 
     def rmdir (self,dirname=None):

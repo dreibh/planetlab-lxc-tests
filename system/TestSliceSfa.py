@@ -10,32 +10,35 @@ from TestKey import TestKey
 from TestUser import TestUser
 from TestNode import TestNode
 from TestSsh import TestSsh
+from TestUserSfa import TestUserSfa
 
 class TestSliceSfa:
 
-    def __init__ (self,test_plc,test_site,slice_spec):
+    def __init__ (self,test_plc,test_site,sfa_slice_spec):
 	self.test_plc=test_plc
 	self.test_site=test_site
-	self.slice_spec=slice_spec
+	self.sfa_slice_spec=sfa_slice_spec
         self.test_ssh=TestSsh(self.test_plc.test_ssh)
         # shortcuts
         self.sfa_spec=test_plc.plc_spec['sfa']
-        self.piuser=self.sfa_spec['piuser']
-        self.regularuser=self.sfa_spec['regularuser']
-        self.slicename=self.slice_spec['slicename']
-        self.login_base=self.sfa_spec['login_base']
+        self.piuser=self.sfa_slice_spec['piuser']
+        self.regularuser=self.sfa_slice_spec['regularuser']
+        self.slicename=self.sfa_slice_spec['slicename']
+        self.login_base=self.sfa_slice_spec['login_base']
         
     def name(self):
-        return self.slice_spec['slice_fields']['name']
+        return self.sfa_slice_spec['slice_fields']['name']
     
-    def mode (self): return self.slice_spec['mode']
+    def mode (self): return self.sfa_slice_spec['mode']
 
     def hrn(self): 
 	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         return "%s.%s.%s"%(root_auth,self.login_base,self.slicename)
-    def addslicefile (self):
-        return self.resname("addslice","rspec")
-    def resname (self,name,ext): return "%s_%s.%s"%(self.slicename,name,ext)
+#    def resname (self,name,ext): return "%s_%s.%s"%(self.slicename,name,ext)
+    def resname (self,name,ext): return "%s.%s"%(name,ext)
+
+    def addslicefile (self): return self.resname("addslice","xml")
+    def addpersonfile (self): return self.resname("addperson","xml")
     def adfile (self): return self.resname("ad","rspec")
     def reqfile (self): return self.resname("req","rspec")
     def nodefile (self): return self.resname("nodes","txt")
@@ -43,8 +46,11 @@ class TestSliceSfa:
         if self.mode()=='pg': return "-r protogeni"
         else: return ""
 
+    def sfi_path (self):
+        return "/root/sfi/%s"%self.slicename
+
     def locate_key(self):
-        for username,keyname in self.slice_spec['usernames']:
+        for username,keyname in self.sfa_slice_spec['usernames']:
                 key_spec=self.test_plc.locate_key(keyname)
                 test_key=TestKey(self.test_plc,key_spec)
                 publickey=test_key.publicpath()
@@ -53,34 +59,80 @@ class TestSliceSfa:
                     found=True
         return (found,privatekey)
 
-    # dir_name is local and will be pushed later on
+    # dir_name is local and will be pushed later on by TestPlc
     def sfi_config (self,dir_name):
-        # TODO this needs to be done remotely
+        plc_spec=self.test_plc.plc_spec
+        sfa_spec=self.sfa_spec
+        sfa_slice_spec=self.sfa_slice_spec
+        #
+	file_name=dir_name + os.sep + self.piuser + '.pkey'
+        fileconf=open(file_name,'w')
+        fileconf.write (plc_spec['keys'][0]['private'])
+        fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
+        #
+	file_name=dir_name + os.sep + self.addpersonfile()
+        fileconf=open(file_name,'w')
+	fileconf.write(sfa_slice_spec['slice_person_xml'])
+	fileconf.write('\n')
+        fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
+        #
+	file_name=dir_name + os.sep + 'sfi_config'
+        fileconf=open(file_name,'w')
+	SFI_AUTH="%s.%s"%(sfa_spec['SFA_REGISTRY_ROOT_AUTH'],self.login_base)
+        fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
+	fileconf.write('\n')
+	SFI_USER=SFI_AUTH + '.' + self.piuser
+        fileconf.write ("SFI_USER='%s'"%SFI_USER)
+	fileconf.write('\n')
+	SFI_REGISTRY='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12345/'
+        fileconf.write ("SFI_REGISTRY='%s'"%SFI_REGISTRY)
+	fileconf.write('\n')
+	SFI_SM='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12347/'
+        fileconf.write ("SFI_SM='%s'"%SFI_SM)
+	fileconf.write('\n')
+        fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
+        #
 	file_name=dir_name + os.sep + self.addslicefile()
         fileconf=open(file_name,'w')
-	fileconf.write(self.slice_spec['slice_add_xml'])
+	fileconf.write(sfa_slice_spec['slice_add_xml'])
 	fileconf.write('\n')
         utils.header ("(Over)wrote %s"%file_name)
         fileconf.close()
-	file_name=dir_name + os.sep + 'person.xml'
-        fileconf=open(file_name,'w')
-	fileconf.write(self.slice_spec['slice_person_xml'])
-	fileconf.write('\n')
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
-        
+
+    # user management
+    def sfa_add_user (self, options):
+        return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).add_user()
+    def sfa_update_user (self, options):
+        return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).update_user()
+    def sfa_delete_user (self, options):
+        return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).delete_user()
+
+
     # those are step names exposed as methods of TestPlc, hence the _sfa
+    def sfa_view (self, options):
+        "run sfi.py list and sfi.py show (both on Registry) and sfi.py slices (on SM)"
+	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+	return \
+	self.test_plc.run_in_guest("sfi.py -d %s list %s.%s"%(self.sfi_path(),root_auth,self.login_base))==0 and \
+	self.test_plc.run_in_guest("sfi.py -d %s show %s.%s"%(self.sfi_path(),root_auth,self.login_base))==0 and \
+	self.test_plc.run_in_guest("sfi.py -d %s slices"%self.sfi_path())==0 
+
     def sfa_add_slice(self,options):
-	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ add %s"%(self.addslicefile()))==0
+	return self.test_plc.run_in_guest("sfi.py -d %s add %s"%(self.sfi_path(),self.addslicefile()))==0
 
     def sfa_discover(self,options):
-        return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ %s resources -o /root/.sfi/%s"%(self.discover_option(),self.adfile()))==0
+        return self.test_plc.run_in_guest("sfi.py -d %s resources %s -o %s/%s"%\
+                                              (self.sfi_path(),self.discover_option(),self.sfi_path(),self.adfile()))==0
 
     def sfa_create_slice(self,options):
         commands=[
-            "sfiListNodes.py -i /root/.sfi/%s -o /root/.sfi/%s"%(self.adfile(),self.nodefile()),
-            "sfiAddSliver.py -i /root/.sfi/%s -n /root/.sfi/%s -o /root/.sfi/%s"%(self.adfile(),self.nodefile(),self.reqfile()),
-            "sfi.py -d /root/.sfi/ create %s %s"%(self.hrn(),self.reqfile()),
+            "sfiListNodes.py -i %s/%s -o %s/%s"%(self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile()),
+            "sfiAddSliver.py -i %s/%s -n %s/%s -o %s/%s"%\
+                (self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile(),self.sfi_path(),self.reqfile()),
+            "sfi.py -d %s create %s %s"%(self.sfi_path(),self.hrn(),self.reqfile()),
             ]
         for command in commands:
             if self.test_plc.run_in_guest(command)!=0: return False
@@ -88,7 +140,7 @@ class TestSliceSfa:
 
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
-        slice_fields = self.slice_spec['slice_fields']
+        slice_fields = self.sfa_slice_spec['slice_fields']
         slice_name = slice_fields['name']
         slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), slice_name)[0]
         nodes=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), {'peer_id':None})
@@ -106,8 +158,8 @@ class TestSliceSfa:
         return self.sfa_create_slice(options)
 
     def sfa_delete_slice(self,options):
-	self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ delete %s"%(self.hrn()))
-	return self.test_plc.run_in_guest("sfi.py -d /root/.sfi/ remove -t slice %s"%(self.hrn()))==0
+	self.test_plc.run_in_guest("sfi.py -d %s delete %s"%(self.sfi_path(),self.hrn()))
+	return self.test_plc.run_in_guest("sfi.py -d %s remove -t slice %s"%(self.sfi_path(),self.hrn()))==0
 
     # check the resulting sliver
     def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
@@ -120,10 +172,10 @@ class TestSliceSfa:
             return False
 
         # convert nodenames to real hostnames
-        slice_spec = self.slice_spec
+        sfa_slice_spec = self.sfa_slice_spec
         restarted=[]
         tocheck=[]
-        for nodename in slice_spec['nodenames']:
+        for nodename in sfa_slice_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tocheck.append(node_spec['node_fields']['hostname'])
 
@@ -165,3 +217,4 @@ class TestSliceSfa:
             time.sleep (period)
         # for an empty slice
         return True
+
