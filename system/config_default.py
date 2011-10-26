@@ -312,26 +312,27 @@ def sfa (options,index) :
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_API_DEBUG': True,
         # details of the slices to create
-        # xxx framework is ready to use pg rspecs, but code is not yet
-        'sfa_slice_specs' : [ sfa_slice_spec(options,index,mode) 
-                              for mode in ['pl']],
+        'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspecmode) 
+                              for rspecmode in ['pl','pg']],
     }
 
 # subindex is 0 (pl slice) or 1 (pg slice)
-def sfa_slice_spec (options,index,mode):
+def sfa_slice_spec (options,index,rspecmode):
     the_login_base=login_base(index)
     piuser='fake-pi%d'%index
-    regularuser='sfauser%d%s'%(index,mode)
-    slicename='slsfa%d%s'%(index,mode)
+    regularuser='sfauser%d%s'%(index,rspecmode)
+    slicename='slsfa%d%s'%(index,rspecmode)
     prefix='%s.%s'%(sfa_root(index),the_login_base)
     hrn=prefix+'.'+slicename
+    person_hrn=prefix+'.'+regularuser
     researcher=prefix+'.'+piuser
     slice_add_xml = '''<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/">
 <researcher>%s</researcher></record>'''%(hrn, researcher)
 
     mail="%s@%s"%(regularuser,domain)
+    print 'in sfa_slice_spec','slicename',slicename,'hrn',hrn,'mail',mail
     key=public_key
-    slice_person_xml ='''<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(hrn)s" 
+    slice_person_xml ='''<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(person_hrn)s" 
 last_name="Sfa" name="%(hrn)s" type="user">
 <keys>%(key)s</keys><role_ids>20</role_ids><role_ids>10</role_ids>
 <site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%(prefix)s</sites></record>'''%locals()
@@ -351,7 +352,7 @@ last_name="Sfa" name="%(hrn)s" type="user">
              'slicename' : slicename,
              'slice_add_xml' : slice_add_xml,
              'slice_person_xml' : slice_person_xml,
-             'mode':mode,
+             'rspecmode':rspecmode,
              } 
 
 
