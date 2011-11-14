@@ -129,7 +129,7 @@ class TestPlc:
         return step != SEP and step != SEPSFA
 
     # turn off the sfa-related steps when build has skipped SFA
-    # this is originally for centos5 as recent SFAs won't build on this platformb
+    # this is originally for centos5 as recent SFAs won't build on this platform
     @staticmethod
     def check_whether_build_has_sfa (rpms_url):
         # warning, we're now building 'sface' so let's be a bit more picky
@@ -337,6 +337,18 @@ class TestPlc:
         "show test configuration after localization"
         self.display_pass (1)
         self.display_pass (2)
+        return True
+
+    def show_vplc (self):
+        "print out a shell command that can be cut'n pasted to define the GUEST variable"
+        # these work but the shell prompt does not get displayed..
+        command1="ssh %s vserver %s enter"%(self.plc_spec['host_box'],self.plc_spec['vservername'])
+        command2="ssh root@%s %s"%(socket.gethostname(),command1)
+        # guess local domain from hostname
+        domain=socket.gethostname().split('.',1)[1]
+        fqdn="%s.%s"%(self.plc_spec['host_box'],domain)
+        print "export PLCHOST=%s"%fqdn
+        print "export GUEST=%s"%self.plc_spec['vservername']
         return True
 
     # entry point
