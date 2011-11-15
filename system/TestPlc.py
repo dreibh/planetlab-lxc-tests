@@ -105,6 +105,7 @@ class TestPlc:
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
+        'export',
         'check_hooks',  
         'free_all',
         'show_boxes', 'local_list','local_rel','local_rel_plc','local_rel_qemu',SEP,
@@ -339,16 +340,20 @@ class TestPlc:
         self.display_pass (2)
         return True
 
-    def show_vplc (self):
-        "print out a shell command that can be cut'n pasted to define the GUEST variable"
+    def export (self):
+        "print cut'n paste-able stuff to export env variables to your shell"
         # these work but the shell prompt does not get displayed..
         command1="ssh %s vserver %s enter"%(self.plc_spec['host_box'],self.plc_spec['vservername'])
         command2="ssh root@%s %s"%(socket.gethostname(),command1)
         # guess local domain from hostname
         domain=socket.gethostname().split('.',1)[1]
         fqdn="%s.%s"%(self.plc_spec['host_box'],domain)
+        print "export BUILD=%s"%self.options.buildname
         print "export PLCHOST=%s"%fqdn
         print "export GUEST=%s"%self.plc_spec['vservername']
+        # find hostname of first node
+        (hostname,_) = self.all_node_infos()[0]
+        print "export NODE=%s"%(hostname)
         return True
 
     # entry point
