@@ -144,7 +144,8 @@ steps refer to a method in TestPlc or to a step_* module
             setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
 
         if not self.options.rspec_styles:
-            self.options.rspec_styles=['pl','pg']
+#            self.options.rspec_styles=['pl','pg']
+            self.options.rspec_styles=['pl']
 
         # handle defaults and option persistence
         for (recname,filename,default,need_reverse) in (
