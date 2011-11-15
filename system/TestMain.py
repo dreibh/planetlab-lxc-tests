@@ -112,6 +112,8 @@ steps refer to a method in TestPlc or to a step_* module
                           help="sets test size in # of plcs - default is 1")
         parser.add_option("-q","--qualifier",action="store",type="int",dest="qualifier",default=None,
                           help="run steps only on plc numbered <qualifier>, starting at 1")
+        parser.add_option("-y","--rspec-style",action="append",dest="rspec_styles",default=[],
+                          help="pl is for planetlab rspecs, pg is for protogeni")
         parser.add_option("-k","--keep-going",action="store",dest="keep_going",default=False,
                           help="proceeds even if some steps are failing")
         parser.add_option("-D","--dbname",action="store",dest="dbname",default=None,
@@ -140,6 +142,9 @@ steps refer to a method in TestPlc or to a step_* module
         # flatten relevant options
         for optname in ['config','exclude','ips_bplc','ips_vplc','ips_bnode','ips_vnode']:
             setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
+
+        if not self.options.rspec_styles:
+            self.options.rspec_styles=['pl','pg']
 
         # handle defaults and option persistence
         for (recname,filename,default,need_reverse) in (

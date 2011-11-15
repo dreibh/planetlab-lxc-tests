@@ -312,16 +312,16 @@ def sfa (options,index) :
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_API_DEBUG': True,
         # details of the slices to create
-        'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspecmode) 
-                              for rspecmode in ['pl','pg']],
+        'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspec_style) 
+                              for rspec_style in options.rspec_styles ]
     }
 
 # subindex is 0 (pl slice) or 1 (pg slice)
-def sfa_slice_spec (options,index,rspecmode):
+def sfa_slice_spec (options,index,rspec_style):
     the_login_base=login_base(index)
     piuser='fake-pi%d'%index
-    regularuser='sfauser%d%s'%(index,rspecmode)
-    slicename='slsfa%d%s'%(index,rspecmode)
+    regularuser='sfauser%d%s'%(index,rspec_style)
+    slicename='slsfa%d%s'%(index,rspec_style)
     prefix='%s.%s'%(sfa_root(index),the_login_base)
     hrn=prefix+'.'+slicename
     person_hrn=prefix+'.'+regularuser
@@ -352,7 +352,7 @@ last_name="Sfa" name="%(hrn)s" type="user">
              'slicename' : slicename,
              'slice_add_xml' : slice_add_xml,
              'slice_person_xml' : slice_person_xml,
-             'rspecmode':rspecmode,
+             'rspec_style':rspec_style,
              } 
 
 

@@ -29,7 +29,7 @@ class TestSliceSfa:
     def name(self):
         return self.sfa_slice_spec['slice_fields']['name']
     
-    def rspecmode (self): return self.sfa_slice_spec['rspecmode']
+    def rspec_style (self): return self.sfa_slice_spec['rspec_style']
 
     def hrn(self): 
 	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
@@ -43,7 +43,7 @@ class TestSliceSfa:
     def reqfile (self): return self.resname("req","rspec")
     def nodefile (self): return self.resname("nodes","txt")
     def discover_option(self):
-        if self.rspecmode()=='pg': return "-r protogeni"
+        if self.rspec_style()=='pg': return "-r protogeni"
         else: return ""
 
     def sfi_path (self):
