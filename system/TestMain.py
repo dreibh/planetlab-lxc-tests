@@ -23,6 +23,7 @@ class TestMain:
     subversion_id = "Now using git -- version tracker broken"
 
     default_config = [ 'default' ] 
+    default_rspec_styles = [ 'pl', 'pg' ]
 
     default_build_url = "git://git.onelab.eu/tests"
 
@@ -144,8 +145,7 @@ steps refer to a method in TestPlc or to a step_* module
             setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
 
         if not self.options.rspec_styles:
-#            self.options.rspec_styles=['pl','pg']
-            self.options.rspec_styles=['pl']
+            self.options.rspec_styles=TestMain.default_rspec_styles
 
         # handle defaults and option persistence
         for (recname,filename,default,need_reverse) in (
