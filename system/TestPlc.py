@@ -352,7 +352,8 @@ class TestPlc:
         print "export PLCHOST=%s"%fqdn
         print "export GUEST=%s"%self.plc_spec['vservername']
         # find hostname of first node
-        (hostname,_) = self.all_node_infos()[0]
+        (hostname,qemubox) = self.all_node_infos()[0]
+        print "export KVMHOST=%s.%s"%(qemubox,domain)
         print "export NODE=%s"%(hostname)
         return True
 
