@@ -338,7 +338,6 @@ steps refer to a method in TestPlc or to a step_* module
         utils.init_options(self.options)
 
         overall_result = True
-        testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
         all_step_infos=[]
         for step in self.options.steps:
             if not TestPlc.valid_step(step):
@@ -348,11 +347,6 @@ steps refer to a method in TestPlc or to a step_* module
             if step.find("force_") == 0:
                 step=step.replace("force_","")
                 force=True
-            # a cross step will run a method on TestPlc that has a signature like
-            # def cross_foo (self, all_test_plcs)
-            cross=False
-            if step.find("cross_") == 0:
-                cross=True
             # allow for steps to specify an index like in 
             # run checkslice@2
             try:        (step,qualifier)=step.split('@')
@@ -361,6 +355,11 @@ steps refer to a method in TestPlc or to a step_* module
             try:
                 stepobj = Step (step)
                 for (substep, method) in stepobj.tuples():
+                    # a cross step will run a method on TestPlc that has a signature like
+                    # def cross_foo (self, all_test_plcs)
+                    cross=False
+                    if substep.find("cross_") == 0:
+                        cross=True
                     all_step_infos.append ( (substep, method, force, cross, qualifier, ) )
             except :
                 utils.header("********** FAILED step %s (NOT FOUND) -- won't be run"%step)
