@@ -92,7 +92,8 @@ class TestPlc:
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', SEP,
-	'sfa_install', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
+	'sfa_install', 'sfa_tables_install', 'sfa_plc_install', 'sfa_client_install', SEPSFA,
+        'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
         'sfa_create_slice@1', 'sfa_check_slice_plc@1', SEPSFA, 
         'sfa_update_user@1', 'sfa_update_slice@1', 'sfa_view@1', 'sfa_utest@1',SEPSFA,
@@ -196,6 +197,13 @@ class TestPlc:
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
         return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote),keep_stdin=True))
+
+    # does a yum install in the vs, ignore yum retcod, check with rpm
+    def yum_install (self, rpms):
+        if isinstance (rpms, list): 
+            rpms=" ".join(rpms)
+        self.run_in_guest("yum -y install %s"%rpms)
+        return  self.run_in_guest("rpm -q %s"%rpms)==0
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
@@ -564,8 +572,7 @@ class TestPlc:
         pkgs_list.append ("noderepo-%s"%nodefamily)
         pkgs_list.append ("bootstrapfs-%s-plain"%nodefamily)
         pkgs_string=" ".join(pkgs_list)
-        self.run_in_guest("yum -y install %s"%pkgs_string)
-        return self.run_in_guest("rpm -q %s"%pkgs_string)==0
+        return self.yum_install (pkgs_list)
 
     ### 
     def plc_configure(self):
@@ -1120,11 +1127,23 @@ class TestPlc:
 
     ### sfa_install_rpm
     def sfa_install(self):
-        "yum install sfa, sfa-plc and sfa-client"
-        # ignore yum retcod
-        self.run_in_guest("yum -y install sfa sfa-client sfa-plc sfa-sfatables")
-        return  self.run_in_guest("rpm -q sfa sfa-client sfa-plc sfa-sfatables")==0
+        "yum install sfa"
+        return self.yum_install ("sfa")
         
+    ### sfa_install_rpm
+    def sfa_plc_install(self):
+        "yum install sfa-plc"
+        return self.yum_install("sfa-plc")
+        
+    ### sfa_install_rpm
+    def sfa_client_install(self):
+        "yum install sfa-client"
+        return self.yum_install("sfa-client")
+        
+    ### sfa_install_rpm
+    def sfa_tables_install(self):
+        "yum install sfa-client"
+        return self.yum_install ("sfa-sfatables")
 
     def sfa_dbclean(self):
         "thoroughly wipes off the SFA database"
