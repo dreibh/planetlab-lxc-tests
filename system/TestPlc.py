@@ -105,11 +105,8 @@ class TestPlc:
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
-        'export',
-        'check_hooks',  
-        'free_all',
-        'show_boxes', 'local_list','local_rel','local_rel_plc','local_rel_qemu',SEP,
-        'plc_stop', 'vs_start', 'vs_stop', SEP,
+        'export', 'show_boxes', SEP,
+        'check_hooks', 'plc_stop', 'vs_start', 'vs_stop', SEP,
         'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
         'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
         'delete_leases', 'list_leases', SEP,
@@ -118,7 +115,7 @@ class TestPlc:
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEP,
         'plc_db_dump' , 'plc_db_restore', SEP,
-        'standby_1 through 20',SEP,
+        'standby_1_through_20',SEP,
         ]
 
     @staticmethod
@@ -466,36 +463,36 @@ class TestPlc:
         now=int(time.time())
         return utils.system(self.test_ssh.actual_command("echo %d > /vservers/%s.timestamp"%(now,self.vservername)))==0
         
-    def local_pre (self):
-        "run site-dependant pre-test script as defined in LocalTestResources"
-        from LocalTestResources import local_resources
-        return local_resources.step_pre(self)
- 
-    def local_post (self):
-        "run site-dependant post-test script as defined in LocalTestResources"
-        from LocalTestResources import local_resources
-        return local_resources.step_post(self)
- 
-    def local_list (self):
-        "run site-dependant list script as defined in LocalTestResources"
-        from LocalTestResources import local_resources
-        return local_resources.step_list(self)
- 
-    def local_rel (self):
-        "run site-dependant release script as defined in LocalTestResources"
-        from LocalTestResources import local_resources
-        return local_resources.step_release(self)
- 
-    def local_rel_plc (self):
-        "run site-dependant release script as defined in LocalTestResources"
-        from LocalTestResources import local_resources
-        return local_resources.step_release_plc(self)
- 
-    def local_rel_qemu (self):
-        "run site-dependant release script as defined in LocalTestResources"
-        from LocalTestResources import local_resources
-        return local_resources.step_release_qemu(self)
- 
+#    def local_pre (self):
+#        "run site-dependant pre-test script as defined in LocalTestResources"
+#        from LocalTestResources import local_resources
+#        return local_resources.step_pre(self)
+# 
+#    def local_post (self):
+#        "run site-dependant post-test script as defined in LocalTestResources"
+#        from LocalTestResources import local_resources
+#        return local_resources.step_post(self)
+# 
+#    def local_list (self):
+#        "run site-dependant list script as defined in LocalTestResources"
+#        from LocalTestResources import local_resources
+#        return local_resources.step_list(self)
+# 
+#    def local_rel (self):
+#        "run site-dependant release script as defined in LocalTestResources"
+#        from LocalTestResources import local_resources
+#        return local_resources.step_release(self)
+# 
+#    def local_rel_plc (self):
+#        "run site-dependant release script as defined in LocalTestResources"
+#        from LocalTestResources import local_resources
+#        return local_resources.step_release_plc(self)
+# 
+#    def local_rel_qemu (self):
+#        "run site-dependant release script as defined in LocalTestResources"
+#        from LocalTestResources import local_resources
+#        return local_resources.step_release_qemu(self)
+# 
     def vs_delete(self):
         "vserver delete the test myplc"
         self.run_in_host("vserver --silent %s delete"%self.vservername)
@@ -1471,6 +1468,9 @@ class TestPlc:
 
         utils.header('Database restored from ' + dump)
 
+    def standby_1_through_20(self):
+        """convenience function to wait for a specified number of minutes"""
+        pass
     @standby_generic 
     def standby_1(): pass
     @standby_generic 

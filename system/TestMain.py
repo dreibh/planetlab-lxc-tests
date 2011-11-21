@@ -8,6 +8,7 @@ from optparse import OptionParser
 import traceback
 from time import strftime
 import readline
+import glob
 
 import utils
 from TestPlc import TestPlc
@@ -17,6 +18,58 @@ from TestNode import TestNode
 # add $HOME in PYTHONPATH so we can import LocalSubstrate.py
 sys.path.append(os.environ['HOME'])
 import LocalSubstrate
+
+class Step:
+
+    natives=TestPlc.__dict__
+
+    def __init__ (self, name):
+        self.name=name.replace('-','_')
+        # a native step is implemented as a method on TestPlc
+        self.native = name in Step.natives
+        if self.native:
+            self.method=Step.natives[self.name]
+        else:
+            # non-native steps (macros) are implemented as a 'Step'
+            try:
+                modulename = 'macro_' + self.name
+                module = __import__ (modulename)
+                self.substeps = module.sequence
+            except Exception,e:
+                print "Cannot load macro step %s (%s) - exiting"%(self.name,e)
+                raise
+
+    def norm_name (self): return self.name.replace('_','-')
+
+    def print_doc (self):
+        if self.native:
+            print '*',self.norm_name(),"\r",4*"\t",
+            try:
+                print self.method.__doc__
+            except:
+                print "*** no doc found"
+        else:
+            print '*',self.norm_name(),"\r",3*"\t","========== BEG MACRO step"
+            for step in self.substeps:
+                Step(step).print_doc()
+            print '*',self.norm_name(),"\r",3*"\t","========== END MACRO step"
+
+    # return a list of (name, method) for all native steps involved
+    def tuples (self):
+        if self.native: return [ (self.name, self.method,) ]
+        else:
+            result=[]
+            for substep in [ Step(name) for name in self.substeps ] : 
+                result += substep.tuples()
+            return result
+
+    # convenience for listing macros
+    # just do a listdir, hoping we're in the right directory...
+    @staticmethod
+    def list_macros ():
+        names= [ filename.replace('macro_','').replace('.py','') for filename in glob.glob ('macro_*.py')]
+        names.sort()
+        return names
 
 class TestMain:
 
@@ -39,15 +92,21 @@ class TestMain:
     def init_steps(self):
         self.steps_message  = 20*'x'+" Defaut steps are\n"+TestPlc.printable_steps(TestPlc.default_steps)
         self.steps_message += 20*'x'+" Other useful steps are\n"+TestPlc.printable_steps(TestPlc.other_steps)
+        self.steps_message += 20*'x'+" Macro steps are\n"+" ".join(Step.list_macros())
 
     def list_steps(self):
         if not self.options.verbose:
             print self.steps_message,
         else:
-            testplc_method_dict = __import__("TestPlc").__dict__['TestPlc'].__dict__
-            scopes = [("Default steps",TestPlc.default_steps)]
-            if self.options.all_steps:
-                scopes.append ( ("Other steps",TestPlc.other_steps) )
+            # steps mentioned on the command line
+            if self.options.args:
+                scopes = [("Argument steps",self.options.args)]
+            else:
+                scopes = [("Default steps",TestPlc.default_steps)]
+                if self.options.all_steps:
+                    scopes.append ( ("Other steps",TestPlc.other_steps) )
+                    # try to list macro steps as well
+                    scopes.append ( ("Macro steps", Step.list_macros()) )
             for (scope,steps) in scopes:
                 print '--------------------',scope
                 for step in [step for step in steps if TestPlc.valid_step(step)]:
@@ -56,18 +115,7 @@ class TestMain:
                     stepname=step
                     for special in ['force']:
                         stepname = stepname.replace(special+'_',"")
-                    print '*',step,"\r",4*"\t",
-                    try:
-                        doc=testplc_method_dict[stepname].__doc__
-                    except:
-                        try:
-                            # locate the step_<name> module
-                            modulename='step_'+stepname
-                            doc = __import__(modulename).__doc__
-                        except:
-                            doc=None
-                    if doc: print doc
-                    else:   print "*** no doc found"
+                    Step(stepname).print_doc()
 
     def run (self):
         self.init_steps()
@@ -204,6 +252,7 @@ steps refer to a method in TestPlc or to a step_* module
         TestPlc.check_whether_build_has_sfa(self.options.arch_rpms_url)
 
         # no step specified
+        self.options.args = self.args
         if len(self.args) == 0:
             self.options.steps=TestPlc.default_steps
         else:
@@ -309,24 +358,14 @@ steps refer to a method in TestPlc or to a step_* module
             try:        (step,qualifier)=step.split('@')
             except:     qualifier=self.options.qualifier
 
-            # try and locate a method in TestPlc
-            if testplc_method_dict.has_key(step):
-                all_step_infos += [ (step, testplc_method_dict[step] , force, cross, qualifier)]
-            # otherwise search for the 'run' method in the step_<x> module
-            else:
-                modulename='step_'+step
-                try:
-                    # locate all methods named run* in the module
-                    module_dict = __import__(modulename).__dict__
-                    names = [ key for key in module_dict.keys() if key.find("run")==0 ]
-                    if not names:
-                        raise Exception,"No run* method in module %s"%modulename
-                    names.sort()
-                    all_step_infos += [ ("%s.%s"%(step,name),module_dict[name],force,cross,qualifier) for name in names ]
-                except :
-                    utils.header("********** FAILED step %s (NOT FOUND) -- won't be run"%step)
-                    traceback.print_exc()
-                    overall_result = False
+            try:
+                stepobj = Step (step)
+                for (substep, method) in stepobj.tuples():
+                    all_step_infos.append ( (substep, method, force, cross, qualifier, ) )
+            except :
+                utils.header("********** FAILED step %s (NOT FOUND) -- won't be run"%step)
+                traceback.print_exc()
+                overall_result = False
             
         if self.options.dry_run:
             self.show_env(self.options,"Dry run")

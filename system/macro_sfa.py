@@ -1,0 +1,17 @@
+sequence = [ 
+'sfa_plcclean', 
+'sfa_dbclean',
+'sfa_import', 
+'sfi_configure', 
+'sfa_add_user', 
+'sfa_add_slice',
+'sfa_discover', 
+'sfa_create_slice', 
+'sfa_check_slice_plc', 
+'sfa_update_user',
+'sfa_update_slice', 
+'sfa_view', 
+'sfa_utest', 
+'sfa_delete_slice', 
+'sfa_delete_user',
+]
