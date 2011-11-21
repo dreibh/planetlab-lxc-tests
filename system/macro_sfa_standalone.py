@@ -1,0 +1,10 @@
+sequence=[
+'show',
+'vs_delete',
+'timestamp_vs',
+'vs_create',
+'sfa_install',
+'sfa_configure',
+'cross_sfa_configure',
+'sfa_start',
+]
