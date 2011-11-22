@@ -1232,12 +1232,14 @@ class TestPlc:
 		     'SFA_REGISTRY_HOST',
 		     'SFA_AGGREGATE_HOST',
                      'SFA_SM_HOST',
+		     'SFA_PLC_URL',
                      'SFA_PLC_USER',
                      'SFA_PLC_PASSWORD',
-                     'SFA_PLC_DB_HOST',
-                     'SFA_PLC_DB_USER',
-                     'SFA_PLC_DB_PASSWORD',
-		     'SFA_PLC_URL',
+                     'SFA_DB_HOST',
+                     'SFA_DB_USER',
+                     'SFA_DB_PASSWORD',
+                     # should be tmp
+                     'SFA_DB_NAME',
                      ]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
         # the way plc_config handles booleans just sucks..

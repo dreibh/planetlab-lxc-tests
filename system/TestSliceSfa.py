@@ -86,10 +86,10 @@ class TestSliceSfa:
 	SFI_USER=SFI_AUTH + '.' + self.piuser
         fileconf.write ("SFI_USER='%s'"%SFI_USER)
 	fileconf.write('\n')
-	SFI_REGISTRY='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12345/'
+	SFI_REGISTRY='http://' + sfa_spec['SFA_REGISTRY_HOST'] + ':12345/'
         fileconf.write ("SFI_REGISTRY='%s'"%SFI_REGISTRY)
 	fileconf.write('\n')
-	SFI_SM='http://' + sfa_spec['SFA_PLC_DB_HOST'] + ':12347/'
+	SFI_SM='http://' + sfa_spec['SFA_SM_HOST'] + ':12347/'
         fileconf.write ("SFI_SM='%s'"%SFI_SM)
 	fileconf.write('\n')
         fileconf.close()

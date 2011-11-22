@@ -304,12 +304,15 @@ def sfa (options,index) :
 	'SFA_REGISTRY_HOST' : 'deferred-myplc-hostname',
 	'SFA_AGGREGATE_HOST': 'deferred-myplc-hostname',
 	'SFA_SM_HOST': 'deferred-myplc-hostname',
+	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_PLC_USER' : 'root@test.onelab.eu',
         'SFA_PLC_PASSWORD' : 'test++',
-        'SFA_PLC_DB_HOST':'deferred-myplc-hostname',
-        'SFA_PLC_DB_USER' : 'pgsqluser',
-        'SFA_PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
-	'SFA_PLC_URL' : 'deferred-myplc-api-url',
+        'SFA_DB_HOST':'deferred-myplc-hostname',
+        'SFA_DB_USER' : 'pgsqluser',
+        'SFA_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
+        # the default settings come with 'sfa' as the dbname
+        # temporary until we get the initscript to create that one
+        'SFA_DB_NAME' : 'planetlab5',
         'SFA_API_DEBUG': True,
         # details of the slices to create
         'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspec_style) 
