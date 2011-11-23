@@ -587,7 +587,7 @@ class TestPlc:
                      'PLC_MAIL_ENABLED',
                      'PLC_MAIL_SUPPORT_ADDRESS',
                      'PLC_DB_HOST',
-                     'PLC_DB_PASSWORD',
+#                     'PLC_DB_PASSWORD',
 		     # Above line was added for integrating SFA Testing
                      'PLC_API_HOST',
                      'PLC_WWW_HOST',
@@ -1242,9 +1242,9 @@ class TestPlc:
                      'SFA_PLC_PASSWORD',
                      'SFA_DB_HOST',
                      'SFA_DB_USER',
-                     'SFA_DB_PASSWORD',
+#                     'SFA_DB_PASSWORD',
                      # should be tmp
-                     'SFA_DB_NAME',
+#                     'SFA_DB_NAME',
                      ]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
         # the way plc_config handles booleans just sucks..
