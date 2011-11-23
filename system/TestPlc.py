@@ -92,8 +92,7 @@ class TestPlc:
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', SEP,
-	'sfa_install', 'sfa_tables_install', 'sfa_plc_install', 'sfa_client_install', SEPSFA,
-        'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
+        'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
         'sfa_create_slice@1', 'sfa_check_slice_plc@1', SEPSFA, 
         'sfa_update_user@1', 'sfa_update_slice@1', 'sfa_view@1', 'sfa_utest@1',SEPSFA,
@@ -114,7 +113,8 @@ class TestPlc:
         'populate' , SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
-        'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEP,
+	'sfa_install', 'sfa_tables_install', 'sfa_plc_install', 'sfa_client_install', SEPSFA,
+        'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
         'standby_1_through_20',SEP,
         ]
@@ -1126,6 +1126,10 @@ class TestPlc:
     # in particular runs with --preserve (dont cleanup) and without --check
     # also it gets run twice, once with the --foreign option for creating fake foreign entries
 
+    def sfa_install_all (self):
+        "yum install sfa sfa-plc sfa-sfatables sfa-client"
+        return self.yum_install ("sfa sfa-plc sfa-sfatables sfa-client")
+
     ### sfa_install_rpm
     def sfa_install(self):
         "yum install sfa"
@@ -1143,7 +1147,7 @@ class TestPlc:
         
     ### sfa_install_rpm
     def sfa_tables_install(self):
-        "yum install sfa-client"
+        "yum install sfa-sfatables"
         return self.yum_install ("sfa-sfatables")
 
     def sfa_dbclean(self):
