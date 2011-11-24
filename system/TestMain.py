@@ -14,6 +14,7 @@ import utils
 from TestPlc import TestPlc
 from TestSite import TestSite
 from TestNode import TestNode
+from macros import sequences
 
 # add $HOME in PYTHONPATH so we can import LocalSubstrate.py
 sys.path.append(os.environ['HOME'])
@@ -30,13 +31,10 @@ class Step:
         if self.native:
             self.method=Step.natives[self.name]
         else:
-            # non-native steps (macros) are implemented as a 'Step'
             try:
-                modulename = 'macro_' + self.name
-                module = __import__ (modulename)
-                self.substeps = module.sequence
+                self.substeps=sequences[self.name]
             except Exception,e:
-                print "Cannot load macro step %s (%s) - exiting"%(self.name,e)
+                print "macro step %s not found in macros.py (%s) - exiting"%(self.name,e)
                 raise
 
     def norm_name (self): return self.name.replace('_','-')
@@ -67,7 +65,7 @@ class Step:
     # just do a listdir, hoping we're in the right directory...
     @staticmethod
     def list_macros ():
-        names= [ filename.replace('macro_','').replace('.py','') for filename in glob.glob ('macro_*.py')]
+        names= sequences.keys()
         names.sort()
         return names
 

@@ -113,7 +113,7 @@ class TestPlc:
         'populate' , SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
-	'sfa_install', 'sfa_tables_install', 'sfa_plc_install', 'sfa_client_install', SEPSFA,
+	'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
         'standby_1_through_20',SEP,
@@ -1130,23 +1130,19 @@ class TestPlc:
         "yum install sfa sfa-plc sfa-sfatables sfa-client"
         return self.yum_install ("sfa sfa-plc sfa-sfatables sfa-client")
 
-    ### sfa_install_rpm
-    def sfa_install(self):
+    def sfa_install_core(self):
         "yum install sfa"
         return self.yum_install ("sfa")
         
-    ### sfa_install_rpm
-    def sfa_plc_install(self):
+    def sfa_install_plc(self):
         "yum install sfa-plc"
         return self.yum_install("sfa-plc")
         
-    ### sfa_install_rpm
-    def sfa_client_install(self):
+    def sfa_install_client(self):
         "yum install sfa-client"
         return self.yum_install("sfa-client")
         
-    ### sfa_install_rpm
-    def sfa_tables_install(self):
+    def sfa_install_sfatables(self):
         "yum install sfa-sfatables"
         return self.yum_install ("sfa-sfatables")
 
