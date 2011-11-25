@@ -1236,8 +1236,8 @@ class TestPlc:
 		     'SFA_PLC_URL',
                      'SFA_PLC_USER',
                      'SFA_PLC_PASSWORD',
-                     'SFA_DB_HOST',
-                     'SFA_DB_USER',
+#                     'SFA_DB_HOST',
+#                     'SFA_DB_USER',
 #                     'SFA_DB_PASSWORD',
                      # should be tmp
 #                     'SFA_DB_NAME',

@@ -307,8 +307,8 @@ def sfa (options,index) :
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_PLC_USER' : 'root@test.onelab.eu',
         'SFA_PLC_PASSWORD' : 'test++',
-        'SFA_DB_HOST':'deferred-myplc-hostname',
-        'SFA_DB_USER' : 'pgsqluser',
+#        'SFA_DB_HOST':'deferred-myplc-hostname',
+#        'SFA_DB_USER' : 'pgsqluser',
 #        'SFA_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
 # the default settings come with 'sfa' as the dbname
 # temporary until we get the initscript to create that one
