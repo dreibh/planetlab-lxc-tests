@@ -336,7 +336,7 @@ def sfa_slice_spec (options,index,rspec_style):
     print 'in sfa_slice_spec','slicename',slicename,'hrn',hrn,'mail',mail
     key=public_key
     slice_person_xml ='''<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(person_hrn)s" 
-last_name="Sfa" name="%(hrn)s" type="user">
+last_name="Sfa %(rspec_style)s" name="%(hrn)s" type="user">
 <keys>%(key)s</keys><role_ids>20</role_ids><role_ids>10</role_ids>
 <site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%(prefix)s</sites></record>'''%locals()
 
