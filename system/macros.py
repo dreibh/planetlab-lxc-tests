@@ -25,6 +25,15 @@ sequences['sfa'] = [
     'sfa_delete_user',
     ]
 
+sequences['sfa_create'] = [
+    'sfa_plcclean', 
+    'sfa_dbclean',
+    'sfa_import', 
+    'sfi_configure', 
+    'sfa_add_user', 
+    'sfa_add_slice',
+]
+
 sequences['sfa_restart'] = [
     'sfa_plcclean',
     'sfa_dbclean',
