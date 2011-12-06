@@ -27,14 +27,14 @@ class OnelabSubstrate (Substrate):
       return [ ('vs64-1', 20),  # how many plcs max in this box
                ]  
 
-   # vplc01 to 15
+   # vplc01 to 40
    def vplc_ips (self):
       return [  ( 'vplc%02d'%i,                 # DNS name
                   'unused')                     # MAC address 
-                for i in range(1,21) ] 
+                for i in range(1,41) ] 
 
    def qemu_boxes_spec (self):
-      return [ # how many plcs max in this box
+      return [ # how many qemus max in this box
          ('kvm64-1', 3), # 4 cores, 4Gb
          ('kvm64-2', 3), # 4 cores, 4Gb
          ('kvm64-3', 2), # 2 cores, 4Gb
