@@ -1229,20 +1229,21 @@ class TestPlc:
         fileconf=open(tmpname,'w')
         for var in [ 'SFA_REGISTRY_ROOT_AUTH',
                      'SFA_INTERFACE_HRN',
-#                     'SFA_REGISTRY_LEVEL1_AUTH',
+                     'SFA_REGISTRY_LEVEL1_AUTH',
 		     'SFA_REGISTRY_HOST',
 		     'SFA_AGGREGATE_HOST',
                      'SFA_SM_HOST',
 		     'SFA_PLC_URL',
                      'SFA_PLC_USER',
                      'SFA_PLC_PASSWORD',
-#                     'SFA_DB_HOST',
-#                     'SFA_DB_USER',
-#                     'SFA_DB_PASSWORD',
-                     # should be tmp
-#                     'SFA_DB_NAME',
+                     'SFA_AGGREGATE_API_VERSION',
+                     'SFA_DB_HOST',
+                     'SFA_DB_USER',
+                     'SFA_DB_PASSWORD',
+                     'SFA_DB_NAME',
                      ]:
-            fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
+            if self.plc_spec['sfa'].has_key(var):
+                fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
         # the way plc_config handles booleans just sucks..
         for var in ['SFA_API_DEBUG']:
             val='false'
