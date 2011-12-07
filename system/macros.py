@@ -6,12 +6,20 @@ sequences={}
 "release local resources (stop vs, kill qemus, clean trackers)"
 sequences['free_all'] = [ 'vs_stop', 'qemu_kill_mine', ]
 
+sequences['sfa_restart'] = [
+    'sfa_plcclean',
+    'sfa_dbclean',
+    'sfa_stop',
+    'sfa_configure',
+    'sfa_start',
+    'sfa_import',
+    'sfi_clean',
+    'sfi_configure',
+    ]
+
 "re-run a complete sfa cycle from a nightly test"
 sequences['sfa'] = [ 
-    'sfa_plcclean', 
-    'sfa_dbclean',
-    'sfa_import', 
-    'sfi_configure', 
+    'sfa_restart',
     'sfa_add_user', 
     'sfa_add_slice',
     'sfa_discover', 
@@ -33,17 +41,6 @@ sequences['sfa_create'] = [
     'sfa_add_user', 
     'sfa_add_slice',
 ]
-
-sequences['sfa_restart'] = [
-    'sfa_plcclean',
-    'sfa_dbclean',
-    'sfa_stop',
-    'sfi_clean',
-    'sfa_configure',
-    'sfa_import',
-    'sfa_start',
-    'sfi_configure',
-    ]
 
 # run the whole SFA stuff but from scratch, new vs all reinstalled and all
 sequences['sfa_scratch'] = [
