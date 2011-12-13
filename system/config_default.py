@@ -308,7 +308,7 @@ def sfa (options,index) :
         'SFA_PLC_USER' : 'root@test.onelab.eu',
         'SFA_PLC_PASSWORD' : 'test++',
 # use -c apiv2 to override this one
-        'SFA_AGGREGATE_API_VERSION' : 1,
+#        'SFA_AGGREGATE_API_VERSION' : 1,
         'SFA_API_DEBUG': True,
         # details of the slices to create
         'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspec_style) 
