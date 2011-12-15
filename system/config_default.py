@@ -309,7 +309,7 @@ def sfa (options,index) :
         'SFA_PLC_PASSWORD' : 'test++',
 # use -c apiv2 to override this one
 #        'SFA_AGGREGATE_API_VERSION' : 1,
-        'SFA_API_DEBUG': True,
+        'SFA_API_LOGLEVEL': 1,
         # details of the slices to create
         'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspec_style) 
                               for rspec_style in options.rspec_styles ]

@@ -1240,11 +1240,12 @@ class TestPlc:
                      'SFA_DB_USER',
                      'SFA_DB_PASSWORD',
                      'SFA_DB_NAME',
+                     'SFA_API_LOGLEVEL',
                      ]:
             if self.plc_spec['sfa'].has_key(var):
                 fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
         # the way plc_config handles booleans just sucks..
-        for var in ['SFA_API_DEBUG']:
+        for var in []:
             val='false'
             if self.plc_spec['sfa'][var]: val='true'
             fileconf.write ('e %s\n%s\n'%(var,val))
