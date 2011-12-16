@@ -20,8 +20,10 @@ def login_base (index):
     else: return 'site%s'%chr(index+94)
 
 def sfa_root (index):
-    # pla, plb, ...
-    return 'pl%s'%chr(index+96)
+    # use plt (planetlab test) instead of pl
+    # otherwise a triangular test ends up with 'plc'
+    # plta, pltb, ...
+    return 'plt%s'%chr(index+96)
 
 def nodes(options,index):
     return [{'name':'node%d'%index,
