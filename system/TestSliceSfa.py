@@ -54,7 +54,7 @@ class TestSliceSfa:
     # xxx this needs tweaks with more recent versions of sfa that have pgv2 as the default ?
     def discover_option(self):
         if self.rspec_style()=='pg': return "-r protogeni"
-        else:                        return ""
+        else:                        return "-r sfa"
 
     def sfi_path (self):
         return "/root/sfi/%s"%self.slicename
