@@ -31,10 +31,19 @@ class TestSliceSfa:
     
     def rspec_style (self): return self.sfa_slice_spec['rspec_style']
 
-    def hrn(self): 
-	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-        return "%s.%s.%s"%(root_auth,self.login_base,self.slicename)
-#    def resname (self,name,ext): return "%s_%s.%s"%(self.slicename,name,ext)
+    # the hrn for the site
+    def site_hrn (self):
+        return "%s.%s"%(self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'],
+                        self.login_base)
+
+    # something in the site (users typically)
+    def qualified_hrn (self, name):
+        return "%s.%s"%(self.site_hrn(),name)
+
+    # the slice hrn
+    def hrn(self): return self.qualified_hrn (self.slicename)
+
+    # result name
     def resname (self,name,ext): return "%s.%s"%(name,ext)
 
     def addslicefile (self): return self.resname("addslice","xml")
@@ -42,9 +51,10 @@ class TestSliceSfa:
     def adfile (self): return self.resname("ad","rspec")
     def reqfile (self): return self.resname("req","rspec")
     def nodefile (self): return self.resname("nodes","txt")
+    # xxx this needs tweaks with more recent versions of sfa that have pgv2 as the default ?
     def discover_option(self):
         if self.rspec_style()=='pg': return "-r protogeni"
-        else: return ""
+        else:                        return ""
 
     def sfi_path (self):
         return "/root/sfi/%s"%self.slicename
@@ -60,14 +70,22 @@ class TestSliceSfa:
         return (found,privatekey)
 
     # dir_name is local and will be pushed later on by TestPlc
+    # by default set SFI_USER to the pi, we'll overload this
+    # on the command line when needed
     def sfi_config (self,dir_name):
         plc_spec=self.test_plc.plc_spec
         sfa_spec=self.sfa_spec
         sfa_slice_spec=self.sfa_slice_spec
-        #
-	file_name=dir_name + os.sep + self.piuser + '.pkey'
+        # store private key for sfa pi user
+	file_name=dir_name + os.sep + self.qualified_hrn (self.piuser) + '.pkey'
         fileconf=open(file_name,'w')
         fileconf.write (plc_spec['keys'][0]['private'])
+        fileconf.close()
+        utils.header ("(Over)wrote %s"%file_name)
+        # store private key for sfa regular user
+	file_name=dir_name + os.sep + self.qualified_hrn(self.regularuser) + '.pkey'
+        fileconf=open(file_name,'w')
+        fileconf.write (plc_spec['keys'][1]['private'])
         fileconf.close()
         utils.header ("(Over)wrote %s"%file_name)
         #
@@ -80,7 +98,7 @@ class TestSliceSfa:
         #
 	file_name=dir_name + os.sep + 'sfi_config'
         fileconf=open(file_name,'w')
-	SFI_AUTH="%s.%s"%(sfa_spec['SFA_REGISTRY_ROOT_AUTH'],self.login_base)
+	SFI_AUTH="%s"%(self.site_hrn())
         fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
 	fileconf.write('\n')
 	SFI_USER=SFI_AUTH + '.' + self.piuser
@@ -110,29 +128,38 @@ class TestSliceSfa:
     def sfa_delete_user (self, options):
         return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).delete_user()
 
+    # run as pi
+    def sfi_pi (self, command):
+        return "sfi.py -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.piuser), command,)
+    # the sfi.py command line option to run as a regular user
+    def sfi_user (self, command):
+        return "sfi.py -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.regularuser), command,)
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
     def sfa_view (self, options):
-        "run sfi.py list and sfi.py show (both on Registry) and sfi.py slices (on SM)"
+        "run (as regular user) sfi list and sfi show (both on Registry) and sfi slices (on SM)"
 	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 	return \
-	self.test_plc.run_in_guest("sfi.py -d %s list %s.%s"%(self.sfi_path(),root_auth,self.login_base))==0 and \
-	self.test_plc.run_in_guest("sfi.py -d %s show %s.%s"%(self.sfi_path(),root_auth,self.login_base))==0 and \
-	self.test_plc.run_in_guest("sfi.py -d %s slices"%self.sfi_path())==0 
+	self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.site_hrn())))==0 and \
+	self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.site_hrn())))==0 and \
+	self.test_plc.run_in_guest(self.sfi_user("slices"))==0 
 
+    # needs to be run as pi
     def sfa_add_slice(self,options):
-	return self.test_plc.run_in_guest("sfi.py -d %s add %s"%(self.sfi_path(),self.addslicefile()))==0
+	return self.test_plc.run_in_guest(self.sfi_pi("add %s"%(self.addslicefile())))==0
 
+    # run as user
     def sfa_discover(self,options):
-        return self.test_plc.run_in_guest("sfi.py -d %s resources %s -o %s/%s"%\
-                                              (self.sfi_path(),self.discover_option(),self.sfi_path(),self.adfile()))==0
+        return self.test_plc.run_in_guest(self.sfi_user(\
+                "resources %s -o %s/%s"% (self.discover_option(),self.sfi_path(),self.adfile())))==0
 
+    # run sfi create as a regular user
     def sfa_create_slice(self,options):
         commands=[
             "sfiListNodes.py -i %s/%s -o %s/%s"%(self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile()),
             "sfiAddSliver.py -i %s/%s -n %s/%s -o %s/%s"%\
                 (self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile(),self.sfi_path(),self.reqfile()),
-            "sfi.py -d %s create %s %s"%(self.sfi_path(),self.hrn(),self.reqfile()),
+            self.sfi_user("create %s %s"%(self.hrn(),self.reqfile())),
             ]
         for command in commands:
             if self.test_plc.run_in_guest(command)!=0: return False
@@ -157,9 +184,10 @@ class TestSliceSfa:
     def sfa_update_slice(self,options):
         return self.sfa_create_slice(options)
 
+    # run as pi
     def sfa_delete_slice(self,options):
-	self.test_plc.run_in_guest("sfi.py -d %s delete %s"%(self.sfi_path(),self.hrn()))
-	return self.test_plc.run_in_guest("sfi.py -d %s remove -t slice %s"%(self.sfi_path(),self.hrn()))==0
+	self.test_plc.run_in_guest(self.sfi_pi("delete %s"%(self.hrn(),)))
+	return self.test_plc.run_in_guest(self.sfi_pi("remove -t slice %s"%(self.hrn(),)))==0
 
     # check the resulting sliver
     def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):

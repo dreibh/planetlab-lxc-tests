@@ -144,13 +144,51 @@ BO+VyPNWF+kDNI8mSUwi7jLW6liMdhNOmDaSX0+0X8CHtK898xM=
 -----END RSA PRIVATE KEY-----
 """
 
+### another keypair for the SFA user
+public_key2="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQLvh5LkrjyLIr9UJznTJHMnqjdqzRdc9ekVmI9bx/5X4flnGtPBsr6bK/CPXmWjS2Vw0QOxi1NM45qkQJZXxroS0aehCCrvJRHgp/LOZykWCyNKqVopq9w0kH4jw1KFGIuwWROpOcMq2d/kAwyr6RV/W66KNVqu2XDiNOPJLcuZCuKrH++q3fPyP2zHSJ/irew7vwqIXbDSnVvvyRXYgc9KlR57L4BWthXcUofHlje8wKq7nWBQIUslYtJDryJg5tBvJIFfCFGmWZy0WJlGJd+yppI5jRvt9c6n9HyJKN22lUBTaTaDFvo+Xu5GEazLKG/v8h/o5WpxrrE6Y3TKeX user@test.onelab.eu
+"""
+
+private_key2="""
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA0C74eS5K48iyK/VCc50yRzJ6o3as0XXPXpFZiPW8f+V+H5Zx
+rTwbK+myvwj15lo0tlcNEDsYtTTOOapECWV8a6EtGnoQgq7yUR4KfyzmcpFgsjSq
+laKavcNJB+I8NShRiLsFkTqTnDKtnf5AMMq+kVf1uuijVartlw4jTjyS3LmQriqx
+/vqt3z8j9sx0if4q3sO78KiF2w0p1b78kV2IHPSpUeey+AVrYV3FKHx5Y3vMCqu5
+1gUCFLJWLSQ68iYObQbySBXwhRplmctFiZRiXfsqaSOY0b7fXOp/R8iSjdtpVAU2
+k2gxb6Pl7uRhGsyyhv7/If6OVqca6xOmN0ynlwIDAQABAoIBADZnwAmzPmEO5vkz
+7DzYnPYcTA6CCiHnPt1A8Pwo9C0cZXyNzYFvTs6IEW15QwIDGvl4AHL4brmUZjyN
+saAfBIgAJBBiTARLAgqO5kFcE5FnSrTnrJjUWMo0ydYkmoVt1vj7nzXX8BGG8PZ0
+JoRZx7mmGhLRjzXpKJQsXq+ohtzlrSoOzkx9jKqCOerhsZGBAIMl/w+gfePWoU6q
+Q/NPHM0ckgvzNRs7x+AMcCtIn+xZIBzbLTKpoEI3dIvMf46ghAG5mTc08OJjqHaS
+faTUyp828teAVLtWxAAv2JKcplEnjsDNU8KOGIFkUkwLNTTvwc0pCVYwyDKVxtl3
+Hv76T5ECgYEA6wiun6IHfY5a4Wcn+vrUsrt3atikiBMiXvZk7ZmU5HKc72+c4mVh
+frmwF8F355ncI3w63/3CKfP+X4yvsHoR+ps27t2hMMfGco7j3bMDHHpo9n04/1ZX
+pYP2RlPz4EKAhD2Wi0sgTsxchwrL42qkuolmzT4TWN32xjF2ZwhCDh8CgYEA4sEf
+VY+jVrMNHoHG/v1UN8nBzF5g6PwHtoo4GrFd4pMb9wo6LX4ib4FGRQfSjZ4kQ0KB
+Qxrl7xLw4GlYKnYqAqgZ1peb7JN7k5Yq1Drqi61ZZxvdQ2BbO7dx22Bb3VwsKA97
+DUcWUdKLVw2gU7beMYYBNMliw/E5Gx12Mqvnx4kCgYEAyQSf9cArD+PVLrt/olUt
+3cAgnq2z6v4Sg43RPLYCdnDgcJjRYYC8JhrC1U6PMvKRKXhzEmiCzEb25Nn62cFN
+5z0heqLr3kC/JfO4SEF3A8BeTZNEUH6Ub+exluzuxHucV34lZ/VVKI/5Azbksxje
+0vv5hMj22ybcjR542h5iAJkCgYAsFw8HrPk+l2wanXNbC1j/y/whx8wiITdCuBd2
+oTw3HRGX9GYhiGAbvFA0hfPb038LkPffW3CQDufFStZ40ycSAyua/Tm1Q2wI428K
+ezY12IwEr3dTbX3v25iI5nCWVyDC3Ve42jStzjmHwL+G54zGpl6/q9THcrT+37im
+26QiuQKBgQCTUDGKLqQ+QM8dAl6IZpz+oExdDCWwCNjTMH83tz1Rwoc+npW7z2ZC
+D/FseVOmS9MqJkgCap5pr4m1Qj5YciZNteIHdkIbD1yDoPaW1NvlOnxzVBQXK3HD
+rUck4dxa0t30wUFK0XVQjNEArXqvU23EB8Z7bQQMRx0yhd4pF5k29Q==
+-----END RSA PRIVATE KEY-----
+"""
+
 def keys (options,index):
     return [ {'name': 'key1',
               'private' : private_key,
               'key_fields' : {'key_type':'ssh',
-                              'key': public_key}}
+                              'key': public_key}},
+             {'name': 'key2',
+              'private' : private_key2,
+              'key_fields' : {'key_type':'ssh',
+                              'key': public_key2}}
+            
              ]
-
 
 ############################## initscripts
 initscript_by_name="""#!/bin/bash
@@ -325,15 +363,16 @@ def sfa_slice_spec (options,index,rspec_style):
     slicename='slsfa%d%s'%(index,rspec_style)
     prefix='%s.%s'%(sfa_root(index),the_login_base)
     hrn=prefix+'.'+slicename
-    person_hrn=prefix+'.'+regularuser
-    researcher=prefix+'.'+piuser
+    user_hrn=prefix+'.'+regularuser
+    pi_hrn=prefix+'.'+piuser
     slice_add_xml = '''<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/">
-<researcher>%s</researcher></record>'''%(hrn, researcher)
+<researcher>%s</researcher>
+</record>'''%(hrn, user_hrn)
 
     mail="%s@%s"%(regularuser,domain)
     print 'in sfa_slice_spec','slicename',slicename,'hrn',hrn,'mail',mail
-    key=public_key
-    slice_person_xml ='''<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(person_hrn)s" 
+    key=public_key2
+    slice_person_xml ='''<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(user_hrn)s" 
 last_name="Sfa %(rspec_style)s" name="%(hrn)s" type="user">
 <keys>%(key)s</keys><role_ids>20</role_ids><role_ids>10</role_ids>
 <site_ids>1</site_ids><roles>pi</roles><roles>admin</roles><sites>%(prefix)s</sites></record>'''%locals()
