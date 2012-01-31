@@ -386,7 +386,7 @@ last_name="Sfa %(rspec_style)s" name="%(hrn)s" type="user">
              'piuser' : piuser,
              'regularuser':regularuser,
              'domain':domain,
-             'usernames' : [ (regularuser,'key1') ],
+             'usernames' : [ (regularuser,'key2') ],
              'nodenames' : all_nodenames(options,index),
              'sitename' : the_login_base,
              'slicename' : slicename,
