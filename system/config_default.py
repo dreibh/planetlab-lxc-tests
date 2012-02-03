@@ -365,21 +365,21 @@ def sfa_slice_spec (options,index,rspec_style):
     hrn=prefix+'.'+slicename
     user_hrn=prefix+'.'+regularuser
     pi_hrn=prefix+'.'+piuser
-    slice_record_xml = '''<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/">
+    person_record_xml =\
+'''<record hrn="%(user_hrn)s" type="user" email="%(mail)s" enabled="True" 
+first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
+<keys>%(key)s</keys>
+<roles>user</roles>
+<roles>tech</roles>
+</record>'''%locals()
+    slice_record_xml =\
+'''<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/">
 <researcher>%s</researcher>
 </record>'''%(hrn, user_hrn)
 
     mail="%s@%s"%(regularuser,domain)
     print 'in sfa_slice_spec','slicename',slicename,'hrn',hrn,'mail',mail
     key=public_key2
-    person_record_xml ='''<record email="%(mail)s" enabled="True" first_name="Fake" hrn="%(user_hrn)s" 
-last_name="Sfa %(rspec_style)s" name="%(hrn)s" type="user">
-<keys>%(key)s</keys>
-<role_ids>20</role_ids><role_ids>10</role_ids>
-<roles>pi</roles><roles>admin</roles>
-<site_ids>1</site_ids>
-<sites>%(prefix)s</sites>
-</record>'''%locals()
 
     return { 'slice_fields': {'name':'%s_%s'%(the_login_base,slicename),
                               'url':'http://foo%d@foo.com'%index,
