@@ -365,6 +365,8 @@ def sfa_slice_spec (options,index,rspec_style):
     hrn=prefix+'.'+slicename
     user_hrn=prefix+'.'+regularuser
     pi_hrn=prefix+'.'+piuser
+    key=public_key2
+    mail="%s@%s"%(regularuser,domain)
     person_record_xml =\
 '''<record hrn="%(user_hrn)s" type="user" email="%(mail)s" enabled="True" 
 first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
@@ -377,9 +379,6 @@ first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
 <researcher>%s</researcher>
 </record>'''%(hrn, user_hrn)
 
-    mail="%s@%s"%(regularuser,domain)
-    print 'in sfa_slice_spec','slicename',slicename,'hrn',hrn,'mail',mail
-    key=public_key2
 
     return { 'slice_fields': {'name':'%s_%s'%(the_login_base,slicename),
                               'url':'http://foo%d@foo.com'%index,
