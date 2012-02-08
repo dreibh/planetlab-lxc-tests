@@ -333,6 +333,7 @@ def plc (options,index) :
         'leases' : leases (options, index),
     }
 
+# NOTE: SFA currently has SFA_AGGREGATE_API_VERSION=2 baked into the code
 def sfa (options,index) :
     return { 
         # the default is to use AMs in the various aggregates.xml
@@ -347,8 +348,7 @@ def sfa (options,index) :
 	'SFA_PLC_URL' : 'deferred-myplc-api-url',
         'SFA_PLC_USER' : 'root@test.onelab.eu',
         'SFA_PLC_PASSWORD' : 'test++',
-# use -c apiv2 to override this one
-#        'SFA_AGGREGATE_API_VERSION' : 1,
+# use -c sfadebug to increment this one
         'SFA_API_LOGLEVEL': 1,
         # details of the slices to create
         'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspec_style) 
