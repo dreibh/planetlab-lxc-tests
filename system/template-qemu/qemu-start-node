@@ -16,7 +16,7 @@ cd $(dirname $0)
 ########## globals
 # 1 gigabyte ram
 RAM=1024
-DISK_SIZE=18G
+DISK_SIZE=100G
 DISK_FORMAT=qcow2
 DISK_IMAGE=hdd-${DISK_FORMAT}-${DISK_SIZE}.img
 
