@@ -353,6 +353,7 @@ class BuildBox (Box):
 
     # inspect box and find currently running builds
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
+    matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*init-vserver.*-i\s+eth.\s+(?P<buildname>[^\s]+)\s*\Z")
     def sense(self, options):
         print 'b',
         self.sense_uptime()
@@ -367,7 +368,14 @@ class BuildBox (Box):
                 date=time.strftime('%Y-%m-%d',time.localtime(time.time()))
                 buildname=m.group('buildname').replace('@DATE@',date)
                 self.add_build (buildname,m.group('pid'))
-            else: header('command %r returned line that failed to match'%command)
+                continue
+            m=BuildBox.matcher_building_vm.match(line)
+            if m: 
+                # buildname is expansed here
+                self.add_build (buildname,m.group('pid'))
+                continue
+            header('BuildBox.sense: command %r returned line that failed to match'%command)
+            header(">>%s<<"%line)
 
 ############################################################
 class PlcInstance:
@@ -622,8 +630,11 @@ class QemuBox (Box):
         for line in ps_lines:
             if not line.strip() or line.find('PID') >=0 : continue
             m=QemuBox.matcher.match(line)
-            if m: self.add_node (m.group('nodename'),m.group('pid'))
-            else: header('command %r returned line that failed to match'%command)
+            if m: 
+                self.add_node (m.group('nodename'),m.group('pid'))
+                continue
+            header('QemuBox.sense: command %r returned line that failed to match'%command)
+            header(">>%s<<"%line)
         ########## retrieve alive instances and map to build
         live_builds=[]
         command=['grep','.','*/*/qemu.pid','/dev/null']
@@ -774,7 +785,9 @@ class TestBox (Box):
                 plcindex=m.group('plcindex')
                 step=m.group('step')
                 self.add_broken(buildname,plcindex, step)
-            else: header("command %r returned line that failed to match\n%s"%(command,line))
+                continue
+            header("TestBox.sense: command %r returned line that failed to match\n%s"%(command,line))
+            header(">>%s<<"%line)
 
         pids = self.backquote_ssh (['pgrep','run_log'],trash_err=True)
         if not pids: return
@@ -787,7 +800,9 @@ class TestBox (Box):
                 pid=m.group('pid')
                 buildname=m.group('buildname')
                 self.add_running_test(pid, buildname)
-            else: header("command %r returned line that failed to match\n%s"%(command,line))
+                continue
+            header("TestBox.sense: command %r returned line that failed to match\n%s"%(command,line))
+            header(">>%s<<"%line)
         
         
     def line (self):
