@@ -692,7 +692,7 @@ class TestInstance:
 
     def add_pid (self,pid):
         self.pids.append(pid)
-    def set_broken (self,plcindex, step): 
+    def set_broken (self, plcindex, step): 
         self.broken_steps.append ( (plcindex, step,) )
 
     def line (self):
@@ -775,7 +775,7 @@ class TestBox (Box):
                 t=self.add_timestamp(buildname,timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
 
-        command=['bash','-c',"grep KO /root/*/logs/trace* /dev/null" ]
+        command=['bash','-c',"grep KO /root/*/logs/trace-* /dev/null" ]
         trace_lines=self.backquote_ssh (command).split('\n')
         for line in trace_lines:
             if not line.strip(): continue
