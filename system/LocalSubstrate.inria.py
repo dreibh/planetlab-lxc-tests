@@ -24,7 +24,7 @@ class OnelabSubstrate (Substrate):
 
    # the vs-capable box for PLCs
    def plc_boxes_spec (self):
-      return [ ('vs64-1', 20),  # how many plcs max in this box
+      return [ ('vs64-1', 35),  # how many plcs max in this box
                ]  
 
    # vplc01 to 40
