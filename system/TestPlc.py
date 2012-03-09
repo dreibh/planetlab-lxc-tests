@@ -203,8 +203,9 @@ class TestPlc:
         if isinstance (rpms, list): 
             rpms=" ".join(rpms)
         self.run_in_guest("yum -y install %s"%rpms)
-        self.run_in_guest("yum-complete-transaction")
-        return  self.run_in_guest("rpm -q %s"%rpms)==0
+        # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
+        self.run_in_guest("yum-complete-transaction -y")
+        return self.run_in_guest("rpm -q %s"%rpms)==0
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
