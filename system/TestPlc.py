@@ -179,16 +179,35 @@ class TestPlc:
     def run_in_host (self,command):
         return self.test_ssh.run_in_buildname(command)
 
-    #command gets run in the vserver
+    #command gets run in the plc's vm
     def host_to_guest(self,command):
-        return "vserver %s exec %s"%(self.vservername,command)
+        if self.options.plcs_use_lxc:
+            # XXX TODO-lxc how to run a command in the plc context from an lxc-based host
+            return "TODO-lxc TestPlc.host_to_guest"
+        else:
+            return "vserver %s exec %s"%(self.vservername,command)
     
+    def vm_root_in_guest(self):
+        if self.options.plcs_use_lxc:
+            # TODO-lxc
+            return "TODO TestPlc.vm_root_in_guest"
+        else:
+            return "/vservers/%s"%self.vservername
+
     #start/stop the vserver
     def start_guest_in_host(self):
-        return "vserver %s start"%(self.vservername)
+        if self.options.plcs_use_lxc:
+            # XXX TODO-lxc how to run a command in the plc context from an lxc-based host
+            return "TODO-lxc TestPlc.start_guest_in_host"
+        else:
+            return "vserver %s start"%(self.vservername)
     
     def stop_guest_in_host(self):
-        return "vserver %s stop"%(self.vservername)
+        if self.options.plcs_use_lxc:
+            # XXX TODO-lxc how to run a command in the plc context from an lxc-based host
+            return "TODO-lxc TestPlc.stop_guest_in_host"
+        else:
+            return "vserver %s stop"%(self.vservername)
     
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
@@ -345,9 +364,6 @@ class TestPlc:
 
     def export (self):
         "print cut'n paste-able stuff to export env variables to your shell"
-        # these work but the shell prompt does not get displayed..
-        command1="ssh %s vserver %s enter"%(self.plc_spec['host_box'],self.plc_spec['vservername'])
-        command2="ssh root@%s %s"%(socket.gethostname(),command1)
         # guess local domain from hostname
         domain=socket.gethostname().split('.',1)[1]
         fqdn="%s.%s"%(self.plc_spec['host_box'],domain)
@@ -451,6 +467,7 @@ class TestPlc:
     @staticmethod
     def display_mapping_plc (plc_spec):
         print '+ MyPLC',plc_spec['name']
+        # WARNING this would not be right for lxc-based PLC's - should be harmless though
         print '+\tvserver address = root@%s:/vservers/%s'%(plc_spec['host_box'],plc_spec['vservername'])
         print '+\tIP = %s/%s'%(plc_spec['PLC_API_HOST'],plc_spec['vserverip'])
         for site_spec in plc_spec['sites']:
@@ -467,43 +484,22 @@ class TestPlc:
     # cannot be inside the vserver, that causes vserver .. build to cough
     def timestamp_vs (self):
         now=int(time.time())
-        return utils.system(self.test_ssh.actual_command("echo %d > /vservers/%s.timestamp"%(now,self.vservername)))==0
+        # TODO-lxc check this one
+        # a first approx. is to store the timestamp close to the VM root like vs does
+        stamp_path="%s.timestamp"%self.vm_root_in_guest()
+        return utils.system(self.test_ssh.actual_command("echo %d > %s"%(now,stamp_path)))==0
         
-#    def local_pre (self):
-#        "run site-dependant pre-test script as defined in LocalTestResources"
-#        from LocalTestResources import local_resources
-#        return local_resources.step_pre(self)
-# 
-#    def local_post (self):
-#        "run site-dependant post-test script as defined in LocalTestResources"
-#        from LocalTestResources import local_resources
-#        return local_resources.step_post(self)
-# 
-#    def local_list (self):
-#        "run site-dependant list script as defined in LocalTestResources"
-#        from LocalTestResources import local_resources
-#        return local_resources.step_list(self)
-# 
-#    def local_rel (self):
-#        "run site-dependant release script as defined in LocalTestResources"
-#        from LocalTestResources import local_resources
-#        return local_resources.step_release(self)
-# 
-#    def local_rel_plc (self):
-#        "run site-dependant release script as defined in LocalTestResources"
-#        from LocalTestResources import local_resources
-#        return local_resources.step_release_plc(self)
-# 
-#    def local_rel_qemu (self):
-#        "run site-dependant release script as defined in LocalTestResources"
-#        from LocalTestResources import local_resources
-#        return local_resources.step_release_qemu(self)
-# 
     def vs_delete(self):
         "vserver delete the test myplc"
-        self.run_in_host("vserver --silent %s delete"%self.vservername)
-        self.run_in_host("rm -f /vservers/%s.timestamp"%self.vservername)
-        return True
+        stamp_path="%s.timestamp"%self.vm_root_in_guest()
+        self.run_in_host("rm -f %s"%stamp_path)
+        if self.options.plcs_use_lxc:
+            # TODO-lxc : how to trash a VM altogether and the related timestamp as well
+            # might make sense to test that this has been done - unlike for vs
+            pass
+        else:
+            self.run_in_host("vserver --silent %s delete"%self.vservername)
+            return True
 
     ### install
     # historically the build was being fetched by the tests
@@ -534,7 +530,11 @@ class TestPlc:
         test_env_options += " -p %s"%self.options.personality
         test_env_options += " -d %s"%self.options.pldistro
         test_env_options += " -f %s"%self.options.fcdistro
-        script="vtest-init-vserver.sh"
+        if self.options.plcs_use_lxc:
+            # TODO-lxc : might need some tweaks
+            script="vtest-init-lxc.sh"
+        else:
+            script="vtest-init-vserver.sh"
         vserver_name = self.vservername
         vserver_options="--netdev eth0 --interface %s"%self.vserverip
         try:
@@ -644,10 +644,11 @@ class TestPlc:
         if not os.path.isdir(dir):
             os.mkdir(dir)
         vservername=self.vservername
+        vm_root=self.vm_root_in_guest()
         overall=True
         prefix = 'debug_ssh_key'
         for ext in [ 'pub', 'rsa' ] :
-            src="/vservers/%(vservername)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
+            src="%(vm_root)s/etc/planetlab/%(prefix)s.%(ext)s"%locals()
             dst="keys/%(vservername)s-debug.%(ext)s"%locals()
             if self.test_ssh.fetch(src,dst) != 0: overall=False
         return overall
@@ -1111,7 +1112,8 @@ class TestPlc:
         "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
-        remote="/vservers/%s/%s"%(self.vservername,location)
+        # TODO-lxc
+        remote="%s/%s"%(self.vm_root_in_guest(),location)
         self.test_ssh.copy_abs("plcsh_stress_test.py",remote)
         command = location
         command += " -- --check"
@@ -1280,8 +1282,8 @@ class TestPlc:
         file(reg_fname,"w").write("<registries>%s</registries>\n" % \
                                      " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
         utils.header ("(Over)wrote %s"%reg_fname)
-        return self.test_ssh.copy_abs(agg_fname,'/vservers/%s/etc/sfa/aggregates.xml'%self.vservername)==0 \
-            and  self.test_ssh.copy_abs(reg_fname,'/vservers/%s/etc/sfa/registries.xml'%self.vservername)==0
+        return self.test_ssh.copy_abs(agg_fname,'/%s/etc/sfa/aggregates.xml'%self.vm_root_in_guest())==0 \
+            and  self.test_ssh.copy_abs(reg_fname,'/%s/etc/sfa/registries.xml'%self.vm_root_in_guest())==0
 
     def sfa_import(self):
         "sfa-import-plc"
@@ -1311,7 +1313,7 @@ class TestPlc:
             test_slice.sfi_config(dir_name)
             # push into the remote /root/sfi area
             location = test_slice.sfi_path()
-            remote="/vservers/%s/%s"%(self.vservername,location)
+            remote="%s/%s"%(self.vm_root_in_guest(),location)
             self.test_ssh.mkdir(remote,abs=True)
             # need to strip last level or remote otherwise we get an extra dir level
             self.test_ssh.copy_abs(dir_name, os.path.dirname(remote), recursive=True)
@@ -1386,7 +1388,7 @@ class TestPlc:
         "creates random entries in the PLCAPI"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
-        remote="/vservers/%s/%s"%(self.vservername,location)
+        remote="%s/%s"%(self.vm_root_in_guest(),location)
         self.test_ssh.copy_abs("plcsh_stress_test.py",remote)
         command = location
         command += " -- --preserve --short-names"
