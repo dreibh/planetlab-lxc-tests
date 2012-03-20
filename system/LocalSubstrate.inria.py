@@ -23,8 +23,13 @@ class OnelabSubstrate (Substrate):
       return [ 'liquid', 'reed', 'velvet', ]
 
    # the vs-capable box for PLCs
-   def plc_boxes_spec (self):
+   def plc_vs_boxes_spec (self):
       return [ ('vs64-1', 35),  # how many plcs max in this box
+               ]  
+
+   # the lxc-capable box for PLCs
+   def plc_lxc_boxes_spec (self):
+      return [ ('lxc64-1', 35),  # how many plcs max in this box
                ]  
 
    # vplc01 to 40

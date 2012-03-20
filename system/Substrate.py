@@ -379,16 +379,20 @@ class BuildBox (Box):
 
 ############################################################
 class PlcInstance:
-    def __init__ (self, vservername, ctxid, plcbox):
-        self.vservername=vservername
-        self.ctxid=ctxid
+    def __init__ (self, plcbox):
         self.plc_box=plcbox
         # unknown yet
         self.timestamp=0
-
+        
     def set_timestamp (self,timestamp): self.timestamp=timestamp
     def set_now (self): self.timestamp=int(time.time())
     def pretty_timestamp (self): return time.strftime("%Y-%m-%d:%H-%M",time.localtime(self.timestamp))
+
+class PlcVsInstance (PlcInstance):
+    def __init__ (self, plcbox, vservername, ctxid):
+        PlcInstance.__init__(self,plcbox)
+        self.vservername=vservername
+        self.ctxid=ctxid
 
     def vplcname (self):
         return self.vservername.split('-')[-1]
@@ -409,11 +413,26 @@ class PlcInstance:
         self.plc_box.run_ssh(['vserver',self.vservername,'stop'],msg)
         self.plc_box.forget(self)
 
+class PlcLxcInstance (PlcInstance):
+    # does lxc have a context id of any kind ?
+    def __init__ (self, plcbox, lxcname):
+        PlcInstance.__init__(self, plcbox)
+        self.lxcname = lxcname
+
+    def kill (self):
+        print "TODO PlcLxcInstance.kill"
+
+    def line (self):
+        return "TODO PlcLxcInstance.line"
+
+##########
 class PlcBox (Box):
     def __init__ (self, hostname, max_plcs):
         Box.__init__(self,hostname)
         self.plc_instances=[]
         self.max_plcs=max_plcs
+
+class PlcVsBox (PlcBox):
 
     def add_vserver (self,vservername,ctxid):
         for plc in self.plc_instances:
@@ -421,19 +440,19 @@ class PlcBox (Box):
                 header("WARNING, duplicate myplc %s running on %s"%\
                            (vservername,self.hostname),banner=False)
                 return
-        self.plc_instances.append(PlcInstance(vservername,ctxid,self))
+        self.plc_instances.append(PlcVsInstance(self,vservername,ctxid))
     
     def forget (self, plc_instance):
         self.plc_instances.remove(plc_instance)
 
     # fill one slot even though this one is not started yet
     def add_dummy (self, plcname):
-        dummy=PlcInstance('dummy_'+plcname,0,self)
+        dummy=PlcVsInstance(self,'dummy_'+plcname,0)
         dummy.set_now()
         self.plc_instances.append(dummy)
 
     def line(self): 
-        msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_plcs,self.free_spots(),self.uname())
+        msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
         return msg
         
     def list(self):
@@ -445,7 +464,7 @@ class PlcBox (Box):
             for p in self.plc_instances: 
                 header (p.line(),banner=False)
 
-    def free_spots (self):
+    def free_slots (self):
         return self.max_plcs - len(self.plc_instances)
 
     def uname(self):
@@ -515,6 +534,22 @@ class PlcBox (Box):
             except:  print 'WARNING, could not parse ts line',ts_line
         
 
+class PlcLxcBox (PlcBox):
+
+    def add_dummy (self, plcname):
+        print "TODO PlcLxcBox.add_dummy"
+
+    def free_slots (self):
+        print "TODO PlcLxcBox.free_slots"
+
+    def list (self):
+        print "TODO PlcLxcBox.list"
+
+    def reboot (self, options):
+        print "TODO PlcLxcBox.reboot"
+
+    def sense (self, options):
+        print "TODO PlcLxcBox.sense"
 
 
 ############################################################
@@ -574,7 +609,7 @@ class QemuBox (Box):
         self.qemu_instances.append(dummy)
 
     def line (self):
-        msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_qemus,self.free_spots(),self.driver())
+        msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_qemus,self.free_slots(),self.driver())
         return msg
 
     def list(self):
@@ -586,7 +621,7 @@ class QemuBox (Box):
             for q in self.qemu_instances: 
                 header (q.line(),banner=False)
 
-    def free_spots (self):
+    def free_slots (self):
         return self.max_qemus - len(self.qemu_instances)
 
     def driver(self):
@@ -824,7 +859,7 @@ class Options: pass
 
 class Substrate:
 
-    def __init__ (self):
+    def __init__ (self, use_plc_vs_boxes=True, use_plc_lxc_boxes=False):
         self.options=Options()
         self.options.dry_run=False
         self.options.verbose=False
@@ -832,14 +867,22 @@ class Substrate:
         self.options.soft=False
         self.test_box = TestBox (self.test_box_spec())
         self.build_boxes = [ BuildBox(h) for h in self.build_boxes_spec() ]
-        self.plc_boxes = [ PlcBox (h,m) for (h,m) in self.plc_boxes_spec ()]
+        self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_vs_boxes_spec ()]
+        self.plc_lxc_boxes = [ PlcLxcBox (h,m) for (h,m) in self.plc_lxc_boxes_spec ()]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
-        self.default_boxes = self.plc_boxes + self.qemu_boxes
-        self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
         self._sensed=False
 
         self.vplc_pool = Pool (self.vplc_ips(),"for vplcs",self)
         self.vnode_pool = Pool (self.vnode_ips(),"for vnodes",self)
+        
+        self.rescope (use_plc_vs_boxes, use_plc_lxc_boxes)
+
+    def rescope(self, plcs_on_vs, plcs_on_lxc):
+        self.plc_boxes=[]
+        if plcs_on_vs: self.plc_boxes += self.plc_vs_boxes
+        if plcs_on_lxc: self.plc_boxes += self.plc_lxc_boxes
+        self.default_boxes = self.plc_boxes + self.qemu_boxes
+        self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
 
     def fqdn (self, hostname):
         if hostname.find('.')<0: return "%s.%s"%(hostname,self.domain())
@@ -922,7 +965,7 @@ class Substrate:
             max_free=0
             # use the box that has max free spots for load balancing
             for pb in self.plc_boxes:
-                free=pb.free_spots()
+                free=pb.free_slots()
                 if free>max_free:
                     plc_boxname=pb.hostname
                     max_free=free
@@ -1017,7 +1060,7 @@ class Substrate:
                 max_free=0
                 # use the box that has max free spots for load balancing
                 for qb in self.qemu_boxes:
-                    free=qb.free_spots()
+                    free=qb.free_slots()
                     if free>max_free:
                         qemu_boxname=qb.hostname
                         max_free=free
@@ -1122,6 +1165,8 @@ class Substrate:
                            help='add build boxes')
         parser.add_option ('-p',"--plc",action='store_true',dest='plcs',default=False,
                            help='add plc boxes')
+        parser.add_option ('-X', "--lxc",action='store_true',dest='plcs_use_lxc',
+                           help='use lxc-enabled plc boxes instead of vs-enabled ones')
         parser.add_option ('-q',"--qemu",action='store_true',dest='qemus',default=False,
                            help='add qemu boxes') 
         parser.add_option ('-a',"--all",action='store_true',dest='all',default=False,
@@ -1131,6 +1176,9 @@ class Substrate:
         parser.add_option ('-n',"--dry_run",action='store_true',dest='dry_run',default=False,
                            help='dry run mode')
         (self.options,args)=parser.parse_args()
+
+        if self.options.plcs_use_lxc:
+            self.rescope (plcs_on_vs=False, plcs_on_lxc=True)
 
         boxes=args
         if self.options.testbox: boxes += [self.test_box]
