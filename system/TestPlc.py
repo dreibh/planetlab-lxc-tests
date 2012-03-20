@@ -144,13 +144,9 @@ class TestPlc:
 	self.plc_spec=plc_spec
         self.options=options
 	self.test_ssh=TestSsh(self.plc_spec['host_box'],self.options.buildname)
-        try:
-            self.vserverip=plc_spec['vserverip']
-            self.vservername=plc_spec['vservername']
-            self.url="https://%s:443/PLCAPI/"%plc_spec['vserverip']
-            self.vserver=True
-        except:
-            raise Exception,'chroot-based myplc testing is deprecated'
+        self.vserverip=plc_spec['vserverip']
+        self.vservername=plc_spec['vservername']
+        self.url="https://%s:443/PLCAPI/"%plc_spec['vserverip']
 	self.apiserver=TestApiserver(self.url,options.dry_run)
         
     def name(self):
