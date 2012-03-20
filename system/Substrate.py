@@ -870,9 +870,10 @@ class Substrate:
         # for compat with older LocalSubstrate
         try:
             self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_vs_boxes_spec ()]
+            self.plc_lxc_boxes = [ PlcLxcBox (h,m) for (h,m) in self.plc_lxc_boxes_spec ()]
         except:
             self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_boxes_spec ()]
-        self.plc_lxc_boxes = [ PlcLxcBox (h,m) for (h,m) in self.plc_lxc_boxes_spec ()]
+            self.plc_lxc_boxes = [ ]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
         self._sensed=False
 
