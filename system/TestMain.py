@@ -141,7 +141,7 @@ steps refer to a method in TestPlc or to a step_* module
                           help="pldistro - as in vbuild-nightly")
         parser.add_option("-f","--fcdistro",action="store", dest="fcdistro", 
                           help="fcdistro - as in vbuild-nightly")
-        parser.add_option("-x","--exclude",action="append", dest="exclude", default=[],
+        parser.add_option("-e","--exclude",action="append", dest="exclude", default=[],
                           help="steps to exclude - can be set multiple times, or use quotes")
         parser.add_option("-a","--all",action="store_true",dest="all_steps", default=False,
                           help="Run all default steps")
