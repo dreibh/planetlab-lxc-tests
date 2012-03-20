@@ -859,7 +859,7 @@ class Options: pass
 
 class Substrate:
 
-    def __init__ (self, use_plc_vs_boxes=True, use_plc_lxc_boxes=False):
+    def __init__ (self, plcs_on_vs=True, plcs_on_lxc=False):
         self.options=Options()
         self.options.dry_run=False
         self.options.verbose=False
@@ -867,7 +867,11 @@ class Substrate:
         self.options.soft=False
         self.test_box = TestBox (self.test_box_spec())
         self.build_boxes = [ BuildBox(h) for h in self.build_boxes_spec() ]
-        self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_vs_boxes_spec ()]
+        # for compat with older LocalSubstrate
+        try:
+            self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_vs_boxes_spec ()]
+        except:
+            self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_boxes_spec ()]
         self.plc_lxc_boxes = [ PlcLxcBox (h,m) for (h,m) in self.plc_lxc_boxes_spec ()]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
         self._sensed=False
@@ -875,7 +879,7 @@ class Substrate:
         self.vplc_pool = Pool (self.vplc_ips(),"for vplcs",self)
         self.vnode_pool = Pool (self.vnode_ips(),"for vnodes",self)
         
-        self.rescope (use_plc_vs_boxes, use_plc_lxc_boxes)
+        self.rescope (plcs_on_vs=plcs_on_vs, plcs_on_lxc=plcs_on_lxc)
 
     def rescope(self, plcs_on_vs, plcs_on_lxc):
         self.plc_boxes=[]
