@@ -207,20 +207,24 @@ steps refer to a method in TestPlc or to a step_* module
             ('personality','arg-personality',"linux64",None),
             ('pldistro','arg-pldistro',"onelab",None),
             ('fcdistro','arg-fcdistro','f14',None),
+            ('plcs_use_lxc','arg-plcs-use-lxc',False,None),
             ) :
 #            print 'handling',recname
             path=filename
             is_list = isinstance(default,list)
+            is_bool = isinstance(default,bool)
             if not getattr(self.options,recname):
                 try:
                     parsed=file(path).readlines()
-                    if not is_list:    # strings
+                    if is_list:         # lists
+                        parsed=[x.strip() for x in parsed]
+                    else:               # strings and booleans
                         if len(parsed) != 1:
                             print "%s - error when parsing %s"%(sys.argv[1],path)
                             sys.exit(1)
                         parsed=parsed[0].strip()
-                    else:              # lists
-                        parsed=[x.strip() for x in parsed]
+                        if is_bool:
+                            parsed = parsed.lower()=='true'
                     setattr(self.options,recname,parsed)
                 except:
                     if default != "":
@@ -232,11 +236,11 @@ steps refer to a method in TestPlc or to a step_* module
 
             # save for next run
             fsave=open(path,"w")
-            if not is_list:
-                fsave.write(getattr(self.options,recname) + "\n")
-            else:
+            if is_list:                 # lists
                 for value in getattr(self.options,recname):
                     fsave.write(value + "\n")
+            else:                       # strings and booleans - just call str()
+                fsave.write(str(getattr(self.options,recname)) + "\n")
             fsave.close()
 #            utils.header('Saved %s into %s'%(recname,filename))
 

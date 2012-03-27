@@ -346,7 +346,7 @@ class BuildBox (Box):
 
     def reboot (self, options):
         if not options.soft:
-            self.reboot(options)
+            Box.reboot(self,options)
         else:
             command=['pkill','vbuild']
             self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
@@ -420,10 +420,10 @@ class PlcLxcInstance (PlcInstance):
         self.lxcname = lxcname
 
     def kill (self):
-        print "TODO PlcLxcInstance.kill"
+        print "TODO lxc PlcLxcInstance.kill ..."
 
     def line (self):
-        return "TODO PlcLxcInstance.line"
+        return "TODO lxc PlcLxcInstance.line with lxcname=%s"%(self.lxcname)
 
 ##########
 class PlcBox (Box):
@@ -431,6 +431,38 @@ class PlcBox (Box):
         Box.__init__(self,hostname)
         self.plc_instances=[]
         self.max_plcs=max_plcs
+
+    def free_slots (self):
+        return self.max_plcs - len(self.plc_instances)
+
+    # fill one slot even though this one is not started yet
+    def add_dummy (self, plcname):
+        dummy=PlcVsInstance(self,'dummy_'+plcname,0)
+        dummy.set_now()
+        self.plc_instances.append(dummy)
+
+    def reboot (self, options):
+        if not options.soft:
+            self.reboot(options)
+        else:
+            self.soft_reboot (options)
+
+    def list(self):
+        if not self.plc_instances: 
+            header ('No plc running on %s'%(self.line()))
+        else:
+            header ("Active plc VMs on %s"%self.line())
+            self.plc_instances.sort(timestamp_sort)
+            for p in self.plc_instances: 
+                header (p.line(),banner=False)
+
+    def get_uname(self):
+        self._uname=self.backquote_ssh(['uname','-r']).strip()
+
+    # expecting sense () to have filled self._uname
+    def uname(self):
+        if hasattr(self,'_uname') and self._uname: return self._uname
+        return '*undef* uname'
 
 class PlcVsBox (PlcBox):
 
@@ -445,47 +477,22 @@ class PlcVsBox (PlcBox):
     def forget (self, plc_instance):
         self.plc_instances.remove(plc_instance)
 
-    # fill one slot even though this one is not started yet
-    def add_dummy (self, plcname):
-        dummy=PlcVsInstance(self,'dummy_'+plcname,0)
-        dummy.set_now()
-        self.plc_instances.append(dummy)
-
     def line(self): 
-        msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
+        msg="%s [max=%d,%d free, VS-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
         return msg
         
-    def list(self):
-        if not self.plc_instances: 
-            header ('No vserver running on %s'%(self.line()))
-        else:
-            header ("Active plc VMs on %s"%self.line())
-            self.plc_instances.sort(timestamp_sort)
-            for p in self.plc_instances: 
-                header (p.line(),banner=False)
-
-    def free_slots (self):
-        return self.max_plcs - len(self.plc_instances)
-
-    def uname(self):
-        if hasattr(self,'_uname') and self._uname: return self._uname
-        return '*undef* uname'
-
     def plc_instance_by_vservername (self, vservername):
         for p in self.plc_instances:
             if p.vservername==vservername: return p
         return None
 
-    def reboot (self, options):
-        if not options.soft:
-            self.reboot(options)
-        else:
-            self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers",
-                         dry_run=options.dry_run)
+    def soft_reboot (self, options):
+        self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers",
+                     dry_run=options.dry_run)
 
     def sense (self, options):
         print 'p',
-        self._uname=self.backquote_ssh(['uname','-r']).strip()
+        self.get_uname()
         # try to find fullname (vserver_stat truncates to a ridiculously short name)
         # fetch the contexts for all vservers on that box
         map_command=['grep','.','/etc/vservers/*/context','/dev/null',]
@@ -536,20 +543,21 @@ class PlcVsBox (PlcBox):
 
 class PlcLxcBox (PlcBox):
 
-    def add_dummy (self, plcname):
-        print "TODO PlcLxcBox.add_dummy"
+    # a line describing the box
+    def line(self): 
+        msg="%s [max=%d,%d free, LXC-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
+        return msg
+        
+    # essentially shutdown all running containers
+    def soft_reboot (self, options):
+        print "TODO lxc PlcLxcBox.soft_reboot"
 
-    def free_slots (self):
-        print "TODO PlcLxcBox.free_slots"
-
-    def list (self):
-        print "TODO PlcLxcBox.list"
-
-    def reboot (self, options):
-        print "TODO PlcLxcBox.reboot"
-
+    # sense is expected to fill self.plc_instances with PlcLxcInstance's 
+    # to describe the currently running VM's
+    # as well as to call  self.get_uname() once
     def sense (self, options):
-        print "TODO PlcLxcBox.sense"
+        print "p(lxc) - todo (PlcLxcBox.sense)",
+        self.get_uname()
 
 
 ############################################################
