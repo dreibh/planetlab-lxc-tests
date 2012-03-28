@@ -355,7 +355,7 @@ class BuildBox (Box):
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
     matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*init-vserver.*-i\s+eth.\s+(?P<buildname>[^\s]+)\s*\Z")
     def sense(self, options):
-        print 'b',
+        print 'bb',
         self.sense_uptime()
         pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
         if not pids: return
@@ -441,6 +441,9 @@ class PlcBox (Box):
         dummy.set_now()
         self.plc_instances.append(dummy)
 
+    def forget (self, plc_instance):
+        self.plc_instances.remove(plc_instance)
+
     def reboot (self, options):
         if not options.soft:
             self.reboot(options)
@@ -474,9 +477,6 @@ class PlcVsBox (PlcBox):
                 return
         self.plc_instances.append(PlcVsInstance(self,vservername,ctxid))
     
-    def forget (self, plc_instance):
-        self.plc_instances.remove(plc_instance)
-
     def line(self): 
         msg="%s [max=%d,%d free, VS-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
         return msg
@@ -491,7 +491,7 @@ class PlcVsBox (PlcBox):
                      dry_run=options.dry_run)
 
     def sense (self, options):
-        print 'p',
+        print 'vp',
         self.get_uname()
         # try to find fullname (vserver_stat truncates to a ridiculously short name)
         # fetch the contexts for all vservers on that box
@@ -556,7 +556,7 @@ class PlcLxcBox (PlcBox):
     # to describe the currently running VM's
     # as well as to call  self.get_uname() once
     def sense (self, options):
-        print "p(lxc) - todo (PlcLxcBox.sense)",
+        print "px (todo:PlcLxcBox.sense)",
         self.get_uname()
 
 
@@ -656,7 +656,7 @@ class QemuBox (Box):
 
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-cdrom\s+(?P<nodename>[^\s]+)\.iso")
     def sense(self, options):
-        print 'q',
+        print 'qn',
         modules=self.backquote_ssh(['lsmod']).split('\n')
         self._driver='*NO kqemu/kmv_intel MODULE LOADED*'
         for module in modules:
@@ -797,7 +797,7 @@ class TestBox (Box):
     matcher_proc=re.compile (".*/proc/(?P<pid>[0-9]+)/cwd.*/root/(?P<buildname>[^/]+)$")
     matcher_grep=re.compile ("/root/(?P<buildname>[^/]+)/logs/trace.*:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
     def sense (self, options):
-        print 't',
+        print 'tm',
         self.sense_uptime()
         self.starting_ips=[x for x in self.backquote_ssh(['cat',Starting.location], trash_err=True).strip().split('\n') if x]
 
