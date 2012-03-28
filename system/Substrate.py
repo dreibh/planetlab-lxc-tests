@@ -556,7 +556,7 @@ class PlcLxcBox (PlcBox):
     # to describe the currently running VM's
     # as well as to call  self.get_uname() once
     def sense (self, options):
-        print "px (todo:PlcLxcBox.sense)",
+        print "xp (todo:PlcLxcBox.sense)",
         self.get_uname()
 
 
@@ -1178,8 +1178,6 @@ class Substrate:
                            help='add build boxes')
         parser.add_option ('-p',"--plc",action='store_true',dest='plcs',default=False,
                            help='add plc boxes')
-        parser.add_option ('-X', "--lxc",action='store_true',dest='plcs_use_lxc',
-                           help='use lxc-enabled plc boxes instead of vs-enabled ones')
         parser.add_option ('-q',"--qemu",action='store_true',dest='qemus',default=False,
                            help='add qemu boxes') 
         parser.add_option ('-a',"--all",action='store_true',dest='all',default=False,
@@ -1190,8 +1188,7 @@ class Substrate:
                            help='dry run mode')
         (self.options,args)=parser.parse_args()
 
-        if self.options.plcs_use_lxc:
-            self.rescope (plcs_on_vs=False, plcs_on_lxc=True)
+        self.rescope (plcs_on_vs=True, plcs_on_lxc=True)
 
         boxes=args
         if self.options.testbox: boxes += [self.test_box]
