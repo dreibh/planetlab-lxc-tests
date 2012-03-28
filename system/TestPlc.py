@@ -571,7 +571,7 @@ class TestPlc:
         pkgs_list.append ("slicerepo-%s"%nodefamily)
         pkgs_list.append ("myplc")
         pkgs_list.append ("noderepo-%s"%nodefamily)
-        pkgs_list.append ("bootstrapfs-%s-plain"%nodefamily)
+        pkgs_list.append ("nodeimage-%s-plain"%nodefamily)
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install (pkgs_list)
 
