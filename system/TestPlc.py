@@ -489,6 +489,8 @@ class TestPlc:
         stamp_path="%s.timestamp"%self.vm_root_in_guest()
         return utils.system(self.test_ssh.actual_command("echo %d > %s"%(now,stamp_path)))==0
         
+    # this is called inconditionnally at the beginning of the test sequence 
+    # just in case this is a rerun, so if the vm is not running it's fine
     def vs_delete(self):
         "vserver delete the test myplc"
         stamp_path="%s.timestamp"%self.vm_root_in_guest()
@@ -496,7 +498,8 @@ class TestPlc:
         if self.options.plcs_use_lxc:
             # TODO-lxc : how to trash a VM altogether and the related timestamp as well
             # might make sense to test that this has been done - unlike for vs
-            pass
+            print "TODO TestPlc.vs_delete"
+            return True
         else:
             self.run_in_host("vserver --silent %s delete"%self.vservername)
             return True

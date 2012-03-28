@@ -890,12 +890,21 @@ class Substrate:
         
         self.rescope (plcs_on_vs=plcs_on_vs, plcs_on_lxc=plcs_on_lxc)
 
-    def rescope(self, plcs_on_vs, plcs_on_lxc):
+    # which plc boxes are we interested in ?
+    def rescope (self, plcs_on_vs, plcs_on_lxc):
         self.plc_boxes=[]
         if plcs_on_vs: self.plc_boxes += self.plc_vs_boxes
         if plcs_on_lxc: self.plc_boxes += self.plc_lxc_boxes
         self.default_boxes = self.plc_boxes + self.qemu_boxes
         self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
+
+    def summary_line (self):
+        msg  = "["
+        msg += " %d vp"%len(self.plc_vs_boxes)
+        msg += " %d xp"%len(self.plc_lxc_boxes)
+        msg += " %d tried plc boxes"%len(self.plc_boxes)
+        msg += "]"
+        return msg
 
     def fqdn (self, hostname):
         if hostname.find('.')<0: return "%s.%s"%(hostname,self.domain())
@@ -995,8 +1004,9 @@ class Substrate:
                 except:
                     msg=""
                     if not plc_boxname: msg += " PLC boxes are full"
-                    if not vplc_hostname: msg += " vplc IP pool exhausted" 
-                    raise Exception,"Could not make space for a PLC instance:"+msg
+                    if not vplc_hostname: msg += " vplc IP pool exhausted"
+                    msg += " %s"%self.summary_line()
+                    raise Exception,"Cannot make space for a PLC instance:"+msg
                 freed_plc_boxname=plc_instance_to_kill.plc_box.hostname
                 freed_vplc_hostname=plc_instance_to_kill.vplcname()
                 message='killing oldest plc instance = %s on %s'%(plc_instance_to_kill.line(),
@@ -1090,7 +1100,8 @@ class Substrate:
                         msg=""
                         if not qemu_boxname: msg += " QEMU boxes are full"
                         if not vnode_hostname: msg += " vnode IP pool exhausted" 
-                        raise Exception,"Could not make space for a QEMU instance:"+msg
+                        msg += " %s"%self.summary_line()
+                        raise Exception,"Cannot make space for a QEMU instance:"+msg
                     freed_qemu_boxname=qemu_instance_to_kill.qemu_box.hostname
                     freed_vnode_hostname=short_hostname(qemu_instance_to_kill.nodename)
                     # kill it
@@ -1165,7 +1176,7 @@ class Substrate:
             box.reboot(self.options)
 
     ####################
-    # can be run as a utility to manage the local infrastructure
+    # can be run as a utility to probe/display/manage the local infrastructure
     def main (self):
         parser=OptionParser()
         parser.add_option ('-r',"--reboot",action='store_true',dest='reboot',default=False,
