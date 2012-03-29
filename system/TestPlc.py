@@ -917,7 +917,7 @@ class TestPlc:
         return True
 
     def nodes_booted(self):
-        return self.nodes_check_boot_state('boot',timeout_minutes=30,silent_minutes=20)
+        return self.nodes_check_boot_state('boot',timeout_minutes=30,silent_minutes=28)
 
     def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period=15):
         # compute timeout
