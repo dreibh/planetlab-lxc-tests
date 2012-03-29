@@ -966,11 +966,11 @@ class TestPlc:
         
     def ssh_node_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
-        return self.check_nodes_ssh(debug=True,timeout_minutes=10,silent_minutes=5)
+        return self.check_nodes_ssh(debug=True,timeout_minutes=10,silent_minutes=8)
     
     def ssh_node_boot(self):
         "Tries to ssh into nodes in production mode with the root ssh key"
-        return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=15)
+        return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=35)
     
     @node_mapper
     def qemu_local_init (self): 
