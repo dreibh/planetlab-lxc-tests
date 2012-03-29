@@ -41,11 +41,8 @@ def node_mapper (method):
     def actual(self,*args, **kwds):
         overall=True
         node_method = TestNode.__dict__[method.__name__]
-        for site_spec in self.plc_spec['sites']:
-            test_site = TestSite (self,site_spec)
-            for node_spec in site_spec['nodes']:
-                test_node = TestNode (self,test_site,node_spec)
-                if not node_method(test_node, *args, **kwds): overall=False
+        for test_node in self.all_node():
+            if not node_method(test_node, *args, **kwds): overall=False
         return overall
     # restore the doc text
     actual.__doc__=method.__doc__
@@ -101,8 +98,7 @@ class TestPlc:
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-#        'check_tcp', 'check_netflow', SEP,
-         'check_tcp',  SEP,
+        'check_tcp', 'check_netflow', SEP,
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
@@ -847,6 +843,15 @@ class TestPlc:
                     overall=False
         return overall
 
+    # a list of TestNode objs
+    def all_nodes (self):
+        nodes=[]
+        for site_spec in self.plc_spec['sites']:
+            test_site = TestSite (self,site_spec)
+            for node_spec in site_spec['nodes']:
+                nodes.append(TestNode (self,test_site,node_spec))
+        return nodes
+
     # return a list of tuples (nodename,qemuname)
     def all_node_infos (self) :
         node_infos = []
@@ -1079,14 +1084,6 @@ class TestPlc:
         "tries to ssh-enter the slice with the user key, to ensure slice creation"
         pass
 
-    def check_netflow (self): 
-        "all nodes: check that the netflow slice is alive"
-        return self.check_systemslice ('netflow')
-    
-    @node_mapper
-    def check_systemslice (self, slicename):
-        pass
-
     @node_mapper
     def keys_clear_known_hosts (self): 
         "remove test nodes entries from the local known_hosts file"
@@ -1119,6 +1116,31 @@ class TestPlc:
             if not c_test_sliver.run_tcp_client(s_test_sliver.test_node.name(),port):
                 overall=False
         return overall
+
+    # painfully enough, we need to allow for some time as netflow might show up last
+    def check_netflow (self): 
+        "all nodes: check that the netflow slice is alive"
+        return self.check_systemslice ('netflow')
+    
+    # we have the slices up already here, so it should not take too long
+    def check_systemslice (self, slicename, timeout_minutes=5, period=15):
+        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
+        test_nodes=self.all_nodes()
+        while test_nodes:
+            for test_node in test_nodes:
+                if test_node.check_systemslice (slicename):
+                    utils.header ("ok")
+                    test_nodes.remove(test_node)
+                else:
+                    print '.',
+            if not test_nodes:
+                return True
+            if datetime.datetime.now () > timeout:
+                for test_node in test_nodes:
+                    utils.header ("can't find system slice %s in %s"%(slicename,test_node.name()))
+                return False
+            time.sleep(period)
+        return True
 
     def plcsh_stress_test (self):
         "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"

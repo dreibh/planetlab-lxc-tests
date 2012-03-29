@@ -277,7 +277,6 @@ class TestNode:
         test_ssh=self.create_test_ssh()
         (retcod,output)=utils.output_of(test_ssh.actual_command("cat /vservers/%s/etc/slicefamily")%vservername)
         if retcod != 0: 
-            utils.header ("Can't find /etc/slicefamily for %s"%slicename)
             return False
         # get last line only as ssh pollutes the output
         slicefamily=output.split("\n")[-1]
