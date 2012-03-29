@@ -99,9 +99,10 @@ class TestPlc:
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
-        'ssh_node_boot@1', 'ssh_slice', 'check_netflow', 'check_initscripts', SEP,
+        'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'check_tcp',  SEP,
+#        'check_tcp', 'check_netflow', SEP,
+         'check_tcp',  SEP,
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
