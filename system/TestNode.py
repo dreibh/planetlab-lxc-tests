@@ -271,3 +271,17 @@ class TestNode:
             utils.header ("SUCCESS: node hook %s OK"%script_name)
             return True
 
+    def check_systemslice (self, slicename):
+        sitename=self.test_plc.plc_spec['PLC_SLICE_PREFIX']
+        vservername="%s_%s"%(sitename,slicename)
+        test_ssh=self.create_test_ssh()
+        (retcod,output)=utils.output_of(test_ssh.actual_command("cat /vservers/%s/etc/slicefamily")%vservername)
+        if retcod != 0: 
+            utils.header ("Can't find /etc/slicefamily for %s"%slicename)
+            return False
+        # get last line only as ssh pollutes the output
+        slicefamily=output.split("\n")[-1]
+        utils.header("system slice %s has slicefamily %s"%(slicename, slicefamily))
+        return test_ssh.run("vserver-stat | grep %s"%vservername)==0
+        
+        
