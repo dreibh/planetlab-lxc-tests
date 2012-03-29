@@ -970,7 +970,7 @@ class TestPlc:
     
     def ssh_node_boot(self):
         "Tries to ssh into nodes in production mode with the root ssh key"
-        return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=35)
+        return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=38)
     
     @node_mapper
     def qemu_local_init (self): 
