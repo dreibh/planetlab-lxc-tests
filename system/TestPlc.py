@@ -41,7 +41,7 @@ def node_mapper (method):
     def actual(self,*args, **kwds):
         overall=True
         node_method = TestNode.__dict__[method.__name__]
-        for test_node in self.all_node():
+        for test_node in self.all_nodes():
             if not node_method(test_node, *args, **kwds): overall=False
         return overall
     # restore the doc text
