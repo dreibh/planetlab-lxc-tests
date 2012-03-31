@@ -179,30 +179,26 @@ class TestPlc:
     #command gets run in the plc's vm
     def host_to_guest(self,command):
         if self.options.plcs_use_lxc:
-            # XXX TODO-lxc how to run a command in the plc context from an lxc-based host
-            return "TODO-lxc TestPlc.host_to_guest"
+            return "ssh -o StrictHostKeyChecking=no %s %s"%(self.hostname(),command)
         else:
             return "vserver %s exec %s"%(self.vservername,command)
     
     def vm_root_in_guest(self):
         if self.options.plcs_use_lxc:
-            # TODO-lxc
-            return "TODO TestPlc.vm_root_in_guest"
+            return "/var/lib/lxc/%s/rootfs/"%(self.vservername)
         else:
-            return "/vservers/%s"%self.vservername
+            return "/vservers/%s"%(self.vservername)
 
     #start/stop the vserver
     def start_guest_in_host(self):
         if self.options.plcs_use_lxc:
-            # XXX TODO-lxc how to run a command in the plc context from an lxc-based host
-            return "TODO-lxc TestPlc.start_guest_in_host"
+            return "lxc-start --name=%s"%(self.vservername)
         else:
             return "vserver %s start"%(self.vservername)
     
     def stop_guest_in_host(self):
         if self.options.plcs_use_lxc:
-            # XXX TODO-lxc how to run a command in the plc context from an lxc-based host
-            return "TODO-lxc TestPlc.stop_guest_in_host"
+            return "lxc-stop --name=%s"%(self.vservername)
         else:
             return "vserver %s stop"%(self.vservername)
     
@@ -493,9 +489,7 @@ class TestPlc:
         stamp_path="%s.timestamp"%self.vm_root_in_guest()
         self.run_in_host("rm -f %s"%stamp_path)
         if self.options.plcs_use_lxc:
-            # TODO-lxc : how to trash a VM altogether and the related timestamp as well
-            # might make sense to test that this has been done - unlike for vs
-            print "TODO TestPlc.vs_delete"
+            self.run_in_host("lxc-destroy --name %s"%self.vservername)
             return True
         else:
             self.run_in_host("vserver --silent %s delete"%self.vservername)
@@ -531,7 +525,6 @@ class TestPlc:
         test_env_options += " -d %s"%self.options.pldistro
         test_env_options += " -f %s"%self.options.fcdistro
         if self.options.plcs_use_lxc:
-            # TODO-lxc : might need some tweaks
             script="vtest-init-lxc.sh"
         else:
             script="vtest-init-vserver.sh"
@@ -1146,7 +1139,6 @@ class TestPlc:
         "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
-        # TODO-lxc
         remote="%s/%s"%(self.vm_root_in_guest(),location)
         self.test_ssh.copy_abs("plcsh_stress_test.py",remote)
         command = location
