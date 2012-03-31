@@ -487,7 +487,7 @@ class TestPlc:
         # a first approx. is to store the timestamp close to the VM root like vs does
         stamp_path=self.vm_timestamp_path ()
         stamp_dir = os.path.dirname (stamp_path)
-        utils.system(self.test_ssh.actual_command("mkdir -p %s"%stamp_dir)
+        utils.system(self.test_ssh.actual_command("mkdir -p %s"%stamp_dir))
         return utils.system(self.test_ssh.actual_command("echo %d > %s"%(now,stamp_path)))==0
         
     # this is called inconditionnally at the beginning of the test sequence 
