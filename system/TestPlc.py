@@ -183,11 +183,17 @@ class TestPlc:
         else:
             return "vserver %s exec %s"%(self.vservername,command)
     
-    def vm_root_in_guest(self):
+    def vm_root_in_host(self):
         if self.options.plcs_use_lxc:
             return "/var/lib/lxc/%s/rootfs/"%(self.vservername)
         else:
             return "/vservers/%s"%(self.vservername)
+
+    def vm_timestamp_path (self):
+        if self.options.plcs_use_lxc:
+            return "/var/lib/lxc/%s.timestamp"%(self.vservername)
+        else:
+            return "/vservers/%s.timestamp"%(self.vservername)
 
     #start/stop the vserver
     def start_guest_in_host(self):
@@ -479,14 +485,16 @@ class TestPlc:
         now=int(time.time())
         # TODO-lxc check this one
         # a first approx. is to store the timestamp close to the VM root like vs does
-        stamp_path="%s.timestamp"%self.vm_root_in_guest()
+        stamp_path=self.vm_timestamp_path ()
+        stamp_dir = os.path.dirname (stamp_path)
+        utils.system(self.test_ssh.actual_command("mkdir -p %s"%stamp_dir)
         return utils.system(self.test_ssh.actual_command("echo %d > %s"%(now,stamp_path)))==0
         
     # this is called inconditionnally at the beginning of the test sequence 
     # just in case this is a rerun, so if the vm is not running it's fine
     def vs_delete(self):
         "vserver delete the test myplc"
-        stamp_path="%s.timestamp"%self.vm_root_in_guest()
+        stamp_path=self.vm_timestamp_path()
         self.run_in_host("rm -f %s"%stamp_path)
         if self.options.plcs_use_lxc:
             self.run_in_host("lxc-destroy --name %s"%self.vservername)
@@ -637,7 +645,7 @@ class TestPlc:
         if not os.path.isdir(dir):
             os.mkdir(dir)
         vservername=self.vservername
-        vm_root=self.vm_root_in_guest()
+        vm_root=self.vm_root_in_host()
         overall=True
         prefix = 'debug_ssh_key'
         for ext in [ 'pub', 'rsa' ] :
@@ -1139,7 +1147,7 @@ class TestPlc:
         "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
-        remote="%s/%s"%(self.vm_root_in_guest(),location)
+        remote="%s/%s"%(self.vm_root_in_host(),location)
         self.test_ssh.copy_abs("plcsh_stress_test.py",remote)
         command = location
         command += " -- --check"
@@ -1308,8 +1316,8 @@ class TestPlc:
         file(reg_fname,"w").write("<registries>%s</registries>\n" % \
                                      " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
         utils.header ("(Over)wrote %s"%reg_fname)
-        return self.test_ssh.copy_abs(agg_fname,'/%s/etc/sfa/aggregates.xml'%self.vm_root_in_guest())==0 \
-            and  self.test_ssh.copy_abs(reg_fname,'/%s/etc/sfa/registries.xml'%self.vm_root_in_guest())==0
+        return self.test_ssh.copy_abs(agg_fname,'/%s/etc/sfa/aggregates.xml'%self.vm_root_in_host())==0 \
+            and  self.test_ssh.copy_abs(reg_fname,'/%s/etc/sfa/registries.xml'%self.vm_root_in_host())==0
 
     def sfa_import(self):
         "sfa-import-plc"
@@ -1339,7 +1347,7 @@ class TestPlc:
             test_slice.sfi_config(dir_name)
             # push into the remote /root/sfi area
             location = test_slice.sfi_path()
-            remote="%s/%s"%(self.vm_root_in_guest(),location)
+            remote="%s/%s"%(self.vm_root_in_host(),location)
             self.test_ssh.mkdir(remote,abs=True)
             # need to strip last level or remote otherwise we get an extra dir level
             self.test_ssh.copy_abs(dir_name, os.path.dirname(remote), recursive=True)
@@ -1414,7 +1422,7 @@ class TestPlc:
         "creates random entries in the PLCAPI"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
-        remote="%s/%s"%(self.vm_root_in_guest(),location)
+        remote="%s/%s"%(self.vm_root_in_host(),location)
         self.test_ssh.copy_abs("plcsh_stress_test.py",remote)
         command = location
         command += " -- --preserve --short-names"
