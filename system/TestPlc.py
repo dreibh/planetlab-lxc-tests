@@ -497,6 +497,7 @@ class TestPlc:
         stamp_path=self.vm_timestamp_path()
         self.run_in_host("rm -f %s"%stamp_path)
         if self.options.plcs_use_lxc:
+            self.run_in_host("lxc-stop --name %s"%self.vservername)
             self.run_in_host("lxc-destroy --name %s"%self.vservername)
             return True
         else:
