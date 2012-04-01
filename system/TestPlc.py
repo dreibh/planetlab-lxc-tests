@@ -179,7 +179,7 @@ class TestPlc:
     #command gets run in the plc's vm
     def host_to_guest(self,command):
         if self.options.plcs_use_lxc:
-            return "ssh -o StrictHostKeyChecking=no %s %s"%(self.hostname(),command)
+            return "ssh -o StrictHostKeyChecking=no %s %s"%(self.vserverip,command)
         else:
             return "vserver %s exec %s"%(self.vservername,command)
     
