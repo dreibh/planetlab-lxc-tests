@@ -191,7 +191,7 @@ class TestPlc:
 
     def vm_timestamp_path (self):
         if self.options.plcs_use_lxc:
-            return "/var/lib/lxc/%s.timestamp"%(self.vservername)
+            return "/var/lib/lxc/%s/%s.timestamp"%(self.vservername,self.vservername)
         else:
             return "/vservers/%s.timestamp"%(self.vservername)
 
