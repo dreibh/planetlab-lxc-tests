@@ -198,7 +198,7 @@ class TestPlc:
     #start/stop the vserver
     def start_guest_in_host(self):
         if self.options.plcs_use_lxc:
-            return "lxc-start --name=%s"%(self.vservername)
+            return "lxc-start --daemon --name=%s"%(self.vservername)
         else:
             return "vserver %s start"%(self.vservername)
     
