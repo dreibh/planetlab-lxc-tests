@@ -367,8 +367,13 @@ class TestPlc:
         domain=socket.gethostname().split('.',1)[1]
         fqdn="%s.%s"%(self.plc_spec['host_box'],domain)
         print "export BUILD=%s"%self.options.buildname
-        print "export PLCHOST=%s"%fqdn
-        print "export GUEST=%s"%self.plc_spec['vservername']
+        if self.options.plcs_use_lxc:
+            print "export PLCHOSTLXC=%s"%fqdn
+        else:
+            print "export PLCHOSTVS=%s"%fqdn
+        print "export GUESTNAME=%s"%self.plc_spec['vservername']
+        vplcname=self.plc_spec['vservername'].split('-')[-1]
+        print "export GUESTHOSTNAME=%s.%s"%(vplcname,domain)
         # find hostname of first node
         (hostname,qemubox) = self.all_node_infos()[0]
         print "export KVMHOST=%s.%s"%(qemubox,domain)
