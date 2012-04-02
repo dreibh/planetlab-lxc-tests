@@ -24,6 +24,3 @@ ifeq (,$(PLCSSH))
 else
 	+$(RSYNC) ./ $(PLCSSH)
 endif
-
-
-
