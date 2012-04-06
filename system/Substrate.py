@@ -415,15 +415,31 @@ class PlcVsInstance (PlcInstance):
 
 class PlcLxcInstance (PlcInstance):
     # does lxc have a context id of any kind ?
-    def __init__ (self, plcbox, lxcname):
+    def __init__ (self, plcbox, lxcname, pid):
         PlcInstance.__init__(self, plcbox)
         self.lxcname = lxcname
+	self.pid = pid
 
-    def kill (self):
-        print "TODO lxc PlcLxcInstance.kill ..."
+    def vplcname (self):
+        return self.lxcname.split('-')[-1]
+    def buildname (self):
+        return self.lxcname.rsplit('-',2)[0]
 
     def line (self):
-        return "TODO lxc PlcLxcInstance.line with lxcname=%s"%(self.lxcname)
+        msg="== %s =="%(self.vplcname())
+        msg += " [=%s]"%self.lxcname
+        if self.pid==-1:  msg+=" not (yet?) running"
+        else:              msg+=" (pid=%s)"%self.pid
+        if self.timestamp: msg += " @ %s"%self.pretty_timestamp()
+        else:              msg += " *unknown timestamp*"
+        return msg
+
+    def kill (self):
+        command="rsync lxc-driver.sh  %s:/root"%self.plc_box.hostname
+	commands.getstatusoutput(command)
+	msg="lxc container stopping %s on %s"%(self.lxcname,self.plc_box.hostname)
+	self.plc_box.run_ssh(['/root/lxc-driver.sh','-c','stop_lxc','-n',self.lxcname],msg)
+        self.plc_box.forget(self)
 
 ##########
 class PlcBox (Box):
@@ -543,22 +559,56 @@ class PlcVsBox (PlcBox):
 
 class PlcLxcBox (PlcBox):
 
+    def add_lxc (self,lxcname,pid):
+        for plc in self.plc_instances:
+            if plc.lxcname==lxcname:
+                header("WARNING, duplicate myplc %s running on %s"%\
+                           (lxcname,self.hostname),banner=False)
+                return
+        self.plc_instances.append(PlcLxcInstance(self,lxcname,pid))    
+
+
     # a line describing the box
     def line(self): 
         msg="%s [max=%d,%d free, LXC-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
         return msg
-        
+    
+    def plc_instance_by_lxcname (self, lxcname):
+        for p in self.plc_instances:
+            if p.lxcname==lxcname: return p
+        return None
+    
     # essentially shutdown all running containers
     def soft_reboot (self, options):
-        print "TODO lxc PlcLxcBox.soft_reboot"
+        command="rsync lxc-driver.sh  %s:/root"%self.hostname
+        commands.getstatusoutput(command)
+	self.run_ssh(['/root/lxc-driver.sh','-c','stop_all'],"Stopping all running lxc containers",
+                     dry_run=options.dry_run)
+
 
     # sense is expected to fill self.plc_instances with PlcLxcInstance's 
     # to describe the currently running VM's
     # as well as to call  self.get_uname() once
     def sense (self, options):
-        print "xp (todo:PlcLxcBox.sense)",
+        print "xp",
         self.get_uname()
-
+	command="rsync lxc-driver.sh  %s:/root"%self.hostname
+        commands.getstatusoutput(command)
+	command=['/root/lxc-driver.sh','-c','sense_all']
+        lxc_stat = self.backquote_ssh (command)
+	for lxc_line in lxc_stat.split("\n"):
+            if not lxc_line: continue
+            lxcname=lxc_line.split(";")[0]
+	    pid=lxc_line.split(";")[1]
+	    timestamp=lxc_line.split(";")[2]
+            self.add_lxc(lxcname,pid)
+            timestamp=int(timestamp)
+            p=self.plc_instance_by_lxcname(lxcname)
+            if not p:
+                print 'WARNING zombie plc',self.hostname,lxcname
+                print '... was expecting',lxcname,'in',[i.lxcname for i in self.plc_instances]
+                continue
+            p.set_timestamp(timestamp)
 
 ############################################################
 class QemuInstance: 
