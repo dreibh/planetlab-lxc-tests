@@ -503,7 +503,7 @@ class PlcVsBox (PlcBox):
         return None
 
     def soft_reboot (self, options):
-        self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers",
+        self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers on %s"%(self.hostname,),
                      dry_run=options.dry_run)
 
     def sense (self, options):
@@ -582,7 +582,7 @@ class PlcLxcBox (PlcBox):
     def soft_reboot (self, options):
         command="rsync lxc-driver.sh  %s:/root"%self.hostname
         commands.getstatusoutput(command)
-	self.run_ssh(['/root/lxc-driver.sh','-c','stop_all'],"Stopping all running lxc containers",
+	self.run_ssh(['/root/lxc-driver.sh','-c','stop_all'],"Stopping all running lxc containers on %s"%(self.hostname,),
                      dry_run=options.dry_run)
 
 
