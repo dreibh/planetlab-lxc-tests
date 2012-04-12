@@ -1442,6 +1442,7 @@ class TestPlc:
         "gets all possible logs from plc's/qemu node's/slice's for future reference"
         # (1.a) get the plc's /var/log/ and store it locally in logs/myplc.var-log.<plcname>/*
         # (1.b) get the plc's  /var/lib/pgsql/data/pg_log/ -> logs/myplc.pgsql-log.<plcname>/*
+        # (1.c) get the plc's /root/sfi -> logs/sfi.<plcname>/
         # (2) get all the nodes qemu log and store it as logs/node.qemu.<node>.log
         # (3) get the nodes /var/log and store is as logs/node.var-log.<node>/*
         # (4) as far as possible get the slice's /var/log as logs/sliver.var-log.<sliver>/*
@@ -1451,6 +1452,9 @@ class TestPlc:
         # (1.b)
         print "-------------------- TestPlc.gather_logs : PLC's /var/lib/psql/data/pg_log/"
         self.gather_pgsql_logs ()
+        # (1.c)
+        print "-------------------- TestPlc.gather_logs : PLC's /root/sfi/"
+        self.gather_root_sfi ()
         # (2) 
         print "-------------------- TestPlc.gather_logs : nodes's QEMU logs"
         for site_spec in self.plc_spec['sites']:
@@ -1486,6 +1490,12 @@ class TestPlc:
         utils.system("mkdir -p logs/myplc.pgsql-log.%s"%self.name())
         to_plc = self.actual_command_in_guest("tar -C /var/lib/pgsql/data/pg_log/ -cf - .")        
         command = to_plc + "| tar -C logs/myplc.pgsql-log.%s -xf -"%self.name()
+        utils.system(command)
+
+    def gather_root_sfi (self):
+        utils.system("mkdir -p logs/sfi.%s"%self.name())
+        to_plc = self.actual_command_in_guest("tar -C /root/sfi/ -cf - .")        
+        command = to_plc + "| tar -C logs/sfi.%s -xf -"%self.name()
         utils.system(command)
 
     def gather_nodes_var_logs (self):
