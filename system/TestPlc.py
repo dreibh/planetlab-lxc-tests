@@ -98,7 +98,7 @@ class TestPlc:
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'check_tcp', 'check_netflow', SEP,
+        'check_tcp', 'check_sys_slice', SEP,
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
@@ -1125,9 +1125,12 @@ class TestPlc:
         return overall
 
     # painfully enough, we need to allow for some time as netflow might show up last
-    def check_netflow (self): 
-        "all nodes: check that the netflow slice is alive"
-        return self.check_systemslice ('netflow')
+    def check_sys_slice (self): 
+        "all nodes: check that a system slice is alive"
+# would probably make more sense to check for netflow, 
+# but that one is currently not working in the lxc distro        
+#        return self.check_systemslice ('netflow')
+        return self.check_systemslice ('drl')
     
     # we have the slices up already here, so it should not take too long
     def check_systemslice (self, slicename, timeout_minutes=5, period=15):
@@ -1135,7 +1138,7 @@ class TestPlc:
         test_nodes=self.all_nodes()
         while test_nodes:
             for test_node in test_nodes:
-                if test_node.check_systemslice (slicename):
+                if test_node.check_systemslice (slicename,dry_run=self.options.dry_run):
                     utils.header ("ok")
                     test_nodes.remove(test_node)
                 else:

@@ -271,16 +271,24 @@ class TestNode:
             utils.header ("SUCCESS: node hook %s OK"%script_name)
             return True
 
-    def check_systemslice (self, slicename):
+    def has_libvirt (self):
+        test_ssh=self.create_test_ssh()
+        return test_ssh.run ("rpm -q libvirt-client")==0
+
+    def check_systemslice (self, slicename,dry_run=False):
         sitename=self.test_plc.plc_spec['PLC_SLICE_PREFIX']
         vservername="%s_%s"%(sitename,slicename)
         test_ssh=self.create_test_ssh()
-        (retcod,output)=utils.output_of(test_ssh.actual_command("cat /vservers/%s/etc/slicefamily")%vservername)
-        if retcod != 0: 
-            return False
-        # get last line only as ssh pollutes the output
-        slicefamily=output.split("\n")[-1]
-        utils.header("system slice %s has slicefamily %s"%(slicename, slicefamily))
-        return test_ssh.run("vserver-stat | grep %s"%vservername)==0
+        if self.has_libvirt():
+            return test_ssh.run("virsh --connect lxc:// list | grep -q ' %s '"%vservername,
+                                dry_run=dry_run)==0
+        else:
+            (retcod,output)=utils.output_of(test_ssh.actual_command("cat /vservers/%s/etc/slicefamily 2> /dev/null")%vservername)
+            # get last line only as ssh pollutes the output
+            slicefamily=output.split("\n")[-1]
+            utils.header("system slice %s has slicefamily %s"%(slicename, slicefamily))
+            if retcod != 0: 
+                return False
+            return test_ssh.run("vserver-stat | grep %s"%vservername,dry_run=dry_run)==0
         
         
