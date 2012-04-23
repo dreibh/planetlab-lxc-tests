@@ -1174,6 +1174,7 @@ class Substrate:
             nodemap={'host_box':qemu_boxname,
                      'node_fields:hostname':vnode_fqdn,
                      'interface_fields:ip':ip, 
+                     'ipaddress_fields:ip_addr':ip, 
                      'interface_fields:mac':mac,
                      }
             nodemap.update(self.network_settings())

@@ -67,17 +67,30 @@ class TestNode:
         utils.header("node %s created by user %s"%(self.name(),test_user.name()))
         rootauth=self.test_plc.auth_root()
         server = self.test_plc.apiserver
-        server.AddNode(userauth,
-                       self.test_site.site_spec['site_fields']['login_base'],
-                       self.node_spec['node_fields'])
+        node_id=server.AddNode(userauth,
+                               self.test_site.site_spec['site_fields']['login_base'],
+                               self.node_spec['node_fields'])
         server.SetNodePlainBootstrapfs(userauth,
                                        self.node_spec['node_fields']['hostname'],
                                        'YES')
         # create as reinstall to avoid user confirmation
         server.UpdateNode(userauth, self.name(), {'boot_state':'reinstall'})
-        # populate network interfaces - primary
-        server.AddInterface(userauth,self.name(),
-                                            self.node_spec['interface_fields'])
+
+        if not self.test_plc.has_addresses_api():
+#            print 'USING OLD INTERFACE'
+            # populate network interfaces - primary
+            server.AddInterface(userauth,self.name(),
+                                self.node_spec['interface_fields'])
+        else:
+#            print 'USING NEW INTERFACE with separate ip addresses'
+            # this is for setting the 'dns' stuff that now goes with the node
+            server.UpdateNode (userauth, self.name(), self.node_spec['node_fields_nint'])
+            interface_id = server.AddInterface (userauth, self.name(),self.node_spec['interface_fields_nint'])
+            server.AddIpAddress (userauth, interface_id, self.node_spec['ipaddress_fields'])
+            route_fields=self.node_spec['route_fields']
+            route_fields['interface_id']=interface_id
+            server.AddRoute (userauth, node_id, self.node_spec['route_fields'])
+            pass
         # populate network interfaces - others
         if self.node_spec.has_key('extra_interfaces'):
             for interface in self.node_spec['extra_interfaces']:

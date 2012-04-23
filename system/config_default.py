@@ -27,21 +27,40 @@ def sfa_root (index):
 
 def nodes(options,index):
     return [{'name':'node%d'%index,
-             'node_fields': {'hostname': 'deferred-nodename%d'%index,
-                             'model':'qemu/minhw', } ,
+             'node_fields':             {'hostname': 'deferred-nodename%d'%index,
+                                         'model':'qemu/minhw', } ,
              'host_box': 'deferred-node-hostbox-%d'%index,
              'owner' : 'pi',
              'nodegroups' : 'mynodegroup',
-             'interface_fields': { 'method':'static',
-                                   'type':'ipv4',
-                                   'ip':'xxx-deferred-xxx',
-                                   'gateway':'xxx-deferred-xxx',
-                                   'network':'xxx-deferred-xxx',
-                                   'broadcast':'xxx-deferred-xxx',
-                                   'netmask':'xxx-deferred-xxx',
-                                   'dns1': 'xxx-deferred-xxx',
-                                   'dns2': 'xxx-deferred-xxx',
-                                   },
+             'interface_fields':        { 'method':'static',
+                                          'type':'ipv4',
+                                          'ip':'xxx-deferred-xxx',
+                                          'gateway':'xxx-deferred-xxx',
+                                          'network':'xxx-deferred-xxx',
+                                          'broadcast':'xxx-deferred-xxx',
+                                          'netmask':'xxx-deferred-xxx',
+                                          'dns1': 'xxx-deferred-xxx',
+                                          'dns2': 'xxx-deferred-xxx',
+                                          },
+             # how to deal with the new plcapi way of modeling interfaces
+             # last_updated - ip_address_ids - is_primary - hostname 
+             # method 'static' or 'dhcp' - mac - interface_tag_ids
+             # if_name - ifname (accessor) - bwlimit
+             # xxx remains to deal with dns1 dns2 and gateway
+             # this gets appended to node_fields with the new interface
+             'node_fields_nint' :       { 'dns':'xxx-deferred-xxx',
+                                          },
+             'interface_fields_nint' :  { 'is_primary' : True,
+                                          'method' : 'static',
+                                          },
+             # last_updated - netmask - ip_addr - type (e.g., 'ipv4')
+             'ipaddress_fields' :       { 'type' : 'ipv4',
+                                          'ip_addr' : 'xxx-deferred-xxx',
+                                          'netmask' : 'xxx-deferred-xxx',
+                                          } ,
+             'route_fields' :           { 'subnet' : '0.0.0.0/0',
+                                          'next_hop' : 'xxx-deferred-xxx',
+                                          },
              }]
 
 def all_nodenames (options,index):

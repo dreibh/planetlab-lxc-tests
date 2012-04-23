@@ -146,6 +146,9 @@ class TestPlc:
         self.url="https://%s:443/PLCAPI/"%plc_spec['vserverip']
 	self.apiserver=TestApiserver(self.url,options.dry_run)
         
+    def has_addresses_api (self):
+        return hasattr(self.apiserver,'AddIpAddress')
+
     def name(self):
         name=self.plc_spec['name']
         return "%s.%s"%(name,self.vservername)
@@ -357,8 +360,8 @@ class TestPlc:
     #################### display config
     def show (self):
         "show test configuration after localization"
-        self.display_pass (1)
-        self.display_pass (2)
+        self.show_pass (1)
+        self.show_pass (2)
         return True
 
     def export (self):
@@ -382,7 +385,7 @@ class TestPlc:
 
     # entry point
     always_display_keys=['PLC_WWW_HOST','nodes','sites',]
-    def display_pass (self,passno):
+    def show_pass (self,passno):
         for (key,val) in self.plc_spec.iteritems():
             if not self.options.verbose and key not in TestPlc.always_display_keys: continue
             if passno == 2:

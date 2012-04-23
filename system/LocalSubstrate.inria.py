@@ -59,12 +59,15 @@ class OnelabSubstrate (Substrate):
       return 'pl.sophia.inria.fr'
 
    def network_settings (self):
-      return { 'interface_fields:gateway':'138.96.112.250',
-               'interface_fields:network':'138.96.112.0',
-               'interface_fields:broadcast':'138.96.119.255',
-               'interface_fields:netmask':'255.255.248.0',
-               'interface_fields:dns1': '138.96.112.1',
-               'interface_fields:dns2': '138.96.112.2',
+      return { 'interface_fields:gateway':      '138.96.112.250',
+               'route_fields:next_hop':         '138.96.112.250',
+               'interface_fields:network':      '138.96.112.0',
+               'interface_fields:broadcast':    '138.96.119.255',
+               'interface_fields:netmask':      '255.255.248.0',
+               'interface_fields:dns1':         '138.96.112.1',
+               'interface_fields:dns2':         '138.96.112.2',
+               'node_fields_nint:dns':          '138.96.112.1,138.96.112.2',
+               'ipaddress_fields:netmask':      '255.255.248.0',
                }
 
 # the hostname for the testmaster - in case we'd like to run this remotely
