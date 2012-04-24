@@ -42,22 +42,21 @@ def nodes(options,index):
                                           'dns1': 'xxx-deferred-xxx',
                                           'dns2': 'xxx-deferred-xxx',
                                           },
-             # how to deal with the new plcapi way of modeling interfaces
-             # last_updated - ip_address_ids - is_primary - hostname 
-             # method 'static' or 'dhcp' - mac - interface_tag_ids
-             # if_name - ifname (accessor) - bwlimit
-             # xxx remains to deal with dns1 dns2 and gateway
-             # this gets appended to node_fields with the new interface
+             ######## how to deal with the new plcapi way of modeling interfaces
+             # this pertains to the node as per the new interface - using UpdateNode
+             # after node_fields above is used to create the Node
              'node_fields_nint' :       { 'dns':'xxx-deferred-xxx',
                                           },
+             # used in replacement of interface_fields above
              'interface_fields_nint' :  { 'is_primary' : True,
                                           'method' : 'static',
                                           },
-             # last_updated - netmask - ip_addr - type (e.g., 'ipv4')
+             # used to create an IpAddress
              'ipaddress_fields' :       { 'type' : 'ipv4',
                                           'ip_addr' : 'xxx-deferred-xxx',
                                           'netmask' : 'xxx-deferred-xxx',
                                           } ,
+             # used to create a Route
              'route_fields' :           { 'subnet' : '0.0.0.0/0',
                                           'next_hop' : 'xxx-deferred-xxx',
                                           },
