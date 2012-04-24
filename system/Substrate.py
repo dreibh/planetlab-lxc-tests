@@ -150,7 +150,7 @@ class Pool:
         # where to send notifications upon load_starting
         self.substrate=substrate
 
-    def list (self):
+    def list (self, verbose):
         for i in self.pool_items: print i.line()
 
     def line (self):
@@ -336,7 +336,7 @@ class BuildBox (Box):
                 return
         self.build_instances.append(BuildInstance(buildname, pid, self))
 
-    def list(self):
+    def list(self, verbose):
         if not self.build_instances: 
             header ('No build process on %s (%s)'%(self.hostname,self.uptime()))
         else:
@@ -466,7 +466,7 @@ class PlcBox (Box):
         else:
             self.soft_reboot (options)
 
-    def list(self):
+    def list(self, verbose):
         if not self.plc_instances: 
             header ('No plc running on %s'%(self.line()))
         else:
@@ -670,7 +670,7 @@ class QemuBox (Box):
         msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_qemus,self.free_slots(),self.driver())
         return msg
 
-    def list(self):
+    def list(self, verbose):
         if not self.qemu_instances: 
             header ('No qemu process on %s'%(self.line()))
         else:
@@ -782,6 +782,7 @@ class TestInstance:
     def set_now (self): self.timestamp=int(time.time())
     def pretty_timestamp (self): return time.strftime("%Y-%m-%d:%H-%M",time.localtime(self.timestamp))
 
+    def is_running (self): return len(self.pids) != 0
 
     def add_pid (self,pid):
         self.pids.append(pid)
@@ -900,17 +901,28 @@ class TestBox (Box):
     def line (self):
         return "%s (%s)"%(self.hostname,self.uptime())
 
-    def list (self):
-        if not self.test_instances:
-            header ("No known tests on %s"%self.line())
+    def list (self, verbose):
+        # verbose shows all tests
+        if verbose:
+            instances = self.test_instances
+            msg="knwown tests"
         else:
-            header ("Known tests on %s"%self.line())
-            self.test_instances.sort(timestamp_sort)
-            for i in self.test_instances: print i.line()
+            instances = [ i for i in self.test_instances if i.is_running() ]
+            msg="known running tests"
+
+        if not instances:
+            header ("No %s on %s"%(msg,self.line()))
+        else:
+            header ("%s on %s"%(msg,self.line()))
+            instances.sort(timestamp_sort)
+            for i in instances: print i.line()
+        # show 'starting' regardless of verbose
         if self.starting_ips:
             header ("Starting IP addresses on %s"%self.line())
             self.starting_ips.sort()
             for starting in self.starting_ips: print starting
+        else:
+            header ("Empty 'starting' on %s"%self.line())
 
 ############################################################
 class Options: pass
@@ -969,7 +981,7 @@ class Substrate:
         self._sensed=True
         return True
 
-    def list (self):
+    def list (self, verbose):
         for b in self.default_boxes:
             b.list()
 
@@ -1218,7 +1230,7 @@ class Substrate:
         for box in box_or_names:
             if not isinstance(box,Box): box=self.get_box(box)
             if not box: continue
-            box.list()
+            box.list(self.options.verbose)
 
     def reboot_boxes(self,box_or_names):
         for box in box_or_names:
@@ -1259,9 +1271,9 @@ class Substrate:
         if self.options.qemus: boxes += self.qemu_boxes
         if self.options.all: boxes += self.all_boxes
         
-        # default scope is -b -p -q
+        # default scope is -b -p -q -t
         if not boxes:
-            boxes = self.build_boxes + self.plc_boxes + self.qemu_boxes
+            boxes = self.build_boxes + self.plc_boxes + self.qemu_boxes + [self.test_box]
 
         if self.options.reboot: self.reboot_boxes (boxes)
         else:                   self.list_boxes (boxes)
