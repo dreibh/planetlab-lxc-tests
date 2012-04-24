@@ -150,7 +150,7 @@ class Pool:
         # where to send notifications upon load_starting
         self.substrate=substrate
 
-    def list (self, verbose):
+    def list (self, verbose=False):
         for i in self.pool_items: print i.line()
 
     def line (self):
@@ -336,7 +336,7 @@ class BuildBox (Box):
                 return
         self.build_instances.append(BuildInstance(buildname, pid, self))
 
-    def list(self, verbose):
+    def list(self, verbose=False):
         if not self.build_instances: 
             header ('No build process on %s (%s)'%(self.hostname,self.uptime()))
         else:
@@ -466,7 +466,7 @@ class PlcBox (Box):
         else:
             self.soft_reboot (options)
 
-    def list(self, verbose):
+    def list(self, verbose=False):
         if not self.plc_instances: 
             header ('No plc running on %s'%(self.line()))
         else:
@@ -670,7 +670,7 @@ class QemuBox (Box):
         msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_qemus,self.free_slots(),self.driver())
         return msg
 
-    def list(self, verbose):
+    def list(self, verbose=False):
         if not self.qemu_instances: 
             header ('No qemu process on %s'%(self.line()))
         else:
@@ -901,7 +901,7 @@ class TestBox (Box):
     def line (self):
         return "%s (%s)"%(self.hostname,self.uptime())
 
-    def list (self, verbose):
+    def list (self, verbose=False):
         # verbose shows all tests
         if verbose:
             instances = self.test_instances
@@ -981,7 +981,7 @@ class Substrate:
         self._sensed=True
         return True
 
-    def list (self, verbose):
+    def list (self, verbose=False):
         for b in self.default_boxes:
             b.list()
 
