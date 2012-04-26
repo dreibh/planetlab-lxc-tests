@@ -147,7 +147,7 @@ class TestPlc:
 	self.apiserver=TestApiserver(self.url,options.dry_run)
         
     def has_addresses_api (self):
-        return hasattr(self.apiserver,'AddIpAddress')
+        return self.apiserver.has_method('AddIpAddress')
 
     def name(self):
         name=self.plc_spec['name']

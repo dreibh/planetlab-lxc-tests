@@ -48,6 +48,7 @@ server_methods = [ ('GetNodes' ,  []),
                    ('AddLeases', True),
                    ('GetLeases', []),
                    ('DeleteLeases',True),
+                   ('system.listMethods',[]),
                    ]
 
 class TestApiserver:
@@ -70,7 +71,7 @@ class TestApiserver:
                 return actual_method(*args)
 
     def __init__(self,url,dry_run=False):
-        self.apiserver = xmlrpclib.Server(url,allow_none=True)
+        self.apiserver = xmlrpclib.ServerProxy(url,allow_none=True)
         self.dry_run=dry_run
         for (method,defaults) in server_methods:
             setattr(self,method,TestApiserver.Callable(self.apiserver,dry_run,method,defaults))
@@ -79,3 +80,6 @@ class TestApiserver:
         self.dry_run=dry_run
         for (method,defaults) in server_methods:
             getattr(self,method).dry_run = dry_run
+
+    def has_method (self, methodname):
+        return methodname in self.apiserver.system.listMethods()
