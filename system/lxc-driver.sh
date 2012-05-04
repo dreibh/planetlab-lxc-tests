@@ -11,7 +11,6 @@ function start_all () {
 
     for i in $(lxc-ls -1|sort|uniq); do 
         [ "$(lxc-info -n $i | grep state| awk '{print $2;}' )" != "RUNNING" ] && lxc-start -d -n $i || :
- 	lxc-wait -n $i -s RUNNING
     done
    
     #sense_all
@@ -21,10 +20,9 @@ function stop_all () {
    
     for i in $(lxc-ls -1|sort|uniq); do
         [ "$(lxc-info -n $i | grep state| awk '{print $2;}' )" != "STOPPED" ] && lxc-stop -n $i
-        lxc-wait -n $i -s STOPPED
     done
     
-    sense_all
+    #sense_all
 }
 
 function sense_lxc () {
@@ -37,18 +35,16 @@ function start_lxc () {
 
     lxc=$1; shift
     [ "$(lxc-info -n $lxc | grep state| awk '{print $2;}' )" != "RUNNING" ] && lxc-start -d -n $lxc ||:
-    lxc-wait -n $lxc -s RUNNING
     
-    sense_lxc $lxc
+    #sense_lxc $lxc
 }
 
 function stop_lxc () {
 
     lxc=$1; shift
     [ "$(lxc-info -n $lxc | grep state| awk '{print $2;}' )" != "STOPPED" ] && lxc-stop -n $lxc
-    lxc-wait -n $lxc -s STOPPED
 
-    sense_lxc $lxc
+    #sense_lxc $lxc
 }
 
 function restart_all () {
