@@ -19,6 +19,9 @@ def login_base (index):
     # index=3=>'sitea'  4=>'siteb' 
     else: return 'site%s'%chr(index+94)
 
+def sfa_login_base (index, rspec_style):
+    return "sfasite%s"%(rspec_style)
+
 def sfa_root (index):
     # use plt (planetlab test) instead of pl
     # otherwise a triangular test ends up with 'plc'
@@ -196,6 +199,40 @@ rUck4dxa0t30wUFK0XVQjNEArXqvU23EB8Z7bQQMRx0yhd4pF5k29Q==
 -----END RSA PRIVATE KEY-----
 """
 
+### for a PI
+public_key3="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA9LrXvUvGZK092R+0+xNZAOUrywDmfdtOL2XqtO26PCjns2GmxLmphJkvBBtXCt4d8s9jdPILHKnTC0/8/WfrwhZ68AWHay1qnCnWjgMUFEg2J4+MsT0UpirQ7wQbA3KeuAVobRaMIdfgPwlgnmBu2VyPiS4eD4KDz2CgL2DIWzq+DzrakOSqS6eb5MMNS7rIDlxH0WV9bTueweoeWi77zpEtA4sA4EFRKZ21uNyceQ/ob8mKC1yAz2XGIKoLgaxRvd+d8Mmq52OLzbCPtDCnCAtWW2PJt8hEjR+RKwYhf0NcpMXhA5GsYAXUFmHUI0j0f/8qodWuIorE/5zr4EVVkQ== pi@test.onelab.eu
+"""
+
+private_key3="""
+-----BEGIN RSA PRIVATE KEY-----
+MIIEoQIBAAKCAQEA9LrXvUvGZK092R+0+xNZAOUrywDmfdtOL2XqtO26PCjns2Gm
+xLmphJkvBBtXCt4d8s9jdPILHKnTC0/8/WfrwhZ68AWHay1qnCnWjgMUFEg2J4+M
+sT0UpirQ7wQbA3KeuAVobRaMIdfgPwlgnmBu2VyPiS4eD4KDz2CgL2DIWzq+Dzra
+kOSqS6eb5MMNS7rIDlxH0WV9bTueweoeWi77zpEtA4sA4EFRKZ21uNyceQ/ob8mK
+C1yAz2XGIKoLgaxRvd+d8Mmq52OLzbCPtDCnCAtWW2PJt8hEjR+RKwYhf0NcpMXh
+A5GsYAXUFmHUI0j0f/8qodWuIorE/5zr4EVVkQIBIwKCAQAN/AxT9bOQuXE/m2lt
+btHiy0RUvjkOgY9wbDlMKtdxJuirKibJabHqUeVt8u8H729s9ehtFSU01oEWlttB
+riq6ojLpJOMqsiNZYXn5fITN9X9v+ZMC0EpSo1xlbfLqQRBiSXOudlEmgV1FbkAJ
+DNMiXQ+ELoVf+NRU/jUKBYfKssmuwptMuBUvAksTF/bq1P6vaYP2GluEAKSvZjhb
+jc78LMxd1G+rmVX7wmV1dzgscB+d5kvb4lO7gZdJQlGwDxIvGKfAU9oNoIHXt+x4
+TJrNq5+w3DD7VXZx/O2K382HJKmgxZsfHatBZDiEDPnwHYM5BEGa6EJpuKilpHUa
+CSkLAoGBAPvjOw6vSTdJPS11KRV3H+2PDxfqRRiHheZ1fXeL7SUQHaSLwJhCgB9Q
+gTGy6xbGvDLz557ninkh6I4EOaZBZBI3DIFxG/ZZcmEdMIrf4kpFF4yXW/ujjdHk
+uqUX09FBRBPodvZRuHNLXg6g/0uWd7sIuUx/GMQjo37v6W54TuXpAoGBAPi5si4j
+BgBLwkyhdpbHC3GBlqqUUyNfqnZO78yMEDCBY5ANxMZixdEjUpR+Sy6oqYwwo7ub
+2U5cIWCaZ8+3QIFOo6TZ8kyfeEpxbVqbEcezuF8s+nTl4tndmq8U5cOA/bA+zNAR
+UgQcTehuf3KizMERe2IL3F/Ex7689XwgViFpAoGAelhtJGPEefBfixumPaBCtTbb
+cgQS7qg5uRR+xQlzL0JXim/D8i7txhEozv8hupsK9C1TPo24SXbeq2EjUMCs8ueJ
+uzbwUxWAstOp3Q2obTeAd3y3phw9kdV/Oj7F9+yAJu1BGI4Xwvi4qAUOSUkVlVwC
+OxkpSVMjhsxMz0G/7AMCgYAcbP5rrDszO9uw/IKU44xHfIY/YWiWVBN7PDipqZtz
+QfzAAZLU2BabjwIfmWetj55ZKiFXRQLkYkz1GPXr2m3FopZb+6apq9M7tTERq1J9
+ORxipg3+uy/eYngUAmNmzOnK/9zklEPjNm9Nw3xHnZO+SyQLNI421KkdHOja/GGd
+awKBgQCLtk0+RpswH451PWyAJ6F+U4YDVaHR0s6pwp4TJAkDVlFBiRO28jEb5y0N
+bI1R7vrRdq07SgI3USLXqDokQ/pXJhC03w2r7W7niAkNaUll3YtJ2DZVSvuQguR9
+xwRNsuo0x60e7bivU+kNZtLn5FqWuGoBONZnbhgP6y7jPsNrig==
+-----END RSA PRIVATE KEY-----
+"""
+
 def keys (options,index):
     return [ {'name': 'key1',
               'private' : private_key,
@@ -205,7 +242,6 @@ def keys (options,index):
               'private' : private_key2,
               'key_fields' : {'key_type':'ssh',
                               'key': public_key2}}
-            
              ]
 
 ############################## initscripts
@@ -373,10 +409,11 @@ def sfa (options,index) :
                               for rspec_style in options.rspec_styles ]
     }
 
-# subindex is 0 (pl slice) or 1 (pg slice)
+# rspecstyle is 'pl' for sfav1 or 'pg' for pgv2
 def sfa_slice_spec (options,index,rspec_style):
-    the_login_base=login_base(index)
-    piuser='fake-pi%d'%index
+    the_login_base=sfa_login_base(index,rspec_style)
+    piuser='sfapi%d%s'%(index,rspec_style)
+    pimail=piuser+'@test.onelab.eu'
     regularuser='sfauser%d%s'%(index,rspec_style)
     slicename='slsfa%d%s'%(index,rspec_style)
     prefix='%s.%s'%(sfa_root(index),the_login_base)
@@ -405,6 +442,7 @@ first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
                               },
              'login_base' : the_login_base,
              'piuser' : piuser,
+             'pimail' : pimail,
              'regularuser':regularuser,
              'domain':domain,
              'usernames' : [ (regularuser,'key2') ],

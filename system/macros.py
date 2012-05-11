@@ -20,6 +20,8 @@ sequences['sfa_restart'] = [
 "re-run a complete sfa cycle from a nightly test"
 sequences['sfa'] = [ 
     'sfa_restart',
+    'sfa_add_site',
+    'sfa_add_pi',
     'sfa_add_user', 
     'sfa_add_slice',
     'sfa_discover', 

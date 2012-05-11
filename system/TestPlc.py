@@ -67,9 +67,7 @@ def slice_sfa_mapper (method):
         overall=True
         slice_method = TestSliceSfa.__dict__[method.__name__]
         for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
-            site_spec = self.locate_site (slice_spec['sitename'])
-            test_site = TestSite(self,site_spec)
-            test_slice=TestSliceSfa(self,test_site,slice_spec)
+            test_slice=TestSliceSfa(self,slice_spec)
             if not slice_method(test_slice,self.options): overall=False
         return overall
     # restore the doc text
@@ -90,7 +88,8 @@ class TestPlc:
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
-        'sfi_configure@1', 'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
+        'sfi_configure@1', 'sfa_add_site@1','sfa_add_pi@1', SEPSFA,
+        'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
         'sfa_create_slice@1', 'sfa_check_slice_plc@1', SEPSFA, 
         'sfa_update_user@1', 'sfa_update_slice@1', 'sfa_view@1', 'sfa_utest@1',SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
@@ -1193,10 +1192,9 @@ class TestPlc:
 
     def sfa_dbclean(self):
         "thoroughly wipes off the SFA database"
-        self.run_in_guest("sfa-nuke.py")==0 or \
-        self.run_in_guest("sfa-nuke-plc.py") or \
-        self.run_in_guest("sfaadmin.py registry nuke")
-        return True
+        return self.run_in_guest("sfaadmin.py registry nuke")==0 or \
+            self.run_in_guest("sfa-nuke.py")==0 or \
+            self.run_in_guest("sfa-nuke-plc.py")==0
 
     def sfa_plcclean(self):
         "cleans the PLC entries that were created as a side effect of running the script"
@@ -1204,13 +1202,14 @@ class TestPlc:
         sfa_spec=self.plc_spec['sfa']
 
         for sfa_slice_spec in sfa_spec['sfa_slice_specs']:
-            slicename='%s_%s'%(sfa_slice_spec['login_base'],sfa_slice_spec['slicename'])
-            try: self.apiserver.DeleteSlice(self.auth_root(),slicename)
-            except: print "Slice %s already absent from PLC db"%slicename
+            login_base=sfa_slice_spec['login_base']
+            try: self.apiserver.DeleteSite (self.auth.root(),login_base)
+            except: print "Site %s already absent from PLC db"%login_base
 
-            username="%s@%s"%(sfa_slice_spec['regularuser'],sfa_slice_spec['domain'])
-            try: self.apiserver.DeletePerson(self.auth_root(),username)
-            except: print "User %s already absent from PLC db"%username
+            for key in ['piuser','regularuser']:
+                username="%s@%s"%(sfa_slice_spec[key],sfa_slice_spec['domain'])
+                try: self.apiserver.DeletePerson(self.auth_root(),username)
+                except: print "User %s already absent from PLC db"%username
 
         print "REMEMBER TO RUN sfa_import AGAIN"
         return True
@@ -1352,9 +1351,7 @@ class TestPlc:
         sfa_spec=self.plc_spec['sfa']
         # cannot use sfa_slice_mapper to pass dir_name
         for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
-            site_spec = self.locate_site (slice_spec['sitename'])
-            test_site = TestSite(self,site_spec)
-            test_slice=TestSliceSfa(self,test_site,slice_spec)
+            test_slice=TestSliceSfa(self,slice_spec)
             dir_name=self.confsubdir("dot-sfi/%s"%slice_spec['slicename'],clean=True,dry_run=self.options.dry_run)
             test_slice.sfi_config(dir_name)
             # push into the remote /root/sfi area
@@ -1370,6 +1367,16 @@ class TestPlc:
         "clean up /root/sfi on the plc side"
         self.run_in_guest("rm -rf /root/sfi")
         return True
+
+    @slice_sfa_mapper
+    def sfa_add_site (self):
+        "bootstrap a site using sfaadmin"
+        pass
+
+    @slice_sfa_mapper
+    def sfa_add_pi (self):
+        "bootstrap a PI user for that site"
+        pass
 
     @slice_sfa_mapper
     def sfa_add_user(self):

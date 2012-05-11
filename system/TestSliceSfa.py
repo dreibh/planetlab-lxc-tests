@@ -14,9 +14,8 @@ from TestUserSfa import TestUserSfa
 
 class TestSliceSfa:
 
-    def __init__ (self,test_plc,test_site,sfa_slice_spec):
+    def __init__ (self,test_plc,sfa_slice_spec):
 	self.test_plc=test_plc
-	self.test_site=test_site
 	self.sfa_slice_spec=sfa_slice_spec
         self.test_ssh=TestSsh(self.test_plc.test_ssh)
         # shortcuts
@@ -76,18 +75,17 @@ class TestSliceSfa:
         plc_spec=self.test_plc.plc_spec
         sfa_spec=self.sfa_spec
         sfa_slice_spec=self.sfa_slice_spec
-        # store private key for sfa pi user
-	file_name=dir_name + os.sep + self.qualified_hrn (self.piuser) + '.pkey'
-        fileconf=open(file_name,'w')
-        fileconf.write (plc_spec['keys'][0]['private'])
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
-        # store private key for sfa regular user
-	file_name=dir_name + os.sep + self.qualified_hrn(self.regularuser) + '.pkey'
-        fileconf=open(file_name,'w')
-        fileconf.write (plc_spec['keys'][1]['private'])
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
+        keys=plc_spec['keys']
+        for (contents,name) in [ (keys[0]['private'],             self.piuser+'.pkey'),
+                                 (keys[0]['key_fields']['key'],   self.piuser+'.pub'),
+                                 (keys[1]['private'],             self.regularuser+'.pkey'),
+                                 (keys[0]['key_fields']['key'],   self.regularuser+'.pub'),
+                                ]:
+            file_name=os.path.join(dir_name,self.qualified_hrn(name))
+            fileconf=open(file_name,'w')
+            fileconf.write (contents)
+            fileconf.close()
+            utils.header ("(Over)wrote %s"%file_name)
         #
 	file_name=dir_name + os.sep + self.addpersonfile()
         fileconf=open(file_name,'w')
@@ -119,6 +117,21 @@ class TestSliceSfa:
 	fileconf.write('\n')
         utils.header ("(Over)wrote %s"%file_name)
         fileconf.close()
+
+    # using sfaadmin to bootstrap
+    def sfa_add_site (self, options):
+        command="sfaadmin reg register -t authority -x %s"%self.site_hrn()
+        return self.test_plc.run_in_guest(command)==0
+
+    def sfa_add_pi (self, options):
+        pi_hrn=self.qualified_hrn(self.piuser)
+        pi_mail=self.sfa_slice_spec['pimail']
+        # as installed by sfi_config
+        pi_key=os.path.join(self.sfi_path(),self.qualified_hrn(self.piuser+'.pub'))
+        command="sfaadmin reg register -t user -x %s --email %s --key %s"%(pi_hrn,pi_mail,pi_key)
+        if self.test_plc.run_in_guest(command)!=0: return False
+        command="sfaadmin reg update -t authority -x %s --pi %s"%(self.site_hrn(),pi_hrn)
+        return self.test_plc.run_in_guest(command)==0
 
     # user management
     def sfa_add_user (self, options):
