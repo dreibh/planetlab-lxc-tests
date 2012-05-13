@@ -1203,7 +1203,7 @@ class TestPlc:
 
         for sfa_slice_spec in sfa_spec['sfa_slice_specs']:
             login_base=sfa_slice_spec['login_base']
-            try: self.apiserver.DeleteSite (self.auth.root(),login_base)
+            try: self.apiserver.DeleteSite (self.auth_root(),login_base)
             except: print "Site %s already absent from PLC db"%login_base
 
             for key in ['piuser','regularuser']:
