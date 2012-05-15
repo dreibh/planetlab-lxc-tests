@@ -494,7 +494,7 @@ class PlcVsBox (PlcBox):
         self.plc_instances.append(PlcVsInstance(self,vservername,ctxid))
     
     def line(self): 
-        msg="%s [max=%d,%d free, VS-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
+        msg="%s [max=%d,free=%d, VS-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
         return msg
         
     def plc_instance_by_vservername (self, vservername):
@@ -570,7 +570,7 @@ class PlcLxcBox (PlcBox):
 
     # a line describing the box
     def line(self): 
-        msg="%s [max=%d,%d free, LXC-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
+        msg="%s [max=%d,free=%d, LXC-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
         return msg
     
     def plc_instance_by_lxcname (self, lxcname):
@@ -667,7 +667,7 @@ class QemuBox (Box):
         self.qemu_instances.append(dummy)
 
     def line (self):
-        msg="%s [max=%d,%d free] (%s)"%(self.hostname, self.max_qemus,self.free_slots(),self.driver())
+        msg="%s [max=%d,free=%d] (%s)"%(self.hostname, self.max_qemus,self.free_slots(),self.driver())
         return msg
 
     def list(self, verbose=False):
