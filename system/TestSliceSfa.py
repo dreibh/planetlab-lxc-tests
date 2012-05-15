@@ -56,7 +56,7 @@ class TestSliceSfa:
         else:                        return "-r sfa"
 
     def sfi_path (self):
-        return "/root/sfi/%s"%self.slicename
+        return "/root/sfi/%s%s"%(self.slicename,self.rspec_style())
 
     def locate_key(self):
         for username,keyname in self.sfa_slice_spec['usernames']:

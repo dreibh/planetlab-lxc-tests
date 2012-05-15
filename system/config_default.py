@@ -20,7 +20,7 @@ def login_base (index):
     else: return 'site%s'%chr(index+94)
 
 def sfa_login_base (index, rspec_style):
-    return "sfasite%s"%(rspec_style)
+    return "sfa%s"%(rspec_style)
 
 def sfa_root (index):
     # use plt (planetlab test) instead of pl
@@ -288,7 +288,7 @@ def initscripts(options,index):
 # one has an initscript code, the other one an initscript name
 def slices (options,index):
     def theslice (i):
-        slice_spec = { 'slice_fields': {'name':'%s_slpl%d'%(login_base(index),i),
+        slice_spec = { 'slice_fields': {'name':'%s_sl%d'%(login_base(index),i),
                                         'instantiation':'plc-instantiated',
                                         'url':'http://foo%d.com'%index,
                                         'description':'testslice number %d'%i,
@@ -318,18 +318,18 @@ def tcp_tests (options,index):
         return [
             # local test
             { 'server_node': 'node1',
-              'server_slice' : '%s_slpl1'%login_base(index),
+              'server_slice' : '%s_sl1'%login_base(index),
               'client_node' : 'node1',
-              'client_slice' : '%s_slpl1'%login_base(index),
+              'client_slice' : '%s_sl1'%login_base(index),
               'port' : 2000,
               }]
     elif index == 2:
         return [
             # remote test
             { 'server_node': 'node2',
-              'server_slice' : '%s_slpl3'%login_base(index),
+              'server_slice' : '%s_sl3'%login_base(index),
               'client_node' : 'node2',
-              'client_slice' : '%s_slpl4'%login_base(index),
+              'client_slice' : '%s_sl4'%login_base(index),
               'port' : 4000,
               },
             ]
@@ -412,10 +412,11 @@ def sfa (options,index) :
 # rspecstyle is 'pl' for sfav1 or 'pg' for pgv2
 def sfa_slice_spec (options,index,rspec_style):
     the_login_base=sfa_login_base(index,rspec_style)
-    piuser='sfapi%d%s'%(index,rspec_style)
+    # we're already in a dedicated site/authority so no need to encumber with odd names
+    piuser='pi'
     pimail=piuser+'@test.onelab.eu'
-    regularuser='sfauser%d%s'%(index,rspec_style)
-    slicename='slsfa%d%s'%(index,rspec_style)
+    regularuser='us'
+    slicename='sl'
     prefix='%s.%s'%(sfa_root(index),the_login_base)
     hrn=prefix+'.'+slicename
     user_hrn=prefix+'.'+regularuser

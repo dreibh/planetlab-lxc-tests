@@ -1352,7 +1352,8 @@ class TestPlc:
         # cannot use sfa_slice_mapper to pass dir_name
         for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             test_slice=TestSliceSfa(self,slice_spec)
-            dir_name=self.confsubdir("dot-sfi/%s"%slice_spec['slicename'],clean=True,dry_run=self.options.dry_run)
+            dir_basename=os.path.basename(test_slice.sfi_path())
+            dir_name=self.confsubdir("dot-sfi/%s"%dir_basename,clean=True,dry_run=self.options.dry_run)
             test_slice.sfi_config(dir_name)
             # push into the remote /root/sfi area
             location = test_slice.sfi_path()
