@@ -15,6 +15,7 @@
 # (*) or copy a local file into the remote 'buildname' 
 # 
 
+import sys
 import os.path
 import utils
 import shutil
