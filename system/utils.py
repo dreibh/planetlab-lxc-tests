@@ -23,7 +23,7 @@ def pprint(message,spec,depth=2):
 
 
 def system(command,background=False,silent=False):
-    if options.dry_run:
+    if getattr(options,'dry_run',None):
         print 'dry_run:',command
         return 0
     
