@@ -462,7 +462,7 @@ class PlcBox (Box):
 
     def reboot (self, options):
         if not options.soft:
-            self.reboot(options)
+            Box.reboot(self,options)
         else:
             self.soft_reboot (options)
 
@@ -699,7 +699,7 @@ class QemuBox (Box):
 
     def reboot (self, options):
         if not options.soft:
-            self.reboot(options)
+            Box.reboot(options)
         else:
             self.run_ssh(['pkill','qemu'],"Killing qemu instances",
                          dry_run=options.dry_run)
