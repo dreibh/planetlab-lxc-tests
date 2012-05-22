@@ -24,37 +24,38 @@ class Step:
 
     natives=TestPlc.__dict__
 
+    def display (self): return self.name.replace('_','-')
+    def internal (self): return self.name.replace('-','_')
+
     def __init__ (self, name):
-        self.name=name.replace('-','_')
+        self.name=name
         # a native step is implemented as a method on TestPlc
-        self.native = name in Step.natives
+        self.native = self.internal() in Step.natives
         if self.native:
-            self.method=Step.natives[self.name]
+            self.method=Step.natives[self.internal()]
         else:
             try:
-                self.substeps=sequences[self.name]
+                self.substeps=sequences[self.internal()]
             except Exception,e:
-                print "macro step %s not found in macros.py (%s) - exiting"%(self.name,e)
+                print "macro step %s not found in macros.py (%s) - exiting"%(self.display(),e)
                 raise
-
-    def norm_name (self): return self.name.replace('_','-')
 
     def print_doc (self):
         if self.native:
-            print '*',self.norm_name(),"\r",4*"\t",
+            print '*',self.display(),"\r",4*"\t",
             try:
                 print self.method.__doc__
             except:
                 print "*** no doc found"
         else:
-            print '*',self.norm_name(),"\r",3*"\t","========== BEG MACRO step"
+            print '*',self.display(),"\r",3*"\t","========== BEG MACRO step"
             for step in self.substeps:
                 Step(step).print_doc()
-            print '*',self.norm_name(),"\r",3*"\t","========== END MACRO step"
+            print '*',self.display(),"\r",3*"\t","========== END MACRO step"
 
     # return a list of (name, method) for all native steps involved
     def tuples (self):
-        if self.native: return [ (self.name, self.method,) ]
+        if self.native: return [ (self.internal(), self.method,) ]
         else:
             result=[]
             for substep in [ Step(name) for name in self.substeps ] : 
