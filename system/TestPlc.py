@@ -83,7 +83,7 @@ class TestPlc:
         'show', SEP,
         'vs_delete','timestamp_vs','vs_create', SEP,
         'plc_install', 'plc_configure', 'plc_start', SEP,
-        'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
+        'keys_fetch', 'keys_store', 'keys_clear_known_hosts', 'speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', SEP,
@@ -98,6 +98,7 @@ class TestPlc:
         'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'check_tcp', 'check_sys_slice', SEP,
+        'empty_slices', 'ssh_slice_off', 'fill_slices', SEP,
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
@@ -106,7 +107,7 @@ class TestPlc:
         'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
         'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
         'delete_leases', 'list_leases', SEP,
-        'populate' , SEP,
+        'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
 	'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
@@ -688,8 +689,11 @@ class TestPlc:
     def delete_all_sites (self):
         "Delete all sites in PLC, and related objects"
         print 'auth_root',self.auth_root()
-        site_ids = [s['site_id'] for s in self.apiserver.GetSites(self.auth_root(), {}, ['site_id'])]
-        for site_id in site_ids:
+        sites = self.apiserver.GetSites(self.auth_root(), {}, ['site_id'])
+        for site in sites:
+            # keep automatic site - otherwise we shoot in our own foot, root_auth is not valid anymore
+            if site['login_base']==self.plc_spec['PLC_SLICE_PREFIX']: continue
+            site_id=site['site_id']
             print 'Deleting site_id',site_id
             self.apiserver.DeleteSite(self.auth_root(),site_id)
         return True
@@ -1068,24 +1072,33 @@ class TestPlc:
     ### manage slices
     def slices (self):
         "create slices with PLCAPI"
-        return self.do_slices()
+        return self.do_slices(action="add")
 
     def delete_slices (self):
         "delete slices with PLCAPI"
-        return self.do_slices("delete")
+        return self.do_slices(action="delete")
+
+    def fill_slices (self):
+        "add nodes in slices with PLCAPI"
+        return self.do_slices(action="fill")
+
+    def empty_slices (self):
+        "remove nodes from slices with PLCAPI"
+        return self.do_slices(action="empty")
 
     def do_slices (self,  action="add"):
         for slice in self.plc_spec['slices']:
             site_spec = self.locate_site (slice['sitename'])
             test_site = TestSite(self,site_spec)
             test_slice=TestSlice(self,test_site,slice)
-            if action != "add":
-                utils.header("Deleting slices in site %s"%test_site.name())
+            if action == "delete":
                 test_slice.delete_slice()
-            else:    
-                utils.pprint("Creating slice",slice)
+            elif action=="fill":
+                test_slice.add_nodes()
+            elif action=="empty":
+                test_slice.delete_nodes()
+            else:
                 test_slice.create_slice()
-                utils.header('Created Slice %s'%slice['slice_fields']['name'])
         return True
         
     @slice_mapper
@@ -1093,11 +1106,33 @@ class TestPlc:
         "tries to ssh-enter the slice with the user key, to ensure slice creation"
         pass
 
+    @slice_mapper
+    def ssh_slice_off (self): 
+        "tries to ssh-enter the slice with the user key, expecting it to be unreachable"
+        pass
+
     @node_mapper
     def keys_clear_known_hosts (self): 
         "remove test nodes entries from the local known_hosts file"
         pass
     
+    def speed_up_slices (self):
+        "tweak nodemanager settings on all nodes using a conf file"
+        # create the template on the server-side 
+        template="%s.nodemanager"%self.name()
+        template_file = open (template,"w")
+        template_file.write('OPTIONS="-p 30 -r 11 -d"\n')
+        template_file.close()
+        in_vm="/var/www/html/PlanetLabConf/nodemanager"
+        remote="%s/%s"%(self.vm_root_in_host(),in_vm)
+        self.test_ssh.copy_abs(template,remote)
+        # Add a conf file
+        self.apiserver.AddConfFile (self.auth_root(),
+                                    {'dest':'/etc/sysconfig/nodemanager',
+                                     'source':'PlanetLabConf/nodemanager',
+                                     'postinstall_cmd':'service nm restart',})
+        return True
+
     @node_mapper
     def qemu_start (self) : 
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
@@ -1287,6 +1322,8 @@ class TestPlc:
                      'SFA_DB_PASSWORD',
                      'SFA_DB_NAME',
                      'SFA_API_LOGLEVEL',
+                     'SFA_GENERIC_FLAVOUR',
+                     'SFA_AGGREGATE_ENABLED',
                      ]:
             if self.plc_spec['sfa'].has_key(var):
                 fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))

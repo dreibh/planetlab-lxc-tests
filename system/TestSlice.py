@@ -27,34 +27,24 @@ class TestSlice:
             if(slice_spec['slice_fields']['name']== slice_name):
                 return slice_spec
 
-    def delete_slice(self):
+    def owner_auth(self):
         owner_spec = self.test_site.locate_user(self.slice_spec['owner'])
-        auth = TestUser(self,self.test_site,owner_spec).auth()
-        slice_fields = self.slice_spec['slice_fields']
-        slice_name = slice_fields['name']
-        self.test_plc.apiserver.DeleteSlice(auth,slice_fields['name'])
-        utils.header("Deleted slice %s"%slice_fields['name'])
+        return TestUser(self,self.test_site,owner_spec).auth()
 
-    
+    def slice_name (self):
+        return self.slice_spec['slice_fields']['name']
+
+    # init slice with people, and then add nodes 
     def create_slice(self):
-        owner_spec = self.test_site.locate_user(self.slice_spec['owner'])
-        auth = TestUser(self,self.test_site,owner_spec).auth()
+        auth = self.owner_auth()
         slice_fields = self.slice_spec['slice_fields']
         slice_name = slice_fields['name']
-
+        utils.header("Creating slice %s"%slice_name)
         self.test_plc.apiserver.AddSlice(auth,slice_fields)
         for username in self.slice_spec['usernames']:
                 user_spec=self.test_site.locate_user(username)
                 test_user=TestUser(self,self.test_site,user_spec)
                 self.test_plc.apiserver.AddPersonToSlice(auth, test_user.name(), slice_name)
-
-        hostnames=[]
-        for nodename in self.slice_spec['nodenames']:
-            node_spec=self.test_site.locate_node(nodename)
-            test_node=TestNode(self,self.test_site,node_spec)
-            hostnames += [test_node.name()]
-        utils.header("Adding %r in %s"%(hostnames,slice_name))
-        self.test_plc.apiserver.AddSliceToNodes(auth, slice_name, hostnames)
         # add initscript code or name as appropriate
         if self.slice_spec.has_key('initscriptcode'):
             iscode=self.slice_spec['initscriptcode']
@@ -67,7 +57,39 @@ class TestSlice:
         if self.slice_spec.has_key ('vref'):
             vref_value=self.slice_spec['vref']
             self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,'vref',vref_value)
+
+        self.add_nodes()
+
+    # just add the nodes and handle tags
+    def add_nodes (self):
+        auth = self.owner_auth()
+        slice_name = self.slice_name()
+        hostnames=[]
+        for nodename in self.slice_spec['nodenames']:
+            node_spec=self.test_site.locate_node(nodename)
+            test_node=TestNode(self,self.test_site,node_spec)
+            hostnames += [test_node.name()]
+        utils.header("Adding %r in %s"%(hostnames,slice_name))
+        self.test_plc.apiserver.AddSliceToNodes(auth, slice_name, hostnames)
         
+    # trash the slice altogether
+    def delete_slice(self):
+        utils.header("Deleting slice %s"%slice_name)
+        auth = self.owner_auth()
+        slice_name = self.slice_name()
+        self.test_plc.apiserver.DeleteSlice(auth,slice_name)
+
+    # keep the slice alive and just delete nodes
+    def delete_nodes (self):
+        auth = self.owner_auth()
+        slice_name = self.slice_name()
+        print 'retrieving slice %s'%slice_name
+        slice=self.test_plc.apiserver.GetSlices(auth,slice_name)[0]
+        node_ids=slice['node_ids']
+        utils.header ("Deleting %d nodes from slice %s"%\
+                          (len(node_ids),slice_name))
+        self.test_plc.apiserver.DeleteSliceFromNodes (auth,slice_name, node_ids)
+
     def locate_key(self):
         # locate the first avail. key
         found=False
@@ -83,7 +105,16 @@ class TestSlice:
                     found=True
         return (found,privatekey)
 
-    def ssh_slice(self,options,timeout_minutes=20,silent_minutes=10,period=15):
+
+    # trying to reach the slice through ssh - expected to answer
+    def ssh_slice (self, options, *args, **kwds):
+        return self.do_ssh_slice(options, expected=True, *args, **kwds)
+
+    # when we expect the slice is not reachable
+    def ssh_slice_off (self, options, *args, **kwds):
+        return self.do_ssh_slice(options, expected=False, *args, **kwds)
+
+    def do_ssh_slice(self,options,expected=True,timeout_minutes=20,silent_minutes=10,period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # locate a key
@@ -100,7 +131,10 @@ class TestSlice:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tocheck.append(node_spec['node_fields']['hostname'])
 
-        utils.header("checking ssh access into slice %s on nodes %r"%(self.name(),tocheck))
+        if expected:    msg="ssh slice access enabled"
+        else:           msg="ssh slice access disabled"
+            
+        utils.header("checking for %s -- slice %s on nodes %r"%(msg,self.name(),tocheck))
         utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
                          (timeout_minutes,silent_minutes,period))
         while tocheck:
@@ -109,8 +143,11 @@ class TestSlice:
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
                 command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
                 date = utils.system (command, silent=datetime.datetime.now() < graceout)
-                if date==0:
-                    utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
+                if expected:    success = date==0
+                else:           success = date!=0
+                    
+                if success:
+                    utils.header("OK %s - slice=%s@%s"%(msg,self.name(),hostname))
                     tocheck.remove(hostname)
                 else:
                     # real nodes will have been checked once in case they're up - skip if not
@@ -132,7 +169,7 @@ class TestSlice:
                 return True
             if datetime.datetime.now() > timeout:
                 for hostname in tocheck:
-                    utils.header("FAILURE to ssh into %s@%s"%(self.name(),hostname))
+                    utils.header("FAILED %s slice=%s@%s"%(msg,self.name(),hostname))
                 return False
             # wait for the period
             time.sleep (period)
