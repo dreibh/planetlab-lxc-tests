@@ -72,5 +72,12 @@ sequences['sfa_standalone'] = [
     'cross_sfa_configure',
     'sfa_start',
     'sfi_configure',
+    'sfa-add-site',
+    'sfa-add-pi',
+    'sfa-add-user',
+    'sfa-add-slice',
+    'sfa-delete-slice',
+    'sfa-delete-user',
 ]
+
 
