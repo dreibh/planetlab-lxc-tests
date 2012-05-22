@@ -404,6 +404,9 @@ def sfa (options,index) :
         'SFA_PLC_PASSWORD' : 'test++',
 # use -c sfadebug to increment this one
         'SFA_API_LOGLEVEL': 1,
+# use -c sfavoid to set this to 'void'
+        'SFA_GENERIC_FLAVOUR' : 'pl',
+        'SFA_AGGREGATE_ENABLED' : 'true',
         # details of the slices to create
         'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspec_style) 
                               for rspec_style in options.rspec_styles ]
