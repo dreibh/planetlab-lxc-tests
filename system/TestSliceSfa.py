@@ -31,9 +31,12 @@ class TestSliceSfa:
     def rspec_style (self): return self.sfa_slice_spec['rspec_style']
 
     # the hrn for the site
+    def auth_hrn (self):
+        return self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+
+    # the hrn for the site
     def site_hrn (self):
-        return "%s.%s"%(self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'],
-                        self.login_base)
+        return "%s.%s"%(self.auth_hrn(),self.login_base)
 
     # something in the site (users typically)
     def qualified_hrn (self, name):
@@ -120,10 +123,12 @@ class TestSliceSfa:
 
     # using sfaadmin to bootstrap
     def sfa_add_site (self, options):
+        "bootstrap a site using sfaadmin"
         command="sfaadmin reg register -t authority -x %s"%self.site_hrn()
         return self.test_plc.run_in_guest(command)==0
 
     def sfa_add_pi (self, options):
+        "bootstrap a PI user for that site"
         pi_hrn=self.qualified_hrn(self.piuser)
         pi_mail=self.sfa_slice_spec['pimail']
         # as installed by sfi_config
@@ -135,10 +140,13 @@ class TestSliceSfa:
 
     # user management
     def sfa_add_user (self, options):
+        "add a regular user using sfi.py add"
         return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).add_user()
     def sfa_update_user (self, options):
+        "update a user record using sfi.py update"
         return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).update_user()
     def sfa_delete_user (self, options):
+	"run sfi.py delete"
         return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).delete_user()
 
     # run as pi
@@ -149,25 +157,37 @@ class TestSliceSfa:
         return "sfi.py -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.regularuser), command,)
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
-    def sfa_view (self, options):
-        "run (as regular user) sfi list and sfi show (both on Registry) and sfi slices (on SM)"
-	root_auth=self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+
+    def sfa_list (self, options):
+        "run (as regular user) sfi list (on Registry)"
 	return \
-	self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.site_hrn())))==0 and \
-	self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.site_hrn())))==0 and \
-	self.test_plc.run_in_guest(self.sfi_user("slices"))==0 
+            self.test_plc.run_in_guest(self.sfi_user("list -r %s"%self.auth_hrn()))==0 and \
+            self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.site_hrn())))==0
+
+    def sfa_show (self, options):
+        "run (as regular user) sfi show (on Registry)"
+	return \
+            self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.site_hrn())))==0
+
+    def sfa_slices (self, options):
+        "run (as regular user) sfi slices (on SM)"
+	return \
+            self.test_plc.run_in_guest(self.sfi_user("slices"))==0 
 
     # needs to be run as pi
     def sfa_add_slice(self,options):
+        "run sfi.py add (on Registry) from slice.xml"
 	return self.test_plc.run_in_guest(self.sfi_pi("add %s"%(self.addslicefile())))==0
 
     # run as user
     def sfa_discover(self,options):
+        "discover resources into resouces_in.rspec"
         return self.test_plc.run_in_guest(self.sfi_user(\
                 "resources %s -o %s/%s"% (self.discover_option(),self.sfi_path(),self.adfile())))==0
 
     # run sfi create as a regular user
     def sfa_create_slice(self,options):
+        "run sfi.py create (on SM) - 1st time"
         commands=[
             "sfiListNodes.py -i %s/%s -o %s/%s"%(self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile()),
             "sfiAddSliver.py -i %s/%s -n %s/%s -o %s/%s"%\
@@ -180,6 +200,7 @@ class TestSliceSfa:
 
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
+        "check sfa_create_slice at the plcs - all local nodes should be in slice"
         slice_fields = self.sfa_slice_spec['slice_fields']
         slice_name = slice_fields['name']
         slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), slice_name)[0]
@@ -195,15 +216,18 @@ class TestSliceSfa:
 
     # actually the same for now
     def sfa_update_slice(self,options):
+        "run sfi.py create (on SM) on existing object"
         return self.sfa_create_slice(options)
 
     # run as pi
     def sfa_delete_slice(self,options):
+	"run sfi.py delete"
 	self.test_plc.run_in_guest(self.sfi_pi("delete %s"%(self.hrn(),)))
 	return self.test_plc.run_in_guest(self.sfi_pi("remove -t slice %s"%(self.hrn(),)))==0
 
     # check the resulting sliver
     def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
+	"tries to ssh-enter the SFA slice"
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # locate a key

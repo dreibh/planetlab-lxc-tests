@@ -122,6 +122,7 @@ class TestNode:
 
     # Do most of the stuff locally - will be pushed on host_box - *not* the plc - later if needed
     def qemu_local_init(self):
+        "all nodes : init a clean local directory for holding node-dep stuff like iso image..."
         utils.system("rm -rf %s"%self.nodedir())
         utils.system("mkdir %s"%self.nodedir())
         if not self.is_qemu():
@@ -129,6 +130,7 @@ class TestNode:
         return utils.system("rsync -v -a --exclude .svn template-qemu/ %s/"%self.nodedir())==0
 
     def bootcd(self):
+        "all nodes: invoke GetBootMedium and store result locally"
         utils.header("Calling GetBootMedium for %s"%self.name())
         options = []
         if self.is_qemu():
@@ -149,21 +151,25 @@ class TestNode:
             return True
 
     def nodestate_reinstall (self):
+        "all nodes: mark PLCAPI boot_state as reinstall"
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
                                            self.name(),{'boot_state':'reinstall'})
         return True
     
     def nodestate_safeboot (self):
+        "all nodes: mark PLCAPI boot_state as safeboot"
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
                                            self.name(),{'boot_state':'safeboot'})
         return True
     
     def nodestate_boot (self):
+        "all nodes: mark PLCAPI boot_state as boot"
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
                                            self.name(),{'boot_state':'boot'})
         return True
 
     def nodestate_show (self):
+        "all nodes: show PLCAPI boot_state"
         if self.test_plc.options.dry_run:
             print "Dry_run: skipped getting current node state"
             return True
@@ -172,6 +178,7 @@ class TestNode:
         return True
     
     def qemu_local_config(self):
+        "all nodes: compute qemu config qemu.conf and store it locally"
         if not self.is_qemu():
             return
         mac=self.node_spec['interface_fields']['mac']
@@ -194,6 +201,7 @@ class TestNode:
         return True
 
     def qemu_export (self):
+        "all nodes: push local node-dep directory on the qemu box"
         # if relevant, push the qemu area onto the host box
         if self.test_box().is_local():
             return True
@@ -203,6 +211,7 @@ class TestNode:
         return self.test_box().copy(self.nodedir(),recursive=True)==0
             
     def qemu_start (self):
+        "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         model=self.node_spec['node_fields']['model']
         #starting the Qemu nodes before 
         if self.is_qemu():
@@ -212,6 +221,7 @@ class TestNode:
         return True
 
     def timestamp_qemu (self):
+        "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         test_box = self.test_box()
         test_box.run_in_buildname("mkdir -p %s"%self.nodedir())
         now=int(time.time())
@@ -248,6 +258,7 @@ class TestNode:
         self.test_box().test_ssh.fetch(remote_log,local_log)
 
     def keys_clear_known_hosts (self):
+        "remove test nodes entries from the local known_hosts file"
         TestSsh(self.name()).clear_known_hosts()
         return True
 

@@ -108,10 +108,12 @@ class TestSlice:
 
     # trying to reach the slice through ssh - expected to answer
     def ssh_slice (self, options, *args, **kwds):
+        "tries to ssh-enter the slice with the user key, to ensure slice creation"
         return self.do_ssh_slice(options, expected=True, *args, **kwds)
 
     # when we expect the slice is not reachable
     def ssh_slice_off (self, options, *args, **kwds):
+        "tries to ssh-enter the slice with the user key, expecting it to be unreachable"
         return self.do_ssh_slice(options, expected=False, *args, **kwds)
 
     def do_ssh_slice(self,options,expected=True,timeout_minutes=20,silent_minutes=10,period=15):

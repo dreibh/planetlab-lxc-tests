@@ -45,7 +45,7 @@ def node_mapper (method):
             if not node_method(test_node, *args, **kwds): overall=False
         return overall
     # restore the doc text
-    actual.__doc__=method.__doc__
+    actual.__doc__=TestNode.__dict__[method.__name__].__doc__
     return actual
 
 def slice_mapper (method):
@@ -59,7 +59,7 @@ def slice_mapper (method):
             if not slice_method(test_slice,self.options): overall=False
         return overall
     # restore the doc text
-    actual.__doc__=method.__doc__
+    actual.__doc__=TestSlice.__dict__[method.__name__].__doc__
     return actual
 
 def slice_sfa_mapper (method):
@@ -71,7 +71,7 @@ def slice_sfa_mapper (method):
             if not slice_method(test_slice,self.options): overall=False
         return overall
     # restore the doc text
-    actual.__doc__=method.__doc__
+    actual.__doc__=TestSliceSfa.__dict__[method.__name__].__doc__
     return actual
 
 SEP='<sep>'
@@ -91,7 +91,8 @@ class TestPlc:
         'sfi_configure@1', 'sfa_add_site@1','sfa_add_pi@1', SEPSFA,
         'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
         'sfa_create_slice@1', 'sfa_check_slice_plc@1', SEPSFA, 
-        'sfa_update_user@1', 'sfa_update_slice@1', 'sfa_view@1', 'sfa_utest@1',SEPSFA,
+        'sfa_update_user@1', 'sfa_update_slice@1', SEPSFA,
+        'sfa_list@1', 'sfa_show@1', 'sfa_slices@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
@@ -495,6 +496,7 @@ class TestPlc:
     # write a timestamp in /vservers/<>.timestamp
     # cannot be inside the vserver, that causes vserver .. build to cough
     def timestamp_vs (self):
+        "Create a timestamp to remember creation date for this plc"
         now=int(time.time())
         # TODO-lxc check this one
         # a first approx. is to store the timestamp close to the VM root like vs does
@@ -991,37 +993,21 @@ class TestPlc:
         return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=38)
     
     @node_mapper
-    def qemu_local_init (self): 
-        "all nodes : init a clean local directory for holding node-dep stuff like iso image..."
-        pass
+    def qemu_local_init (self): pass
     @node_mapper
-    def bootcd (self): 
-        "all nodes: invoke GetBootMedium and store result locally"
-        pass
+    def bootcd (self): pass
     @node_mapper
-    def qemu_local_config (self): 
-        "all nodes: compute qemu config qemu.conf and store it locally"
-        pass
+    def qemu_local_config (self): pass
     @node_mapper
-    def nodestate_reinstall (self): 
-        "all nodes: mark PLCAPI boot_state as reinstall"
-        pass
+    def nodestate_reinstall (self): pass
     @node_mapper
-    def nodestate_safeboot (self): 
-        "all nodes: mark PLCAPI boot_state as safeboot"
-        pass
+    def nodestate_safeboot (self): pass
     @node_mapper
-    def nodestate_boot (self): 
-        "all nodes: mark PLCAPI boot_state as boot"
-        pass
+    def nodestate_boot (self): pass
     @node_mapper
-    def nodestate_show (self): 
-        "all nodes: show PLCAPI boot_state"
-        pass
+    def nodestate_show (self): pass
     @node_mapper
-    def qemu_export (self): 
-        "all nodes: push local node-dep directory on the qemu box"
-        pass
+    def qemu_export (self): pass
         
     ### check hooks : invoke scripts from hooks/{node,slice}
     def check_hooks_node (self): 
@@ -1107,19 +1093,12 @@ class TestPlc:
         return True
         
     @slice_mapper
-    def ssh_slice(self): 
-        "tries to ssh-enter the slice with the user key, to ensure slice creation"
-        pass
-
+    def ssh_slice(self): pass
     @slice_mapper
-    def ssh_slice_off (self): 
-        "tries to ssh-enter the slice with the user key, expecting it to be unreachable"
-        pass
+    def ssh_slice_off (self): pass
 
     @node_mapper
-    def keys_clear_known_hosts (self): 
-        "remove test nodes entries from the local known_hosts file"
-        pass
+    def keys_clear_known_hosts (self): pass
     
     def speed_up_slices (self):
         "tweak nodemanager settings on all nodes using a conf file"
@@ -1139,14 +1118,10 @@ class TestPlc:
         return True
 
     @node_mapper
-    def qemu_start (self) : 
-        "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
-        pass
+    def qemu_start (self) : pass
 
     @node_mapper
-    def timestamp_qemu (self) : 
-        "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
-        pass
+    def timestamp_qemu (self) : pass
 
     def check_tcp (self):
         "check TCP connectivity between 2 slices (or in loopback if only one is defined)"
@@ -1251,6 +1226,7 @@ class TestPlc:
         if first_try: return True
         utils.header ("********** Regular yum failed - special workaround in place, 2nd chance")
         (code,cached_rpm_path)=utils.output_of(self.actual_command_in_guest('find /var/cache/yum -name sfa-client\*.rpm'))
+        utils.header("rpm_path=<<%s>>"%rpm_path)
         # just for checking 
         self.run_in_guest("rpm -i %s"%cached_rpm_path)
         return self.yum_check_installed ("sfa-client")
@@ -1416,7 +1392,7 @@ class TestPlc:
             utils.header("DRY RUN - skipping step")
             return True
         sfa_spec=self.plc_spec['sfa']
-        # cannot use sfa_slice_mapper to pass dir_name
+        # cannot use slice_sfa_mapper to pass dir_name
         for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
             test_slice=TestSliceSfa(self,slice_spec)
             dir_basename=os.path.basename(test_slice.sfi_path())
@@ -1437,68 +1413,35 @@ class TestPlc:
         return True
 
     @slice_sfa_mapper
-    def sfa_add_site (self):
-        "bootstrap a site using sfaadmin"
-        pass
-
+    def sfa_add_site (self): pass
     @slice_sfa_mapper
-    def sfa_add_pi (self):
-        "bootstrap a PI user for that site"
-        pass
-
+    def sfa_add_pi (self): pass
     @slice_sfa_mapper
-    def sfa_add_user(self):
-        "run sfi.py add"
-        pass
-
+    def sfa_add_user(self): pass
     @slice_sfa_mapper
-    def sfa_update_user(self):
-        "run sfi.py update"
-
+    def sfa_update_user(self): pass
     @slice_sfa_mapper
-    def sfa_add_slice(self):
-        "run sfi.py add (on Registry) from slice.xml"
-        pass
-
+    def sfa_add_slice(self): pass
     @slice_sfa_mapper
-    def sfa_discover(self):
-        "discover resources into resouces_in.rspec"
-        pass
-
+    def sfa_discover(self): pass
     @slice_sfa_mapper
-    def sfa_create_slice(self):
-        "run sfi.py create (on SM) - 1st time"
-        pass
-
+    def sfa_create_slice(self): pass
     @slice_sfa_mapper
-    def sfa_check_slice_plc(self):
-        "check sfa_create_slice at the plcs - all local nodes should be in slice"
-        pass
-
+    def sfa_check_slice_plc(self): pass
     @slice_sfa_mapper
-    def sfa_update_slice(self):
-        "run sfi.py create (on SM) on existing object"
-        pass
-
+    def sfa_update_slice(self): pass
     @slice_sfa_mapper
-    def sfa_view(self):
-        "various registry-related calls"
-        pass
-
+    def sfa_list(self): pass
     @slice_sfa_mapper
-    def ssh_slice_sfa(self): 
-	"tries to ssh-enter the SFA slice"
-        pass
-
+    def sfa_show(self): pass
     @slice_sfa_mapper
-    def sfa_delete_user(self):
-	"run sfi.py delete"
-        pass
-
+    def sfa_slices(self): pass
     @slice_sfa_mapper
-    def sfa_delete_slice(self):
-	"run sfi.py delete (on SM), sfi.py remove (on Registry) to clean slices"
-        pass
+    def ssh_slice_sfa(self): pass
+    @slice_sfa_mapper
+    def sfa_delete_user(self): pass
+    @slice_sfa_mapper
+    def sfa_delete_slice(self): pass
 
     def sfa_stop(self):
         "service sfa stop"

@@ -59,6 +59,12 @@ sequences['sfa_scratch'] = [
     'sfa_update_user', 'sfa_update_slice', 'sfa_view', 'sfa_utest',
 ]
 
+sequences['sfa_view'] = [
+    'sfa-list',
+    'sfa-show',
+    'sfa-slices',
+]
+
 # something that can given to the nightly to prepare a standalone sfa setup
 # after what you'll want to tweak the config to point to a myplc some place else
 sequences['sfa_standalone'] = [
@@ -66,8 +72,8 @@ sequences['sfa_standalone'] = [
     'vs_delete',
     'timestamp_vs',
     'vs_create',
-    'sfa_install_core',
     'sfa_install_client',
+    'sfa_install_core',
     'sfa_configure',
     'cross_sfa_configure',
     'sfa_start',
@@ -76,8 +82,10 @@ sequences['sfa_standalone'] = [
     'sfa-add-pi',
     'sfa-add-user',
     'sfa-add-slice',
+    'sfa-view',
     'sfa-delete-slice',
     'sfa-delete-user',
+    'sfa-view',
 ]
 
 
