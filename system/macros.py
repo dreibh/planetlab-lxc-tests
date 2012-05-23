@@ -65,8 +65,12 @@ sequences['sfi_view_all'] = [
     'sfi_slices',
 ]
 
-# something that can given to the nightly to prepare a standalone sfa setup
-# after what you'll want to tweak the config to point to a myplc some place else
+# macro to exercice the registry only
+# this requires the sfavoid config
+# so that flavour=void and thus sfa-plc is not required
+# xxx todo
+# this initially was just a convenience to setup a reduced depl.
+# clearly there is a lot more to check here in terms of consistency
 sequences['sfa_standalone'] = [
     'show',
     'vs_delete',
