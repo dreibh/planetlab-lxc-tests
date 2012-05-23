@@ -158,18 +158,18 @@ class TestSliceSfa:
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
 
-    def sfa_list (self, options):
+    def sfi_list (self, options):
         "run (as regular user) sfi list (on Registry)"
 	return \
             self.test_plc.run_in_guest(self.sfi_user("list -r %s"%self.auth_hrn()))==0 and \
             self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.site_hrn())))==0
 
-    def sfa_show (self, options):
+    def sfi_show (self, options):
         "run (as regular user) sfi show (on Registry)"
 	return \
             self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.site_hrn())))==0
 
-    def sfa_slices (self, options):
+    def sfi_slices (self, options):
         "run (as regular user) sfi slices (on SM)"
 	return \
             self.test_plc.run_in_guest(self.sfi_user("slices"))==0 

@@ -92,7 +92,7 @@ class TestPlc:
         'sfa_add_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
         'sfa_create_slice@1', 'sfa_check_slice_plc@1', SEPSFA, 
         'sfa_update_user@1', 'sfa_update_slice@1', SEPSFA,
-        'sfa_list@1', 'sfa_show@1', 'sfa_slices@1', 'sfa_utest@1', SEPSFA,
+        'sfi_list@1', 'sfi_show@1', 'sfi_slices@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
@@ -1431,11 +1431,11 @@ class TestPlc:
     @slice_sfa_mapper
     def sfa_update_slice(self): pass
     @slice_sfa_mapper
-    def sfa_list(self): pass
+    def sfi_list(self): pass
     @slice_sfa_mapper
-    def sfa_show(self): pass
+    def sfi_show(self): pass
     @slice_sfa_mapper
-    def sfa_slices(self): pass
+    def sfi_slices(self): pass
     @slice_sfa_mapper
     def ssh_slice_sfa(self): pass
     @slice_sfa_mapper

@@ -29,7 +29,7 @@ sequences['sfa'] = [
     'sfa_check_slice_plc', 
     'sfa_update_user',
     'sfa_update_slice', 
-    'sfa_view', 
+    'sfi_view_all', 
     'sfa_utest', 
     'sfa_delete_slice', 
     'sfa_delete_user',
@@ -56,13 +56,13 @@ sequences['sfa_scratch'] = [
     'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', 
     'sfi_configure', 'sfa_add_user', 'sfa_add_slice', 'sfa_discover', 
     'sfa_create_slice', 'sfa_check_slice_plc', 
-    'sfa_update_user', 'sfa_update_slice', 'sfa_view', 'sfa_utest',
+    'sfa_update_user', 'sfa_update_slice', 'sfi_view_all', 'sfa_utest',
 ]
 
-sequences['sfa_view'] = [
-    'sfa-list',
-    'sfa-show',
-    'sfa-slices',
+sequences['sfi_view_all'] = [
+    'sfi_list',
+    'sfi_show',
+    'sfi_slices',
 ]
 
 # something that can given to the nightly to prepare a standalone sfa setup
@@ -78,14 +78,14 @@ sequences['sfa_standalone'] = [
     'cross_sfa_configure',
     'sfa_start',
     'sfi_configure',
-    'sfa-add-site',
-    'sfa-add-pi',
-    'sfa-add-user',
-    'sfa-add-slice',
-    'sfa-view',
-    'sfa-delete-slice',
-    'sfa-delete-user',
-    'sfa-view',
+    'sfa_add_site',
+    'sfa_add_pi',
+    'sfa_add_user',
+    'sfa_add_slice',
+    'sfi_view_all',
+    'sfa_delete_slice',
+    'sfa_delete_user',
+    'sfi_view_all',
 ]
 
 
