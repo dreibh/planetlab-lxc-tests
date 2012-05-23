@@ -40,18 +40,33 @@ class Step:
                 print "macro step %s not found in macros.py (%s) - exiting"%(self.display(),e)
                 raise
 
-    def print_doc (self):
+    def print_doc (self,level=0):
+        tab=32
+        trail=8
         if self.native:
-            print '*',self.display(),"\r",4*"\t",
+            start=level*' '+'* '
+            # 2 is the len of '* '
+            width=tab-level-2
+            format="%%-%ds"%width
+            line=start+format%self.display()
+            print line,
             try:
                 print self.method.__doc__
             except:
                 print "*** no doc found"
         else:
-            print '*',self.display(),"\r",3*"\t","========== BEG MACRO step"
+            beg_start=level*' '+'>>> '
+            end_start=level*' '+'<<< '
+            trailer=trail*'-'
+            # 4 is the len of '>>> '
+            width=tab-level-4-trail
+            format=("%%-%ds"%width)
+            beg_line=beg_start+format%self.display()+trail*'>'
+            end_line=end_start+format%self.display()+trail*'<'
+            print beg_line
             for step in self.substeps:
-                Step(step).print_doc()
-            print '*',self.display(),"\r",3*"\t","========== END MACRO step"
+                Step(step).print_doc(level+1)
+            print end_line
 
     # return a list of (name, method) for all native steps involved
     def tuples (self):
