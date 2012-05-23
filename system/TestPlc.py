@@ -215,6 +215,11 @@ class TestPlc:
     def run_in_guest_piped (self,local,remote):
         return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote),keep_stdin=True))
 
+    def yum_check_installed (self, rpms):
+        if isinstance (rpms, list): 
+            rpms=" ".join(rpms)
+        return self.run_in_guest("rpm -q %s"%rpms)==0
+        
     # does a yum install in the vs, ignore yum retcod, check with rpm
     def yum_install (self, rpms):
         if isinstance (rpms, list): 
@@ -222,7 +227,7 @@ class TestPlc:
         self.run_in_guest("yum -y install %s"%rpms)
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
         self.run_in_guest("yum-complete-transaction -y")
-        return self.run_in_guest("rpm -q %s"%rpms)==0
+        return self.yum_check_installed (rpms)
 
     def auth_root (self):
 	return {'Username':self.plc_spec['PLC_ROOT_USER'],
@@ -1217,13 +1222,38 @@ class TestPlc:
         "yum install sfa-plc"
         return self.yum_install("sfa-plc")
         
-    def sfa_install_client(self):
-        "yum install sfa-client"
-        return self.yum_install("sfa-client")
-        
     def sfa_install_sfatables(self):
         "yum install sfa-sfatables"
         return self.yum_install ("sfa-sfatables")
+
+    # for some very odd reason, this sometimes fails with the following symptom
+    # # yum install sfa-client
+    # Setting up Install Process
+    # ...
+    # Downloading Packages:
+    # Running rpm_check_debug
+    # Running Transaction Test
+    # Transaction Test Succeeded
+    # Running Transaction
+    # Transaction couldn't start:
+    # installing package sfa-client-2.1-7.onelab.2012.05.23.i686 needs 68KB on the / filesystem
+    # [('installing package sfa-client-2.1-7.onelab.2012.05.23.i686 needs 68KB on the / filesystem', (9, '/', 69632L))]
+    # even though in the same context I have
+    # [2012.05.23--f14-32-sfastd1-1-vplc07] / # df -h 
+    # Filesystem            Size  Used Avail Use% Mounted on
+    # /dev/hdv1             806G  264G  501G  35% /
+    # none                   16M   36K   16M   1% /tmp
+    #
+    # so as a workaround, we first try yum install, and then invoke rpm on the cached rpm...
+    def sfa_install_client(self):
+        "yum install sfa-client"
+        first_try=self.yum_install("sfa-client")
+        if first_try: return True
+        utils.header ("********** Regular yum failed - special workaround in place, 2nd chance")
+        (code,cached_rpm_path)=utils.output_of(self.actual_command_in_guest('find /var/cache/yum -name sfa-client\*.rpm'))
+        # just for checking 
+        self.run_in_guest("rpm -i %s"%cached_rpm_path)
+        return self.yum_check_installed ("sfa-client")
 
     def sfa_dbclean(self):
         "thoroughly wipes off the SFA database"
