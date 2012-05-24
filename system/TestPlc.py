@@ -126,15 +126,20 @@ class TestPlc:
         return step != SEP and step != SEPSFA
 
     # turn off the sfa-related steps when build has skipped SFA
-    # this is originally for centos5 as recent SFAs won't build on this platform
+    # this was originally for centos5 but is still valid
+    # for up to f12 as recent SFAs with sqlalchemy won't build before f14
     @staticmethod
     def check_whether_build_has_sfa (rpms_url):
+        utils.header ("Checking if build provides SFA package...")
         # warning, we're now building 'sface' so let's be a bit more picky
         retcod=os.system ("curl --silent %s/ | grep -q sfa-"%rpms_url)
         # full builds are expected to return with 0 here
-        if retcod!=0:
+        if retcod==0:
+            utils.header("build does provide SFA")
+        else:
             # move all steps containing 'sfa' from default_steps to other_steps
-            sfa_steps= [ step for step in TestPlc.default_steps if step.find('sfa')>=0 ]
+            utils.header("SFA package not found - removing steps with sfa or sfi")
+            sfa_steps= [ step for step in TestPlc.default_steps if step.find('sfa')>=0 or step.find("sfi")>=0 ]
             TestPlc.other_steps += sfa_steps
             for step in sfa_steps: TestPlc.default_steps.remove(step)
 
