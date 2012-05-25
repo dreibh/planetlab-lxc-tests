@@ -297,22 +297,24 @@ class TestNode:
 
     def has_libvirt (self):
         test_ssh=self.create_test_ssh()
-        return test_ssh.run ("rpm -q libvirt-client")==0
+        return test_ssh.run ("rpm -q --quiet libvirt-client")==0
 
     def check_systemslice (self, slicename,dry_run=False):
         sitename=self.test_plc.plc_spec['PLC_SLICE_PREFIX']
         vservername="%s_%s"%(sitename,slicename)
         test_ssh=self.create_test_ssh()
         if self.has_libvirt():
+            utils.header("Checking system slice %s using virsh"%slicename)
             return test_ssh.run("virsh --connect lxc:// list | grep -q ' %s '"%vservername,
                                 dry_run=dry_run)==0
         else:
             (retcod,output)=utils.output_of(test_ssh.actual_command("cat /vservers/%s/etc/slicefamily 2> /dev/null")%vservername)
             # get last line only as ssh pollutes the output
             slicefamily=output.split("\n")[-1]
-            utils.header("system slice %s has slicefamily %s"%(slicename, slicefamily))
+            utils.header("Found slicefamily '%s'for slice %s"%(slicefamily,slicename))
             if retcod != 0: 
                 return False
+            utils.header("Checking system slice %s using vserver-stat"%slicename)
             return test_ssh.run("vserver-stat | grep %s"%vservername,dry_run=dry_run)==0
         
         
