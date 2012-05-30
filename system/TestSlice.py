@@ -74,9 +74,9 @@ class TestSlice:
         
     # trash the slice altogether
     def delete_slice(self):
-        utils.header("Deleting slice %s"%slice_name)
         auth = self.owner_auth()
         slice_name = self.slice_name()
+        utils.header("Deleting slice %s"%slice_name)
         self.test_plc.apiserver.DeleteSlice(auth,slice_name)
 
     # keep the slice alive and just delete nodes
@@ -95,12 +95,11 @@ class TestSlice:
         found=False
         for username in self.slice_spec['usernames']:
             user_spec=self.test_site.locate_user(username)
-            for keyname in user_spec['keynames']:
-                key_spec=self.test_plc.locate_key(keyname)
+            for key_name in user_spec['key_names']:
+                key_spec=self.test_plc.locate_key(key_name)
                 test_key=TestKey(self.test_plc,key_spec)
                 publickey=test_key.publicpath()
                 privatekey=test_key.privatepath()
-                keyname=test_key.name()
                 if os.path.isfile(publickey) and os.path.isfile(privatekey):
                     found=True
         return (found,privatekey)
@@ -159,7 +158,7 @@ class TestSlice:
                     # nm restart after first failure, if requested 
                     if options.forcenm and hostname not in restarted:
                         utils.header ("forcenm option : restarting nm on %s"%hostname)
-                        restart_test_ssh=TestSsh(hostname,key="keys/key1.rsa")
+                        restart_test_ssh=TestSsh(hostname,key="keys/key_admin.rsa")
                         access=restart_test_ssh.actual_command('service nm restart')
                         if (access==0):
                             utils.header('nm restarted on %s'%hostname)

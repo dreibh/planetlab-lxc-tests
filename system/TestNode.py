@@ -268,7 +268,7 @@ class TestNode:
 ###        # assuming we've run testplc.fetch_keys()
 ###        key = "keys/%(vservername)s.rsa"%locals()
         # fetch_keys doesn't grab the root key anymore
-        key = "keys/key1.rsa"
+        key = "keys/key_admin.rsa"
         return TestSsh(self.name(), buildname=self.buildname(), key=key)
 
     def check_hooks (self):

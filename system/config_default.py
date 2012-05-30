@@ -69,45 +69,52 @@ def all_nodenames (options,index):
     return [ node['name'] for node in nodes(options,index)]
 
 def users (options) :
-    return [ {'name' : 'pi', 'keynames' : [ 'key1' ],
-              'user_fields' : {'first_name':'PI', 'last_name':'PI',
-                               'enabled':'True',
-                               'email':'fake-pi1@%s'%domain,
-                               'password':'testpi'},
-              'roles':['pi']},
-             {'name' : 'tech', 'keynames' : [ 'key1' ],
-              'user_fields' : {'first_name':'Tech', 'last_name':'Tech',
-                               'enabled':'true',
-                               'email':'fake-tech1@%s'%domain,
-                               'password':'testtech'},
-              'roles':['tech']},
-             {'name':'user', 'keynames' : [ 'key1' ],
-              'user_fields' : {'first_name':'User', 'last_name':'User',
-                               'enabled':'true',
-                               'email':'fake-user1@%s'%domain,
-                               'password':'testuser'},
-              'roles':['user']},
-             {'name':'techuser', 'keynames' : [ 'key1' ],
-              'user_fields' : {'first_name':'UserTech', 'last_name':'UserTech',
-                               'enabled':'true',
-                               'email':'fake-tech2@%s'%domain,
-                               'password':'testusertech'},
-              'roles':['tech','user']},
-             {'name':'pitech', 'keynames' : [ 'key1' ],
-              'user_fields' : {'first_name':'PiTech',
-                               'last_name':'PiTech',
-                               'enabled':'true',
-                               'email':'fake-pi2@%s'%domain,
-                               'password':'testusertech'},
-              'roles':['pi','tech']},
-             {'name':'admin', 'keynames' : [ 'key1' ],
-              'user_fields' : {'first_name':'Admin',
-                               'last_name':'Admin',
-                               'enabled':'true',
-                               'email':'admin@%s'%domain,
-                               'password':'testuseradmin'},
-              'roles':['admin']},
-             ]
+    return [ 
+        {'name':'admin', 'key_names' : [ 'key_admin' ],
+         'user_fields' : {'first_name':'Admin',
+                          'last_name':'Admin',
+                          'enabled':'true',
+                          'email':'admin@%s'%domain,
+                          'password':'testuseradmin'},
+         'roles':['admin']},
+
+        {'name' : 'pi', 'key_names' : [ 'key_pi' ],
+         'user_fields' : {'first_name':'PI', 'last_name':'PI',
+                          'enabled':'True',
+                          'email':'fake-pi1@%s'%domain,
+                          'password':'testpi'},
+         'roles':['pi']},
+
+        {'name':'pitech', 'key_names' : [ 'key_pi' ],
+         'user_fields' : {'first_name':'PiTech',
+                          'last_name':'PiTech',
+                          'enabled':'true',
+                          'email':'fake-pi2@%s'%domain,
+                          'password':'testusertech'},
+         'roles':['pi','tech']},
+
+        {'name' : 'tech', 'key_names' : [ 'key_user' ],
+         'user_fields' : {'first_name':'Tech', 'last_name':'Tech',
+                          'enabled':'true',
+                          'email':'fake-tech1@%s'%domain,
+                          'password':'testtech'},
+         'roles':['tech']},
+
+        {'name':'user', 'key_names' : [ 'key_user' ],
+         'user_fields' : {'first_name':'User', 'last_name':'User',
+                          'enabled':'true',
+                          'email':'fake-user1@%s'%domain,
+                          'password':'testuser'},
+         'roles':['user']},
+
+        {'name':'techuser', 'key_names' : [ 'key_user' ],
+         'user_fields' : {'first_name':'UserTech', 'last_name':'UserTech',
+                          'enabled':'true',
+                          'email':'fake-tech2@%s'%domain,
+                          'password':'testusertech'},
+         'roles':['tech','user']},
+
+        ]
 
 def all_usernames (options):
     return [ user['name'] for user in users(options)]
@@ -134,10 +141,43 @@ def sites (options,index):
             }]
 
 ##########
+# key0 -> planetlab admin
 # key1 -> planetlab PI
 # key2 -> planetlab user
 # key3 -> sfa PI
 # key4 -> sfa user
+public_key0="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3okOugCBs2j/uur/lBdNUqWG0VdLdrELy85MR6mGOER5ijdbZekEG6KD4zzG2fwXOzdGF99HTQAOXvty02V5/sBN/GbT1Rehwh3cUvZ8i3aJIdN4ku+zbWK6CBsQ8XGXMpCImALDxcvcaoToWJbephDpkgKtcBwmowmOQswO4GTzIdT217J13Z860Jz/QJPIjloS7HpuLmKVlZ/sWCYcuKmR4X7evCXrvbHh+iamSrOHV9sQ6Sf0Wu+VJRaUN92BrxVi9zuJNWZWtWWWjLecyaooOVS0UMBZKUNbnuGXSJ8IFHfQ9wpGGsG+KohvGH4Axh3utaDOlUG641iM5GVBX planetlab-admin@test.onelab.eu
+"""
+
+private_key0="""-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAt6JDroAgbNo/7rq/5QXTVKlhtFXS3axC8vOTEephjhEeYo3W
+2XpBBuig+M8xtn8Fzs3RhffR00ADl77ctNlef7ATfxm09UXocId3FL2fIt2iSHTe
+JLvs21iuggbEPFxlzKQiJgCw8XL3GqE6FiW3qYQ6ZICrXAcJqMJjkLMDuBk8yHU9
+teydd2fOtCc/0CTyI5aEux6bi5ilZWf7FgmHLipkeF+3rwl672x4fompkqzh1fbE
+Okn9FrvlSUWlDfdga8VYvc7iTVmVrVlloy3nMmqKDlUtFDAWSlDW57hl0ifCBR30
+PcKRhrBviqIbxh+AMYd7rWgzpVBuuNYjORlQVwIDAQABAoIBAQCSvuT/SfyfgDme
++TXoOyOKgGFHz13XL5XAuM1Kf9a9xQhXEaoj2QKmFrisnEbJ4/AsN2W8fTH8cydr
+2GZfT2Wo/HhYFZ76cocxhc+vj2jgX+UTqfDrwhGhp9isp+OhqOThCDkRzXOZP5og
+eb8Fe9atbLGNJxXJUQZzCgSu2Z+bOZMhh983DNB7porEhcB21Ja86a6VzIW0ieM0
+WxeVuQfPPGH1U6wGr3rVwKF0tXQHlMg48KNmpvahwS89Ihp1VIBzSNlVXkZ9O5Fc
+wmBQGNoeM32/N+8yHVYkdTHIrvi5mm52KMwhDGg0lXDjrXAIe+rCzuigv5kIsmuA
+fqu6Co8hAoGBAPJF7xDGVYjOObQ/ckdpQ76ntJcNMIVa4XoL0cn9NFBhvV1ooRTn
+KASHH9Wj+sWYkZDm4wmWgaIthnQb2F1Rq/8FmJaPlCVQZtLDydDI7spLF+ixVxCk
+y8nhCr+cad9yPJ8ozYP2vMs9gBheDaL8LBDUdPyuC94e2TQy0fqW0rJFAoGBAMIJ
+yvATDuF4Zssn4gOpRkyP9fjdrnIo5YKF9aCjv/j984XexwRqAwvSMqykmUnwF4Yg
+rWjV+1Jw9lJuAIMUdiIH3fqPGBeOrpvES5Kmi1FFB5ufA1Hcpe9LNJSiuNMYemCB
+rDnfoG2cW1lCwrb5y8ROOUp2OAQ5jJQyPjV08S/rAoGARZ0An1JN23xeKkOcw5Yk
+iBDKHCkHCxpc9WOWCTL/KCWdcsyQlGADKKHm7M0sTkCTew5MqEGdyArKumwR1GaW
+RDXIbWKeD8a1dNQbFinWKzw+h3cFbFvdzokiPIJmDXVWo+jmfIeWIdPvDZFg27cX
+tlJFtyEPeehlQtFjclyJ9/0CgYEAuDht6MJfVWdnSKfj6A/1Q0lGgXGOZqo3RFWE
+n2/4GiCY7NdWYfV4UOfO3qQjONRusRQjLy5BPsMqyZXQfKKXibWoZXMnr23yjsat
+7VybVpxQHcq5byYqkGb5U8it6xUJUsiqSAPtn0NcYwGENg4xDH4r3GsiwbgVpLmS
+4FPXjOMCgYA40bzt7QjKBURj3A9nMrFpbg1dQjNZv7ThnDq2KcLlQxusddSO3Tou
+capLbON5tuaHbiGGVYSiUCHC6HXYWN7JGytpAjAYZhLWmK7ltNMlDQA9FX8LktPE
+UToHxiKAuREDgRP9waHmk16833hNe8tDvX5P9vKWxx1AtZRuJoFozw==
+-----END RSA PRIVATE KEY-----
+"""
+
 public_key1="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== planetlab-pi@test.onelab.eu
 """
 private_key1="""-----BEGIN RSA PRIVATE KEY-----
@@ -270,18 +310,31 @@ NhwboXV6u+hSpUHGK+MmqGgKkkZI6KRwTT+NWZY2FTX3UOl8IMymTBk=
 -----END RSA PRIVATE KEY-----
 """
 
+master_key_index = {
+    'key_admin':    {'private':private_key0, 'public':public_key0},
+    'key_pi':       {'private':private_key1, 'public':public_key1},
+    'key_user':     {'private':private_key2, 'public':public_key2},
+    'key_sfapi':    {'private':private_key3, 'public':public_key3},
+    'key_sfauser':  {'private':private_key4, 'public':public_key4},
+}
 
-# the keys for PLC
-def plc_keys (options,index):
-    return [ {'name': 'key1',
-              'private' : private_key1,
-              'key_fields' : {'key_type':'ssh',
-                              'key': public_key1}},
-             {'name': 'key2',
-              'private' : private_key2,
-              'key_fields' : {'key_type':'ssh',
-                              'key': public_key2}}
-             ]
+plc_key_names = [ 'key_admin', 'key_pi', 'key_tech' ]
+
+# expose a list of key_specs
+#  { 'key_name':<>, 'private':<>, 'public':<>, 'in_plc':<bool>, key_fields: <for AddKey>, }
+def keys (options,index):
+    result = []
+    for (key_name, priv_pub) in master_key_index.items():
+        private=priv_pub['private']
+        public=priv_pub['public']
+        result.append( { 'key_name': key_name,
+                         'private':private,
+                         'public':public,
+                         'in_plc': key_name in plc_key_names,
+                         'key_fields' : {'key_type':'ssh',
+                                         'key': public},
+                         } )
+    return result
 
 ############################## initscripts
 initscript_by_name="""#!/bin/bash
@@ -418,7 +471,7 @@ def plc (options,index) :
         'PLC_OMF_ENABLED' : 'true',
         'PLC_OMF_XMPP_SERVER': 'deferred-myplc-hostname',
         'sites' : sites(options,index),
-        'keys' : plc_keys(options,index),
+        'keys' : keys(options,index),
         'initscripts': initscripts(options,index),
         'slices' : slices(options,index),
         'tcp_test' : tcp_tests(options,index),
@@ -465,6 +518,7 @@ def sfa_slice_spec (options,index,rspec_style):
     pi_hrn=prefix+'.'+piuser
     mail="%s@%s"%(regularuser,domain)
     # passed to sfi
+    # -k gets computed later on from the hrn (i.e. from the '-x' key..)
     person_options = { '-t': 'user',
                        '-x': user_hrn,
                        '-e': mail,
@@ -489,18 +543,20 @@ def sfa_slice_spec (options,index,rspec_style):
              'pimail' : pimail,
              'regularuser':regularuser,
              'domain':domain,
-             'usernames' : [ (regularuser,'key2') ],
+             'slice_key_names' : [ 'key_sfauser' ],
+             'hrn_keys' : { piuser : 'key_sfapi',
+                            regularuser : 'key_sfauser' },
              'nodenames' : all_nodenames(options,index),
              'sitename' : the_login_base,
              'slicename' : slicename,
              'rspec_style':rspec_style,
              'person_sfi_options': person_options,
              'slice_sfi_options': slice_options,
-             # these get exported under the sfi directory
-             'pi_private_key':private_key3,
-             'pi_public_key':public_key3,
-             'user_private_key':private_key4,
-             'user_public_key':public_key4,
+#             # these get exported under the sfi directory
+#             'pi_private_key':private_key3,
+#             'pi_public_key':public_key3,
+#             'user_private_key':private_key4,
+#             'user_public_key':public_key4,
              } 
 
 

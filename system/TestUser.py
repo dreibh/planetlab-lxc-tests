@@ -43,10 +43,7 @@ class TestUser:
 
     def add_keys (self):
         user_spec=self.user_spec
-        for keyname in user_spec['keynames']:
-            key=self.test_plc.locate_key(keyname)
+        for key_name in user_spec['key_names']:
+            key_spec=self.test_plc.locate_key(key_name)
             auth=self.auth()
-            self.test_plc.apiserver.AddPersonKey(auth,self.name(), key['key_fields'])
-            
-
-        
+            self.test_plc.apiserver.AddPersonKey(auth,self.name(), key_spec['key_fields'])

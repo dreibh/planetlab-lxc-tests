@@ -13,7 +13,7 @@ class TestKey:
         self.test_ssh=TestSsh(self.test_plc.test_ssh)
         
     def name(self):
-        return self.key_spec['name']
+        return self.key_spec['key_name']
 
     def publicpath(self):
         return "keys/%s.pub"%(self.name())

@@ -263,11 +263,11 @@ class TestPlc:
                     return (site,node)
         raise Exception,"Cannot locate hostname %s"%hostname
         
-    def locate_key (self,keyname):
+    def locate_key (self,key_name):
         for key in self.plc_spec['keys']:
-            if key['name'] == keyname:
+            if key['key_name'] == key_name:
                 return key
-        raise Exception,"Cannot locate key %s"%keyname
+        raise Exception,"Cannot locate key %s"%key_name
 
     def locate_slice (self, slicename):
         for slice in self.plc_spec['slices']:
@@ -446,7 +446,7 @@ class TestPlc:
         print '+ ======== initscript',initscript['initscript_fields']['name']
 
     def display_key_spec (self,key):
-        print '+ ======== key',key['name']
+        print '+ ======== key',key['key_name']
 
     def display_slice_spec (self,slice):
         print '+ ======== slice',slice['slice_fields']['name']
@@ -954,7 +954,7 @@ class TestPlc:
             local_key = "keys/%(vservername)s-debug.rsa"%locals()
         else: 
             message="boot"
-	    local_key = "keys/key1.rsa"
+	    local_key = "keys/key_admin.rsa"
         node_infos = self.all_node_infos()
         utils.header("checking ssh access (expected in %s mode) to nodes:"%message)
         for (nodename,qemuname) in node_infos:
@@ -1534,7 +1534,7 @@ class TestPlc:
             test_site = TestSite (self,site_spec)
             for node_spec in site_spec['nodes']:
                 test_node=TestNode(self,test_site,node_spec)
-                test_ssh = TestSsh (test_node.name(),key="keys/key1.rsa")
+                test_ssh = TestSsh (test_node.name(),key="keys/key_admin.rsa")
                 command = test_ssh.actual_command("tar -C /var/log -cf - .")
                 command = command + "| tar -C logs/node.var-log.%s -xf -"%test_node.name()
                 utils.system("mkdir -p logs/node.var-log.%s"%test_node.name())

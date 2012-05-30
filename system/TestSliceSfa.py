@@ -60,13 +60,13 @@ class TestSliceSfa:
         return "/root/sfi/%s%s"%(self.slicename,self.rspec_style())
 
     def locate_key(self):
-        for username,keyname in self.sfa_slice_spec['usernames']:
-                key_spec=self.test_plc.locate_key(keyname)
-                test_key=TestKey(self.test_plc,key_spec)
-                publickey=test_key.publicpath()
-                privatekey=test_key.privatepath()
-                if os.path.isfile(publickey) and os.path.isfile(privatekey):
-                    found=True
+        for key_name in self.sfa_slice_spec['slice_key_names']:
+            key_spec=self.test_plc.locate_key(key_name)
+            test_key=TestKey(self.test_plc,key_spec)
+            publickey=test_key.publicpath()
+            privatekey=test_key.privatepath()
+            if os.path.isfile(publickey) and os.path.isfile(privatekey):
+                found=True
         return (found,privatekey)
 
     # dir_name is local and will be pushed later on by TestPlc
@@ -78,17 +78,15 @@ class TestSliceSfa:
         sfa_slice_spec=self.sfa_slice_spec
         keys=plc_spec['keys']
         # fetch keys in config spec and expose to sfi
-        for (key_key,name) in [ ('pi_private_key',     self.piuser+'.pkey'),
-                                ('pi_public_key',      self.piuser+'.pub'),
-                                ('user_private_key',   self.regularuser+'.pkey'),
-                                ('user_public_key',    self.regularuser+'.pub'),
-                                ]:
-            file_name=os.path.join(dir_name,self.qualified_hrn(name))
-            fileconf=open(file_name,'w')
-            contents=self.sfa_slice_spec[key_key]
-            fileconf.write (contents)
-            fileconf.close()
-            utils.header ("(Over)wrote %s"%file_name)
+        for (hrn_leaf,key_name) in sfa_slice_spec['hrn_keys'].items():
+            key_spec = self.test_plc.locate_key (key_name)
+            for (kind,ext) in [ ('private', 'pkey'), ('public', 'pub') ] :
+                contents=key_spec[kind]
+                file_name=os.path.join(dir_name,self.qualified_hrn(hrn_leaf))+"."+ext
+                fileconf=open(file_name,'w')
+                fileconf.write (contents)
+                fileconf.close()
+                utils.header ("(Over)wrote %s"%file_name)
         #
 	file_name=dir_name + os.sep + 'sfi_config'
         fileconf=open(file_name,'w')
@@ -253,7 +251,7 @@ class TestSliceSfa:
                     # nm restart after first failure, if requested 
                     if options.forcenm and hostname not in restarted:
                         utils.header ("forcenm option : restarting nm on %s"%hostname)
-                        restart_test_ssh=TestSsh(hostname,key="keys/key1.rsa")
+                        restart_test_ssh=TestSsh(hostname,key="keys/key_admin.rsa")
                         access=restart_test_ssh.actual_command('service nm restart')
                         if (access==0):
                             utils.header('nm restarted on %s'%hostname)
