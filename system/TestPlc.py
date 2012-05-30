@@ -1255,7 +1255,10 @@ class TestPlc:
             for key in ['piuser','regularuser']:
                 username="%s@%s"%(sfa_slice_spec[key],sfa_slice_spec['domain'])
                 try: self.apiserver.DeletePerson(self.auth_root(),username)
-                except: print "User %s already absent from PLC db"%username
+                except: 
+                    # this in fact is expected as sites delete their members
+                    #print "User %s already absent from PLC db"%username
+                    pass
 
         print "REMEMBER TO RUN sfa_import AGAIN"
         return True
@@ -1401,7 +1404,7 @@ class TestPlc:
             test_slice=TestSliceSfa(self,slice_spec)
             dir_basename=os.path.basename(test_slice.sfi_path())
             dir_name=self.confsubdir("dot-sfi/%s"%dir_basename,clean=True,dry_run=self.options.dry_run)
-            test_slice.sfi_config(dir_name)
+            test_slice.sfi_configure(dir_name)
             # push into the remote /root/sfi area
             location = test_slice.sfi_path()
             remote="%s/%s"%(self.vm_root_in_host(),location)

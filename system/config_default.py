@@ -424,12 +424,22 @@ def sfa_slice_spec (options,index,rspec_style):
     hrn=prefix+'.'+slicename
     user_hrn=prefix+'.'+regularuser
     pi_hrn=prefix+'.'+piuser
-    key=public_key2
     mail="%s@%s"%(regularuser,domain)
+    user_key=public_key2
+    # xxx as compared with the xml-record-based approach
+    # is enabled=True needed here ?
+    # ditto for roles = user+tech
+    person_options = { '-t': 'user',
+                       '-x': user_hrn,
+                       '-e': mail,
+                       '-f': "Fake",
+                       '-l': "SFA-style-%s"%rspec_style,
+                       }
+                       
     person_record_xml =\
-'''<record hrn="%(user_hrn)s" type="user" email="%(mail)s" enabled="True" 
+'''<record enabled="True" 
 first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
-<keys>%(key)s</keys>
+<keys>%(user_key)s</keys>
 <roles>user</roles>
 <roles>tech</roles>
 </record>'''%locals()
@@ -453,8 +463,10 @@ first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
              'nodenames' : all_nodenames(options,index),
              'sitename' : the_login_base,
              'slicename' : slicename,
-             'slice_record' : slice_record_xml,
+             # handle key separately because of embedded whitespace
+             'person_options': person_options,
              'person_record' : person_record_xml,
+             'slice_record' : slice_record_xml,
              'rspec_style':rspec_style,
              } 
 

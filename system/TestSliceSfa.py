@@ -49,7 +49,6 @@ class TestSliceSfa:
     def resname (self,name,ext): return "%s.%s"%(name,ext)
 
     def addslicefile (self): return self.resname("slice_record","xml")
-    def addpersonfile (self): return self.resname("person_record","xml")
     def adfile (self): return self.resname("ad","rspec")
     def reqfile (self): return self.resname("req","rspec")
     def nodefile (self): return self.resname("nodes","txt")
@@ -74,7 +73,7 @@ class TestSliceSfa:
     # dir_name is local and will be pushed later on by TestPlc
     # by default set SFI_USER to the pi, we'll overload this
     # on the command line when needed
-    def sfi_config (self,dir_name):
+    def sfi_configure (self,dir_name):
         plc_spec=self.test_plc.plc_spec
         sfa_spec=self.sfa_spec
         sfa_slice_spec=self.sfa_slice_spec
@@ -89,13 +88,6 @@ class TestSliceSfa:
             fileconf.write (contents)
             fileconf.close()
             utils.header ("(Over)wrote %s"%file_name)
-        #
-	file_name=dir_name + os.sep + self.addpersonfile()
-        fileconf=open(file_name,'w')
-	fileconf.write(sfa_slice_spec['person_record'])
-	fileconf.write('\n')
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
         #
 	file_name=dir_name + os.sep + 'sfi_config'
         fileconf=open(file_name,'w')
