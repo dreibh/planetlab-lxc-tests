@@ -22,7 +22,7 @@ class TestUserSfa:
 
     # xxx todo - not the right place any longer - or is it ?
     def add_user (self):
-        sfi_add_options = self.sfa_slice_spec['person_options']
+        sfi_add_options = self.sfa_slice_spec['person_sfi_options']
         command="sfi -d %s add"%(self.sfi_path())
         for (opt,val) in sfi_add_options.items():
             command += " %s %s"%(opt,val)
@@ -36,12 +36,9 @@ class TestUserSfa:
         # xxx TODO now that we use sfi arguments
         utils.header ("WARNING: TestUserSfa.update_user needs more work")
         return True
-#	return self.test_plc.run_in_guest("sfi.py -d %s update %s"%
-#                                          (self.sfi_path(),self.addpersonfile()))==0
 
     def delete_user(self):
 	auth=self.sfa_spec['SFA_REGISTRY_ROOT_AUTH']
 	return \
-            self.test_plc.run_in_guest("sfi.py -d %s remove -t user %s.%s.%s"%(
+            self.test_plc.run_in_guest("sfi -d %s remove -t user %s.%s.%s"%(
                 self.sfi_path(),auth,self.login_base,self.regularuser))==0
-

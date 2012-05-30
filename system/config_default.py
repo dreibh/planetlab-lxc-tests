@@ -134,9 +134,13 @@ def sites (options,index):
             }]
 
 ##########
-public_key="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== root@test.onelab.eu
+# key1 -> planetlab PI
+# key2 -> planetlab user
+# key3 -> sfa PI
+# key4 -> sfa user
+public_key1="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== planetlab-pi@test.onelab.eu
 """
-private_key="""-----BEGIN RSA PRIVATE KEY-----
+private_key1="""-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFU
 YyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXe
 WYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp
@@ -166,7 +170,7 @@ BO+VyPNWF+kDNI8mSUwi7jLW6liMdhNOmDaSX0+0X8CHtK898xM=
 """
 
 ### another keypair for the SFA user
-public_key2="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQLvh5LkrjyLIr9UJznTJHMnqjdqzRdc9ekVmI9bx/5X4flnGtPBsr6bK/CPXmWjS2Vw0QOxi1NM45qkQJZXxroS0aehCCrvJRHgp/LOZykWCyNKqVopq9w0kH4jw1KFGIuwWROpOcMq2d/kAwyr6RV/W66KNVqu2XDiNOPJLcuZCuKrH++q3fPyP2zHSJ/irew7vwqIXbDSnVvvyRXYgc9KlR57L4BWthXcUofHlje8wKq7nWBQIUslYtJDryJg5tBvJIFfCFGmWZy0WJlGJd+yppI5jRvt9c6n9HyJKN22lUBTaTaDFvo+Xu5GEazLKG/v8h/o5WpxrrE6Y3TKeX user@test.onelab.eu
+public_key2="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQLvh5LkrjyLIr9UJznTJHMnqjdqzRdc9ekVmI9bx/5X4flnGtPBsr6bK/CPXmWjS2Vw0QOxi1NM45qkQJZXxroS0aehCCrvJRHgp/LOZykWCyNKqVopq9w0kH4jw1KFGIuwWROpOcMq2d/kAwyr6RV/W66KNVqu2XDiNOPJLcuZCuKrH++q3fPyP2zHSJ/irew7vwqIXbDSnVvvyRXYgc9KlR57L4BWthXcUofHlje8wKq7nWBQIUslYtJDryJg5tBvJIFfCFGmWZy0WJlGJd+yppI5jRvt9c6n9HyJKN22lUBTaTaDFvo+Xu5GEazLKG/v8h/o5WpxrrE6Y3TKeX planetlab-user@test.onelab.eu
 """
 
 private_key2="""
@@ -200,7 +204,7 @@ rUck4dxa0t30wUFK0XVQjNEArXqvU23EB8Z7bQQMRx0yhd4pF5k29Q==
 """
 
 ### for a PI
-public_key3="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA9LrXvUvGZK092R+0+xNZAOUrywDmfdtOL2XqtO26PCjns2GmxLmphJkvBBtXCt4d8s9jdPILHKnTC0/8/WfrwhZ68AWHay1qnCnWjgMUFEg2J4+MsT0UpirQ7wQbA3KeuAVobRaMIdfgPwlgnmBu2VyPiS4eD4KDz2CgL2DIWzq+DzrakOSqS6eb5MMNS7rIDlxH0WV9bTueweoeWi77zpEtA4sA4EFRKZ21uNyceQ/ob8mKC1yAz2XGIKoLgaxRvd+d8Mmq52OLzbCPtDCnCAtWW2PJt8hEjR+RKwYhf0NcpMXhA5GsYAXUFmHUI0j0f/8qodWuIorE/5zr4EVVkQ== pi@test.onelab.eu
+public_key3="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA9LrXvUvGZK092R+0+xNZAOUrywDmfdtOL2XqtO26PCjns2GmxLmphJkvBBtXCt4d8s9jdPILHKnTC0/8/WfrwhZ68AWHay1qnCnWjgMUFEg2J4+MsT0UpirQ7wQbA3KeuAVobRaMIdfgPwlgnmBu2VyPiS4eD4KDz2CgL2DIWzq+DzrakOSqS6eb5MMNS7rIDlxH0WV9bTueweoeWi77zpEtA4sA4EFRKZ21uNyceQ/ob8mKC1yAz2XGIKoLgaxRvd+d8Mmq52OLzbCPtDCnCAtWW2PJt8hEjR+RKwYhf0NcpMXhA5GsYAXUFmHUI0j0f/8qodWuIorE/5zr4EVVkQ== sfa-pi@test.onelab.eu
 """
 
 private_key3="""
@@ -233,11 +237,46 @@ xwRNsuo0x60e7bivU+kNZtLn5FqWuGoBONZnbhgP6y7jPsNrig==
 -----END RSA PRIVATE KEY-----
 """
 
-def keys (options,index):
+public_key4="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIim+K+tfwI7KcfbtX/FB1DQCWU1RY8eH4b18KywxI3DDuHa4jGvPjeU5WPwfOsUFpWcWMXCmA26TSOmeT2HiiSJNLUKB0keu/PtHAGnn6rFv5YjCF2fa65wZVkEy6eb8buBny+2L5jhFPW0KE4JNTCiueAEbWZInTWmdA1WB8QeTV3USi33NTtYE05I2/x4G2BtFmmzWzCuyRVjkWZQPJY6wIyM1+qGixpbacScxYYDBGA0I9N9VSN9OS2BN3GY8xFJjFSD2+GxsUhDUmUw2bO8ppn2OSl8NUW/U4EQzUTP8VhebI6UqjfIGAv5qHPpe0Yrcrd/QlbWvj2zpqvVtX sfa-user@test.onelab.eu
+"""
+
+private_key4="""
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAyIpvivrX8COynH27V/xQdQ0AllNUWPHh+G9fCssMSNww7h2u
+Ixrz43lOVj8HzrFBaVnFjFwpgNuk0jpnk9h4okiTS1CgdJHrvz7RwBp5+qxb+WIw
+hdn2uucGVZBMunm/G7gZ8vti+Y4RT1tChOCTUworngBG1mSJ01pnQNVgfEHk1d1E
+ot9zU7WBNOSNv8eBtgbRZps1swrskVY5FmUDyWOsCMjNfqhosaW2nEnMWGAwRgNC
+PTfVUjfTktgTdxmPMRSYxUg9vhsbFIQ1JlMNmzvKaZ9jkpfDVFv1OBEM1Ez/FYXm
+yOlKo3yBgL+ahz6XtGK3K3f0JW1r49s6ar1bVwIDAQABAoIBAQCQbJKURr8JJMxX
+Q32OihnvkmOf33dZbynMX3jVLxIzztA2TI3CnoCSjCRMnKwkwSdYldxdj2occRKs
+jH9XzIhkZ1wc234TNZvQaY9piCfczhCW8436d9TnGcZIDNoVWeS2M8oMYdsP2q7A
+tfqb85hmL2bmLVDWyiUwX2UJHiKUmSGzUUKqI0RCnvt2XioSVSvvo+DWz+aA/GR+
+rvl7EyniqA93gvP7kduOJ95CGUbgJuO3Kay5zq1YaR0LawxsiEHaK75/unFpbVmd
+FqB1h7srfHJWhrRW9NQs1YFFeDIGZ+dDuFKwPSxe9EmT4q/4Uu2LnnR4AkluPzog
+9KhUa1MxAoGBAOSqSSiD1fwbvqHu3z/gl7YouSCB78RnnvTdRhzMeqpWNuy/c20l
+nkD8NZBTBSXQGoU4hY83ncsA+PBc0HbI3ZJyEBySdp7b5rE79+xRnXpsV5PARnkb
+FbaMeu8RuM1rVUQYRpp8hawo5iycV5IFeQZ3jhB1gunTR3kVgNxSIcdlAoGBAOCD
+eVkfUcPQ/TqE1QoXYg1UTz1ZLB0Iton7UJ9G7cLkg53dyPPrh+MgzZSWh5DnmBSd
+Dj+XjYbCPvShQsnMoyjlFcXpuG+6ebyig2F8w6FKKkrB5r9pzP3237jBZZquX4De
+PwOHC2lNOoBIbv+VnlpSjx2XMDrGkIQwWUwonwILAoGBAJmQ1vLznwjh5SPBVYMD
+pT97l+CCAvEnGfSeihCbLqIoplhWtwENK3u/JYXYi3N6j+T6MZAeLMWB0K0z1/h+
+K3fHTJSztCA51HMgr/6wTQ9DpYkfrvR0QR/ItmLJxw+FzsyddQUZLXiSOwqosJLr
+Q/0Y23qoQJQiBTUHQPQ14GOVAoGBAL2T5uStgJJzp1BBl860nfQZa+umn4xIrjJn
+BtXnw56c7NJh02y8RnswWMeOMBzYol9NmxlxdG0FGrngbZAO/vrqLe93gmi9skvp
+gjzQaDSKdpm3j4uz4AfW7WSJ0azCbxxXDiiBYM5jCvIFt8yTXypvqi9XWb9XqfIl
+DVI0vsevAoGAb0SgdcyRcIrozl7Rky1GUTcCPXGMCCts9kMWNucWq6jvkCo8YdH1
+b+fHzZFpKJNbpROjJ1er3U5jg6qtA32mbuQ9IhoYqtLISJqV+MO36pDFmjPng0+D
+NhwboXV6u+hSpUHGK+MmqGgKkkZI6KRwTT+NWZY2FTX3UOl8IMymTBk=
+-----END RSA PRIVATE KEY-----
+"""
+
+
+# the keys for PLC
+def plc_keys (options,index):
     return [ {'name': 'key1',
-              'private' : private_key,
+              'private' : private_key1,
               'key_fields' : {'key_type':'ssh',
-                              'key': public_key}},
+                              'key': public_key1}},
              {'name': 'key2',
               'private' : private_key2,
               'key_fields' : {'key_type':'ssh',
@@ -379,7 +418,7 @@ def plc (options,index) :
         'PLC_OMF_ENABLED' : 'true',
         'PLC_OMF_XMPP_SERVER': 'deferred-myplc-hostname',
         'sites' : sites(options,index),
-        'keys' : keys(options,index),
+        'keys' : plc_keys(options,index),
         'initscripts': initscripts(options,index),
         'slices' : slices(options,index),
         'tcp_test' : tcp_tests(options,index),
@@ -425,10 +464,7 @@ def sfa_slice_spec (options,index,rspec_style):
     user_hrn=prefix+'.'+regularuser
     pi_hrn=prefix+'.'+piuser
     mail="%s@%s"%(regularuser,domain)
-    user_key=public_key2
-    # xxx as compared with the xml-record-based approach
-    # is enabled=True needed here ?
-    # ditto for roles = user+tech
+    # passed to sfi
     person_options = { '-t': 'user',
                        '-x': user_hrn,
                        '-e': mail,
@@ -436,18 +472,12 @@ def sfa_slice_spec (options,index,rspec_style):
                        '-l': "SFA-style-%s"%rspec_style,
                        }
                        
-    person_record_xml =\
-'''<record enabled="True" 
-first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
-<keys>%(user_key)s</keys>
-<roles>user</roles>
-<roles>tech</roles>
-</record>'''%locals()
-    slice_record_xml =\
-'''<record hrn="%s" type="slice" description="SFA-testing" url="http://test.onelab.eu/">
-<researcher>%s</researcher>
-</record>'''%(hrn, user_hrn)
-
+    slice_options = { '-t': 'slice',
+                      '-x': hrn,
+                      '-d': "SFA-testing-%s"%rspec_style,
+                      '-u': "http://test.onelab.eu/",
+                      '-r': user_hrn,
+                      }
 
     return { 'slice_fields': {'name':'%s_%s'%(the_login_base,slicename),
                               'url':'http://foo%d@foo.com'%index,
@@ -463,11 +493,14 @@ first_name="Fake" last_name="Sfa style=%(rspec_style)s" >
              'nodenames' : all_nodenames(options,index),
              'sitename' : the_login_base,
              'slicename' : slicename,
-             # handle key separately because of embedded whitespace
-             'person_options': person_options,
-             'person_record' : person_record_xml,
-             'slice_record' : slice_record_xml,
              'rspec_style':rspec_style,
+             'person_sfi_options': person_options,
+             'slice_sfi_options': slice_options,
+             # these get exported under the sfi directory
+             'pi_private_key':private_key3,
+             'pi_public_key':public_key3,
+             'user_private_key':private_key4,
+             'user_public_key':public_key4,
              } 
 
 

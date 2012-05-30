@@ -48,7 +48,6 @@ class TestSliceSfa:
     # result name
     def resname (self,name,ext): return "%s.%s"%(name,ext)
 
-    def addslicefile (self): return self.resname("slice_record","xml")
     def adfile (self): return self.resname("ad","rspec")
     def reqfile (self): return self.resname("req","rspec")
     def nodefile (self): return self.resname("nodes","txt")
@@ -78,13 +77,15 @@ class TestSliceSfa:
         sfa_spec=self.sfa_spec
         sfa_slice_spec=self.sfa_slice_spec
         keys=plc_spec['keys']
-        for (contents,name) in [ (keys[0]['private'],             self.piuser+'.pkey'),
-                                 (keys[0]['key_fields']['key'],   self.piuser+'.pub'),
-                                 (keys[1]['private'],             self.regularuser+'.pkey'),
-                                 (keys[0]['key_fields']['key'],   self.regularuser+'.pub'),
+        # fetch keys in config spec and expose to sfi
+        for (key_key,name) in [ ('pi_private_key',     self.piuser+'.pkey'),
+                                ('pi_public_key',      self.piuser+'.pub'),
+                                ('user_private_key',   self.regularuser+'.pkey'),
+                                ('user_public_key',    self.regularuser+'.pub'),
                                 ]:
             file_name=os.path.join(dir_name,self.qualified_hrn(name))
             fileconf=open(file_name,'w')
+            contents=self.sfa_slice_spec[key_key]
             fileconf.write (contents)
             fileconf.close()
             utils.header ("(Over)wrote %s"%file_name)
@@ -105,13 +106,6 @@ class TestSliceSfa:
 	fileconf.write('\n')
         fileconf.close()
         utils.header ("(Over)wrote %s"%file_name)
-        #
-	file_name=dir_name + os.sep + self.addslicefile()
-        fileconf=open(file_name,'w')
-	fileconf.write(sfa_slice_spec['slice_record'])
-	fileconf.write('\n')
-        utils.header ("(Over)wrote %s"%file_name)
-        fileconf.close()
 
     # using sfaadmin to bootstrap
     def sfa_add_site (self, options):
@@ -132,21 +126,21 @@ class TestSliceSfa:
 
     # user management
     def sfa_add_user (self, options):
-        "add a regular user using sfi.py add"
+        "add a regular user using sfi add"
         return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).add_user()
     def sfa_update_user (self, options):
-        "update a user record using sfi.py update"
+        "update a user record using sfi update"
         return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).update_user()
     def sfa_delete_user (self, options):
-	"run sfi.py delete"
+	"run sfi delete"
         return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).delete_user()
 
     # run as pi
     def sfi_pi (self, command):
-        return "sfi.py -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.piuser), command,)
-    # the sfi.py command line option to run as a regular user
+        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.piuser), command,)
+    # the sfi command line option to run as a regular user
     def sfi_user (self, command):
-        return "sfi.py -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.regularuser), command,)
+        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.regularuser), command,)
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
 
@@ -168,8 +162,11 @@ class TestSliceSfa:
 
     # needs to be run as pi
     def sfa_add_slice(self,options):
-        "run sfi.py add (on Registry) from slice.xml"
-	return self.test_plc.run_in_guest(self.sfi_pi("add %s"%(self.addslicefile())))==0
+        "run sfi add (on Registry) from slice.xml"
+        sfi_options="add"
+        for (k,v) in self.sfa_slice_spec['slice_sfi_options'].items():
+            sfi_options += " %s %s"%(k,v)
+	return self.test_plc.run_in_guest(self.sfi_pi("%s"%(sfi_options)))==0
 
     # run as user
     def sfa_discover(self,options):
@@ -179,7 +176,7 @@ class TestSliceSfa:
 
     # run sfi create as a regular user
     def sfa_create_slice(self,options):
-        "run sfi.py create (on SM) - 1st time"
+        "run sfi create (on SM) - 1st time"
         commands=[
             "sfiListNodes.py -i %s/%s -o %s/%s"%(self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile()),
             "sfiAddSliver.py -i %s/%s -n %s/%s -o %s/%s"%\
@@ -208,12 +205,12 @@ class TestSliceSfa:
 
     # actually the same for now
     def sfa_update_slice(self,options):
-        "run sfi.py create (on SM) on existing object"
+        "run sfi create (on SM) on existing object"
         return self.sfa_create_slice(options)
 
     # run as pi
     def sfa_delete_slice(self,options):
-	"run sfi.py delete"
+	"run sfi delete"
 	self.test_plc.run_in_guest(self.sfi_pi("delete %s"%(self.hrn(),)))
 	return self.test_plc.run_in_guest(self.sfi_pi("remove -t slice %s"%(self.hrn(),)))==0
 
