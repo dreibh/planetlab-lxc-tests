@@ -37,9 +37,14 @@ sequences['sfa'] = [
 
 sequences['sfa_create'] = [
     'sfa_plcclean', 
+    # nuke sometimes requires the service to be stopped b/c of db locks apparently
+    'sfa_stop',
     'sfa_dbclean',
+    'sfa_start',
     'sfa_import', 
     'sfi_configure', 
+    'sfa_add_site',
+    'sfa_add_pi',
     'sfa_add_user', 
     'sfa_add_slice',
 ]
