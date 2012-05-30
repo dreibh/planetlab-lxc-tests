@@ -42,6 +42,7 @@ sequences['sfa_create'] = [
     'sfa_dbclean',
     'sfa_start',
     'sfa_import', 
+    'sfi_clean',
     'sfi_configure', 
     'sfa_add_site',
     'sfa_add_pi',
