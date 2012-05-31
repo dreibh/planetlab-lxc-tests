@@ -22,14 +22,14 @@ class TestUserSfa:
 
     # xxx todo - not the right place any longer - or is it ?
     def add_user (self):
-        sfi_add_options = self.sfa_slice_spec['person_sfi_options']
+        sfi_add_options = self.sfa_slice_spec['user_sfi_options']
+        user_hrn = self.sfa_slice_spec['user_hrn']
         command="sfi -d %s add"%(self.sfi_path())
-        for (opt,val) in sfi_add_options.items():
-            command += " %s %s"%(opt,val)
+        for opt in sfi_add_options:
+            command += " %s"%(opt,)
         # handle key separately because of embedded whitespace
         # hack - the user's pubkey is avail from his hrn
-        hrn=sfi_add_options['-x']
-        command += " -k %s/%s.pub"%(self.sfi_path(),hrn)
+        command += " -k %s/%s.pub"%(self.sfi_path(),user_hrn)
 	return self.test_plc.run_in_guest(command)==0
 
     def update_user (self):

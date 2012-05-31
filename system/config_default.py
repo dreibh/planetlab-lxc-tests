@@ -519,25 +519,25 @@ def sfa_slice_spec (options,index,rspec_style):
     mail="%s@%s"%(regularuser,domain)
     # passed to sfi
     # -k gets computed later on from the hrn (i.e. from the '-x' key..)
-    person_options = { '-t': 'user',
-                       '-x': user_hrn,
-                       '-e': mail,
-                       '-f': "Fake",
-                       '-l': "SFA-style-%s"%rspec_style,
-                       }
+    user_sfi_options = [ '--type','user',
+                         '--xrn',user_hrn,
+                         '--email',mail,
+                         # xxx
+                         '--extra',"enabled=true",
+                         '--extra',"first_name=Fake",
+                         '--extra',"last_name=SFA-style-%s"%rspec_style,
+                         ]
                        
-    slice_options = { '-t': 'slice',
-                      '-x': hrn,
-                      '-d': "SFA-testing-%s"%rspec_style,
-                      '-u': "http://test.onelab.eu/",
-                      '-r': user_hrn,
-                      }
+    slice_sfi_options = [ '--type', 'slice',
+                          '--xrn', hrn,
+                          '--researchers', user_hrn,
+                          # xxx
+                          '--extra', "description=SFA-testing-%s"%rspec_style,
+                          '--extra', "url=http://slice%d.test.onelab.eu/"%index,
+                          '--extra', "max_nodes=2",
+                          ]
 
-    return { 'slice_fields': {'name':'%s_%s'%(the_login_base,slicename),
-                              'url':'http://foo%d@foo.com'%index,
-                              'description':'SFA-testing',
-                              'max_nodes':2,
-                              },
+    return { 'plc_slicename': '%s_%s'%(the_login_base,slicename),
              'login_base' : the_login_base,
              'piuser' : piuser,
              'pimail' : pimail,
@@ -550,13 +550,9 @@ def sfa_slice_spec (options,index,rspec_style):
              'sitename' : the_login_base,
              'slicename' : slicename,
              'rspec_style':rspec_style,
-             'person_sfi_options': person_options,
-             'slice_sfi_options': slice_options,
-#             # these get exported under the sfi directory
-#             'pi_private_key':private_key3,
-#             'pi_public_key':public_key3,
-#             'user_private_key':private_key4,
-#             'user_public_key':public_key4,
+             'user_sfi_options': user_sfi_options,
+             'user_hrn': user_hrn,
+             'slice_sfi_options': slice_sfi_options,
              } 
 
 

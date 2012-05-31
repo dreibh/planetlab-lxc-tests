@@ -25,8 +25,8 @@ class TestSliceSfa:
         self.slicename=self.sfa_slice_spec['slicename']
         self.login_base=self.sfa_slice_spec['login_base']
         
-    def name(self):
-        return self.sfa_slice_spec['slice_fields']['name']
+    def plc_name(self):
+        return self.sfa_slice_spec['plc_slicename']
     
     def rspec_style (self): return self.sfa_slice_spec['rspec_style']
 
@@ -162,9 +162,9 @@ class TestSliceSfa:
     def sfa_add_slice(self,options):
         "run sfi add (on Registry) from slice.xml"
         sfi_options="add"
-        for (k,v) in self.sfa_slice_spec['slice_sfi_options'].items():
-            sfi_options += " %s %s"%(k,v)
-	return self.test_plc.run_in_guest(self.sfi_pi("%s"%(sfi_options)))==0
+        for opt in self.sfa_slice_spec['slice_sfi_options']:
+            sfi_options += " %s"%(opt)
+	return self.test_plc.run_in_guest(self.sfi_pi(sfi_options))==0
 
     # run as user
     def sfa_discover(self,options):
@@ -188,8 +188,7 @@ class TestSliceSfa:
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
         "check sfa_create_slice at the plcs - all local nodes should be in slice"
-        slice_fields = self.sfa_slice_spec['slice_fields']
-        slice_name = slice_fields['name']
+        slice_name = self.plc_name()
         slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), slice_name)[0]
         nodes=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), {'peer_id':None})
         result=True
@@ -220,7 +219,7 @@ class TestSliceSfa:
         # locate a key
         (found,remote_privatekey)=self.locate_key()
         if not found :
-            utils.header("WARNING: Cannot find a valid key for slice %s"%self.name())
+            utils.header("WARNING: Cannot find a valid key for slice %s"%self.plc_name())
             return False
 
         # convert nodenames to real hostnames
@@ -231,22 +230,22 @@ class TestSliceSfa:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tocheck.append(node_spec['node_fields']['hostname'])
 
-        utils.header("checking ssh access into slice %s on nodes %r"%(self.name(),tocheck))
+        utils.header("checking ssh access into slice %s on nodes %r"%(self.plc_name(),tocheck))
         utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
                          (timeout_minutes,silent_minutes,period))
         while tocheck:
             for hostname in tocheck:
                 (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
-                date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
+                date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.plc_name())
                 command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
                 date = utils.system (command, silent=datetime.datetime.now() < graceout)
                 if date==0:
-                    utils.header("Successfuly entered slice %s on %s"%(self.name(),hostname))
+                    utils.header("Successfuly entered slice %s on %s"%(self.plc_name(),hostname))
                     tocheck.remove(hostname)
                 else:
                     # real nodes will have been checked once in case they're up - skip if not
                     if TestNode.is_real_model(node_spec['node_fields']['model']):
-                        utils.header("WARNING : Checking slice %s on real node %s skipped"%(self.name(),hostname))
+                        utils.header("WARNING : Checking slice %s on real node %s skipped"%(self.plc_name(),hostname))
                         tocheck.remove(hostname)
                     # nm restart after first failure, if requested 
                     if options.forcenm and hostname not in restarted:
@@ -263,7 +262,7 @@ class TestSliceSfa:
                 return True
             if datetime.datetime.now() > timeout:
                 for hostname in tocheck:
-                    utils.header("FAILURE to ssh into %s@%s"%(self.name(),hostname))
+                    utils.header("FAILURE to ssh into %s@%s"%(self.plc_name(),hostname))
                 return False
             # wait for the period
             time.sleep (period)
