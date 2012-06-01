@@ -2,6 +2,8 @@
 # Copyright (C) 2010 INRIA 
 #
 
+import datetime
+
 import utils
 from TestUser import TestUser
 from TestBoxQemu import TestBoxQemu
