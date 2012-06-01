@@ -90,20 +90,12 @@ class TestSlice:
                           (len(node_ids),slice_name))
         self.test_plc.apiserver.DeleteSliceFromNodes (auth,slice_name, node_ids)
 
-    def locate_key(self):
-        # locate the first avail. key
-        found=False
+    def locate_private_key(self):
+        key_names=[]
         for username in self.slice_spec['usernames']:
             user_spec=self.test_site.locate_user(username)
-            for key_name in user_spec['key_names']:
-                key_spec=self.test_plc.locate_key(key_name)
-                test_key=TestKey(self.test_plc,key_spec)
-                publickey=test_key.publicpath()
-                privatekey=test_key.privatepath()
-                if os.path.isfile(publickey) and os.path.isfile(privatekey):
-                    found=True
-        return (found,privatekey)
-
+            key_names += user_spec['key_names']
+        return self.test_plc.locate_private_key_from_key_names (key_names)
 
     # trying to reach the slice through ssh - expected to answer
     def ssh_slice (self, options, *args, **kwds):
@@ -119,8 +111,8 @@ class TestSlice:
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # locate a key
-        (found,remote_privatekey)=self.locate_key()
-        if not found :
+        private_key=self.locate_private_key()
+        if not private_key :
             utils.header("WARNING: Cannot find a valid key for slice %s"%self.name())
             return False
 
@@ -141,7 +133,7 @@ class TestSlice:
         while tocheck:
             for hostname in tocheck:
                 (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
-                date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
+                date_test_ssh = TestSsh (hostname,key=private_key,username=self.name())
                 command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
                 date = utils.system (command, silent=datetime.datetime.now() < graceout)
                 if getattr(options,'dry_run',None): return True

@@ -24,10 +24,10 @@ class TestSliver:
             print str(e)
             
     def create_test_ssh(self):
-        (found,privatekey) = self.get_privateKey()
-        if not found:
+        private_key = self.test_slice.locate_private_key()
+        if not private_key:
             raise Exception,"Cannot find the private key for slice %s"%self.test_slice.name()
-        return TestSsh (self.test_node.name(),key=privatekey,username=self.test_slice.name(),
+        return TestSsh (self.test_node.name(),key=private_key,username=self.test_slice.name(),
                         # so that copies end up in the home dir
                         buildname=".")
 

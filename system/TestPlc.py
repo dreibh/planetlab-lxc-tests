@@ -269,6 +269,19 @@ class TestPlc:
                 return key
         raise Exception,"Cannot locate key %s"%key_name
 
+    def locate_private_key_from_key_names (self, key_names):
+        # locate the first avail. key
+        found=False
+        for key_name in key_names:
+            key_spec=self.locate_key(key_name)
+            test_key=TestKey(self,key_spec)
+            publickey=test_key.publicpath()
+            privatekey=test_key.privatepath()
+            if os.path.isfile(publickey) and os.path.isfile(privatekey):
+                found=True
+        if found: return privatekey
+        else:     return None
+
     def locate_slice (self, slicename):
         for slice in self.plc_spec['slices']:
             if slice['slice_fields']['name'] == slicename:

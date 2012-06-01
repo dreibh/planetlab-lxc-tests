@@ -68,12 +68,13 @@ class TestSliceSfa:
             if self.test_plc.run_in_guest(command)!=0: return False
         return True
 
+    def plc_name (self):
+        return "%s_%s"%(self.test_auth_sfa.login_base,self.slice_spec['name'])
+
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
         "check sfa_create_slice at the plcs - all local nodes should be in slice"
-        login_base=self.test_auth_sfa.login_base
-        slice_name = "%s_%s"%(login_base,self.slice_spec['name'])
-        slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), slice_name)[0]
+        slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), self.plc_name())[0]
         nodes=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), {'peer_id':None})
         result=True
         for node in nodes: 
@@ -95,21 +96,24 @@ class TestSliceSfa:
 	self.test_plc.run_in_guest(self.sfi_pi("delete %s"%(self.hrn(),)))
 	return self.test_plc.run_in_guest(self.sfi_pi("remove -t slice %s"%(self.hrn(),)))==0
 
+    def locate_private_key(self):
+        return self.test_plc.locate_private_key_from_key_names ( [ self.slice_spec['key_name'] ] )
+
     # check the resulting sliver
     def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
 	"tries to ssh-enter the SFA slice"
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
         # locate a key
-        (found,remote_privatekey)=self.locate_key()
-        if not found :
-            utils.header("WARNING: Cannot find a valid key for slice %s"%self.plc_name())
+        private_key=self.locate_private_key()
+        if not private_key :
+            utils.header("WARNING: Cannot find a valid key for slice %s"%self.name())
             return False
 
         # convert nodenames to real hostnames
         restarted=[]
         tocheck=[]
-        for nodename in self.auth_sfa_spec['nodenames']:
+        for nodename in self.slice_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tocheck.append(node_spec['node_fields']['hostname'])
 
@@ -119,7 +123,7 @@ class TestSliceSfa:
         while tocheck:
             for hostname in tocheck:
                 (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
-                date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.plc_name())
+                date_test_ssh = TestSsh (hostname,key=private_key,username=self.plc_name())
                 command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
                 date = utils.system (command, silent=datetime.datetime.now() < graceout)
                 if date==0:
