@@ -1,171 +1,52 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
-import utils
-import os, os.path
-import datetime
-import time
 
-from TestKey import TestKey
+import utils
 from TestUser import TestUser
-from TestNode import TestNode
+from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
-from TestUserSfa import TestUserSfa
+
 
 class TestSliceSfa:
 
-    def __init__ (self,test_plc,sfa_slice_spec):
-	self.test_plc=test_plc
-	self.sfa_slice_spec=sfa_slice_spec
-        self.test_ssh=TestSsh(self.test_plc.test_ssh)
+    def __init__ (self, test_auth_sfa, slice_spec):
+        self.test_auth_sfa=test_auth_sfa
+        self.slice_spec=slice_spec
         # shortcuts
-        self.sfa_spec=test_plc.plc_spec['sfa']
-        self.piuser=self.sfa_slice_spec['piuser']
-        self.regularuser=self.sfa_slice_spec['regularuser']
-        self.slicename=self.sfa_slice_spec['slicename']
-        self.login_base=self.sfa_slice_spec['login_base']
-        
-    def plc_name(self):
-        return self.sfa_slice_spec['plc_slicename']
-    
-    def rspec_style (self): return self.sfa_slice_spec['rspec_style']
+        self.test_plc=self.test_auth_sfa.test_plc
 
-    # the hrn for the site
-    def auth_hrn (self):
-        return self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+    def qualified(self,name): return self.test_auth_sfa.qualified(name)
+    def hrn (self): return self.qualified(self.slice_spec['name'])
+    def sfi_path (self): return self.test_auth_sfa.sfi_path()
 
-    # the hrn for the site
-    def site_hrn (self):
-        return "%s.%s"%(self.auth_hrn(),self.login_base)
+    # send back up to the TestAuthSfa
+    def rspec_style (self): return self.test_auth_sfa.rspec_style()
+    def sfi_pi(self,*args,**kwds): return self.test_auth_sfa.sfi_pi(*args, **kwds)
+    def sfi_user(self,*args,**kwds): return self.test_auth_sfa.sfi_user(*args, **kwds)
 
-    # something in the site (users typically)
-    def qualified_hrn (self, name):
-        return "%s.%s"%(self.site_hrn(),name)
-
-    # the slice hrn
-    def hrn(self): return self.qualified_hrn (self.slicename)
-
-    # result name
-    def resname (self,name,ext): return "%s.%s"%(name,ext)
-
-    def adfile (self): return self.resname("ad","rspec")
-    def reqfile (self): return self.resname("req","rspec")
-    def nodefile (self): return self.resname("nodes","txt")
-    # xxx this needs tweaks with more recent versions of sfa that have pgv2 as the default ?
     def discover_option(self):
         if self.rspec_style()=='pg': return "-r protogeni"
         else:                        return "-r sfa"
 
-    def sfi_path (self):
-        return "/root/sfi/%s%s"%(self.slicename,self.rspec_style())
-
-    def locate_key(self):
-        for key_name in self.sfa_slice_spec['slice_key_names']:
-            key_spec=self.test_plc.locate_key(key_name)
-            test_key=TestKey(self.test_plc,key_spec)
-            publickey=test_key.publicpath()
-            privatekey=test_key.privatepath()
-            if os.path.isfile(publickey) and os.path.isfile(privatekey):
-                found=True
-        return (found,privatekey)
-
-    # dir_name is local and will be pushed later on by TestPlc
-    # by default set SFI_USER to the pi, we'll overload this
-    # on the command line when needed
-    def sfi_configure (self,dir_name):
-        plc_spec=self.test_plc.plc_spec
-        sfa_spec=self.sfa_spec
-        sfa_slice_spec=self.sfa_slice_spec
-        keys=plc_spec['keys']
-        # fetch keys in config spec and expose to sfi
-        for (hrn_leaf,key_name) in sfa_slice_spec['hrn_keys'].items():
-            key_spec = self.test_plc.locate_key (key_name)
-            for (kind,ext) in [ ('private', 'pkey'), ('public', 'pub') ] :
-                contents=key_spec[kind]
-                file_name=os.path.join(dir_name,self.qualified_hrn(hrn_leaf))+"."+ext
-                fileconf=open(file_name,'w')
-                fileconf.write (contents)
-                fileconf.close()
-                utils.header ("(Over)wrote %s"%file_name)
-        #
-	file_name=dir_name + os.sep + 'sfi_config'
-        fileconf=open(file_name,'w')
-	SFI_AUTH="%s"%(self.site_hrn())
-        fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
-	fileconf.write('\n')
-	SFI_USER=SFI_AUTH + '.' + self.piuser
-        fileconf.write ("SFI_USER='%s'"%SFI_USER)
-	fileconf.write('\n')
-	SFI_REGISTRY='http://' + sfa_spec['SFA_REGISTRY_HOST'] + ':12345/'
-        fileconf.write ("SFI_REGISTRY='%s'"%SFI_REGISTRY)
-	fileconf.write('\n')
-	SFI_SM='http://' + sfa_spec['SFA_SM_HOST'] + ':12347/'
-        fileconf.write ("SFI_SM='%s'"%SFI_SM)
-	fileconf.write('\n')
-        fileconf.close()
-        utils.header ("(Over)wrote %s"%file_name)
-
-    # using sfaadmin to bootstrap
-    def sfa_add_site (self, options):
-        "bootstrap a site using sfaadmin"
-        command="sfaadmin reg register -t authority -x %s"%self.site_hrn()
-        return self.test_plc.run_in_guest(command)==0
-
-    def sfa_add_pi (self, options):
-        "bootstrap a PI user for that site"
-        pi_hrn=self.qualified_hrn(self.piuser)
-        pi_mail=self.sfa_slice_spec['pimail']
-        # as installed by sfi_config
-        pi_key=os.path.join(self.sfi_path(),self.qualified_hrn(self.piuser+'.pub'))
-        command="sfaadmin reg register -t user -x %s --email %s --key %s"%(pi_hrn,pi_mail,pi_key)
-        if self.test_plc.run_in_guest(command)!=0: return False
-        command="sfaadmin reg update -t authority -x %s --pi %s"%(self.site_hrn(),pi_hrn)
-        return self.test_plc.run_in_guest(command)==0
-
-    # user management
-    def sfa_add_user (self, options):
-        "add a regular user using sfi add"
-        return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).add_user()
-    def sfa_update_user (self, options):
-        "update a user record using sfi update"
-        return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).update_user()
-    def sfa_delete_user (self, options):
-	"run sfi delete"
-        return TestUserSfa(self.test_plc, self.sfa_slice_spec, self).delete_user()
-
-    # run as pi
-    def sfi_pi (self, command):
-        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.piuser), command,)
-    # the sfi command line option to run as a regular user
-    def sfi_user (self, command):
-        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.qualified_hrn(self.regularuser), command,)
-
     # those are step names exposed as methods of TestPlc, hence the _sfa
-
-    def sfi_list (self, options):
-        "run (as regular user) sfi list (on Registry)"
-	return \
-            self.test_plc.run_in_guest(self.sfi_user("list -r %s"%self.auth_hrn()))==0 and \
-            self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.site_hrn())))==0
-
-    def sfi_show (self, options):
-        "run (as regular user) sfi show (on Registry)"
-	return \
-            self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.site_hrn())))==0
-
-    def sfi_slices (self, options):
-        "run (as regular user) sfi slices (on SM)"
-	return \
-            self.test_plc.run_in_guest(self.sfi_user("slices"))==0 
 
     # needs to be run as pi
     def sfa_add_slice(self,options):
         "run sfi add (on Registry) from slice.xml"
-        sfi_options="add"
-        for opt in self.sfa_slice_spec['slice_sfi_options']:
-            sfi_options += " %s"%(opt)
-	return self.test_plc.run_in_guest(self.sfi_pi(sfi_options))==0
+        sfi_command="add"
+        sfi_command += " --type slice"
+        sfi_command += " --xrn %s"%self.qualified(self.slice_spec['name'])
+        for opt in self.slice_spec['sfi_options']:
+            sfi_command += " %s"%(opt)
+	return self.test_plc.run_in_guest(self.sfi_pi(sfi_command))==0
 
+    # helper - filename to store a given result
+    def _resname (self,name,ext): return "%s.%s"%(name,ext)
+    def adfile (self): return self._resname("ad","rspec")
+    def reqfile (self): return self._resname("req","rspec")
+    def nodefile (self): return self._resname("nodes","txt")
+    
     # run as user
     def sfa_discover(self,options):
         "discover resources into resouces_in.rspec"
@@ -188,7 +69,8 @@ class TestSliceSfa:
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
         "check sfa_create_slice at the plcs - all local nodes should be in slice"
-        slice_name = self.plc_name()
+        login_base=self.test_auth_sfa.login_base
+        slice_name = "%s_%s"%(login_base,self.slice_spec['name'])
         slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), slice_name)[0]
         nodes=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), {'peer_id':None})
         result=True
@@ -223,10 +105,9 @@ class TestSliceSfa:
             return False
 
         # convert nodenames to real hostnames
-        sfa_slice_spec = self.sfa_slice_spec
         restarted=[]
         tocheck=[]
-        for nodename in sfa_slice_spec['nodenames']:
+        for nodename in self.auth_sfa_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tocheck.append(node_spec['node_fields']['hostname'])
 
@@ -269,3 +150,4 @@ class TestSliceSfa:
         # for an empty slice
         return True
 
+    

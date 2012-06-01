@@ -126,7 +126,7 @@ def sites (options,index):
                                'login_base':login_base(index),
                                'abbreviated_name':'PlanetTest%d'%index,
                                'max_slices':100,
-                               'url':'http://test.onelab.eu',
+                               'url':'http://test.%s'%domain,
                                'latitude':float(latitude),
                                'longitude':float(longitude),
                                },
@@ -500,59 +500,56 @@ def sfa (options,index) :
         'SFA_GENERIC_FLAVOUR' : 'pl',
         'SFA_AGGREGATE_ENABLED' : 'true',
         # details of the slices to create
-        'sfa_slice_specs' : [ sfa_slice_spec(options,index,rspec_style) 
-                              for rspec_style in options.rspec_styles ]
+        'auth_sfa_specs' : [ test_auth_sfa_spec(options,index,rspec_style) 
+                             for rspec_style in options.rspec_styles ]
     }
 
 # rspecstyle is 'pl' for sfav1 or 'pg' for pgv2
-def sfa_slice_spec (options,index,rspec_style):
-    the_login_base=sfa_login_base(index,rspec_style)
-    # we're already in a dedicated site/authority so no need to encumber with odd names
-    piuser='pi'
-    pimail=piuser+'@test.onelab.eu'
-    regularuser='us'
-    slicename='sl'
-    prefix='%s.%s'%(sfa_root(index),the_login_base)
-    hrn=prefix+'.'+slicename
-    user_hrn=prefix+'.'+regularuser
-    pi_hrn=prefix+'.'+piuser
-    mail="%s@%s"%(regularuser,domain)
-    # passed to sfi
-    # -k gets computed later on from the hrn (i.e. from the '-x' key..)
-    user_sfi_options = [ '--type','user',
-                         '--xrn',user_hrn,
-                         '--email',mail,
-                         # xxx
-                         '--extra',"enabled=true",
-                         '--extra',"first_name=Fake",
-                         '--extra',"last_name=SFA-style-%s"%rspec_style,
-                         ]
-                       
-    slice_sfi_options = [ '--type', 'slice',
-                          '--xrn', hrn,
-                          '--researchers', user_hrn,
+def test_auth_sfa_spec (options,index,rspec_style):
+    # the auth/site part per se
+    login_base=sfa_login_base(index,rspec_style)
+    hrn_prefix='%s.%s'%(sfa_root(index),login_base)
+    def full_hrn(x):  return "%s.%s"%(hrn_prefix,x)
+    def full_mail(x): return "%s@test.%s"%(x,domain)
+
+    # 2 users
+    pi_spec = {
+        'name':         'pi',
+        'email':        full_mail ('piuser'),
+        'key_name':     'key_sfapi',
+        }
+    user_hrn = full_hrn ('us')
+    user_spec = {
+        'name':         'us',
+        'email':        full_mail ('regularuser'),
+        'key_name':     'key_sfauser',
+        'sfi_options':  [ '--extra',"enabled=true",
+                          '--extra',"first_name=Fake",
+                          '--extra',"last_name=SFA-style-%s"%rspec_style,
+                          ],
+        }
+
+    slice_spec = {
+        'name':          'sl',
+        'sfi_options':  [ '--researchers', user_hrn,
                           # xxx
                           '--extra', "description=SFA-testing-%s"%rspec_style,
                           '--extra', "url=http://slice%d.test.onelab.eu/"%index,
                           '--extra', "max_nodes=2",
-                          ]
+                          ],
+        'key_name':    'key_sfauser',
+        'nodenames':    all_nodenames(options,index),
+        }
+        
+    # we're already in a dedicated site/authority so no need to encumber with odd names
 
-    return { 'plc_slicename': '%s_%s'%(the_login_base,slicename),
-             'login_base' : the_login_base,
-             'piuser' : piuser,
-             'pimail' : pimail,
-             'regularuser':regularuser,
+    return { #'hrn_prefix': hrn_prefix,
+             'login_base' : login_base,
              'domain':domain,
-             'slice_key_names' : [ 'key_sfauser' ],
-             'hrn_keys' : { piuser : 'key_sfapi',
-                            regularuser : 'key_sfauser' },
-             'nodenames' : all_nodenames(options,index),
-             'sitename' : the_login_base,
-             'slicename' : slicename,
              'rspec_style':rspec_style,
-             'user_sfi_options': user_sfi_options,
-             'user_hrn': user_hrn,
-             'slice_sfi_options': slice_sfi_options,
+             'pi_spec': pi_spec,
+             'user_spec': user_spec,
+             'slice_spec': slice_spec,
              } 
 
 

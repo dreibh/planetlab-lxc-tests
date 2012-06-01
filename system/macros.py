@@ -50,6 +50,13 @@ sequences['sfa_create'] = [
     'sfa_add_slice',
 ]
 
+sequences['sfa_provision'] = [ 
+    'sfa-discover',
+    'sfa-create_slice',
+    'sfa_check_slice_plc',
+    'sfa_view_all',
+]
+
 # run the whole SFA stuff but from scratch, new vs all reinstalled and all
 sequences['sfa_scratch'] = [
     'show',

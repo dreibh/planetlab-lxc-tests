@@ -2,7 +2,6 @@
 # Copyright (C) 2010 INRIA 
 #
 import sys, os, os.path, time, base64
-import xmlrpclib
 
 import utils
 from TestUser import TestUser

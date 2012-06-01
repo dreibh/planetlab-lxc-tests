@@ -19,7 +19,7 @@ from TestSliver import TestSliver
 from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
 from TestApiserver import TestApiserver
-from TestSliceSfa import TestSliceSfa
+from TestAuthSfa import TestAuthSfa
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
@@ -62,16 +62,16 @@ def slice_mapper (method):
     actual.__doc__=TestSlice.__dict__[method.__name__].__doc__
     return actual
 
-def slice_sfa_mapper (method):
+def auth_sfa_mapper (method):
     def actual(self):
         overall=True
-        slice_method = TestSliceSfa.__dict__[method.__name__]
-        for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
-            test_slice=TestSliceSfa(self,slice_spec)
+        slice_method = TestAuthSfa.__dict__[method.__name__]
+        for slice_spec in self.plc_spec['sfa']['auth_sfa_specs']:
+            test_slice=TestAuthSfa(self,slice_spec)
             if not slice_method(test_slice,self.options): overall=False
         return overall
     # restore the doc text
-    actual.__doc__=TestSliceSfa.__dict__[method.__name__].__doc__
+    actual.__doc__=TestAuthSfa.__dict__[method.__name__].__doc__
     return actual
 
 SEP='<sep>'
@@ -1247,13 +1247,14 @@ class TestPlc:
         # ignore result 
         sfa_spec=self.plc_spec['sfa']
 
-        for sfa_slice_spec in sfa_spec['sfa_slice_specs']:
-            login_base=sfa_slice_spec['login_base']
+        for auth_sfa_spec in sfa_spec['auth_sfa_specs']:
+            login_base=auth_sfa_spec['login_base']
             try: self.apiserver.DeleteSite (self.auth_root(),login_base)
             except: print "Site %s already absent from PLC db"%login_base
 
-            for key in ['piuser','regularuser']:
-                username="%s@%s"%(sfa_slice_spec[key],sfa_slice_spec['domain'])
+            for spec_name in ['pi_spec','user_spec']:
+                user_spec=auth_sfa_spec[spec_name]
+                username=user_spec['email']
                 try: self.apiserver.DeletePerson(self.auth_root(),username)
                 except: 
                     # this in fact is expected as sites delete their members
@@ -1399,9 +1400,9 @@ class TestPlc:
             utils.header("DRY RUN - skipping step")
             return True
         sfa_spec=self.plc_spec['sfa']
-        # cannot use slice_sfa_mapper to pass dir_name
-        for slice_spec in self.plc_spec['sfa']['sfa_slice_specs']:
-            test_slice=TestSliceSfa(self,slice_spec)
+        # cannot use auth_sfa_mapper to pass dir_name
+        for slice_spec in self.plc_spec['sfa']['auth_sfa_specs']:
+            test_slice=TestAuthSfa(self,slice_spec)
             dir_basename=os.path.basename(test_slice.sfi_path())
             dir_name=self.confsubdir("dot-sfi/%s"%dir_basename,clean=True,dry_run=self.options.dry_run)
             test_slice.sfi_configure(dir_name)
@@ -1419,35 +1420,35 @@ class TestPlc:
         self.run_in_guest("rm -rf /root/sfi")
         return True
 
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_add_site (self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_add_pi (self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_add_user(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_update_user(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_add_slice(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_discover(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_create_slice(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_check_slice_plc(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_update_slice(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfi_list(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfi_show(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfi_slices(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def ssh_slice_sfa(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_delete_user(self): pass
-    @slice_sfa_mapper
+    @auth_sfa_mapper
     def sfa_delete_slice(self): pass
 
     def sfa_stop(self):

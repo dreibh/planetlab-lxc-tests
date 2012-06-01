@@ -144,6 +144,7 @@ class TestSlice:
                 date_test_ssh = TestSsh (hostname,key=remote_privatekey,username=self.name())
                 command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
                 date = utils.system (command, silent=datetime.datetime.now() < graceout)
+                if getattr(options,'dry_run',None): return True
                 if expected:    success = date==0
                 else:           success = date!=0
                     

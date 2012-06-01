@@ -8,23 +8,25 @@ import utils
 
 class TestUserSfa:
 
-    def __init__ (self,test_plc,sfa_slice_spec,test_slice_sfa):
-	self.test_plc=test_plc
-        self.sfa_slice_spec=sfa_slice_spec
-        self.test_slice_sfa=test_slice_sfa
+    def __init__ (self,test_auth_sfa, user_spec):
+        self.test_auth_sfa=test_auth_sfa
+        self.user_spec=user_spec
         # shortcuts
-        self.sfa_spec=test_plc.plc_spec['sfa']
-        self.piuser=self.sfa_slice_spec['piuser']
-        self.regularuser=self.sfa_slice_spec['regularuser']
-        self.login_base=self.sfa_slice_spec['login_base']
+        self.test_plc=self.test_auth_sfa.test_plc
+        self.login_base=self.test_auth_sfa.login_base
 
-    def sfi_path(self): return self.test_slice_sfa.sfi_path()
+    def sfi_path(self): return self.test_auth_sfa.sfi_path()
+    def qualified(self,name): return self.test_auth_sfa.qualified(name)
 
     # xxx todo - not the right place any longer - or is it ?
-    def add_user (self):
-        sfi_add_options = self.sfa_slice_spec['user_sfi_options']
-        user_hrn = self.sfa_slice_spec['user_hrn']
+    def sfa_add_user (self,options):
+        "add a regular user using sfi add"
+        sfi_add_options = self.user_spec['sfi_options']
+        user_hrn = self.qualified(self.user_spec['name'])
         command="sfi -d %s add"%(self.sfi_path())
+        command += " --type user"
+        command += " --xrn %s"%user_hrn
+        command += " --email %s"%self.user_spec['email']
         for opt in sfi_add_options:
             command += " %s"%(opt,)
         # handle key separately because of embedded whitespace
@@ -32,13 +34,15 @@ class TestUserSfa:
         command += " -k %s/%s.pub"%(self.sfi_path(),user_hrn)
 	return self.test_plc.run_in_guest(command)==0
 
-    def update_user (self):
+    def sfa_update_user (self,options):
+        "update a user record using sfi update"
         # xxx TODO now that we use sfi arguments
         utils.header ("WARNING: TestUserSfa.update_user needs more work")
         return True
 
-    def delete_user(self):
-	auth=self.sfa_spec['SFA_REGISTRY_ROOT_AUTH']
+    def sfa_delete_user(self,options):
+	"run sfi delete on user record"
+	auth=self.test_auth_sfa.root_hrn()
 	return \
             self.test_plc.run_in_guest("sfi -d %s remove -t user %s.%s.%s"%(
                 self.sfi_path(),auth,self.login_base,self.regularuser))==0
