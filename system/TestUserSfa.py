@@ -23,14 +23,12 @@ class TestUserSfa:
     # xxx todo - not the right place any longer - or is it ?
     def sfa_add_user (self,options):
         "add a regular user using sfi add"
-        sfi_add_options = self.user_spec['sfi_options']
         user_hrn = self.qualified(self.user_spec['name'])
-        command="%s add"%(self.sfi_path())
+        command="add"
         command += " --type user"
         command += " --xrn %s"%user_hrn
         command += " --email %s"%self.user_spec['email']
-        for opt in sfi_add_options:
-            command += " %s"%(opt,)
+        command += " " + " ".join(self.user_spec['add_options'])
         # handle key separately because of embedded whitespace
         # hack - the user's pubkey is avail from his hrn
         command += " -k %s/%s.pub"%(self.sfi_path(),user_hrn)
@@ -38,9 +36,12 @@ class TestUserSfa:
 
     def sfa_update_user (self,options):
         "update a user record using sfi update"
-        # xxx TODO now that we use sfi arguments
-        utils.header ("WARNING: TestUserSfa.update_user needs more work")
-        return True
+        user_hrn = self.qualified(self.user_spec['name'])
+        command="update"
+        command += " --type user"
+        command += " --xrn %s"%user_hrn
+        command += " " + " ".join(self.user_spec['update_options'])
+	return self.test_plc.run_in_guest(self.sfi_pi(command))==0
 
     def sfa_delete_user(self,options):
 	"run sfi delete on user record"

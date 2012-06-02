@@ -523,15 +523,16 @@ def test_auth_sfa_spec (options,index,rspec_style):
         'name':         'us',
         'email':        full_mail ('regularuser'),
         'key_name':     'key_sfauser',
-        'sfi_options':  [ '--extra',"enabled=true",
-                          '--extra',"first_name=Fake",
+        'add_options':  [ '--extra',"first_name=Fake",
                           '--extra',"last_name=SFA-style-%s"%rspec_style,
                           ],
+        'update_options': [ '--extra',"enabled=true",
+                             ],
         }
 
     slice_spec = {
         'name':          'sl',
-        'sfi_options':  [ '--researchers', user_hrn,
+        'add_options':  [ '--researchers', user_hrn,
                           # xxx
                           '--extra', "description=SFA-testing-%s"%rspec_style,
                           '--extra', "url=http://slice%d.test.onelab.eu/"%index,

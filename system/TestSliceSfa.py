@@ -39,7 +39,7 @@ class TestSliceSfa:
         sfi_command="add"
         sfi_command += " --type slice"
         sfi_command += " --xrn %s"%self.qualified(self.slice_spec['name'])
-        for opt in self.slice_spec['sfi_options']:
+        for opt in self.slice_spec['add_options']:
             sfi_command += " %s"%(opt)
 	return self.test_plc.run_in_guest(self.sfi_pi(sfi_command))==0
 
