@@ -1,13 +1,9 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
-import utils
 import os, os.path
-import datetime
-import time
 
-from TestKey import TestKey
-from TestNode import TestNode
+import utils
 from TestSsh import TestSsh
 from TestUserSfa import TestUserSfa
 from TestSliceSfa import TestSliceSfa
