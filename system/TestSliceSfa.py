@@ -2,6 +2,7 @@
 # Copyright (C) 2010 INRIA 
 #
 
+import time
 import datetime
 
 import utils
