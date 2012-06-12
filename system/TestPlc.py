@@ -1165,7 +1165,7 @@ class TestPlc:
         # netflow currently not working in the lxc distro
         # drl not built at all in the wtx distro
         # if we find either of them we're happy
-        return self.check_netflow() or self.check_drl_ ('drl')
+        return self.check_netflow() or self.check_drl()
     
     # expose these
     def check_netflow (self): return self._check_system_slice ('netflow')
