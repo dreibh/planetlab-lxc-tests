@@ -97,7 +97,7 @@ class TestPlc:
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'check_tcp', 'check_sys_slice', SEP,
+        'check_tcp', 'check_system_slice', SEP,
         'empty_slices', 'ssh_slice_off', 'fill_slices', SEP,
         'force_gather_logs', SEP,
         ]
@@ -113,6 +113,7 @@ class TestPlc:
 	'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
+        'check_netflow','check_drl', SEP,
         'standby_1_through_20',SEP,
         ]
 
@@ -1159,20 +1160,24 @@ class TestPlc:
         return overall
 
     # painfully enough, we need to allow for some time as netflow might show up last
-    def check_sys_slice (self): 
+    def check_system_slice (self): 
         "all nodes: check that a system slice is alive"
-# would probably make more sense to check for netflow, 
-# but that one is currently not working in the lxc distro        
-#        return self.check_systemslice ('netflow')
-        return self.check_systemslice ('drl')
+        # netflow currently not working in the lxc distro
+        # drl not built at all in the wtx distro
+        # if we find either of them we're happy
+        return self.check_netflow() or self.check_drl_ ('drl')
     
+    # expose these
+    def check_netflow (self): return self._check_system_slice ('netflow')
+    def check_drl (self): return self._check_system_slice ('drl')
+
     # we have the slices up already here, so it should not take too long
-    def check_systemslice (self, slicename, timeout_minutes=5, period=15):
+    def _check_system_slice (self, slicename, timeout_minutes=5, period=15):
         timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
         test_nodes=self.all_nodes()
         while test_nodes:
             for test_node in test_nodes:
-                if test_node.check_systemslice (slicename,dry_run=self.options.dry_run):
+                if test_node._check_system_slice (slicename,dry_run=self.options.dry_run):
                     utils.header ("ok")
                     test_nodes.remove(test_node)
                 else:

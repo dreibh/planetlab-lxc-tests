@@ -298,7 +298,7 @@ class TestNode:
         test_ssh=self.create_test_ssh()
         return test_ssh.run ("rpm -q --quiet libvirt-client")==0
 
-    def check_systemslice (self, slicename,dry_run=False):
+    def _check_system_slice (self, slicename,dry_run=False):
         sitename=self.test_plc.plc_spec['PLC_SLICE_PREFIX']
         vservername="%s_%s"%(sitename,slicename)
         test_ssh=self.create_test_ssh()
