@@ -43,8 +43,8 @@ class OnelabSubstrate (Substrate):
          ('kvm64-1', 3), # 4 cores, 4Gb
          ('kvm64-2', 3), # 4 cores, 4Gb
          ('kvm64-3', 2), # 2 cores, 4Gb
-         ('kvm64-4', 3), # 4 cores, 8Gb
-         ('kvm64-5', 2), # 2 cores, 4Gb
+         ('kvm64-4', 1), # 4 cores, 8Gb
+         ('kvm64-5', 1), # 2 cores, 4Gb
          ('kvm64-6', 2), # 2 cores, 4Gb
          ]
 
