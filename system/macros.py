@@ -103,7 +103,8 @@ sequences['sfa_standalone'] = [
     'sfi_view_all',
     'sfa_delete_slice',
     'sfa_delete_user',
-    'sfi_view_all',
+    'sfi_list',
+    'sfi_show',
 ]
 
 
