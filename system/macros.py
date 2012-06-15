@@ -100,11 +100,10 @@ sequences['sfa_standalone'] = [
     'sfa_add_pi',
     'sfa_add_user',
     'sfa_add_slice',
-    'sfi_view_all',
+    'sfi_list',
+    'sfi_show',
     'sfa_delete_slice',
     'sfa_delete_user',
     'sfi_list',
     'sfi_show',
 ]
-
-
