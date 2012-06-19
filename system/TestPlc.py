@@ -114,6 +114,7 @@ class TestPlc:
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
         'check_netflow','check_drl', SEP,
+        'debug_nodemanager', SEP,
         'standby_1_through_20',SEP,
         ]
 
@@ -1133,6 +1134,17 @@ class TestPlc:
                                     {'dest':'/etc/sysconfig/nodemanager',
                                      'source':'PlanetLabConf/nodemanager',
                                      'postinstall_cmd':'service nm restart',})
+        return True
+
+    def debug_nodemanager (self):
+        "sets verbose mode for nodemanager, and speeds up cycle even more (needs speed_up_slices first)"
+        template="%s.nodemanager"%self.name()
+        template_file = open (template,"w")
+        template_file.write('OPTIONS="-p 10 -r 6 -v -d"\n')
+        template_file.close()
+        in_vm="/var/www/html/PlanetLabConf/nodemanager"
+        remote="%s/%s"%(self.vm_root_in_host(),in_vm)
+        self.test_ssh.copy_abs(template,remote)
         return True
 
     @node_mapper
