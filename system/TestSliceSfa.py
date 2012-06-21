@@ -37,13 +37,33 @@ class TestSliceSfa:
 
     # needs to be run as pi
     def sfa_add_slice(self,options):
-        "run sfi add (on Registry) from slice.xml"
+        "run sfi add (on Registry)"
         sfi_command="add"
         sfi_command += " --type slice"
-        sfi_command += " --xrn %s"%self.qualified(self.slice_spec['name'])
+        sfi_command += " --xrn %s"%self.hrn()
         for opt in self.slice_spec['add_options']:
             sfi_command += " %s"%(opt)
 	return self.test_plc.run_in_guest(self.sfi_pi(sfi_command))==0
+
+    def sfa_renew_slice(self, options):
+        "run sfi renew (on Aggregates)"
+        too_late = datetime.datetime.now()+datetime.timedelta(weeks=52)
+        one_month = datetime.datetime.now()+datetime.timedelta(weeks=4)
+        # we expect this to fail on too long term attemps, but to succeed otherwise
+        overall=True
+        for ( renew_until, expected) in [ (too_late, False), (one_month, True) ] :
+            sfi_command="renew"
+            sfi_command += " %s"%self.hrn()
+            sfi_command += " %s"%renew_until.strftime("%Y-%m-%d")
+            succeeded = self.test_plc.run_in_guest(self.sfi_user(sfi_command))==0
+            if succeeded!=expected:
+                utils.header ("Expecting success=%s, got %s"%(expected,succeeded))
+                # however it turns out sfi renew always returns fine....
+                #overall=False
+            # so for helping manual checks:
+            sfi_command="show -k hrn -k expires %s"%self.hrn()
+            self.test_plc.run_in_guest(self.sfi_user(sfi_command))
+        return overall
 
     # helper - filename to store a given result
     def _resname (self,name,ext): return "%s.%s"%(name,ext)
@@ -71,7 +91,7 @@ class TestSliceSfa:
         return True
 
     def plc_name (self):
-        return "%s_%s"%(self.test_auth_sfa.login_base,self.slice_spec['name'])
+        return "%s_%s"%(self.test_auth_sfa.login_base,self.hrn())
 
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):

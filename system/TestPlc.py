@@ -65,10 +65,10 @@ def slice_mapper (method):
 def auth_sfa_mapper (method):
     def actual(self):
         overall=True
-        slice_method = TestAuthSfa.__dict__[method.__name__]
-        for slice_spec in self.plc_spec['sfa']['auth_sfa_specs']:
-            test_slice=TestAuthSfa(self,slice_spec)
-            if not slice_method(test_slice,self.options): overall=False
+        auth_method = TestAuthSfa.__dict__[method.__name__]
+        for auth_spec in self.plc_spec['sfa']['auth_sfa_specs']:
+            test_auth=TestAuthSfa(self,auth_spec)
+            if not auth_method(test_auth,self.options): overall=False
         return overall
     # restore the doc text
     actual.__doc__=TestAuthSfa.__dict__[method.__name__].__doc__
@@ -89,8 +89,8 @@ class TestPlc:
         'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_add_site@1','sfa_add_pi@1', SEPSFA,
-        'sfa_add_user@1', 'sfa_update_user@1', 'sfa_add_slice@1', 'sfa_discover@1', SEPSFA,
-        'sfa_create_slice@1', 'sfa_check_slice_plc@1', 'sfa_update_slice@1', SEPSFA,
+        'sfa_add_user@1', 'sfa_update_user@1', 'sfa_add_slice@1', 'sfa_renew_slice@1', SEPSFA,
+        'sfa_discover@1', 'sfa_create_slice@1', 'sfa_check_slice_plc@1', 'sfa_update_slice@1', SEPSFA,
         'sfi_list@1', 'sfi_show@1', 'sfi_slices@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
@@ -1473,6 +1473,8 @@ class TestPlc:
     def sfa_update_user(self): pass
     @auth_sfa_mapper
     def sfa_add_slice(self): pass
+    @auth_sfa_mapper
+    def sfa_renew_slice(self): pass
     @auth_sfa_mapper
     def sfa_discover(self): pass
     @auth_sfa_mapper

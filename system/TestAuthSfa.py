@@ -163,6 +163,8 @@ class TestAuthSfa:
     @slice_sfa_mapper
     def sfa_add_slice (self, *args, **kwds): pass
     @slice_sfa_mapper
+    def sfa_renew_slice (self, *args, **kwds): pass
+    @slice_sfa_mapper
     def sfa_discover (self, *args, **kwds): pass
     @slice_sfa_mapper
     def sfa_create_slice (self, *args, **kwds): pass
