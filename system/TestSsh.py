@@ -128,6 +128,7 @@ class TestSsh:
                 dirname="%s/%s"%(self.buildname,dirname)
             else:
                 dirname=self.buildname
+        if dirname=='.': return
         return self.run("mkdir -p %s"%dirname)
 
     def rmdir (self,dirname=None):

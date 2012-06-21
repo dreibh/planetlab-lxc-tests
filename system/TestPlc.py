@@ -97,7 +97,7 @@ class TestPlc:
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'check_tcp', 'check_system_slice', SEP,
+        'cross_check_tcp@1', 'check_system_slice', SEP,
         'empty_slices', 'ssh_slice_off', 'fill_slices', SEP,
         'force_gather_logs', SEP,
         ]
@@ -1153,23 +1153,34 @@ class TestPlc:
     @node_mapper
     def timestamp_qemu (self) : pass
 
-    def check_tcp (self):
+    # when a spec refers to a node possibly on another plc
+    def locate_sliver_obj_cross (self, nodename, slicename, other_plcs):
+        for plc in [ self ] + other_plcs:
+            try:
+                return plc.locate_sliver_obj (nodename, slicename)
+            except:
+                pass
+        raise Exception, "Cannot locate sliver %s@%s among all PLCs"%(nodename,slicename)
+
+    # implement this one as a cross step so that we can take advantage of different nodes
+    # in multi-plcs mode
+    def cross_check_tcp (self, other_plcs):
         "check TCP connectivity between 2 slices (or in loopback if only one is defined)"
-        if 'tcp_test' not in self.plc_spec: 
-            utils.header ("check_tcp: no config found")
+        if 'tcp_specs' not in self.plc_spec or not self.plc_spec['tcp_specs']: 
+            utils.header ("check_tcp: no/empty config found")
             return True
-        specs = self.plc_spec['tcp_test']
+        specs = self.plc_spec['tcp_specs']
         overall=True
         for spec in specs:
             port = spec['port']
             # server side
-            s_test_sliver = self.locate_sliver_obj (spec['server_node'],spec['server_slice'])
+            s_test_sliver = self.locate_sliver_obj_cross (spec['server_node'],spec['server_slice'],other_plcs)
             if not s_test_sliver.run_tcp_server(port,timeout=10):
                 overall=False
                 break
 
             # idem for the client side
-            c_test_sliver = self.locate_sliver_obj(spec['server_node'],spec['server_slice'])
+            c_test_sliver = self.locate_sliver_obj_cross (spec['server_node'],spec['client_slice'],other_plcs)
             if not c_test_sliver.run_tcp_client(s_test_sliver.test_node.name(),port):
                 overall=False
         return overall

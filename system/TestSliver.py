@@ -46,7 +46,7 @@ class TestSliver:
     def run_tcp_client (self,servername,port):
         client_command="./tcptest.py client -a %s -p %d"%(servername,port)
         return self.test_ssh.copy("tcptest.py")==0 and \
-            self.test_ssh.run(client_command,background=True)==0
+            self.test_ssh.run(client_command,background=False)==0
 
     # use the node's main ssh root entrance, as the slice entrance might be down
     #def tar_var_logs (self):

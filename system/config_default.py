@@ -405,28 +405,34 @@ def slices (options,index):
 def all_slicenames (options,index):
     return [ slice['slice_fields']['name'] for slice in slices(options,index)]
 
-def tcp_tests (options,index):
-    if index == 1:
-        return [
-            # local test
-            { 'server_node': 'node1',
-              'server_slice' : '%s_sl1'%login_base(index),
-              'client_node' : 'node1',
-              'client_slice' : '%s_sl1'%login_base(index),
-              'port' : 2000,
-              }]
-    elif index == 2:
-        return [
-            # remote test
-            { 'server_node': 'node2',
-              'server_slice' : '%s_sl3'%login_base(index),
-              'client_node' : 'node2',
-              'client_slice' : '%s_sl4'%login_base(index),
-              'port' : 4000,
-              },
-            ]
-    else:
-        return []
+# the logic here is to try:
+# . client and server on the same slice/node
+# . client and server on the same node but 2 different slices
+# if at least 2 plcs, we have 2 nodes, so again on diff. nodes
+def tcp_specs (options,index):
+    # only run the test on the first plc
+    if index != 1: return None
+    # 
+    slice1='%s_sl1'%login_base(1)
+    slice2='%s_sl2'%login_base(1)
+    same_node_same_slice =      { 'server_node': 'node1', 'server_slice': slice1,
+                                  'client_node': 'node1', 'client_slice': slice1,
+                                  'port': 10001}
+# this does not work on vs-nodes....
+    same_node_2_slices =        { 'server_node': 'node1', 'server_slice': slice1,
+                                  'client_node': 'node1', 'client_slice': slice2,
+                                  'port': 10002}
+    two_nodes_same_slice =      { 'server_node': 'node1', 'server_slice': slice1,
+                                  'client_node': 'node2', 'client_slice': slice1,
+                                  'port': 10003}
+    two_nodes_2_slices =        { 'server_node': 'node1', 'server_slice': slice1,
+                                  'client_node': 'node2', 'client_slice': slice2,
+                                  'port': 10004}
+#    specs = [ same_node_same_slice, same_node_2_slices ]
+    specs = [ same_node_same_slice ]
+    if options.size >1 :
+        specs += [ two_nodes_same_slice, two_nodes_2_slices ]
+    return specs
 
 # the semantic for 't_from' and 't_until' here is:
 # if they are smaller than one year, they are relative to the current time, expressed in grains
@@ -474,7 +480,7 @@ def plc (options,index) :
         'keys' : keys(options,index),
         'initscripts': initscripts(options,index),
         'slices' : slices(options,index),
-        'tcp_test' : tcp_tests(options,index),
+        'tcp_specs' : tcp_specs(options,index),
 	'sfa' : sfa(options,index),
         'leases' : leases (options, index),
     }
