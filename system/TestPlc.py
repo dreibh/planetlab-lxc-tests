@@ -1155,6 +1155,9 @@ class TestPlc:
 
     def check_tcp (self):
         "check TCP connectivity between 2 slices (or in loopback if only one is defined)"
+        if 'tcp_test' not in self.plc_spec: 
+            utils.header ("check_tcp: no config found")
+            return True
         specs = self.plc_spec['tcp_test']
         overall=True
         for spec in specs:

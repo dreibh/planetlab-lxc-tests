@@ -291,6 +291,7 @@ steps refer to a method in TestPlc or to a step_* module
 
         # rewrite '-' into '_' in step names
         self.options.steps = [ step.replace('-','_') for step in self.options.steps ]
+        self.options.exclude = [ step.replace('-','_') for step in self.options.exclude ]
 
         # exclude
         selected=[]
