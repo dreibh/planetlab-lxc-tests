@@ -24,6 +24,7 @@ sequences['sfa'] = [
     'sfa_add_pi',
     'sfa_add_user', 
     'sfa_add_slice',
+    'sfa_renew_slice',
     'sfa_discover', 
     'sfa_create_slice', 
     'sfa_check_slice_plc', 
