@@ -91,7 +91,7 @@ class TestSliceSfa:
         return True
 
     def plc_name (self):
-        return "%s_%s"%(self.test_auth_sfa.login_base,self.hrn())
+        return "%s_%s"%(self.test_auth_sfa.login_base,self.slice_spec['name'])
 
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
