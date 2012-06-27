@@ -1175,7 +1175,7 @@ class TestPlc:
             port = spec['port']
             # server side
             s_test_sliver = self.locate_sliver_obj_cross (spec['server_node'],spec['server_slice'],other_plcs)
-            if not s_test_sliver.run_tcp_server(port,timeout=10):
+            if not s_test_sliver.run_tcp_server(port,timeout=20):
                 overall=False
                 break
 
