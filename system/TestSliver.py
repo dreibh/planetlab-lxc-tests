@@ -43,10 +43,16 @@ class TestSliver:
         return self.test_ssh.copy("tcptest.py")==0 and \
             self.test_ssh.run(server_command,background=True)==0
 
-    def run_tcp_client (self,servername,port):
+    def run_tcp_client (self,servername,port,retry=5):
         client_command="./tcptest.py client -a %s -p %d"%(servername,port)
-        return self.test_ssh.copy("tcptest.py")==0 and \
-            self.test_ssh.run(client_command,background=False)==0
+        if self.test_ssh.copy("tcptest.py")!=0: return False
+        utils.header ("tcp client - first attempt")
+        if self.test_ssh.run(client_command,background=False)==0: return True
+        # if first try has failed, wait for <retry> s an try again
+        time.sleep(retry)
+        utils.header ("tcp client - second attempt")
+        if self.test_ssh.run(client_command,background=False)==0: return True
+        return False
 
     # use the node's main ssh root entrance, as the slice entrance might be down
     #def tar_var_logs (self):
