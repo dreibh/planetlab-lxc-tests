@@ -1180,8 +1180,13 @@ class TestPlc:
                 break
 
             # idem for the client side
-            c_test_sliver = self.locate_sliver_obj_cross (spec['server_node'],spec['client_slice'],other_plcs)
-            if not c_test_sliver.run_tcp_client(s_test_sliver.test_node.name(),port):
+            c_test_sliver = self.locate_sliver_obj_cross (spec['client_node'],spec['client_slice'],other_plcs)
+            # use nodename from locatesd sliver, unless 'client_connect' is set
+            if 'client_connect' in spec:
+                destination = spec['client_connect']
+            else:
+                destination=s_test_sliver.test_node.name()
+            if not c_test_sliver.run_tcp_client(destination,port):
                 overall=False
         return overall
 

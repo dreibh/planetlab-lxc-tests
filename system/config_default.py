@@ -415,6 +415,14 @@ def tcp_specs (options,index):
     # 
     slice1='%s_sl1'%login_base(1)
     slice2='%s_sl2'%login_base(1)
+    slice3='%s_sl3'%login_base(2)
+    slice4='%s_sl4'%login_base(2)
+# bind on 0.0.0.0 and try to reach this on localhost
+# not expected to work
+    same_node_same_slice_lo =   { 'server_node': 'node1', 'server_slice': slice1,
+                                  'client_node': 'node1', 'client_slice': slice1,
+                                  'client_connect' : 'localhost',
+                                  'port': 10000}
     same_node_same_slice =      { 'server_node': 'node1', 'server_slice': slice1,
                                   'client_node': 'node1', 'client_slice': slice1,
                                   'port': 10001}
@@ -423,13 +431,16 @@ def tcp_specs (options,index):
                                   'client_node': 'node1', 'client_slice': slice2,
                                   'port': 10002}
     two_nodes_same_slice =      { 'server_node': 'node1', 'server_slice': slice1,
-                                  'client_node': 'node2', 'client_slice': slice1,
+                                  'client_node': 'node2', 'client_slice': slice3,
                                   'port': 10003}
     two_nodes_2_slices =        { 'server_node': 'node1', 'server_slice': slice1,
-                                  'client_node': 'node2', 'client_slice': slice2,
+                                  'client_node': 'node2', 'client_slice': slice4,
                                   'port': 10004}
-#    specs = [ same_node_same_slice, same_node_2_slices ]
-    specs = [ same_node_same_slice ]
+    specs = []
+#    specs += [ same_node_same_slice_lo ]
+    specs += [ same_node_same_slice ]
+# worth another try
+    specs += [ same_node_2_slices ]
     if options.size >1 :
         specs += [ two_nodes_same_slice, two_nodes_2_slices ]
     return specs
