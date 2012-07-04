@@ -389,9 +389,16 @@ class TestPlc:
         self.show_pass (2)
         return True
 
+    # uggly hack to make sure 'run export' only reports about the 1st plc 
+    # to avoid confusion - also we use 'inri_slice1' in various aliases..
+    exported_id=1
     def export (self):
         "print cut'n paste-able stuff to export env variables to your shell"
         # guess local domain from hostname
+        if TestPlc.exported_id>1: 
+            print "export GUESTHOSTNAME%d=%s"%(TestPlc.exported_id,self.plc_spec['vservername'])
+            return
+        TestPlc.exported_id+=1
         domain=socket.gethostname().split('.',1)[1]
         fqdn="%s.%s"%(self.plc_spec['host_box'],domain)
         print "export BUILD=%s"%self.options.buildname
