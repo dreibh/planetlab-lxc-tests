@@ -1297,6 +1297,11 @@ class TestPlc:
             self.run_in_guest("sfa-nuke.py")==0 or \
             self.run_in_guest("sfa-nuke-plc.py")==0
 
+    def sfa_fsclean(self):
+        "cleanup /etc/sfa/trusted_roots and /var/lib/sfa"
+        self.run_in_guest("rm -rf /etc/sfa/trusted_roots /var/lib/sfa/authorities")
+        return True
+
     def sfa_plcclean(self):
         "cleans the PLC entries that were created as a side effect of running the script"
         # ignore result 
@@ -1354,7 +1359,7 @@ class TestPlc:
         if not os.path.isdir(dirname):
             utils.system("mkdir -p %s"%dirname)
         if not os.path.isdir(dirname):
-            raise "Cannot create config dir for plc %s"%self.name()
+            raise Exception,"Cannot create config dir for plc %s"%self.name()
         return dirname
 
     def conffile(self,filename):
@@ -1438,7 +1443,7 @@ class TestPlc:
             and  self.test_ssh.copy_abs(reg_fname,'/%s/etc/sfa/registries.xml'%self.vm_root_in_host())==0
 
     def sfa_import(self):
-        "sfa-import-plc"
+        "use sfaadmin to import from plc"
         auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         return \
             self.run_in_guest('sfaadmin reg import_registry')==0 

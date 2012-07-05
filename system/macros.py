@@ -10,6 +10,7 @@ sequences['sfa_restart'] = [
     'sfa_stop',
     'sfa_plcclean',
     'sfa_dbclean',
+    'sfa_fsclean',
     'sfa_configure',
     'sfa_start',
     'sfa_import',
