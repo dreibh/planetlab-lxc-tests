@@ -1293,7 +1293,7 @@ class TestPlc:
 
     def sfa_dbclean(self):
         "thoroughly wipes off the SFA database"
-        return self.run_in_guest("sfaadmin registry nuke")==0 or \
+        return self.run_in_guest("sfaadmin reg nuke")==0 or \
             self.run_in_guest("sfa-nuke.py")==0 or \
             self.run_in_guest("sfa-nuke-plc.py")==0
 
@@ -1441,7 +1441,7 @@ class TestPlc:
         "sfa-import-plc"
         auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
         return \
-            self.run_in_guest('sfaadmin reg import')==0 
+            self.run_in_guest('sfaadmin reg import_registry')==0 
 # not needed anymore
 #        self.run_in_guest('cp /etc/sfa/authorities/%s/%s.pkey /etc/sfa/authorities/server.key'%(auth,auth))
 
