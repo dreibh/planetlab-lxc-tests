@@ -397,7 +397,7 @@ class TestPlc:
         # guess local domain from hostname
         if TestPlc.exported_id>1: 
             print "export GUESTHOSTNAME%d=%s"%(TestPlc.exported_id,self.plc_spec['vservername'])
-            return
+            return True
         TestPlc.exported_id+=1
         domain=socket.gethostname().split('.',1)[1]
         fqdn="%s.%s"%(self.plc_spec['host_box'],domain)
