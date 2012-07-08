@@ -699,7 +699,7 @@ class QemuBox (Box):
 
     def reboot (self, options):
         if not options.soft:
-            Box.reboot(options)
+            Box.reboot(self,options)
         else:
             self.run_ssh(['pkill','qemu'],"Killing qemu instances",
                          dry_run=options.dry_run)
