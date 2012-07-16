@@ -617,8 +617,8 @@ class TestPlc:
 
     ### 
     def plc_configure(self):
-        "run plc-config-tty"
-        tmpname='%s.plc-config-tty'%(self.name())
+        "run sfa-config-tty"
+        tmpname='%s.sfa-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',
                      'PLC_ROOT_USER',
@@ -643,7 +643,7 @@ class TestPlc:
         fileconf.write('q\n')
         fileconf.close()
         utils.system('cat %s'%tmpname)
-        self.run_in_guest_piped('cat %s'%tmpname,'plc-config-tty')
+        self.run_in_guest_piped('cat %s'%tmpname,'sfa-config-tty')
         utils.system('rm %s'%tmpname)
         return True
 
