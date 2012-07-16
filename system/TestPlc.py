@@ -617,8 +617,8 @@ class TestPlc:
 
     ### 
     def plc_configure(self):
-        "run sfa-config-tty"
-        tmpname='%s.sfa-config-tty'%(self.name())
+        "run plc-config-tty"
+        tmpname='%s.plc-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
         for var in [ 'PLC_NAME',
                      'PLC_ROOT_USER',
