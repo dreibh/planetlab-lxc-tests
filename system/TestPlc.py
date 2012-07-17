@@ -643,7 +643,7 @@ class TestPlc:
         fileconf.write('q\n')
         fileconf.close()
         utils.system('cat %s'%tmpname)
-        self.run_in_guest_piped('cat %s'%tmpname,'sfa-config-tty')
+        self.run_in_guest_piped('cat %s'%tmpname,'plc-config-tty')
         utils.system('rm %s'%tmpname)
         return True
 
