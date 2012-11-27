@@ -494,6 +494,9 @@ def plc (options,index) :
         'tcp_specs' : tcp_specs(options,index),
 	'sfa' : sfa(options,index),
         'leases' : leases (options, index),
+        # big distros need more time to install nodes
+        'ssh_node_boot_timers': (40,38),
+        'ssh_node_debug_timers': (10,8),
     }
 
 # NOTE: SFA currently has SFA_AGGREGATE_API_VERSION=2 baked into the code

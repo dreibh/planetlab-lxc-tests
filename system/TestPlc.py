@@ -152,6 +152,8 @@ class TestPlc:
         self.vservername=plc_spec['vservername']
         self.url="https://%s:443/PLCAPI/"%plc_spec['vserverip']
 	self.apiserver=TestApiserver(self.url,options.dry_run)
+        (self.ssh_node_boot_timeout,self.ssh_node_boot_silent)=plc_spec['ssh_node_boot_timers']
+        (self.ssh_node_debug_timeout,self.ssh_node_debug_silent)=plc_spec['ssh_node_debug_timers']
         
     def has_addresses_api (self):
         return self.apiserver.has_method('AddIpAddress')
@@ -1012,11 +1014,15 @@ class TestPlc:
         
     def ssh_node_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
-        return self.check_nodes_ssh(debug=True,timeout_minutes=10,silent_minutes=8)
+        return self.check_nodes_ssh(debug=True,
+                                    timeout_minutes=self.ssh_node_debug_timeout,
+                                    silent_minutes=self.ssh_node_debug_silent)
     
     def ssh_node_boot(self):
         "Tries to ssh into nodes in production mode with the root ssh key"
-        return self.check_nodes_ssh(debug=False,timeout_minutes=40,silent_minutes=38)
+        return self.check_nodes_ssh(debug=False,
+                                    timeout_minutes=self.ssh_node_boot_timeout,
+                                    silent_minutes=self.ssh_node_boot_silent)
     
     @node_mapper
     def qemu_local_init (self): pass
