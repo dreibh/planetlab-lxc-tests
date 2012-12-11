@@ -724,7 +724,7 @@ class TestPlc:
     def delete_all_sites (self):
         "Delete all sites in PLC, and related objects"
         print 'auth_root',self.auth_root()
-        sites = self.apiserver.GetSites(self.auth_root(), {}, ['site_id'])
+        sites = self.apiserver.GetSites(self.auth_root(), {}, ['site_id','login_base'])
         for site in sites:
             # keep automatic site - otherwise we shoot in our own foot, root_auth is not valid anymore
             if site['login_base']==self.plc_spec['PLC_SLICE_PREFIX']: continue
