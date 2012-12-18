@@ -68,7 +68,12 @@ class TestSlice:
         vsys_tags = self.test_plc.apiserver.GetSliceTags (auth,{'tagname':'vsys','name':slice_name})
         values=[ st['value'] for st in vsys_tags ]
         expected=self.test_plc.plc_spec['expected_vsys_tags']
-        return set(values) == set(expected)
+        result = set(values) == set(expected)
+        if not result:
+            print 'Check vsys defaults with slice %s'%slice_name
+            print 'Expected %s'%expected
+            print 'Got %s'%values
+        return result
 
     # just add the nodes and handle tags
     def add_nodes (self):
