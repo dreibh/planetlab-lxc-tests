@@ -85,6 +85,9 @@ class TestPlc:
         'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', 'speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
+# slices created under plcsh interactively seem to be fine but these ones don't have the tags
+# keep this our of the way for now
+#        'check_vsys_defaults', SEP,
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
