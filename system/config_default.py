@@ -484,6 +484,8 @@ def plc (options,index) :
         'PLC_NET_DNS1' : 'deferred-dns-1',
         'PLC_NET_DNS2' : 'deferred-dns-2',
         'PLC_RESERVATION_GRANULARITY':1800,
+        'PLC_VSYS_DEFAULTS':' , vif_up, vif_down, fd_tuntap, promisc, ',
+        'expected_vsys_tags': [ 'vif_up', 'vif_down', 'fd_tuntap', 'promisc', ],
         # minimal config so the omf plugins actually trigger
         'PLC_OMF_ENABLED' : 'true',
         'PLC_OMF_XMPP_SERVER': 'deferred-myplc-hostname',

@@ -60,6 +60,16 @@ class TestSlice:
 
         self.add_nodes()
 
+    def check_vsys_defaults (self, options, *args, **kwds):
+        "check vsys tags match PLC_VSYS_DEFAULTS"
+        auth = self.owner_auth()
+        slice_fields = self.slice_spec['slice_fields']
+        slice_name = slice_fields['name']
+        vsys_tags = self.test_plc.apiserver.GetSliceTags (auth,{'tagname':'vsys','name':slice_name})
+        values=[ st['value'] for st in vsys_tags ]
+        expected=self.test_plc.plc_spec['expected_vsys_tags']
+        return set(values) == set(expected)
+
     # just add the nodes and handle tags
     def add_nodes (self):
         auth = self.owner_auth()

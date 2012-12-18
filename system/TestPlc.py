@@ -94,7 +94,7 @@ class TestPlc:
         'sfi_list@1', 'sfi_show@1', 'sfi_slices@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
-        'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
+        'check_vsys_defaults', 'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
@@ -639,6 +639,7 @@ class TestPlc:
                      'PLC_RESERVATION_GRANULARITY',
                      'PLC_OMF_ENABLED',
                      'PLC_OMF_XMPP_SERVER',
+                     'PLC_VSYS_DEFAULTS',
                      ]:
             fileconf.write ('e %s\n%s\n'%(var,self.plc_spec[var]))
         fileconf.write('w\n')
@@ -1128,6 +1129,9 @@ class TestPlc:
     def ssh_slice(self): pass
     @slice_mapper
     def ssh_slice_off (self): pass
+
+    @slice_mapper
+    def check_vsys_defaults(self): pass
 
     @node_mapper
     def keys_clear_known_hosts (self): pass

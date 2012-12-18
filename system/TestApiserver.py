@@ -50,6 +50,7 @@ server_methods = [ ('GetNodes' ,  []),
                    ('GetLeases', []),
                    ('DeleteLeases',True),
                    ('AddConfFile','True'),
+                   ('GetSliceTags',[]),
                    ('system.listMethods',[]),
                    ]
 
