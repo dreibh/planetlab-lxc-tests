@@ -20,7 +20,7 @@ class OnelabSubstrate (Substrate):
 
    # the build boxes we use 
    def build_boxes_spec (self):
-      return [ 'liquid', 'reed', 'velvet', ]
+      return [ 'liquid', 'reed', 'velvet', 'gorillaz', ]
 
    # the vs-capable box for PLCs
    def plc_vs_boxes_spec (self):
