@@ -353,7 +353,7 @@ class BuildBox (Box):
 
     # inspect box and find currently running builds
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
-    matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*init-vserver.*-i\s+eth.\s+(?P<buildname>[^\s]+)\s*\Z")
+    matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*init-vserver.*\s+(?P<buildname>[^\s]+)\s*\Z")
     def sense(self, options):
         print 'bb',
         self.sense_uptime()
