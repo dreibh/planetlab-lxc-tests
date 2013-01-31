@@ -30,7 +30,7 @@ class TestSliceSfa:
     def sfi_user(self,*args,**kwds): return self.test_auth_sfa.sfi_user(*args, **kwds)
 
     def discover_option(self):
-        if self.rspec_style()=='pg': return "-r protogeni"
+        if self.rspec_style()=='pg': return "-r GENI"
         else:                        return "-r sfa"
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
