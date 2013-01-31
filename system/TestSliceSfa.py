@@ -84,7 +84,8 @@ class TestSliceSfa:
             "sfiListNodes.py -i %s/%s -o %s/%s"%(self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile()),
             "sfiAddSliver.py -i %s/%s -n %s/%s -o %s/%s"%\
                 (self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile(),self.sfi_path(),self.reqfile()),
-            self.sfi_user("create %s %s"%(self.hrn(),self.reqfile())),
+            self.sfi_user("allocate %s %s"%(self.hrn(),self.reqfile())),
+            self.sfi_user("provision %s"%(self.hrn())),
             ]
         for command in commands:
             if self.test_plc.run_in_guest(command)!=0: return False
