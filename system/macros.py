@@ -77,7 +77,6 @@ sequences['sfa_scratch'] = [
 sequences['sfi_view_all'] = [
     'sfi_list',
     'sfi_show',
-    'sfi_slices',
 ]
 
 # macro to exercice the registry only

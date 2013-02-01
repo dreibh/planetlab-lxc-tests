@@ -154,11 +154,6 @@ class TestAuthSfa:
 	return \
             self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.hrn())))==0
 
-    def sfi_slices (self, options):
-        "run (as regular user) sfi slices (on SM)"
-	return \
-            self.test_plc.run_in_guest(self.sfi_user("slices"))==0 
-
     # those are step names exposed as methods of TestPlc, hence the _sfa
     @slice_sfa_mapper
     def sfa_add_slice (self, *args, **kwds): pass
