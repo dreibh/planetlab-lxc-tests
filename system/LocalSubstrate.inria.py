@@ -30,7 +30,7 @@ class OnelabSubstrate (Substrate):
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
       return [ ('gotan', 35),  # how many plcs max in this box 
-               ('deathvegas', 35),  
+#               ('deathvegas', 35),  
                ]  
 
    # vplc01 to 40
