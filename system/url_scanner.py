@@ -1,5 +1,4 @@
-# a utility for testing xmlrpclib URL's
-# should probably 
+# a rough utility for testing xmlrpclib URL's
 import xmlrpclib
 auth={'AuthMethod':'password','Username':'root@test.onelab.eu','AuthString':'test++'}
 
