@@ -20,6 +20,7 @@ from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
 from TestApiserver import TestApiserver
 from TestAuthSfa import TestAuthSfa
+from PlcapiUrlScanner import PlcapiUrlScanner
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
@@ -83,7 +84,8 @@ class TestPlc:
         'show', SEP,
         'vs_delete','timestamp_vs','vs_create', SEP,
         'plc_install', 'plc_configure', 'plc_start', SEP,
-        'keys_fetch', 'keys_store', 'keys_clear_known_hosts', 'speed_up_slices', SEP,
+        'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
+        'plcapi_urls','speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
 # slices created under plcsh interactively seem to be fine but these ones don't have the tags
 # keep this our of the way for now
@@ -1139,6 +1141,9 @@ class TestPlc:
     @node_mapper
     def keys_clear_known_hosts (self): pass
     
+    def plcapi_urls (self):
+        return PlcapiUrlScanner (self.auth_root(),ip=self.vserverip).scan()
+
     def speed_up_slices (self):
         "tweak nodemanager settings on all nodes using a conf file"
         # create the template on the server-side 
