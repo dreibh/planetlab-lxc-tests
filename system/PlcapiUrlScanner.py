@@ -37,7 +37,7 @@ class PlcapiUrlScanner:
             print '... (http error %s)'%e.errcode,url
             return False
         except Exception as e:
-            print '---',type(e).__name__,url
+            print '---',type(e).__name__,url,e
             if self.verbose: traceback.print_exc()
             return False
 
