@@ -81,7 +81,7 @@ function usage () {
     echo "Description:"
     echo "   This command is used to manage and retreive information on existing lxc containers "
     echo "lxc-driver.sh -c <COMMAND>_all"
-    echo "lxc-driver.sh -c <COMMAND>_lxc -l <LXCNAME>"
+    echo "lxc-driver.sh -c <COMMAND>_lxc -n <LXCNAME>"
     echo "<COMMAND> in {sense,start,stop,restart,destroy}"
 
 }
