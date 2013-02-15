@@ -41,20 +41,22 @@ class PlcapiUrlScanner:
             if self.verbose: traceback.print_exc()
             return False
 
-    def try_url_expected (self, url, expected):
-        return self.try_url(url)==expected
+    def try_url_expected (self, url, required):
+        result=self.try_url(url)==expected
+        if required and not result:     return False
+        else:                           return True
 
     def scan(self):
         overall=True
         for protocol in ['http','https']:
-            expected= protocol=='https'
             for dest in [ self.hostname, self.ip ]:
                 for port in [ '',':80',':443']:
                     for path in ['PLCAPI','PLCAPI/']:
                         if protocol=='http' and port==':443': continue
                         if protocol=='https' and port==':80': continue
+                        required = (protocol=='https') and (path=='PLCAPI/')
                         url="%s://%s%s/%s"%(protocol,dest,port,path)
-                        if not self.try_url_expected (url,expected): overall=False
+                        if not self.try_url_expected (url,required): overall=False
         return overall
 
 from optparse import OptionParser
