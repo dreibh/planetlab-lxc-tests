@@ -41,8 +41,8 @@ class PlcapiUrlScanner:
             if self.verbose: traceback.print_exc()
             return False
 
-    def try_url_expected (self, url, required):
-        result=self.try_url(url)==expected
+    def try_url_required (self, url, required):
+        result=self.try_url(url)
         if required and not result:     return False
         else:                           return True
 
@@ -56,7 +56,7 @@ class PlcapiUrlScanner:
                         if protocol=='https' and port==':80': continue
                         required = (protocol=='https') and (path=='PLCAPI/')
                         url="%s://%s%s/%s"%(protocol,dest,port,path)
-                        if not self.try_url_expected (url,required): overall=False
+                        if not self.try_url_required (url,required): overall=False
         return overall
 
 from optparse import OptionParser
