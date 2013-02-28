@@ -100,7 +100,7 @@ class TestPlc:
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
-        'ssh_node_boot@1', 'ssh_slice', 'check_initscripts', SEP,
+        'ssh_node_boot@1', 'node_bmlogs', 'ssh_slice', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
         'empty_slices', 'ssh_slice_off', 'fill_slices', SEP,
@@ -1029,6 +1029,10 @@ class TestPlc:
         return self.check_nodes_ssh(debug=False,
                                     timeout_minutes=self.ssh_node_boot_timeout,
                                     silent_minutes=self.ssh_node_boot_silent)
+
+    def node_bmlogs(self):
+        "Checks that there's a non-empty dir. /var/log/bm/raw"
+        return utils.system(self.actual_command_in_guest("ls /var/log/bm/raw"))==0
     
     @node_mapper
     def qemu_local_init (self): pass
