@@ -3,7 +3,7 @@
 #
 
 import time
-import datetime
+from datetime import datetime, timedelta
 
 import utils
 from TestNode import TestNode
@@ -11,6 +11,8 @@ from TestUser import TestUser
 from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
 
+from Completer import Completer, CompleterTask
+from TestSlice import CompleterTaskSshSlice
 
 class TestSliceSfa:
 
@@ -47,8 +49,8 @@ class TestSliceSfa:
 
     def sfa_renew_slice(self, options):
         "run sfi renew (on Aggregates)"
-        too_late = datetime.datetime.now()+datetime.timedelta(weeks=52)
-        one_month = datetime.datetime.now()+datetime.timedelta(weeks=4)
+        too_late =  datetime.now() + timedelta(weeks=52)
+        one_month = datetime.now() + timedelta(weeks=4)
         # we expect this to fail on too long term attemps, but to succeed otherwise
         overall=True
         for ( renew_until, expected) in [ (too_late, False), (one_month, True) ] :
@@ -122,60 +124,23 @@ class TestSliceSfa:
         return self.test_plc.locate_private_key_from_key_names ( [ self.slice_spec['key_name'] ] )
 
     # check the resulting sliver
-    def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=30,period=15):
+    def ssh_slice_sfa(self,options,timeout_minutes=40,silent_minutes=0,period_seconds=15):
 	"tries to ssh-enter the SFA slice"
-        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
-        graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
+        timeout  = timedelta(minutes=timeout_minutes)
+        graceout = timedelta(minutes=silent_minutes)
+        period   = timedelta(seconds=period_seconds)
         # locate a key
         private_key=self.locate_private_key()
         if not private_key :
             utils.header("WARNING: Cannot find a valid key for slice %s"%self.name())
             return False
-
-        # convert nodenames to real hostnames
-        restarted=[]
-        tocheck=[]
+        command="echo hostname ; hostname; echo id; id; echo uname -a ; uname -a"
+        
+        tasks=[]
+        slicename=self.slice_spec['name']
+        dry_run = getattr(options,'dry_run',False)
         for nodename in self.slice_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
-            tocheck.append(node_spec['node_fields']['hostname'])
-
-        utils.header("checking ssh access into slice %s on nodes %r"%(self.plc_name(),tocheck))
-        utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
-                         (timeout_minutes,silent_minutes,period))
-        while tocheck:
-            for hostname in tocheck:
-                (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
-                date_test_ssh = TestSsh (hostname,key=private_key,username=self.plc_name())
-                command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
-                date = utils.system (command, silent=datetime.datetime.now() < graceout)
-                if date==0:
-                    utils.header("Successfuly entered slice %s on %s"%(self.plc_name(),hostname))
-                    tocheck.remove(hostname)
-                else:
-                    # real nodes will have been checked once in case they're up - skip if not
-                    if TestNode.is_real_model(node_spec['node_fields']['model']):
-                        utils.header("WARNING : Checking slice %s on real node %s skipped"%(self.plc_name(),hostname))
-                        tocheck.remove(hostname)
-                    # nm restart after first failure, if requested 
-                    if options.forcenm and hostname not in restarted:
-                        utils.header ("forcenm option : restarting nm on %s"%hostname)
-                        restart_test_ssh=TestSsh(hostname,key="keys/key_admin.rsa")
-                        access=restart_test_ssh.actual_command('service nm restart')
-                        if (access==0):
-                            utils.header('nm restarted on %s'%hostname)
-                        else:
-                            utils.header('Failed to restart nm on %s'%(hostname))
-                        restarted.append(hostname)
-            if not tocheck:
-                # we're done
-                return True
-            if datetime.datetime.now() > timeout:
-                for hostname in tocheck:
-                    utils.header("FAILURE to ssh into %s@%s"%(self.plc_name(),hostname))
-                return False
-            # wait for the period
-            time.sleep (period)
-        # for an empty slice
-        return True
-
-    
+            tasks.append( CompleterTaskSshSlice(self.test_plc,node_spec['node_fields']['hostname'],
+                                                slicename,private_key,command,expected=True,dry_run=dry_run))
+        return Completer (tasks).run (timeout, graceout, period)

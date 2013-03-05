@@ -1,13 +1,13 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
-import os, os.path
-import datetime
-import time
 import sys
+import time
+import os, os.path
 import traceback
-from types import StringTypes
 import socket
+from datetime import datetime, timedelta
+from types import StringTypes
 
 import utils
 from TestSite import TestSite
@@ -21,6 +21,7 @@ from TestSsh import TestSsh
 from TestApiserver import TestApiserver
 from TestAuthSfa import TestAuthSfa
 from PlcapiUrlScanner import PlcapiUrlScanner
+from Completer import Completer, CompleterTask
 
 # step methods must take (self) and return a boolean (options is a member of the class)
 
@@ -925,58 +926,58 @@ class TestPlc:
         return res
 
     # silent_minutes : during the first <silent_minutes> minutes nothing gets printed
-    def nodes_check_boot_state (self, target_boot_state, timeout_minutes, silent_minutes,period=15):
+    def nodes_check_boot_state (self, target_boot_state, timeout_minutes, silent_minutes,period_seconds=15):
         if self.options.dry_run:
             print 'dry_run'
             return True
-        # compute timeout
-        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
-        graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
+
+        class CompleterTaskBootState (CompleterTask):
+            def __init__ (self, test_plc,hostname):
+                self.test_plc=test_plc
+                self.hostname=hostname
+                self.last_boot_state='undef'
+            def actual_run (self):
+                try:
+                    node = self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), [ self.hostname ],
+                                                               ['boot_state'])[0]
+                    self.last_boot_state = node['boot_state'] 
+                    return self.last_boot_state == target_boot_state
+                except:
+                    return False
+            def message (self):
+                return "CompleterTaskBootState with node %s"%self.hostname
+            def failure_message (self):
+                return "node %s in state %s - expected %s"%(self.hostname,self.last_boot_state,target_boot_state)
+                
+        timeout = timedelta(minutes=timeout_minutes)
+        graceout = timedelta(minutes=silent_minutes)
+        period   = timedelta(seconds=period_seconds)
         # the nodes that haven't checked yet - start with a full list and shrink over time
-        tocheck = self.all_hostnames()
-        utils.header("checking nodes %r"%tocheck)
-        # create a dict hostname -> status
-        status = dict ( [ (hostname,'undef') for hostname in tocheck ] )
-        while tocheck:
-            # get their status
-            tocheck_status=self.apiserver.GetNodes(self.auth_root(), tocheck, ['hostname','boot_state' ] )
-            # update status
-            for array in tocheck_status:
-                hostname=array['hostname']
-                boot_state=array['boot_state']
-                if boot_state == target_boot_state:
-                    utils.header ("%s has reached the %s state"%(hostname,target_boot_state))
-                else:
-                    # if it's a real node, never mind
-                    (site_spec,node_spec)=self.locate_hostname(hostname)
-                    if TestNode.is_real_model(node_spec['node_fields']['model']):
-                        utils.header("WARNING - Real node %s in %s - ignored"%(hostname,boot_state))
-                        # let's cheat
-                        boot_state = target_boot_state
-                    elif datetime.datetime.now() > graceout:
-                        utils.header ("%s still in '%s' state"%(hostname,boot_state))
-                        graceout=datetime.datetime.now()+datetime.timedelta(1)
-                status[hostname] = boot_state
-            # refresh tocheck
-            tocheck = [ hostname for (hostname,boot_state) in status.iteritems() if boot_state != target_boot_state ]
-            if not tocheck:
-                return True
-            if datetime.datetime.now() > timeout:
-                for hostname in tocheck:
-                    utils.header("FAILURE due to %s in '%s' state"%(hostname,status[hostname]))
-                return False
-            # otherwise, sleep for a while
-            time.sleep(period)
-        # only useful in empty plcs
-        return True
+        utils.header("checking nodes boot state (expected %s)"%target_boot_state)
+        tasks = [ CompleterTaskBootState (self,hostname) \
+                      for (hostname,_) in self.all_node_infos() ]
+        return Completer (tasks).run (timeout, graceout, period)
 
     def nodes_booted(self):
         return self.nodes_check_boot_state('boot',timeout_minutes=30,silent_minutes=28)
 
-    def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period=15):
-        # compute timeout
-        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
-        graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
+    def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period_seconds=15):
+        class CompleterTaskNodeSsh (CompleterTask):
+            def __init__ (self, hostname, qemuname, boot_state, local_key):
+                self.hostname=hostname
+                self.qemuname=qemuname
+                self.boot_state=boot_state
+                self.local_key=local_key
+            def run (self, silent):
+                command = TestSsh (self.hostname,key=self.local_key).actual_command("hostname;uname -a")
+                return utils.system (command, silent=silent)==0
+            def failure_message (self):
+                return "Cannot reach %s @ %s in %s mode"%(self.hostname, self.qemuname, self.boot_state)
+
+        # various delays 
+        timeout  = timedelta(minutes=timeout_minutes)
+        graceout = timedelta(minutes=silent_minutes)
+        period   = timedelta(seconds=period_seconds)
         vservername=self.vservername
         if debug: 
             message="debug"
@@ -984,39 +985,11 @@ class TestPlc:
         else: 
             message="boot"
 	    local_key = "keys/key_admin.rsa"
+        utils.header("checking ssh access to nodes (expected in %s mode)"%message)
         node_infos = self.all_node_infos()
-        utils.header("checking ssh access (expected in %s mode) to nodes:"%message)
-        for (nodename,qemuname) in node_infos:
-            utils.header("hostname=%s -- qemubox=%s"%(nodename,qemuname))
-        utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
-                         (timeout_minutes,silent_minutes,period))
-        while node_infos:
-            for node_info in node_infos:
-                (hostname,qemuname) = node_info
-                # try to run 'hostname' in the node
-                command = TestSsh (hostname,key=local_key).actual_command("hostname;uname -a")
-                # don't spam logs - show the command only after the grace period 
-                success = utils.system ( command, silent=datetime.datetime.now() < graceout)
-                if success==0:
-                    utils.header('Successfully entered root@%s (%s)'%(hostname,message))
-                    # refresh node_infos
-                    node_infos.remove(node_info)
-                else:
-                    # we will have tried real nodes once, in case they're up - but if not, just skip
-                    (site_spec,node_spec)=self.locate_hostname(hostname)
-                    if TestNode.is_real_model(node_spec['node_fields']['model']):
-                        utils.header ("WARNING : check ssh access into real node %s - skipped"%hostname)
-			node_infos.remove(node_info)
-            if  not node_infos:
-                return True
-            if datetime.datetime.now() > timeout:
-                for (hostname,qemuname) in node_infos:
-                    utils.header("FAILURE to ssh into %s (on %s)"%(hostname,qemuname))
-                return False
-            # otherwise, sleep for a while
-            time.sleep(period)
-        # only useful in empty plcs
-        return True
+        tasks = [ CompleterTaskNodeSsh (nodename, qemuname, message, local_key) \
+                      for (nodename,qemuname) in node_infos ]
+        return Completer (tasks).run (timeout, graceout, period)
         
     def ssh_node_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
@@ -1063,21 +1036,33 @@ class TestPlc:
 
     ### initscripts
     def do_check_initscripts(self):
-        overall = True
+        class CompleterTaskInitscript (CompleterTask):
+            def __init__ (self, test_sliver, stamp):
+                self.test_sliver=test_sliver
+                self.stamp=stamp
+            def actual_run (self):
+                return self.test_sliver.check_initscript_stamp (self.stamp)
+            def message (self):
+                return "initscript checker for %s"%self.test_sliver.name()
+            def failure_message (self):
+                return "initscript stamp %s not found in sliver %s"%(self.stamp,self.test_sliver.name())
+            
+        tasks=[]
         for slice_spec in self.plc_spec['slices']:
             if not slice_spec.has_key('initscriptstamp'):
                 continue
             stamp=slice_spec['initscriptstamp']
+            slicename=slice_spec['slice_fields']['name']
             for nodename in slice_spec['nodenames']:
+                print 'nodename',nodename,'slicename',slicename,'stamp',stamp
                 (site,node) = self.locate_node (nodename)
                 # xxx - passing the wrong site - probably harmless
                 test_site = TestSite (self,site)
                 test_slice = TestSlice (self,test_site,slice_spec)
                 test_node = TestNode (self,test_site,node)
                 test_sliver = TestSliver (self, test_node, test_slice)
-                if not test_sliver.check_initscript_stamp(stamp):
-                    overall = False
-        return overall
+                tasks.append ( CompleterTaskInitscript (test_sliver, stamp))
+        return Completer (tasks).run (timedelta(minutes=5), timedelta(minutes=4), timedelta(seconds=10))
 	    
     def check_initscripts(self):
         "check that the initscripts have triggered"
@@ -1234,24 +1219,23 @@ class TestPlc:
     def check_drl (self): return self._check_system_slice ('drl')
 
     # we have the slices up already here, so it should not take too long
-    def _check_system_slice (self, slicename, timeout_minutes=5, period=15):
-        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
-        test_nodes=self.all_nodes()
-        while test_nodes:
-            for test_node in test_nodes:
-                if test_node._check_system_slice (slicename,dry_run=self.options.dry_run):
-                    utils.header ("ok")
-                    test_nodes.remove(test_node)
-                else:
-                    print '.',
-            if not test_nodes:
-                return True
-            if datetime.datetime.now () > timeout:
-                for test_node in test_nodes:
-                    utils.header ("can't find system slice %s in %s"%(slicename,test_node.name()))
-                return False
-            time.sleep(period)
-        return True
+    def _check_system_slice (self, slicename, timeout_minutes=5, period_seconds=15):
+        class CompleterTaskSystemSlice (CompleterTask):
+            def __init__ (self, test_node, dry_run): 
+                self.test_node=test_node
+                self.dry_run=dry_run
+            def actual_run (self): 
+                return self.test_node._check_system_slice (slicename, dry_run=self.dry_run)
+            def message (self): 
+                return "System slice %s @ %s"%(slicename, self.test_node.name())
+            def failure_message (self): 
+                return "COULD not find system slice %s @ %s"%(slicename, self.test_node.name())
+        timeout = timedelta(minutes=timeout_minutes)
+        silent  = timedelta (0)
+        period  = timedelta (seconds=period_seconds)
+        tasks = [ CompleterTaskSystemSlice (test_node, self.options.dry_run) \
+                      for test_node in self.all_nodes() ]
+        return Completer (tasks) . run (timeout, silent, period)
 
     def plcsh_stress_test (self):
         "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"
@@ -1636,7 +1620,7 @@ class TestPlc:
             if not isinstance(name,StringTypes):
                 raise Exception
         except:
-            t=datetime.datetime.now()
+            t=datetime.now()
             d=t.date()
             name=str(d)
         return "/root/%s-%s.sql"%(database,name)
