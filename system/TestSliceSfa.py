@@ -137,7 +137,7 @@ class TestSliceSfa:
         command="echo hostname ; hostname; echo id; id; echo uname -a ; uname -a"
         
         tasks=[]
-        slicename=self.slice_spec['name']
+        slicename=self.plc_name()
         dry_run = getattr(options,'dry_run',False)
         for nodename in self.slice_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
