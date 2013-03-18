@@ -1,50 +1,52 @@
 #!/bin/bash
 
 function sense_all () {
-
-    for i in $(lxc-ls -1|sort|uniq); do 
-	[ "$(lxc-info -n $i | grep state| awk '{print $2;}' )" == "RUNNING" ] && echo "$i;$(lxc-info -n $i | grep pid | awk '{print $2;}');$(cat /var/lib/lxc/$i/$i.timestamp)" || :
-    done    
+    virsh -c lxc:// list | grep running | while read line; do
+        pid=$(echo $line | cut -d' ' -f1)
+        lxc_name=$(echo $line | cut -d' ' -f2)
+        timestamp=$(cat /var/lib/lxc/$lxc_name/$lxc_name.timestamp)
+        echo "$lxc_name;$pid;$timestamp" 
+    done  
 }
 
 function start_all () {
-
-    for i in $(lxc-ls -1|sort|uniq); do 
-        [ "$(lxc-info -n $i | grep state| awk '{print $2;}' )" != "RUNNING" ] && lxc-start -d -n $i || :
-    done
-   
-    #sense_all
+    virsh -c lxc:// list --inactive | grep " - "| while read line; do
+        lxc_name=$(echo $line | cut -d' ' -f2)
+        virsh -c lxc:// start $lxc_name
+    done    
 }
 
 function stop_all () {
-   
-    for i in $(lxc-ls -1|sort|uniq); do
-        [ "$(lxc-info -n $i | grep state| awk '{print $2;}' )" != "STOPPED" ] && lxc-stop -n $i
-    done
-    
-    #sense_all
+    virsh -c lxc:// list | grep running | while read line; do
+        lxc_name=$(echo $line | cut -d' ' -f2)
+        virsh -c lxc:// destroy $lxc_name
+    done   
 }
 
 function sense_lxc () {
 
-    lxc=$1; shift
-    [ "$(lxc-info -n $lxc | grep state | awk '{print $2;}')" == "RUNNING" ] && echo "$lxc;$(lxc-info -n $lxc | grep pid | awk '{print $2;}');$(cat /var/lib/lxc/$lxc/$lxc.timestamp)" || :
+    lxc_name=$1; shift
+    if [ "$(virsh -c lxc:// dominfo $lxc_name | grep State| cut -d' ' -f11)" == "running" ] ; then
+       pid=$(virsh -c lxc:// dominfo $lxc_name| grep Id | cut -d' ' -f14)
+       timestamp=$(cat /var/lib/lxc/$lxc_name/$lxc_name.timestamp)
+       echo "$lxc_name;$pid;$timestamp"
+    fi
 }
 
 function start_lxc () {
 
-    lxc=$1; shift
-    [ "$(lxc-info -n $lxc | grep state| awk '{print $2;}' )" != "RUNNING" ] && lxc-start -d -n $lxc ||:
-    
-    #sense_lxc $lxc
+    lxc_name=$1; shift
+    if [ "$(virsh -c lxc:// dominfo $lxc_name | grep State| cut -d' ' -f11)" != "running" ] ; then
+       virsh -c lxc:// start $lxc_name
+    fi
 }
 
 function stop_lxc () {
 
-    lxc=$1; shift
-    [ "$(lxc-info -n $lxc | grep state| awk '{print $2;}' )" != "STOPPED" ] && lxc-stop -n $lxc
-
-    #sense_lxc $lxc
+    lxc_name=$1; shift
+    if [ "$(virsh -c lxc:// dominfo $lxc_name | grep State| cut -d' ' -f11)" != "shut off" ] ; then
+       virsh -c lxc:// destroy $lxc_name
+    fi
 }
 
 function restart_all () {
@@ -55,25 +57,27 @@ function restart_all () {
 
 function restart_lxc () {
 
-    lxc=$1; shift
-    stop_lxc $lxc
-    start_lxc $lxc
+    lxc_name=$1; shift
+    stop_lxc $lxc_name
+    start_lxc $lxc_name
 }
 
 function destroy_all () {
     
     stop_all
-    for i in $(lxc-ls -1|sort|uniq); do
-        lxc-destroy -n $i
+    virsh -c lxc:// list --all | while read line; do
+        lxc_name=$(echo $line | cut -d' ' -f2)
+        virsh -c lxc:// undefine $lxc_name
+        rm -fr /var/lib/lxc/$lxc_name 
     done
-
 }
 
 function destroy_lxc () {
 
-    lxc=$1; shift
-    stop_lxc $lxc
-    lxc-destroy -n $lxc
+    lxc_name=$1; shift
+    stop_lxc $lxc_name
+    virsh -c lxc:// undefine $lxc_name
+    rm -fr /var/lib/lxc/$lxc_name
 }
 
 function usage () {
