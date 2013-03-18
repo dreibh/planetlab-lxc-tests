@@ -216,13 +216,13 @@ class TestPlc:
     #start/stop the vserver
     def start_guest_in_host(self):
         if self.options.plcs_use_lxc:
-            return "lxc-start --daemon --name=%s"%(self.vservername)
+            return "virsh -c lxc:// start %s"%(self.vservername)
         else:
             return "vserver %s start"%(self.vservername)
     
     def stop_guest_in_host(self):
         if self.options.plcs_use_lxc:
-            return "lxc-stop --name=%s"%(self.vservername)
+            return "virsh -c lxc:// destroy %s"%(self.vservername)
         else:
             return "vserver %s stop"%(self.vservername)
     
@@ -546,8 +546,9 @@ class TestPlc:
         stamp_path=self.vm_timestamp_path()
         self.run_in_host("rm -f %s"%stamp_path)
         if self.options.plcs_use_lxc:
-            self.run_in_host("lxc-stop --name %s"%self.vservername)
-            self.run_in_host("lxc-destroy --name %s"%self.vservername)
+            self.run_in_host("virsh -c lxc:// destroy %s"%self.vservername)
+            self.run_in_host("virsh -c lxc:// undefine %s"%self.vservername)
+            self.run_in_host("rm -fr /var/lib/lxc/%s"%self.vservername)
             return True
         else:
             self.run_in_host("vserver --silent %s delete"%self.vservername)
