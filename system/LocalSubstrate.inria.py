@@ -44,10 +44,10 @@ class OnelabSubstrate (Substrate):
       return [ # how many qemus max in this box
          ('kvm64-1', 3), # 4 cores, 4Gb
          ('kvm64-2', 3), # 4 cores, 4Gb
-         ('kvm64-3', 2), # 2 cores, 4Gb
-         ('kvm64-4', 1), # 4 cores, 8Gb
+         ('kvm64-3', 1), # 2 cores, 4Gb
+         ('kvm64-4', 2), # 4 cores, 8Gb
          ('kvm64-5', 1), # 2 cores, 4Gb
-         ('kvm64-6', 2), # 2 cores, 4Gb
+         ('kvm64-6', 3), # 
          ]
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
