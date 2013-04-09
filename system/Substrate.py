@@ -708,7 +708,7 @@ class QemuBox (Box):
     def sense(self, options):
         print 'qn',
         modules=self.backquote_ssh(['lsmod']).split('\n')
-        self._driver='*NO kqemu/kmv_intel MODULE LOADED*'
+        self._driver='*NO kqemu/kvm_intel MODULE LOADED*'
         for module in modules:
             if module.find('kqemu')==0:
                 self._driver='kqemu module loaded'
