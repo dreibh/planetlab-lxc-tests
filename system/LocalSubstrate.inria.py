@@ -43,7 +43,7 @@ class OnelabSubstrate (Substrate):
    def qemu_boxes_spec (self):
       return [ # how many qemus max in this box
 # enfoui runs f18 - also can't seem to enter BIOS on that one
-#         ('kvm64-6', 4), # 4 cores, 8Gb
+         ('kvm64-6', 4), # 4 cores, 8Gb
          ('kvm64-1', 3), # 4 cores, 4Gb
          ('kvm64-2', 3), # 4 cores, 4Gb
          ('kvm64-4', 2), # 4 cores, 8Gb
