@@ -18,10 +18,22 @@ set -x
 INTERFACE_BRIDGE=br0
 
 # Default Value for INTERFACE_LAN
+# use /proc/net/dev instead of a hard-wired list
+function gather_interfaces () {
+    python <<EOF
+for line in file("/proc/net/dev"):
+    if ':' not in line: continue
+    ifname=line.replace(" ","").split(":")[0]
+    if ifname.find("lo")==0: continue
+    if ifname.find("virbr")==0: continue
+    if ifname.find("tap")==0: continue
+    print ifname
+EOF
+}
+    
 # let's try to figure out the interface to use - try these in order
-IFNAMES="eth0 eth1 eth2 eth3"
 function discover_interface () {
-    for ifname in $IFNAMES; do
+    for ifname in $(gather_interfaces); do
 	ip link show $ifname | grep -q UP && { INTERFACE_LAN=$ifname; return; }
     done
     # still not found ? that's bad
