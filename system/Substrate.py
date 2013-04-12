@@ -715,8 +715,6 @@ class QemuBox (Box):
             # kvm might be loaded without kvm_intel (we dont have AMD)
             elif module.find('kvm_intel')==0:
                 self._driver='kvm_intel module loaded'
-            elif module=='kvm':
-                self._driver='kvm module loaded'
         ########## find out running pids
         pids=self.backquote_ssh(['pgrep','qemu'])
         if not pids: return
