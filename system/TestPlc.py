@@ -203,13 +203,13 @@ class TestPlc:
     
     def vm_root_in_host(self):
         if self.options.plcs_use_lxc:
-            return "/var/lib/lxc/%s/rootfs/"%(self.vservername)
+            return "/vservers/%s/rootfs/"%(self.vservername)
         else:
             return "/vservers/%s"%(self.vservername)
 
     def vm_timestamp_path (self):
         if self.options.plcs_use_lxc:
-            return "/var/lib/lxc/%s/%s.timestamp"%(self.vservername,self.vservername)
+            return "/vservers/%s/%s.timestamp"%(self.vservername,self.vservername)
         else:
             return "/vservers/%s.timestamp"%(self.vservername)
 
@@ -548,7 +548,7 @@ class TestPlc:
         if self.options.plcs_use_lxc:
             self.run_in_host("virsh -c lxc:// destroy %s"%self.vservername)
             self.run_in_host("virsh -c lxc:// undefine %s"%self.vservername)
-            self.run_in_host("rm -fr /var/lib/lxc/%s"%self.vservername)
+            self.run_in_host("rm -fr /vservers/%s"%self.vservername)
             return True
         else:
             self.run_in_host("vserver --silent %s delete"%self.vservername)
