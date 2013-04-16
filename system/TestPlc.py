@@ -192,7 +192,7 @@ class TestPlc:
         return utils.system(self.actual_command_in_guest(command))
     
     def run_in_host (self,command):
-        return self.test_ssh.run_in_buildname(command)
+        return self.test_ssh.run_in_buildname(command, dry_run=self.options.dry_run)
 
     #command gets run in the plc's vm
     def host_to_guest(self,command):

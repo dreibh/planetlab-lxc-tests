@@ -48,12 +48,16 @@ class TestSsh:
             utils.header("WARNING : something wrong in is_local_hostname with hostname=%s"%hostname)
             return False
 
-    def __init__(self,hostname,buildname=None,key=None, username=None,unknown_host=True):
+    # some boxes have their working space in user's homedir (/root), 
+    # some others in a dedicated area with max. space (/vservers)
+    # when root is not specified we use the homedir
+    def __init__(self,hostname,buildname=None,key=None, username=None,unknown_host=True, root=None):
         self.hostname=hostname
         self.buildname=buildname
         self.key=key
         self.username=username
         self.unknown_host=unknown_host
+        self.root=root
 
     def is_local(self):
         return TestSsh.is_local_hostname(self.hostname)
@@ -73,27 +77,29 @@ class TestSsh:
             return "%s@%s"%(self.username,self.hostname)
     
     # command gets run on the right box
-    def actual_command (self, command,keep_stdin=False):
+    def actual_command (self, command, keep_stdin=False, dry_run=False):
         if self.is_local():
             return command
         ssh_command = "ssh "
-        if not keep_stdin:
-            ssh_command += "-n "
-        ssh_command += TestSsh.std_options
-        if self.unknown_host: ssh_command += TestSsh.unknown_option
+        if not dry_run:
+            if not keep_stdin:
+                ssh_command += "-n "
+            ssh_command += TestSsh.std_options
+            if self.unknown_host: ssh_command += TestSsh.unknown_option
         ssh_command += self.key_part()
         ssh_command += "%s %s" %(self.hostname_part(),TestSsh.backslash_shell_specials(command))
         return ssh_command
 
     # same in argv form
-    def actual_argv (self, argv,keep_stdin=False):
+    def actual_argv (self, argv,keep_stdin=False, dry_run=False):
         if self.is_local():
             return argv
         ssh_argv=[]
         ssh_argv.append('ssh')
-        if not keep_stdin: ssh_argv.append('-n')
-        ssh_argv += TestSsh.std_options.split()
-        if self.unknown_host: ssh_argv += TestSsh.unknown_option.split()
+        if not dry_run:
+            if not keep_stdin: ssh_argv.append('-n')
+            ssh_argv += TestSsh.std_options.split()
+            if self.unknown_host: ssh_argv += TestSsh.unknown_option.split()
         ssh_argv += self.key_part().split()
         ssh_argv.append(self.hostname_part())
         ssh_argv += argv
@@ -105,7 +111,7 @@ class TestSsh:
         sys.stdout.flush()
 
     def run(self, command,message=None,background=False,dry_run=False):
-        local_command = self.actual_command(command)
+        local_command = self.actual_command(command, dry_run=dry_run)
         if dry_run:
             utils.header("DRY RUN " + local_command)
             return 0
@@ -113,25 +119,33 @@ class TestSsh:
             self.header(message)
             return utils.system(local_command,background)
 
-    def clean_dir (self,dirname):
+    def run_in_buildname (self,command, background=False, dry_run=False):
         if self.is_local():
-            return 0
-        return self.run("rm -rf %s"%dirname)
+            return utils.system(command,background)
+        self.create_buildname_once(dry_run)
+        return self.run("cd %s ; %s"%(self.fullname(self.buildname),command),
+                        background=background, dry_run=dry_run)
 
-    def mkdir (self,dirname=None,abs=False):
+    def fullname (self,dirname):
+        if self.root==None:     return dirname
+        else:                   return os.path.join(self.root,dirname)
+        
+    def mkdir (self,dirname=None,abs=False,dry_run=False):
         if self.is_local():
             if dirname:
                 return os.path.mkdir(dirname)
             return 0
+        # ab. paths remain as-is
         if not abs:
             if dirname:
                 dirname="%s/%s"%(self.buildname,dirname)
             else:
                 dirname=self.buildname
+            dirname=self.fullname(dirname)
         if dirname=='.': return
-        return self.run("mkdir -p %s"%dirname)
+        return self.run("mkdir -p %s"%dirname,dry_run=dry_run)
 
-    def rmdir (self,dirname=None):
+    def rmdir (self,dirname=None, dry_run=False):
         if self.is_local():
             if dirname:
                 return shutil.rmtree(dirname)
@@ -140,34 +154,33 @@ class TestSsh:
             dirname="%s/%s"%(self.buildname,dirname)
         else:
             dirname=self.buildname
-        return self.run("rm -rf %s"%dirname)
+        dirname=self.fullname(dirname)
+        return self.run("rm -rf %s"%dirname, dry_run=dry_run)
 
-    def create_buildname_once (self):
+    def create_buildname_once (self, dry_run):
         if self.is_local():
             return
         # create remote buildname on demand
         try:
             self.buildname_created
         except:
-            self.mkdir()
+            self.mkdir(dry_run=dry_run)
             self.buildname_created=True
 
-    def run_in_buildname (self,command, background=False):
-        if self.is_local():
-            return utils.system(command,background)
-        self.create_buildname_once()
-        return self.run("cd %s ; %s"%(self.buildname,command),background)
-
-    def copy (self,local_file,recursive=False):
+    def copy (self,local_file,recursive=False,dry_run=False):
         if self.is_local():
             return 0
         self.create_buildname_once()
         scp_command="scp "
-        scp_command += TestSsh.std_options
+        if not dry_run:
+            scp_command += TestSsh.std_options
         if recursive: scp_command += "-r "
         scp_command += self.key_part()
         scp_command += "%s %s:%s/%s"%(local_file,self.hostname_part(),
-                                      self.buildname,os.path.basename(local_file) or ".")
+                                      self.fullname(self.buildname),os.path.basename(local_file) or ".")
+        if dry_run:
+            utils.header ("DRY RUN TestSsh.copy %s"%scp_command)
+            return True
         return utils.system(scp_command)
 
     def copy_abs (self,local_file,remote_file,recursive=False):

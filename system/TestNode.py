@@ -18,6 +18,8 @@ class TestNode:
     def name(self):
         return self.node_spec['node_fields']['hostname']
     
+    def dry_run (self):
+        return self.test_plc.options.dry_run
     @staticmethod
     def is_qemu_model (model):
         return model.find("qemu") >= 0
@@ -142,7 +144,7 @@ class TestNode:
 
         filename="%s/%s.iso"%(self.nodedir(),self.name())
         utils.header('Storing boot medium into %s'%filename)
-        if self.test_plc.options.dry_run:
+        if self.dry_run():
             print "Dry_run: skipped writing of iso image"
             return True
         else:
@@ -169,7 +171,7 @@ class TestNode:
 
     def nodestate_show (self):
         "all nodes: show PLCAPI boot_state"
-        if self.test_plc.options.dry_run:
+        if self.dry_run():
             print "Dry_run: skipped getting current node state"
             return True
         state=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), self.name(), ['boot_state'])[0]['boot_state']
@@ -186,7 +188,7 @@ class TestNode:
         auth=self.test_plc.auth_root()
         target_arch=self.test_plc.apiserver.GetPlcRelease(auth)['build']['target-arch']
         conf_filename="%s/qemu.conf"%(self.nodedir())
-        if self.test_plc.options.dry_run:
+        if self.dry_run():
             print "dry_run: skipped actual storage of qemu.conf"
             return True
         utils.header('Storing qemu config for %s in %s'%(self.name(),conf_filename))
@@ -204,10 +206,11 @@ class TestNode:
         # if relevant, push the qemu area onto the host box
         if self.test_box().is_local():
             return True
+        dry_run=self.dry_run()
         utils.header ("Cleaning any former sequel of %s on %s"%(self.name(),self.host_box()))
-        self.test_box().run_in_buildname("rm -rf %s"%self.nodedir())
+        self.test_box().rmdir(self.nodedir(), dry_run=dry_run)
         utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
-        return self.test_box().copy(self.nodedir(),recursive=True)==0
+        return self.test_box().copy(self.nodedir(),recursive=True,dry_run=dry_run)==0
             
     def qemu_start (self):
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
@@ -222,22 +225,23 @@ class TestNode:
     def timestamp_qemu (self):
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         test_box = self.test_box()
-        test_box.run_in_buildname("mkdir -p %s"%self.nodedir())
+        test_box.run_in_buildname("mkdir -p %s"%self.nodedir(), dry_run=self.dry_run())
         now=int(time.time())
-        return test_box.run_in_buildname("echo %d > %s/timestamp"%(now,self.nodedir()))==0
+        return test_box.run_in_buildname("echo %d > %s/timestamp"%(now,self.nodedir()), dry_run=self.dry_run())==0
 
     def start_qemu (self):
         test_box = self.test_box()
         utils.header("Starting qemu node %s on %s"%(self.name(),test_box.hostname()))
 
-        test_box.run_in_buildname("%s/qemu-bridge-init start >> %s/log.txt"%(self.nodedir(),self.nodedir()))
+        test_box.run_in_buildname("%s/qemu-bridge-init start >> %s/log.txt"%(self.nodedir(),self.nodedir()),
+                                  dry_run=self.dry_run())
         # kick it off in background, as it would otherwise hang
         test_box.run_in_buildname("%s/qemu-start-node 2>&1 >> %s/log.txt"%(self.nodedir(),self.nodedir()))
 
     def list_qemu (self):
         utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
         command="%s/qemu-kill-node -l %s"%(self.nodedir(),self.name())
-        self.test_box().run_in_buildname(command)
+        self.test_box().run_in_buildname(command, dry_run=self.dry_run())
         return True
 
     def kill_qemu (self):
@@ -246,7 +250,7 @@ class TestNode:
         # kill the right processes 
         utils.header("Stopping qemu for node %s on box %s"%(self.name(),self.test_box().hostname()))
         command="%s/qemu-kill-node %s"%(self.nodedir(),self.name())
-        self.test_box().run_in_buildname(command)
+        self.test_box().run_in_buildname(command, dry_run=self.dry_run())
         return True
 
     def gather_qemu_logs (self):
