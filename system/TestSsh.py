@@ -170,7 +170,7 @@ class TestSsh:
     def copy (self,local_file,recursive=False,dry_run=False):
         if self.is_local():
             return 0
-        self.create_buildname_once()
+        self.create_buildname_once(dry_run)
         scp_command="scp "
         if not dry_run:
             scp_command += TestSsh.std_options

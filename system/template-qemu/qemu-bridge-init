@@ -34,7 +34,7 @@ EOF
 # let's try to figure out the interface to use - try these in order
 function discover_interface () {
     for ifname in $(gather_interfaces); do
-	ip link show $ifname | grep -q UP && { INTERFACE_LAN=$ifname; return; }
+	ip link show $ifname | grep -qi 'state UP' && { INTERFACE_LAN=$ifname; return; }
     done
     # still not found ? that's bad
     INTERFACE_LAN=unknown
