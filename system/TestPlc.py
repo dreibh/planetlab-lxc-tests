@@ -183,10 +183,10 @@ class TestPlc:
         return self.test_ssh.actual_command(self.host_to_guest(command),dry_run=self.options.dry_run)
     
     def start_guest (self):
-      return utils.system(self.test_ssh.actual_command(self.start_guest_in_host()),dry_run=self.options.dry_run)
+      return utils.system(self.test_ssh.actual_command(self.start_guest_in_host(),dry_run=self.options.dry_run))
     
     def stop_guest (self):
-      return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host()),dry_run=self.options.dry_run)
+      return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host(),dry_run=self.options.dry_run))
     
     def run_in_guest (self,command):
         return utils.system(self.actual_command_in_guest(command),dry_run=self.options.dry_run)
