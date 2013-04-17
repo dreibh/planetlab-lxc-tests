@@ -845,8 +845,8 @@ class TestBox (Box):
             self.test_instances.append(i)
         i.set_broken(plcindex, step)
 
-    matcher_proc=re.compile (".*/proc/(?P<pid>[0-9]+)/cwd.*/root/(?P<buildname>[^/]+)$")
-    matcher_grep=re.compile ("/root/(?P<buildname>[^/]+)/logs/trace.*:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
+    matcher_proc=re.compile (".*/proc/(?P<pid>[0-9]+)/cwd.*/vservers/(?P<buildname>[^/]+)$")
+    matcher_grep=re.compile ("/vservers/(?P<buildname>[^/]+)/logs/trace.*:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
     def sense (self, options):
         print 'tm',
         self.sense_uptime()
@@ -855,11 +855,11 @@ class TestBox (Box):
         # scan timestamps on all tests
         # this is likely to not invoke ssh so we need to be a bit smarter to get * expanded
         # xxx would make sense above too
-        command=['bash','-c',"grep . /root/*/timestamp /dev/null"]
+        command=['bash','-c',"grep . /vservers/*/timestamp /dev/null"]
         ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for ts_line in ts_lines:
             if not ts_line.strip(): continue
-            # expect /root/<buildname>/timestamp:<timestamp>
+            # expect /vservers/<buildname>/timestamp:<timestamp>
             try:
                 (ts_file,timestamp)=ts_line.split(':')
                 ts_file=os.path.dirname(ts_file)
@@ -868,7 +868,7 @@ class TestBox (Box):
                 t=self.add_timestamp(buildname,timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
 
-        command=['bash','-c',"grep KO /root/*/logs/trace-* /dev/null" ]
+        command=['bash','-c',"grep KO /vservers/*/logs/trace-* /dev/null" ]
         trace_lines=self.backquote_ssh (command).split('\n')
         for line in trace_lines:
             if not line.strip(): continue
