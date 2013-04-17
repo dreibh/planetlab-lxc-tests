@@ -746,7 +746,7 @@ class QemuBox (Box):
         # retrieve timestamps
         if not live_builds: return
         command=   ['grep','.']
-        command += ['%s/*/timestamp'%b for b in live_builds]
+        command += ['/vservers/%s/*/timestamp'%b for b in live_builds]
         command += ['/dev/null']
         ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for ts_line in ts_lines:
