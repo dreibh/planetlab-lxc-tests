@@ -180,16 +180,16 @@ class TestPlc:
 	pass
 
     def actual_command_in_guest (self,command):
-        return self.test_ssh.actual_command(self.host_to_guest(command))
+        return self.test_ssh.actual_command(self.host_to_guest(command),dry_run=self.options.dry_run)
     
     def start_guest (self):
-      return utils.system(self.test_ssh.actual_command(self.start_guest_in_host()))
+      return utils.system(self.test_ssh.actual_command(self.start_guest_in_host()),dry_run=self.options.dry_run)
     
     def stop_guest (self):
-      return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host()))
+      return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host()),dry_run=self.options.dry_run)
     
     def run_in_guest (self,command):
-        return utils.system(self.actual_command_in_guest(command))
+        return utils.system(self.actual_command_in_guest(command),dry_run=self.options.dry_run)
     
     def run_in_host (self,command):
         return self.test_ssh.run_in_buildname(command, dry_run=self.options.dry_run)
@@ -197,7 +197,7 @@ class TestPlc:
     #command gets run in the plc's vm
     def host_to_guest(self,command):
         if self.options.plcs_use_lxc:
-            return "ssh -o StrictHostKeyChecking=no %s %s"%(self.vserverip,command)
+            return "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s %s"%(self.vserverip,command)
         else:
             return "vserver %s exec %s"%(self.vservername,command)
     

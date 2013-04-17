@@ -198,14 +198,15 @@ class TestSsh:
     def copy_home (self, local_file, recursive=False):
         return self.copy_abs(local_file,os.path.basename(local_file),recursive)
 
-    def fetch (self, remote_file, local_file, recursive=False):
+    def fetch (self, remote_file, local_file, recursive=False, dry_run=False):
         if self.is_local():
             command="cp "
             if recursive: command += "-r "
             command += "%s %s"%(remote_file,local_file)
         else:
             command="scp "
-            command += TestSsh.std_options
+            if not dry_run:
+                command += TestSsh.std_options
             if recursive: command += "-r "
             command += self.key_part()
             # absolute path - do not preprend buildname
@@ -213,6 +214,7 @@ class TestSsh:
                 remote_path=remote_file
             else:
                 remote_path="%s/%s"%(self.buildname,remote_file)
+                remote_path=self.fullname(remote_path)
             command += "%s:%s %s"%(self.hostname_part(),remote_path,local_file)
         return utils.system(command)
 
