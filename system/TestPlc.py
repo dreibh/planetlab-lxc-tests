@@ -189,7 +189,7 @@ class TestPlc:
       return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host(),dry_run=self.options.dry_run))
     
     def run_in_guest (self,command):
-        return utils.system(self.actual_command_in_guest(command),dry_run=self.options.dry_run)
+        return utils.system(self.actual_command_in_guest(command))
     
     def run_in_host (self,command):
         return self.test_ssh.run_in_buildname(command, dry_run=self.options.dry_run)
