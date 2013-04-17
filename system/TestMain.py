@@ -189,8 +189,9 @@ steps refer to a method in TestPlc or to a step_* module
                           help="prompts before each step")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
-        parser.add_option("-r","--restart-nm", action="store_true", dest="forcenm", default=False, 
-                          help="Force the NM to restart in ssh_slices step")
+# dropped when added Completer.py
+#        parser.add_option("-r","--restart-nm", action="store_true", dest="forcenm", default=False, 
+#                          help="Force the NM to restart in ssh_slices step")
         parser.add_option("-t","--trace", action="store", dest="trace_file", default=None,
                           help="Trace file location")
         (self.options, self.args) = parser.parse_args()

@@ -708,11 +708,11 @@ class QemuBox (Box):
     def sense(self, options):
         print 'qn',
         modules=self.backquote_ssh(['lsmod']).split('\n')
-        self._driver='*NO kqemu/kmv_intel MODULE LOADED*'
+        self._driver='*NO kqemu/kvm_intel MODULE LOADED*'
         for module in modules:
             if module.find('kqemu')==0:
                 self._driver='kqemu module loaded'
-            # kvm might be loaded without vkm_intel (we dont have AMD)
+            # kvm might be loaded without kvm_intel (we dont have AMD)
             elif module.find('kvm_intel')==0:
                 self._driver='kvm_intel module loaded'
         ########## find out running pids
@@ -730,13 +730,13 @@ class QemuBox (Box):
             header(">>%s<<"%line)
         ########## retrieve alive instances and map to build
         live_builds=[]
-        command=['grep','.','*/*/qemu.pid','/dev/null']
+        command=['grep','.','/vservers/*/*/qemu.pid','/dev/null']
         pid_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for pid_line in pid_lines:
             if not pid_line.strip(): continue
             # expect <build>/<nodename>/qemu.pid:<pid>pid
             try:
-                (buildname,nodename,tail)=pid_line.split('/')
+                (_,__,buildname,nodename,tail)=pid_line.split('/')
                 (_,pid)=tail.split(':')
                 q=self.qemu_instance_by_pid (pid)
                 if not q: continue

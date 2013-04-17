@@ -20,17 +20,19 @@ class OnelabSubstrate (Substrate):
 
    # the build boxes we use 
    def build_boxes_spec (self):
-      return [ 'liquid', 'reed', 'velvet', 'gorillaz', ]
+      return [ 'liquid', 'reed', 'velvet' ]
 
    # the vs-capable box for PLCs
    def plc_vs_boxes_spec (self):
-      return [ ('vs64-1', 35),  # how many plcs max in this box
+      return [ ('warhol', 35),  # how many plcs max in this box
                ]  
 
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
-      return [ ('lxc64-1', 35),  # how many plcs max in this box
-               ]  
+      return [ 
+         ('gotan', 30),         # how many plcs max in this box 
+         ('deathvegas', 30),    
+         ]  
 
    # vplc01 to 40
    def vplc_ips (self):
@@ -40,12 +42,13 @@ class OnelabSubstrate (Substrate):
 
    def qemu_boxes_spec (self):
       return [ # how many qemus max in this box
+# enfoui runs f18 - also can't seem to enter BIOS on that one
+         ('kvm64-6', 4), # 4 cores, 8Gb
          ('kvm64-1', 3), # 4 cores, 4Gb
          ('kvm64-2', 3), # 4 cores, 4Gb
-         ('kvm64-3', 2), # 2 cores, 4Gb
-         ('kvm64-4', 1), # 4 cores, 8Gb
+         ('kvm64-4', 2), # 4 cores, 8Gb
+         ('kvm64-3', 1), # 2 cores, 4Gb
          ('kvm64-5', 1), # 2 cores, 4Gb
-         ('kvm64-6', 2), # 2 cores, 4Gb
          ]
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)

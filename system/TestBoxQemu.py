@@ -7,6 +7,9 @@ import os.path
 import utils
 from TestSsh import TestSsh
 
+# Apriol 2013 - using /vservers/ for hosting this stuff as well, making IT-like stuff easier
+KVMROOT="/vservers"
+
 # xxx this should probably inherit TestSsh
 class TestBoxQemu:
 
@@ -14,7 +17,7 @@ class TestBoxQemu:
         self.hostname_value=hostname
         self.buildname=buildname
         self.key=key
-        self.test_ssh=TestSsh(self.hostname_value,self.buildname,self.key)
+        self.test_ssh=TestSsh(self.hostname_value,self.buildname,self.key,root=KVMROOT)
         
     def hostname (self):
         return self.hostname_value
@@ -22,18 +25,18 @@ class TestBoxQemu:
     def is_local(self):
         return self.test_ssh.is_local()
     
-    def run_in_buildname (self,command,background=False):
+    def run_in_buildname (self,command,background=False, dry_run=False):
         message="On %s: running %s"%(self.hostname(),command)
         if background: message += " &"
         utils.header(message)
-        return self.test_ssh.run_in_buildname (command,background)
+        return self.test_ssh.run_in_buildname (command,background, dry_run)
 
     # xxx could/should use rsync instead
-    def copy (self,local_file,recursive=False):
-        return self.test_ssh.copy (local_file,recursive)
+    def copy (self,local_file,recursive=False,dry_run=False):
+        return self.test_ssh.copy (local_file,recursive,dry_run=dry_run)
 
-    def clean_dir (self,dirname):
-        return self.test_ssh.clean_dir(dirname)
+    def rmdir (self,dirname, dry_run=False):
+        return self.test_ssh.rmdir(dirname, dry_run=dry_run)
 
     def mkdir (self,dirname):
         return self.test_ssh.mkdir(dirname)

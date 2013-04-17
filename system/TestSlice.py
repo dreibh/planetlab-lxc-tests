@@ -3,13 +3,35 @@
 #
 import utils
 import os, os.path
-import datetime
+from datetime import datetime, timedelta
 import time
 
 from TestKey import TestKey
 from TestUser import TestUser
 from TestNode import TestNode
 from TestSsh import TestSsh
+from Completer import Completer, CompleterTask
+
+class CompleterTaskSshSlice (CompleterTask):
+
+    def __init__ (self, test_plc, hostname, slicename, private_key,command, expected, dry_run):
+        self.test_plc=test_plc
+        self.hostname=hostname
+        self.slicename=slicename
+        self.private_key=private_key
+        self.command=command
+        self.dry_run=dry_run
+        self.expected=expected
+    def run (self, silent): 
+        (site_spec,node_spec) = self.test_plc.locate_hostname(self.hostname)
+        test_ssh = TestSsh (self.hostname,key=self.private_key,username=self.slicename)
+        full_command = test_ssh.actual_command(self.command)
+        retcod = utils.system (full_command, silent=silent)
+        if self.dry_run: return True
+        if self.expected:       return retcod==0
+        else:                   return retcod!=0
+    def failure_message (self): 
+        return "Could not ssh into slice %s @ %s"%(self.slicename,self.hostname)
 
 class TestSlice:
 
@@ -122,9 +144,46 @@ class TestSlice:
         "tries to ssh-enter the slice with the user key, expecting it to be unreachable"
         return self.do_ssh_slice(options, expected=False, *args, **kwds)
 
-    def do_ssh_slice(self,options,expected=True,timeout_minutes=20,silent_minutes=10,period=15):
-        timeout = datetime.datetime.now()+datetime.timedelta(minutes=timeout_minutes)
-        graceout = datetime.datetime.now()+datetime.timedelta(minutes=silent_minutes)
+    def do_ssh_slice(self,options,expected=True,
+                     timeout_minutes=20,silent_minutes=10,period_seconds=15,command=None):
+        "tries to enter a slice"
+
+        timeout  = timedelta(minutes=timeout_minutes)
+        graceout = timedelta(minutes=silent_minutes)
+        period   = timedelta(seconds=period_seconds)
+        if not command:
+            command="echo hostname ; hostname; echo id; id; echo uname -a ; uname -a"
+        # locate a key
+        private_key=self.locate_private_key()
+        if not private_key :
+            utils.header("WARNING: Cannot find a valid key for slice %s"%self.name())
+            return False
+
+        # convert nodenames to real hostnames
+        if expected:    msg="ssh slice access enabled"
+        else:           msg="ssh slice access disabled"
+        utils.header("checking for %s -- slice %s"%(msg,self.name()))
+
+        tasks=[]
+        slicename=self.name()
+        dry_run = getattr(options,'dry_run',False)
+        for nodename in self.slice_spec['nodenames']:
+            (site_spec,node_spec) = self.test_plc.locate_node(nodename)
+            tasks.append( CompleterTaskSshSlice(self.test_plc,node_spec['node_fields']['hostname'],
+                                                slicename,private_key,command,expected,dry_run))
+        return Completer (tasks).run (timeout, graceout, period)
+
+    def ssh_slice_basics (self, options, *args, **kwds):
+        "the slice is expected to be UP and we just check a few simple sanity commands, including 'ps' to check for /proc"
+        overall=True
+        if not self.do_ssh_slice_once(options,expected=True,  command='true'): overall=False
+        if not self.do_ssh_slice_once(options,expected=False, command='false'): overall=False
+        if not self.do_ssh_slice_once(options,expected=False, command='someimprobablecommandname'): overall=False
+        if not self.do_ssh_slice_once(options,expected=True,  command='ps'): overall=False
+        return overall
+
+    # pick just one nodename and runs the ssh command once
+    def do_ssh_slice_once(self,options,command,expected):
         # locate a key
         private_key=self.locate_private_key()
         if not private_key :
@@ -133,54 +192,20 @@ class TestSlice:
 
         # convert nodenames to real hostnames
         slice_spec = self.slice_spec
-        restarted=[]
-        tocheck=[]
-        for nodename in slice_spec['nodenames']:
-            (site_spec,node_spec) = self.test_plc.locate_node(nodename)
-            tocheck.append(node_spec['node_fields']['hostname'])
+        nodename=slice_spec['nodenames'][0]
+        (site_spec,node_spec) = self.test_plc.locate_node(nodename)
+        hostname=node_spec['node_fields']['hostname']
 
-        if expected:    msg="ssh slice access enabled"
-        else:           msg="ssh slice access disabled"
+        if expected:    msg="%s to return TRUE from ssh"%command
+        else:           msg="%s to return FALSE from ssh"%command
             
-        utils.header("checking for %s -- slice %s on nodes %r"%(msg,self.name(),tocheck))
-        utils.header("max timeout is %d minutes, silent for %d minutes (period is %s)"%\
-                         (timeout_minutes,silent_minutes,period))
-        while tocheck:
-            for hostname in tocheck:
-                (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
-                date_test_ssh = TestSsh (hostname,key=private_key,username=self.name())
-                command = date_test_ssh.actual_command("echo hostname ; hostname; echo id; id; echo uname -a ; uname -a")
-                date = utils.system (command, silent=datetime.datetime.now() < graceout)
-                if getattr(options,'dry_run',None): return True
-                if expected:    success = date==0
-                else:           success = date!=0
-                    
-                if success:
-                    utils.header("OK %s - slice=%s@%s"%(msg,self.name(),hostname))
-                    tocheck.remove(hostname)
-                else:
-                    # real nodes will have been checked once in case they're up - skip if not
-                    if TestNode.is_real_model(node_spec['node_fields']['model']):
-                        utils.header("WARNING : Checking slice %s on real node %s skipped"%(self.name(),hostname))
-                        tocheck.remove(hostname)
-                    # nm restart after first failure, if requested 
-                    if options.forcenm and hostname not in restarted:
-                        utils.header ("forcenm option : restarting nm on %s"%hostname)
-                        restart_test_ssh=TestSsh(hostname,key="keys/key_admin.rsa")
-                        access=restart_test_ssh.actual_command('service nm restart')
-                        if (access==0):
-                            utils.header('nm restarted on %s'%hostname)
-                        else:
-                            utils.header('Failed to restart nm on %s'%(hostname))
-                        restarted.append(hostname)
-            if not tocheck:
-                # we're done
-                return True
-            if datetime.datetime.now() > timeout:
-                for hostname in tocheck:
-                    utils.header("FAILED %s slice=%s@%s"%(msg,self.name(),hostname))
-                return False
-            # wait for the period
-            time.sleep (period)
-        # for an empty slice
-        return True
+        utils.header("checking %s -- slice %s on node %s"%(msg,self.name(),hostname))
+        (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
+        test_ssh = TestSsh (hostname,key=private_key,username=self.name())
+        full_command = test_ssh.actual_command(command)
+        retcod = utils.system (full_command,silent=True)
+        if getattr(options,'dry_run',None): return True
+        if expected:    success = retcod==0
+        else:           success = retcod!=0
+        if not success: utils.header ("WRONG RESULT for %s"%msg)
+        return success
