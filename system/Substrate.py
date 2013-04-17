@@ -730,13 +730,13 @@ class QemuBox (Box):
             header(">>%s<<"%line)
         ########## retrieve alive instances and map to build
         live_builds=[]
-        command=['grep','.','*/*/qemu.pid','/dev/null']
+        command=['grep','.','/vservers/*/*/qemu.pid','/dev/null']
         pid_lines=self.backquote_ssh(command,trash_err=True).split('\n')
         for pid_line in pid_lines:
             if not pid_line.strip(): continue
             # expect <build>/<nodename>/qemu.pid:<pid>pid
             try:
-                (buildname,nodename,tail)=pid_line.split('/')
+                (_,__,buildname,nodename,tail)=pid_line.split('/')
                 (_,pid)=tail.split(':')
                 q=self.qemu_instance_by_pid (pid)
                 if not q: continue

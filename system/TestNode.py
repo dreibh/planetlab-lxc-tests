@@ -258,7 +258,7 @@ class TestNode:
             return True
         remote_log="%s/log.txt"%self.nodedir()
         local_log="logs/node.qemu.%s.txt"%self.name()
-        self.test_box().test_ssh.fetch(remote_log,local_log)
+        self.test_box().test_ssh.fetch(remote_log,local_log,dry_run=self.dry_run())
 
     def keys_clear_known_hosts (self):
         "remove test nodes entries from the local known_hosts file"
