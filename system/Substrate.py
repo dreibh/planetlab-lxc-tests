@@ -753,7 +753,7 @@ class QemuBox (Box):
             if not ts_line.strip(): continue
             # expect <build>/<nodename>/timestamp:<timestamp>
             try:
-                (buildname,nodename,tail)=ts_line.split('/')
+                (_,__,buildname,nodename,tail)=ts_line.split('/')
                 nodename=nodename.replace('qemu-','')
                 (_,timestamp)=tail.split(':')
                 timestamp=int(timestamp)
