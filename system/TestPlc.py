@@ -115,7 +115,7 @@ class TestPlc:
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
-        'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
+        'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', 'qemu_clean_mine', SEP,
 	'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
@@ -329,7 +329,7 @@ class TestPlc:
         return self.locate_sliver_obj(nodename,slicename)
 
     # all different hostboxes used in this plc
-    def gather_hostBoxes(self):
+    def get_BoxNodes(self):
         # maps on sites and nodes, return [ (host_box,test_node) ]
         tuples=[]
         for site_spec in self.plc_spec['sites']:
@@ -350,7 +350,7 @@ class TestPlc:
     # a step for checking this stuff
     def show_boxes (self):
         'print summary of nodes location'
-        for (box,nodes) in self.gather_hostBoxes().iteritems():
+        for (box,nodes) in self.get_BoxNodes().iteritems():
             print box,":"," + ".join( [ node.name() for node in nodes ] )
         return True
 
@@ -358,7 +358,7 @@ class TestPlc:
     def qemu_kill_all(self):
         'kill all qemu instances on the qemu boxes involved by this setup'
         # this is the brute force version, kill all qemus on that host box
-        for (box,nodes) in self.gather_hostBoxes().iteritems():
+        for (box,nodes) in self.get_BoxNodes().iteritems():
             # pass the first nodename, as we don't push template-qemu on testboxes
             nodedir=nodes[0].nodedir()
             TestBoxQemu(box,self.options.buildname).qemu_kill_all(nodedir)
@@ -367,24 +367,33 @@ class TestPlc:
     # make this a valid step
     def qemu_list_all(self):
         'list all qemu instances on the qemu boxes involved by this setup'
-        for (box,nodes) in self.gather_hostBoxes().iteritems():
+        for (box,nodes) in self.get_BoxNodes().iteritems():
             # this is the brute force version, kill all qemus on that host box
             TestBoxQemu(box,self.options.buildname).qemu_list_all()
         return True
 
-    # kill only the right qemus
+    # kill only the qemus related to this test
     def qemu_list_mine(self):
         'list qemu instances for our nodes'
-        for (box,nodes) in self.gather_hostBoxes().iteritems():
+        for (box,nodes) in self.get_BoxNodes().iteritems():
             # the fine-grain version
             for node in nodes:
                 node.list_qemu()
         return True
 
+    # kill only the qemus related to this test
+    def qemu_clean_mine(self):
+        'cleanup (rm -rf) qemu instances for our nodes'
+        for (box,nodes) in self.get_BoxNodes().iteritems():
+            # the fine-grain version
+            for node in nodes:
+                node.clean_qemu()
+        return True
+
     # kill only the right qemus
     def qemu_kill_mine(self):
         'kill the qemu instances for our nodes'
-        for (box,nodes) in self.gather_hostBoxes().iteritems():
+        for (box,nodes) in self.get_BoxNodes().iteritems():
             # the fine-grain version
             for node in nodes:
                 node.kill_qemu()

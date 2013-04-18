@@ -244,6 +244,12 @@ class TestNode:
         self.test_box().run_in_buildname(command, dry_run=self.dry_run())
         return True
 
+    def clean_qemu (self):
+        utils.header("Cleaning up qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
+        command="rm -rf %s"%(self.nodedir())
+        self.test_box().run_in_buildname(command, dry_run=self.dry_run())
+        return True
+
     def kill_qemu (self):
         #Prepare the log file before killing the nodes
         test_box = self.test_box()
