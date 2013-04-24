@@ -201,6 +201,12 @@ class TestNode:
         file.close()
         return True
 
+    def qemu_clean (self):
+        utils.header("Cleaning up qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
+        dry_run=self.dry_run()
+        self.test_box().rmdir(self.nodedir(), dry_run=dry_run)
+        return True
+
     def qemu_export (self):
         "all nodes: push local node-dep directory on the qemu box"
         # if relevant, push the qemu area onto the host box
@@ -208,7 +214,6 @@ class TestNode:
             return True
         dry_run=self.dry_run()
         utils.header ("Cleaning any former sequel of %s on %s"%(self.name(),self.host_box()))
-        self.test_box().rmdir(self.nodedir(), dry_run=dry_run)
         utils.header ("Transferring configuration files for node %s onto %s"%(self.name(),self.host_box()))
         return self.test_box().copy(self.nodedir(),recursive=True,dry_run=dry_run)==0
             
@@ -241,12 +246,6 @@ class TestNode:
     def list_qemu (self):
         utils.header("Listing qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
         command="%s/qemu-kill-node -l %s"%(self.nodedir(),self.name())
-        self.test_box().run_in_buildname(command, dry_run=self.dry_run())
-        return True
-
-    def clean_qemu (self):
-        utils.header("Cleaning up qemu for host %s on box %s"%(self.name(),self.test_box().hostname()))
-        command="rm -rf %s"%(self.nodedir())
         self.test_box().run_in_buildname(command, dry_run=self.dry_run())
         return True
 
