@@ -92,7 +92,7 @@ class TestPlc:
 # keep this our of the way for now
 #        'check_vsys_defaults', SEP,
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
-        'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', SEP,
+        'qemu_kill_mine','qemu_clean_mine', 'qemu_export', 'qemu_start', 'timestamp_qemu', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_add_site@1','sfa_add_pi@1', SEPSFA,
         'sfa_add_user@1', 'sfa_update_user@1', 'sfa_add_slice@1', 'sfa_renew_slice@1', SEPSFA,
@@ -115,7 +115,7 @@ class TestPlc:
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
-        'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', 'qemu_clean_mine', SEP,
+        'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
 	'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
@@ -387,7 +387,7 @@ class TestPlc:
         for (box,nodes) in self.get_BoxNodes().iteritems():
             # the fine-grain version
             for node in nodes:
-                node.clean_qemu()
+                node.qemu_clean()
         return True
 
     # kill only the right qemus

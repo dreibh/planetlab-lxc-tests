@@ -171,7 +171,9 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Specify the set of hostnames for the boxes that host the nodes")
         parser.add_option("-N","--nodes",action="append", dest="ips_vnode", default=[],
                           help="Specify the set of hostname/IP's to use for vnodes")
-        parser.add_option ('-X', "--lxc",action='store_true',dest='plcs_use_lxc',
+        parser.add_option ('-X', "--lxc",action='store_true',dest='plcs_use_lxc',default=True,
+                           help='use lxc-enabled plc boxes instead of vs-enabled ones')
+        parser.add_option ('-S', "--vs",action='store_false',dest='plcs_use_lxc',
                            help='use lxc-enabled plc boxes instead of vs-enabled ones')
         parser.add_option("-s","--size",action="store",type="int",dest="size",default=1,
                           help="sets test size in # of plcs - default is 1")
