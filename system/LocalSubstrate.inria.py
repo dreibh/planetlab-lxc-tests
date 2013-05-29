@@ -24,8 +24,9 @@ class OnelabSubstrate (Substrate):
 
    # the vs-capable box for PLCs
    def plc_vs_boxes_spec (self):
-      return [ ('warhol', 35),  # how many plcs max in this box
-               ]  
+      return [ 
+#         ('warhol', 35),  # how many plcs max in this box
+         ]  
 
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
