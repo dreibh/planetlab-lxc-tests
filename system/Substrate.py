@@ -799,7 +799,8 @@ class TestInstance:
         else:                   msg += " !!!pids=%s!!!"%self.pids
         msg += " @%s"%self.pretty_timestamp()
         if self.broken_steps:
-            msg += " [BROKEN=" + " ".join( [ "%s@%s"%(s,i) for (i,s) in self.broken_steps ] ) + "]"
+            # sometimes we have an empty plcindex
+            msg += " [BROKEN=" + " ".join( [ "%s@%s"%(s,i) if i else s for (i,s) in self.broken_steps ] ) + "]"
         return msg
 
 class TestBox (Box):
@@ -847,6 +848,7 @@ class TestBox (Box):
 
     matcher_proc=re.compile (".*/proc/(?P<pid>[0-9]+)/cwd.*/root/(?P<buildname>[^/]+)$")
     matcher_grep=re.compile ("/root/(?P<buildname>[^/]+)/logs/trace.*:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
+    matcher_grep_missing=re.compile ("grep: /root/(?P<buildname>[^/]+)/logs/trace: No such file or directory")
     def sense (self, options):
         print 'tm',
         self.sense_uptime()
@@ -868,10 +870,19 @@ class TestBox (Box):
                 t=self.add_timestamp(buildname,timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
 
-        command=['bash','-c',"grep KO /root/*/logs/trace-* /dev/null" ]
+        # let's try to be robust here -- tests that fail very early like e.g.
+        # "Cannot make space for a PLC instance: vplc IP pool exhausted", that occurs as part of provision
+        # will result in a 'trace' symlink to an inexisting 'trace-<>.txt' because no step has gone through
+        # simple 'trace' sohuld exist though as it is created by run_log
+        command=['bash','-c',"grep KO /root/*/logs/trace /dev/null 2>&1" ]
         trace_lines=self.backquote_ssh (command).split('\n')
         for line in trace_lines:
             if not line.strip(): continue
+            m=TestBox.matcher_grep_missing.match(line)
+            if m:
+                buildname=m.group('buildname')
+                self.add_broken(buildname,'','NO STEP DONE')
+                continue
             m=TestBox.matcher_grep.match(line)
             if m: 
                 buildname=m.group('buildname')
