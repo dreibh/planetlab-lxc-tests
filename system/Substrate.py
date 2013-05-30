@@ -696,14 +696,15 @@ class QemuBox (Box):
         self.qemu_instances.append(dummy)
 
     def line (self):
-        msg="%s [max=%d,free=%d] (%s)"%(self.hostname_fedora(), self.max_qemus,self.free_slots(),self.driver())
-        return msg
+        return "%s [max=%d,free=%d] (%s) %s"%(
+            self.hostname_fedora(), self.max_qemus,self.free_slots(),
+            self.uptime(),self.driver())
 
     def list(self, verbose=False):
         if not self.qemu_instances: 
             header ('No qemu on %s'%(self.line()))
         else:
-            header ("Active qemus on %s"%(self.line()))
+            header ("Qemus on %s"%(self.line()))
             self.qemu_instances.sort(timestamp_sort)
             for q in self.qemu_instances: 
                 header (q.line(),banner=False)
