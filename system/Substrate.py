@@ -286,21 +286,24 @@ class Box:
         else:
             probe_argv=self.test_ssh().actual_argv(composite_command)
         composite=self.backquote ( probe_argv, trash_err=True )
-        if not composite: print "root@%s unreachable"%self.hostname
         self._hostname = self._uptime = self._uname = self._fedora = "** Unknown **"
-        try:
-            pieces = composite.split(Box.separator)
-            pieces = [ x.strip() for x in pieces ]
-            [self._hostname, self._uptime, self._uname, self._fedora] = pieces
-            # customize
-            self._uptime = ', '.join([ x.strip() for x in self._uptime.split(',')[2:]])
-            self._fedora = self._fedora.replace("Fedora release ","f").split(" ")[0]
-        except:
-            import traceback
-            print 'BEG issue with pieces',pieces
-            traceback.print_exc()
-            print 'END issue with pieces',pieces
-        self._probed=self._hostname
+        if not composite: 
+            print "root@%s unreachable"%self.hostname
+            self._probed=''
+        else:
+            try:
+                pieces = composite.split(Box.separator)
+                pieces = [ x.strip() for x in pieces ]
+                [self._hostname, self._uptime, self._uname, self._fedora] = pieces
+                # customize
+                self._uptime = ', '.join([ x.strip() for x in self._uptime.split(',')[2:]])
+                self._fedora = self._fedora.replace("Fedora release ","f").split(" ")[0]
+            except:
+                import traceback
+                print 'BEG issue with pieces',pieces
+                traceback.print_exc()
+                print 'END issue with pieces',pieces
+            self._probed=self._hostname
         return self._probed
 
     # use argv=['bash','-c',"the command line"]
