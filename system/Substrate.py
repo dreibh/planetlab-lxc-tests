@@ -261,13 +261,64 @@ class Box:
         self.test_ssh().run("shutdown -r now",message="Rebooting %s"%self.hostname,
                             dry_run=options.dry_run)
 
+    def hostname_fedora (self): return "%s [%s]"%(self.hostname,self.fedora())
+
+    separator = "===composite==="
+
+    # probe the ssh link
+    # take this chance to gather useful stuff
+    def probe (self):
+        # try it only once
+        if self._probed is not None: return self._probed
+        composite_command = [ ]
+        composite_command += [ "hostname" ]
+        composite_command += [ ";" , "echo", Box.separator , ";" ]
+        composite_command += [ "uptime" ]
+        composite_command += [ ";" , "echo", Box.separator , ";" ]
+        composite_command += [ "uname", "-r"]
+        composite_command += [ ";" , "echo", Box.separator , ";" ]
+        composite_command += [ "cat" , "/etc/fedora-release" ]
+
+        # due to colons and all, this is going wrong on the local box (typically testmaster)
+        # I am reluctant to change TestSsh as it might break all over the place, so
+        if self.test_ssh().is_local():
+            probe_argv = [ "bash", "-c", " ".join (composite_command) ]
+        else:
+            probe_argv=self.test_ssh().actual_argv(composite_command)
+        composite=self.backquote ( probe_argv, trash_err=True )
+        self._hostname = self._uptime = self._uname = self._fedora = "** Unknown **"
+        if not composite: 
+            print "root@%s unreachable"%self.hostname
+            self._probed=''
+        else:
+            try:
+                pieces = composite.split(Box.separator)
+                pieces = [ x.strip() for x in pieces ]
+                [self._hostname, self._uptime, self._uname, self._fedora] = pieces
+                # customize
+                self._uptime = ', '.join([ x.strip() for x in self._uptime.split(',')[2:]])
+                self._fedora = self._fedora.replace("Fedora release ","f").split(" ")[0]
+            except:
+                import traceback
+                print 'BEG issue with pieces',pieces
+                traceback.print_exc()
+                print 'END issue with pieces',pieces
+            self._probed=self._hostname
+        return self._probed
+
+    # use argv=['bash','-c',"the command line"]
     def uptime(self):
+        self.probe()
         if hasattr(self,'_uptime') and self._uptime: return self._uptime
-        return '*undef* uptime'
-    def sense_uptime (self):
-        command=['uptime']
-        self._uptime=self.backquote_ssh(command,trash_err=True).strip()
-        if not self._uptime: self._uptime='unreachable'
+        return '*unprobed* uptime'
+    def uname(self):
+        self.probe()
+        if hasattr(self,'_uname') and self._uname: return self._uname
+        return '*unprobed* uname'
+    def fedora(self):
+        self.probe()
+        if hasattr(self,'_fedora') and self._fedora: return self._fedora
+        return '*unprobed* fedora'
 
     def run(self,argv,message=None,trash_err=False,dry_run=False):
         if dry_run:
@@ -296,15 +347,6 @@ class Box:
             result= subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=file('/dev/null','w')).communicate()[0]
         return result
 
-    def probe (self):
-        if self._probed is not None: return self._probed
-        # first probe the ssh link
-        probe_argv=self.test_ssh().actual_argv(['hostname'])
-        self._probed=self.backquote ( probe_argv, trash_err=True )
-        if not self._probed: print "root@%s unreachable"%self.hostname
-        return self._probed
-
-    # use argv=['bash','-c',"the command line"]
     # if you have any shell-expanded arguments like *
     # and if there's any chance the command is adressed to the local host
     def backquote_ssh (self, argv, trash_err=False):
@@ -338,9 +380,9 @@ class BuildBox (Box):
 
     def list(self, verbose=False):
         if not self.build_instances: 
-            header ('No build process on %s (%s)'%(self.hostname,self.uptime()))
+            header ('No build process on %s (%s)'%(self.hostname_fedora(),self.uptime()))
         else:
-            header ("Builds on %s (%s)"%(self.hostname,self.uptime()))
+            header ("Builds on %s (%s)"%(self.hostname_fedora(),self.uptime()))
             for b in self.build_instances: 
                 header (b.line(),banner=False)
 
@@ -356,7 +398,6 @@ class BuildBox (Box):
     matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*init-vserver.*\s+(?P<buildname>[^\s]+)\s*\Z")
     def sense(self, options):
         print 'bb',
-        self.sense_uptime()
         pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
         if not pids: return
         command=['ps','-o','pid,command'] + [ pid for pid in pids.split("\n") if pid]
@@ -475,13 +516,6 @@ class PlcBox (Box):
             for p in self.plc_instances: 
                 header (p.line(),banner=False)
 
-    def get_uname(self):
-        self._uname=self.backquote_ssh(['uname','-r']).strip()
-
-    # expecting sense () to have filled self._uname
-    def uname(self):
-        if hasattr(self,'_uname') and self._uname: return self._uname
-        return '*undef* uname'
 
 class PlcVsBox (PlcBox):
 
@@ -494,7 +528,7 @@ class PlcVsBox (PlcBox):
         self.plc_instances.append(PlcVsInstance(self,vservername,ctxid))
     
     def line(self): 
-        msg="%s [max=%d,free=%d, VS-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
+        msg="%s [max=%d,free=%d, VS-based] (%s)"%(self.hostname_fedora(), self.max_plcs,self.free_slots(),self.uname())
         return msg
         
     def plc_instance_by_vservername (self, vservername):
@@ -508,7 +542,6 @@ class PlcVsBox (PlcBox):
 
     def sense (self, options):
         print 'vp',
-        self.get_uname()
         # try to find fullname (vserver_stat truncates to a ridiculously short name)
         # fetch the contexts for all vservers on that box
         map_command=['grep','.','/etc/vservers/*/context','/dev/null',]
@@ -570,8 +603,8 @@ class PlcLxcBox (PlcBox):
 
     # a line describing the box
     def line(self): 
-        msg="%s [max=%d,free=%d, LXC-based] (%s)"%(self.hostname, self.max_plcs,self.free_slots(),self.uname())
-        return msg
+        return "%s [max=%d,free=%d, LXC-based] (%s)"%(self.hostname_fedora(), self.max_plcs,self.free_slots(),
+                                                      self.uname())
     
     def plc_instance_by_lxcname (self, lxcname):
         for p in self.plc_instances:
@@ -591,7 +624,6 @@ class PlcLxcBox (PlcBox):
     # as well as to call  self.get_uname() once
     def sense (self, options):
         print "xp",
-        self.get_uname()
 	command="rsync lxc-driver.sh  %s:/root"%self.hostname
         commands.getstatusoutput(command)
 	command=['/root/lxc-driver.sh','-c','sense_all']
@@ -667,14 +699,15 @@ class QemuBox (Box):
         self.qemu_instances.append(dummy)
 
     def line (self):
-        msg="%s [max=%d,free=%d] (%s)"%(self.hostname, self.max_qemus,self.free_slots(),self.driver())
-        return msg
+        return "%s [max=%d,free=%d] (%s) %s"%(
+            self.hostname_fedora(), self.max_qemus,self.free_slots(),
+            self.uptime(),self.driver())
 
     def list(self, verbose=False):
         if not self.qemu_instances: 
-            header ('No qemu process on %s'%(self.line()))
+            header ('No qemu on %s'%(self.line()))
         else:
-            header ("Active qemu processes on %s"%(self.line()))
+            header ("Qemus on %s"%(self.line()))
             self.qemu_instances.sort(timestamp_sort)
             for q in self.qemu_instances: 
                 header (q.line(),banner=False)
@@ -714,7 +747,7 @@ class QemuBox (Box):
                 self._driver='kqemu module loaded'
             # kvm might be loaded without kvm_intel (we dont have AMD)
             elif module.find('kvm_intel')==0:
-                self._driver='kvm_intel module loaded'
+                self._driver='kvm_intel OK'
         ########## find out running pids
         pids=self.backquote_ssh(['pgrep','qemu'])
         if not pids: return
@@ -799,7 +832,8 @@ class TestInstance:
         else:                   msg += " !!!pids=%s!!!"%self.pids
         msg += " @%s"%self.pretty_timestamp()
         if self.broken_steps:
-            msg += " [BROKEN=" + " ".join( [ "%s@%s"%(s,i) for (i,s) in self.broken_steps ] ) + "]"
+            # sometimes we have an empty plcindex
+            msg += " [BROKEN=" + " ".join( [ "%s@%s"%(s,i) if i else s for (i,s) in self.broken_steps ] ) + "]"
         return msg
 
 class TestBox (Box):
@@ -847,9 +881,9 @@ class TestBox (Box):
 
     matcher_proc=re.compile (".*/proc/(?P<pid>[0-9]+)/cwd.*/root/(?P<buildname>[^/]+)$")
     matcher_grep=re.compile ("/root/(?P<buildname>[^/]+)/logs/trace.*:TRACE:\s*(?P<plcindex>[0-9]+).*step=(?P<step>\S+).*")
+    matcher_grep_missing=re.compile ("grep: /root/(?P<buildname>[^/]+)/logs/trace: No such file or directory")
     def sense (self, options):
         print 'tm',
-        self.sense_uptime()
         self.starting_ips=[x for x in self.backquote_ssh(['cat',Starting.location], trash_err=True).strip().split('\n') if x]
 
         # scan timestamps on all tests
@@ -868,10 +902,19 @@ class TestBox (Box):
                 t=self.add_timestamp(buildname,timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
 
-        command=['bash','-c',"grep KO /root/*/logs/trace-* /dev/null" ]
+        # let's try to be robust here -- tests that fail very early like e.g.
+        # "Cannot make space for a PLC instance: vplc IP pool exhausted", that occurs as part of provision
+        # will result in a 'trace' symlink to an inexisting 'trace-<>.txt' because no step has gone through
+        # simple 'trace' sohuld exist though as it is created by run_log
+        command=['bash','-c',"grep KO /root/*/logs/trace /dev/null 2>&1" ]
         trace_lines=self.backquote_ssh (command).split('\n')
         for line in trace_lines:
             if not line.strip(): continue
+            m=TestBox.matcher_grep_missing.match(line)
+            if m:
+                buildname=m.group('buildname')
+                self.add_broken(buildname,'','NO STEP DONE')
+                continue
             m=TestBox.matcher_grep.match(line)
             if m: 
                 buildname=m.group('buildname')
@@ -899,16 +942,16 @@ class TestBox (Box):
         
         
     def line (self):
-        return "%s (%s)"%(self.hostname,self.uptime())
+        return self.hostname_fedora()
 
     def list (self, verbose=False):
         # verbose shows all tests
         if verbose:
             instances = self.test_instances
-            msg="knwown tests"
+            msg="tests"
         else:
             instances = [ i for i in self.test_instances if i.is_running() ]
-            msg="known running tests"
+            msg="running tests"
 
         if not instances:
             header ("No %s on %s"%(msg,self.line()))
@@ -1215,8 +1258,10 @@ class Substrate:
     #################### show results for interactive mode
     def get_box (self,boxname):
         for b in self.build_boxes + self.plc_boxes + self.qemu_boxes + [self.test_box] :
-            if b.shortname()==boxname:
-                return b
+            if b.shortname()==boxname:                          return b
+            try:
+                if b.shortname()==boxname.split('.')[0]:        return b
+            except: pass
         print "Could not find box %s"%boxname
         return None
 
