@@ -84,7 +84,7 @@ class TestPlc:
     default_steps = [
         'show', SEP,
         'vs_delete','timestamp_vs','vs_create', SEP,
-        'plc_install', 'plc_configure', 'plc_start', SEP,
+        'plc_install', 'mod_python', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls','speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
@@ -632,6 +632,11 @@ class TestPlc:
         pkgs_list.append ("nodeimage-%s-plain"%nodefamily)
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install (pkgs_list)
+
+    ###
+    def mod_python(self):
+        """yum install mod_python, useful on f18 and above so as to avoid broken wsgi"""
+        return self.yum_install ( [ 'mod_python' ] )
 
     ### 
     def plc_configure(self):
