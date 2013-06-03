@@ -84,7 +84,8 @@ class TestPlc:
     default_steps = [
         'show', SEP,
         'vs_delete','timestamp_vs','vs_create', SEP,
-        'plc_install', 'mod_python', 'plc_configure', 'plc_start', SEP,
+#        'plc_install', 'mod_python', 'plc_configure', 'plc_start', SEP,
+        'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls','speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
