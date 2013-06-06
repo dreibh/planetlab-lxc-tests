@@ -376,8 +376,10 @@ def initscripts(options,index):
                                        }},
              ]
 
-# always return 2 slices
-# one has an initscript code, the other one an initscript name
+# returns 3 slices
+# 1 has an initscript code
+# 2 has an initscript name
+# 3 is an omf-friendly slice
 def slices (options,index):
     def theslice (i):
         slice_spec = { 'slice_fields': {'name':'%s_sl%d'%(login_base(index),i),
@@ -391,16 +393,23 @@ def slices (options,index):
                        'sitename' : login_base(index),
                        'owner' : 'pi',
                        }
-        # odd one has an initscript_code
-        if i%2==1:
+        # 1st one has an initscript_code
+        if i%3==1:
             slice_spec['initscriptcode']=initscript_by_code
             slice_spec['initscriptstamp']='the_script_code'
-        # even one has an initscript (name)
-        else:
+        # 2nd one has an initscript (name)
+        elif i%3==2:
             slice_spec['initscriptname']='the_script_name'
             slice_spec['initscriptstamp']='the_script_name'
+        # 3rd one is omf-friendly
+        else:
+            slice_spec ['omf-friendly'] = True
         return slice_spec
-    return [ theslice(i) for i in range (2*index-1,2*index+1) ]
+    # usual index is 1, additional plc's then get 2...
+    # so index=1 -> 1 - 2 - 3
+    #    index=2 -> 4 - 5 - 6
+    # 3 * (index-1) + 1 = 3*index-2  .. same+3 = 3*index+1
+    return [ theslice(i) for i in range (3*index-2,3*index+1) ]
 
 def all_slicenames (options,index):
     return [ slice['slice_fields']['name'] for slice in slices(options,index)]
@@ -415,8 +424,9 @@ def tcp_specs (options,index):
     # 
     slice1='%s_sl1'%login_base(1)
     slice2='%s_sl2'%login_base(1)
-    slice3='%s_sl3'%login_base(2)
-    slice4='%s_sl4'%login_base(2)
+    # with the addition of omf-friendly slices..
+    slice3='%s_sl4'%login_base(2)
+    slice4='%s_sl5'%login_base(2)
 # bind on 0.0.0.0 and try to reach this on localhost
 # not expected to work
     same_node_same_slice_lo =   { 'server_node': 'node1', 'server_slice': slice1,
@@ -578,6 +588,7 @@ def test_auth_sfa_spec (options,index,rspec_style):
 
 def config (plc_specs,options):
     result=plc_specs
+    # plc 'index' starts with 1 
     for i in range (options.size):
         result.append(plc(options,i+1))
     return result

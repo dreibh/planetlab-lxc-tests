@@ -262,4 +262,7 @@ def plc () :
     }
 
 def config (plc_specs,options):
+    print "config_wifilab is obsolete .."
+    import sys
+    sys.exit(1)
     return plc_specs + [ plc() ]
