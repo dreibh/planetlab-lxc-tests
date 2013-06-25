@@ -634,7 +634,8 @@ class PlcLxcBox (PlcBox):
 	    pid=lxc_line.split(";")[1]
 	    timestamp=lxc_line.split(";")[2]
             self.add_lxc(lxcname,pid)
-            timestamp=int(timestamp)
+            try: timestamp=int(timestamp)
+            except: timestamp=0
             p=self.plc_instance_by_lxcname(lxcname)
             if not p:
                 print 'WARNING zombie plc',self.hostname,lxcname
