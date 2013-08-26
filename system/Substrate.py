@@ -59,6 +59,9 @@ import utils
 from TestSsh import TestSsh
 from TestMapper import TestMapper
 
+# too painful to propagate this cleanly
+verbose=None
+
 def header (message,banner=True):
     if not message: return
     if banner: print "===============",
@@ -261,7 +264,16 @@ class Box:
         self.test_ssh().run("shutdown -r now",message="Rebooting %s"%self.hostname,
                             dry_run=options.dry_run)
 
-    def hostname_fedora (self): return "%s [%s]"%(self.hostname,self.fedora())
+    def hostname_fedora (self,virt=None):
+        result = "%s {"%self.hostname
+        if virt: result += "%s-"%virt
+        result += "%s"%self.fedora()
+        # too painful to propagate this cleanly
+        global verbose
+        if verbose:
+            result += "-%s" % self.uname()
+        result += "}"
+        return result
 
     separator = "===composite==="
 
@@ -516,7 +528,7 @@ class PlcBox (Box):
             for p in self.plc_instances: 
                 header (p.line(),banner=False)
 
-
+# we do not this at INRIA any more
 class PlcVsBox (PlcBox):
 
     def add_vserver (self,vservername,ctxid):
@@ -528,7 +540,7 @@ class PlcVsBox (PlcBox):
         self.plc_instances.append(PlcVsInstance(self,vservername,ctxid))
     
     def line(self): 
-        msg="%s [max=%d,free=%d, VS-based] (%s)"%(self.hostname_fedora(), self.max_plcs,self.free_slots(),self.uname())
+        msg="%s [max=%d,free=%d] (%s)"%(self.hostname_fedora(virt="vs"), self.max_plcs,self.free_slots(),self.uptime())
         return msg
         
     def plc_instance_by_vservername (self, vservername):
@@ -603,8 +615,10 @@ class PlcLxcBox (PlcBox):
 
     # a line describing the box
     def line(self): 
-        return "%s [max=%d,free=%d, LXC-based] (%s)"%(self.hostname_fedora(), self.max_plcs,self.free_slots(),
-                                                      self.uname())
+        return "%s [max=%d,free=%d] (%s)"%(self.hostname_fedora(virt="lxc"), 
+                                           self.max_plcs,self.free_slots(),
+                                           self.uptime(),
+                                           )
     
     def plc_instance_by_lxcname (self, lxcname):
         for p in self.plc_instances:
@@ -621,7 +635,6 @@ class PlcLxcBox (PlcBox):
 
     # sense is expected to fill self.plc_instances with PlcLxcInstance's 
     # to describe the currently running VM's
-    # as well as to call  self.get_uname() once
     def sense (self, options):
         print "xp",
 	command="rsync lxc-driver.sh  %s:/root"%self.hostname
@@ -701,7 +714,7 @@ class QemuBox (Box):
 
     def line (self):
         return "%s [max=%d,free=%d] (%s) %s"%(
-            self.hostname_fedora(), self.max_qemus,self.free_slots(),
+            self.hostname_fedora(virt="qemu"), self.max_qemus,self.free_slots(),
             self.uptime(),self.driver())
 
     def list(self, verbose=False):
@@ -1317,6 +1330,8 @@ class Substrate:
         if self.options.qemus: boxes += self.qemu_boxes
         if self.options.all: boxes += self.all_boxes
         
+        global verbose
+        verbose=self.options.verbose
         # default scope is -b -p -q -t
         if not boxes:
             boxes = self.build_boxes + self.plc_boxes + self.qemu_boxes + [self.test_box]
