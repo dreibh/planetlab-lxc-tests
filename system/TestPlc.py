@@ -64,6 +64,36 @@ def slice_mapper (method):
     actual.__doc__=TestSlice.__dict__[method.__name__].__doc__
     return actual
 
+# a variant that expects the TestSlice method to return a list of CompleterTasks that
+# are then merged into a single Completer run to avoid wating for all the slices
+# esp. useful when a test fails of course
+# because we need to pass arguments we use a class instead..
+class slice_mapper__tasks (object):
+    # could not get this to work with named arguments
+    def __init__ (self,timeout_minutes,silent_minutes,period_seconds):
+        print "self",self
+        print "timeout_minutes,silent_minutes,period_seconds",timeout_minutes,silent_minutes,period_seconds
+        self.timeout=timedelta(minutes=timeout_minutes)
+        self.silent=timedelta(minutes=silent_minutes)
+        self.period=timedelta(seconds=period_seconds)
+    def __call__ (self, method):
+        decorator_self=self
+        # compute augmented method name
+        method_name = method.__name__ + "__tasks"
+        # locate in TestSlice
+        slice_method = TestSlice.__dict__[ method_name ]
+        def wrappee(self):
+            tasks=[]
+            for slice_spec in self.plc_spec['slices']:
+                site_spec = self.locate_site (slice_spec['sitename'])
+                test_site = TestSite(self,site_spec)
+                test_slice=TestSlice(self,test_site,slice_spec)
+                tasks += slice_method (test_slice, self.options)
+            return Completer (tasks).run (decorator_self.timeout, decorator_self.silent, decorator_self.period)
+        # restore the doc text from the TestSlice method even if a bit odd
+        wrappee.__doc__ = slice_method.__doc__
+        return wrappee
+
 def auth_sfa_mapper (method):
     def actual(self):
         overall=True
@@ -1135,10 +1165,11 @@ class TestPlc:
                 test_slice.create_slice()
         return True
         
-    @slice_mapper
+    @slice_mapper__tasks(20,10,15)
     def ssh_slice(self): pass
-    @slice_mapper
+    @slice_mapper__tasks(20,19,15)
     def ssh_slice_off (self): pass
+
     @slice_mapper
     def ssh_slice_basics(self): pass
 
