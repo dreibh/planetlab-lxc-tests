@@ -30,8 +30,11 @@ class CompleterTaskSshSlice (CompleterTask):
         if self.dry_run: return True
         if self.expected:       return retcod==0
         else:                   return retcod!=0
-    def failure_message (self): 
-        return "Could not ssh into slice %s @ %s"%(self.slicename,self.hostname)
+    def failure_message (self):
+        if self.expected:
+            return "Could not ssh into sliver %s@%s"%(self.slicename,self.hostname)
+        else:
+            return "Could still ssh into sliver%s@ %s"%(self.slicename,self.hostname)
 
 class TestSlice:
 
