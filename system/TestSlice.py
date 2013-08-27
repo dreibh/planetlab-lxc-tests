@@ -34,7 +34,7 @@ class CompleterTaskSshSlice (CompleterTask):
         if self.expected:
             return "Could not ssh into sliver %s@%s"%(self.slicename,self.hostname)
         else:
-            return "Could still ssh into sliver%s@ %s"%(self.slicename,self.hostname)
+            return "Could still ssh into sliver%s@%s (that was expected to be down)"%(self.slicename,self.hostname)
 
 class TestSlice:
 
@@ -145,7 +145,7 @@ class TestSlice:
 
     # trying to reach the slice through ssh - expected to answer
     def ssh_slice (self, options, *args, **kwds):
-        "tries to ssh-enter the slice with the user key, to ensure slice creation"
+        "tries to ssh-enter the slice with the user key, to check for slice creation"
         return self.do_ssh_slice(options, expected=True, *args, **kwds)
 
     # when we expect the slice is not reachable
