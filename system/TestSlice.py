@@ -143,23 +143,24 @@ class TestSlice:
             key_names += user_spec['key_names']
         return self.test_plc.locate_private_key_from_key_names (key_names)
 
-    # trying to reach the slice through ssh - expected to answer
-    def ssh_slice (self, options, *args, **kwds):
+    # to be used through TestPlc.slice_mapper_tasks
+    # i.e. returns a list of CompleterTasks that are merged into the same Completer run
+    # to avoid waiting for as many slices as the Plc has
+    # also the __doc__ lines are used for the TestPlc methods, e.g. just 'ssh_slice'
+    def ssh_slice__tasks (self, options, *args, **kwds):
         "tries to ssh-enter the slice with the user key, to check for slice creation"
-        return self.do_ssh_slice(options, expected=True, *args, **kwds)
+        return self.ssh_tasks(options, expected=True, *args, **kwds)
 
     # when we expect the slice is not reachable
-    def ssh_slice_off (self, options, *args, **kwds):
+    def ssh_slice_off__tasks (self, options, *args, **kwds):
         "tries to ssh-enter the slice with the user key, expecting it to be unreachable"
-        return self.do_ssh_slice(options, expected=False, *args, **kwds)
+        return self.ssh_tasks(options, expected=False, *args, **kwds)
 
-    def do_ssh_slice(self,options,expected=True,
-                     timeout_minutes=20,silent_minutes=10,period_seconds=15,command=None):
-        "tries to enter a slice"
-
-        timeout  = timedelta(minutes=timeout_minutes)
-        graceout = timedelta(minutes=silent_minutes)
-        period   = timedelta(seconds=period_seconds)
+    def ssh_tasks(self,options, expected=True, command=None):
+#                     timeout_minutes=20,silent_minutes=10,period_seconds=15):
+#        timeout  = timedelta(minutes=timeout_minutes)
+#        graceout = timedelta(minutes=silent_minutes)
+#        period   = timedelta(seconds=period_seconds)
         if not command:
             command="echo hostname ; hostname; echo id; id; echo uname -a ; uname -a"
         # locate a key
@@ -180,7 +181,8 @@ class TestSlice:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tasks.append( CompleterTaskSshSlice(self.test_plc,node_spec['node_fields']['hostname'],
                                                 slicename,private_key,command,expected,dry_run))
-        return Completer (tasks).run (timeout, graceout, period)
+        return tasks
+#        return Completer (tasks).run (timeout, graceout, period)
 
     def ssh_slice_basics (self, options, *args, **kwds):
         "the slice is expected to be UP and we just check a few simple sanity commands, including 'ps' to check for /proc"
