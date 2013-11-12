@@ -483,6 +483,7 @@ def plc (options,index) :
         'PLC_ROOT_USER' : 'root@test.onelab.eu',
         'PLC_ROOT_PASSWORD' : 'test++',
         'PLC_SLICE_PREFIX' : 'auto',
+        'PLC_HRN_ROOT': sfa_root(index),
         'PLC_SHORTNAME' : 'Rlab',
         'PLC_MAIL_ENABLED':'false',
         'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@inria.fr',
