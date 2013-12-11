@@ -340,8 +340,8 @@ def keys (options,index):
 initscript_by_name="""#!/bin/bash
 command=$1; shift
 slicename=$1; shift
-stamp="the_script_name"
-stampfile=/tmp/$stamp.stamp
+stamp="initscript_by_name"
+stampfile=/var/tmp/$stamp.stamp
 date=$(date)
 
 echo $date "Running initscript with command=$command and slicename=$slicename"
@@ -367,12 +367,12 @@ restart) restart ;;
 esac
 """
 
-initscript_by_code=initscript_by_name.replace("the_script_name","the_script_code")
+initscript_by_code=initscript_by_name.replace("initscript_by_name","initscript_by_code")
 
 # one single initscript in the InitScripts table
 def initscripts(options,index): 
     return [ { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'the_script_name',
+                                       'name':'initscript_by_name',
                                        'script' : initscript_by_name,
                                        }},
              ]
@@ -394,14 +394,14 @@ def slices (options,index):
                        'sitename' : login_base(index),
                        'owner' : 'pi',
                        }
-        # 1st one has an initscript_code
+        # 1st one has an initscript by code
         if i%3==1:
             slice_spec['initscriptcode']=initscript_by_code
-            slice_spec['initscriptstamp']='the_script_code'
-        # 2nd one has an initscript (name)
+            slice_spec['initscriptstamp']='initscript_by_code'
+        # 2nd one has an initscript by name
         elif i%3==2:
-            slice_spec['initscriptname']='the_script_name'
-            slice_spec['initscriptstamp']='the_script_name'
+            slice_spec['initscriptname']='initscript_by_name'
+            slice_spec['initscriptstamp']='initscript_by_name'
         # 3rd one is omf-friendly
         else:
             # potentially turned off with config_no_omf

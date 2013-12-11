@@ -36,7 +36,7 @@ class TestSliver:
 
     def check_initscript_stamp(self,stamp):
         utils.header("Checking for initscript stamp %s on sliver %s"%(stamp,self.name()))
-        return self.test_ssh.run("ls -l /tmp/%s.stamp"%stamp)==0
+        return self.test_ssh.run("ls -l /var/tmp/%s.stamp"%stamp)==0
     
     def run_tcp_server (self,port,timeout=10):
         server_command = "./tcptest.py server -p %d -t %d"%(port,timeout)
