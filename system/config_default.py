@@ -342,16 +342,17 @@ command=$1; shift
 slicename=$1; shift
 stamp="the_script_name"
 stampfile=/tmp/$stamp.stamp
+date=$(date)
 
-echo "Running initscript with command=$command and slicename=$slicename"
+echo $date "Running initscript with command=$command and slicename=$slicename"
 
 function start () {
-  (echo Starting test initscript: $stamp on slicename $slicename ; date) >> $stampfile
-  echo "This is the stdout of the sliver $slicename initscript $command (exp. start) pid=$$" 
-  echo "This is the stderr of the sliver $slicename initscript $command (exp. start) pid=$$" 1>&2
+  (echo $date Starting test initscript: $stamp on slicename $slicename ; date) >> $stampfile
+  echo $date "This is the stdout of the sliver $slicename initscript $command (exp. start) pid=$$"
+  echo $date "This is the stderr of the sliver $slicename initscript $command (exp. start) pid=$$" 1>&2
 }
 function stop () {
-  echo "Removing stamp $stampfile"
+  echo $date "Removing stamp $stampfile"
   rm -f $stampfile
 }
 function restart () {
