@@ -1,5 +1,5 @@
 tags:
-	find . '(' -name '*.py' -o -name 'qemu-*' ')' | grep -v '.svn/' | xargs etags
+	find . '(' -name '*.py' -o -name 'qemu-*' ')' | grep -v '.git/' | xargs etags
 
 .PHONY: tags
 
@@ -13,7 +13,7 @@ PLCSSH:=root@$(TESTMASTER):$(BUILD)
 endif
 
 LOCAL_RSYNC_EXCLUDES	:= --exclude '*.pyc' --exclude 'arg*' --exclude LocalTestResources.py
-RSYNC_EXCLUDES		:= --exclude .svn --exclude CVS --exclude '*~' --exclude TAGS $(LOCAL_RSYNC_EXCLUDES)
+RSYNC_EXCLUDES		:= --exclude .git --exclude CVS --exclude '*~' --exclude TAGS $(LOCAL_RSYNC_EXCLUDES)
 RSYNC_COND_DRY_RUN	:= $(if $(findstring n,$(MAKEFLAGS)),--dry-run,)
 RSYNC			:= rsync -a -v $(RSYNC_COND_DRY_RUN) $(RSYNC_EXCLUDES)
 

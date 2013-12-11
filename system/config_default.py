@@ -404,6 +404,7 @@ def slices (options,index):
             slice_spec['initscriptstamp']='the_script_name'
         # 3rd one is omf-friendly
         else:
+            # potentially turned off with config_no_omf
             slice_spec ['omf-friendly'] = True
         return slice_spec
     # usual index is 1, additional plc's then get 2...
