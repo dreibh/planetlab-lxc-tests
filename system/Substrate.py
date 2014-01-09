@@ -402,6 +402,10 @@ class BuildBox (Box):
         if not options.soft:
             Box.reboot(self,options)
         else:
+            self.soft_reboot (options)
+
+class BuildVsBox (BuildBox):
+    def soft_reboot (self, options):
             command=['pkill','vbuild']
             self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
 
@@ -409,7 +413,7 @@ class BuildBox (Box):
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
     matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*init-vserver.*\s+(?P<buildname>[^\s]+)\s*\Z")
     def sense(self, options):
-        print 'bb',
+        print 'vb',
         pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
         if not pids: return
         command=['ps','-o','pid,command'] + [ pid for pid in pids.split("\n") if pid]
@@ -430,6 +434,15 @@ class BuildBox (Box):
             header('BuildBox.sense: command %r returned line that failed to match'%command)
             header(">>%s<<"%line)
 
+class BuildLxcBox (BuildBox):
+    def soft_reboot (self, options):
+            command=['pkill','lbuild']
+            self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
+
+    # inspect box and find currently running builds
+    def sense(self, options):
+        print 'xb (Substrate.BuildLxcBox.sense - NIY)'
+    
 ############################################################
 class PlcInstance:
     def __init__ (self, plcbox):
@@ -993,14 +1006,10 @@ class Substrate:
         self.options.reboot=False
         self.options.soft=False
         self.test_box = TestBox (self.test_box_spec())
-        self.build_boxes = [ BuildBox(h) for h in self.build_boxes_spec() ]
-        # for compat with older LocalSubstrate
-        try:
-            self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_vs_boxes_spec ()]
-            self.plc_lxc_boxes = [ PlcLxcBox (h,m) for (h,m) in self.plc_lxc_boxes_spec ()]
-        except:
-            self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_boxes_spec ()]
-            self.plc_lxc_boxes = [ ]
+        self.build_vs_boxes = [ BuildVsBox(h) for h in self.build_vs_boxes_spec() ]
+        self.build_lxc_boxes = [ BuildLxcBox(h) for h in self.build_lxc_boxes_spec() ]
+        self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_vs_boxes_spec ()]
+        self.plc_lxc_boxes = [ PlcLxcBox (h,m) for (h,m) in self.plc_lxc_boxes_spec ()]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
         self._sensed=False
 
@@ -1011,6 +1020,7 @@ class Substrate:
 
     # which plc boxes are we interested in ?
     def rescope (self, plcs_on_vs, plcs_on_lxc):
+        self.build_boxes = self.build_vs_boxes + self.build_lxc_boxes
         self.plc_boxes=[]
         if plcs_on_vs: self.plc_boxes += self.plc_vs_boxes
         if plcs_on_lxc: self.plc_boxes += self.plc_lxc_boxes
