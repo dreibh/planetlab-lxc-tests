@@ -441,7 +441,7 @@ class BuildLxcBox (BuildBox):
 
     # inspect box and find currently running builds
     def sense(self, options):
-        print 'xb (Substrate.BuildLxcBox.sense - NIY)'
+        print 'xb (Substrate.BuildLxcBox.sense - NIY)',
     
 ############################################################
 class PlcInstance:
