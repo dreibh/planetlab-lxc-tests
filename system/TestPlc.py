@@ -618,15 +618,15 @@ class TestPlc:
         repo_url = self.options.arch_rpms_url
         for level in [ 'arch' ]:
 	    repo_url = os.path.dirname(repo_url)
-        # pass the vbuild-nightly options to vtest-init-vserver
+        # pass the vbuild-nightly options to [lv]test-initvm
         test_env_options=""
         test_env_options += " -p %s"%self.options.personality
         test_env_options += " -d %s"%self.options.pldistro
         test_env_options += " -f %s"%self.options.fcdistro
         if self.options.plcs_use_lxc:
-            script="vtest-init-lxc.sh"
+            script="ltest-initvm.sh"
         else:
-            script="vtest-init-vserver.sh"
+            script="vtest-initvm.sh"
         vserver_name = self.vservername
         vserver_options="--netdev eth0 --interface %s"%self.vserverip
         try:
