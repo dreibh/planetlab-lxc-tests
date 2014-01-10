@@ -411,7 +411,7 @@ class BuildVsBox (BuildBox):
 
     # inspect box and find currently running builds
     matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
-    matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*init-vserver.*\s+(?P<buildname>[^\s]+)\s*\Z")
+    matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*initvm.*\s+(?P<buildname>[^\s]+)\s*\Z")
     def sense(self, options):
         print 'vb',
         pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
@@ -420,18 +420,18 @@ class BuildVsBox (BuildBox):
         ps_lines=self.backquote_ssh (command).split('\n')
         for line in ps_lines:
             if not line.strip() or line.find('PID')>=0: continue
-            m=BuildBox.matcher.match(line)
+            m=BuildVsBox.matcher.match(line)
             if m: 
                 date=time.strftime('%Y-%m-%d',time.localtime(time.time()))
                 buildname=m.group('buildname').replace('@DATE@',date)
                 self.add_build (buildname,m.group('pid'))
                 continue
-            m=BuildBox.matcher_building_vm.match(line)
+            m=BuildVsBox.matcher_building_vm.match(line)
             if m: 
                 # buildname is expansed here
                 self.add_build (buildname,m.group('pid'))
                 continue
-            header('BuildBox.sense: command %r returned line that failed to match'%command)
+            header('BuildVsBox.sense: command %r returned line that failed to match'%command)
             header(">>%s<<"%line)
 
 class BuildLxcBox (BuildBox):
