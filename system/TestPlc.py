@@ -135,7 +135,10 @@ class TestPlc:
         'ssh_node_boot@1', 'node_bmlogs@1', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
-        'empty_slices', 'ssh_slice_off', 'fill_slices', SEP,
+        # check slices are turned off properly
+        'empty_slices', 'ssh_slice_off', SEP,
+        # check they are properly re-created with the same name
+        'fill_slices', 'ssh_slice', SEP,
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
