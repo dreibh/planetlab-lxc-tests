@@ -71,7 +71,6 @@ def slice_mapper (method):
 class slice_mapper__tasks (object):
     # could not get this to work with named arguments
     def __init__ (self,timeout_minutes,silent_minutes,period_seconds):
-        print "self",self
         print "timeout_minutes,silent_minutes,period_seconds",timeout_minutes,silent_minutes,period_seconds
         self.timeout=timedelta(minutes=timeout_minutes)
         self.silent=timedelta(minutes=silent_minutes)
