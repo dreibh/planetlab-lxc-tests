@@ -33,7 +33,6 @@ class OnelabSubstrate (Substrate):
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
       return [ 
-# gotan has fsck issues and is being reinstalled under f20
 #         ('gotan', 10),         # how many plcs max in this box 
          ('deathvegas', 10),    
          ]  
