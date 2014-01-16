@@ -1,4 +1,4 @@
 *.pyc
 key*.pub
 key*.rsa
-args-*
+arg-*
