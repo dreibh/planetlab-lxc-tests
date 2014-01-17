@@ -191,6 +191,7 @@ class TestSlice:
         if not self.do_ssh_slice_once(options,expected=False, command='false'): overall=False
         if not self.do_ssh_slice_once(options,expected=False, command='someimprobablecommandname'): overall=False
         if not self.do_ssh_slice_once(options,expected=True,  command='ps'): overall=False
+        if not self.do_ssh_slice_once(options,expected=False, command='ls /vservers'): overall=False
         return overall
 
     # pick just one nodename and runs the ssh command once
