@@ -620,25 +620,24 @@ class TestPlc:
         repo_url = self.options.arch_rpms_url
         for level in [ 'arch' ]:
 	    repo_url = os.path.dirname(repo_url)
-        # pass the vbuild-nightly options to [lv]test-initvm
+
+        # invoke initvm (drop support for vs)
+        script="ltest-initvm.sh"
         test_env_options=""
-        test_env_options += " -p %s"%self.options.personality
-        test_env_options += " -d %s"%self.options.pldistro
-        test_env_options += " -f %s"%self.options.fcdistro
-        if self.options.plcs_use_lxc:
-            script="ltest-initvm.sh"
-        else:
-            script="vtest-initvm.sh"
+        # pass the vbuild-nightly options to [lv]test-initvm
+        script_options += " -p %s"%self.options.personality
+        script_options += " -d %s"%self.options.pldistro
+        script_options += " -f %s"%self.options.fcdistro
+        script_options += " -r %s"%repo_url
         vserver_name = self.vservername
-        vserver_options="--netdev eth0 --interface %s"%self.vserverip
         try:
             vserver_hostname=socket.gethostbyaddr(self.vserverip)[0]
-            vserver_options += " --hostname %s"%vserver_hostname
+            script_options += " -n %s"%vserver_hostname
         except:
             print "Cannot reverse lookup %s"%self.vserverip
             print "This is considered fatal, as this might pollute the test results"
             return False
-        create_vserver="%(build_dir)s/%(script)s %(test_env_options)s %(vserver_name)s %(repo_url)s -- %(vserver_options)s"%locals()
+        create_vserver="%(build_dir)s/%(script)s %(script_options)s %(vserver_name)s"%locals()
         return self.run_in_host(create_vserver) == 0
 
     ### install_rpm 
