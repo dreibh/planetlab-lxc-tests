@@ -623,7 +623,7 @@ class TestPlc:
 
         # invoke initvm (drop support for vs)
         script="ltest-initvm.sh"
-        test_env_options=""
+        script_options=""
         # pass the vbuild-nightly options to [lv]test-initvm
         script_options += " -p %s"%self.options.personality
         script_options += " -d %s"%self.options.pldistro
