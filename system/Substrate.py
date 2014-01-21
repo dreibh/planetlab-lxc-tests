@@ -442,7 +442,7 @@ class BuildLxcBox (BuildBox):
 
     # inspect box and find currently running builds
     def sense(self, options):
-        print 'xb'
+        print 'xb',
         pids=self.backquote_ssh(['pgrep','lbuild'],trash_err=True)
         if not pids: return
         command=['ps','-o','pid,command'] + [ pid for pid in pids.split("\n") if pid]
