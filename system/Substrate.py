@@ -404,14 +404,15 @@ class BuildBox (Box):
         else:
             self.soft_reboot (options)
 
+build_matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
+build_matcher_initvm=re.compile("\s*(?P<pid>[0-9]+).*initvm.*\s+(?P<buildname>[^\s]+)\s*\Z")
+
 class BuildVsBox (BuildBox):
     def soft_reboot (self, options):
             command=['pkill','vbuild']
             self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
 
     # inspect box and find currently running builds
-    matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
-    matcher_building_vm=re.compile("\s*(?P<pid>[0-9]+).*initvm.*\s+(?P<buildname>[^\s]+)\s*\Z")
     def sense(self, options):
         print 'vb',
         pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
@@ -420,13 +421,13 @@ class BuildVsBox (BuildBox):
         ps_lines=self.backquote_ssh (command).split('\n')
         for line in ps_lines:
             if not line.strip() or line.find('PID')>=0: continue
-            m=BuildVsBox.matcher.match(line)
+            m=build_matcher.match(line)
             if m: 
                 date=time.strftime('%Y-%m-%d',time.localtime(time.time()))
                 buildname=m.group('buildname').replace('@DATE@',date)
                 self.add_build (buildname,m.group('pid'))
                 continue
-            m=BuildVsBox.matcher_building_vm.match(line)
+            m=build_matcher_initvm.match(line)
             if m: 
                 # buildname is expansed here
                 self.add_build (buildname,m.group('pid'))
@@ -441,7 +442,26 @@ class BuildLxcBox (BuildBox):
 
     # inspect box and find currently running builds
     def sense(self, options):
-        print 'xb (Substrate.BuildLxcBox.sense - NIY)',
+        print 'xb'
+        pids=self.backquote_ssh(['pgrep','lbuild'],trash_err=True)
+        if not pids: return
+        command=['ps','-o','pid,command'] + [ pid for pid in pids.split("\n") if pid]
+        ps_lines=self.backquote_ssh (command).split('\n')
+        for line in ps_lines:
+            if not line.strip() or line.find('PID')>=0: continue
+            m=build_matcher.match(line)
+            if m: 
+                date=time.strftime('%Y-%m-%d',time.localtime(time.time()))
+                buildname=m.group('buildname').replace('@DATE@',date)
+                self.add_build (buildname,m.group('pid'))
+                continue
+            m=build_matcher_initvm.match(line)
+            if m: 
+                # buildname is expansed here
+                self.add_build (buildname,m.group('pid'))
+                continue
+            header('BuildLxcBox.sense: command %r returned line that failed to match'%command)
+            header(">>%s<<"%line)
     
 ############################################################
 class PlcInstance:
