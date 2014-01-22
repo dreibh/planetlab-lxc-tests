@@ -64,6 +64,18 @@ def slice_mapper (method):
     actual.__doc__=TestSlice.__dict__[method.__name__].__doc__
     return actual
 
+# run a step but return True so that we can go on
+def ignore_result (method):
+    def wrappee (self):
+        # ssh_slice_ignore->ssh_slice
+        ref_name=method.__name__.replace('_ignore','').replace('ignore_','')
+        ref_method=TestPlc.__dict__[ref_name]
+        result=ref_method(self)
+        print "Actual - but ignored - result for %(ref_name)s is %(result)s"%locals()
+        return True
+    wrappee.__doc__="ignored version of " + method.__name__.replace('_ignore','').replace('ignore_','')
+    return wrappee
+
 # a variant that expects the TestSlice method to return a list of CompleterTasks that
 # are then merged into a single Completer run to avoid wating for all the slices
 # esp. useful when a test fails of course
@@ -131,13 +143,13 @@ class TestPlc:
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
         'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
-        'ssh_node_boot@1', 'node_bmlogs@1', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts', SEP,
+        'ssh_node_boot@1', 'node_bmlogs@1', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
         # check slices are turned off properly
         'empty_slices', 'ssh_slice_off', SEP,
         # check they are properly re-created with the same name
-        'fill_slices', 'ssh_slice', SEP,
+        'fill_slices', 'ssh_slice_again_ignore', SEP,
         'force_gather_logs', SEP,
         ]
     other_steps = [ 
@@ -1171,6 +1183,10 @@ class TestPlc:
     @slice_mapper__tasks(20,19,15)
     def ssh_slice_off (self): pass
 
+    # this is semantically just equivalent to ssh_slice
+    # but we use another name so we can exclude it from the tests on the nightly command line
+    ssh_slice_again=ssh_slice
+
     @slice_mapper
     def ssh_slice_basics(self): pass
 
@@ -1692,6 +1708,11 @@ class TestPlc:
 
         utils.header('Database restored from ' + dump)
 
+    @ignore_result
+    def ssh_slice_again_ignore (self): pass
+    @ignore_result
+    def check_initscripts_ignore (self): pass
+    
     def standby_1_through_20(self):
         """convenience function to wait for a specified number of minutes"""
         pass
