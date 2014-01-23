@@ -252,7 +252,7 @@ class TestPlc:
     
     def vm_root_in_host(self):
         if self.options.plcs_use_lxc:
-            return "/vservers/%s/rootfs/"%(self.vservername)
+            return "/vservers/%s/"%(self.vservername)
         else:
             return "/vservers/%s"%(self.vservername)
 
