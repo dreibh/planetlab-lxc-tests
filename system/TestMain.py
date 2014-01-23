@@ -471,7 +471,7 @@ steps refer to a method in TestPlc or to a step_* module
                             step_result=step_result.result
                             msg="OK" if step_result else "KO"
                             utils.header('********** %d IGNORED (%s) step %s on %s'%(plc_counter,msg,stepname,plcname))
-                            status="I[%s]"%msg
+                            status="%s[I]"%msg
                         elif step_result:
                             utils.header('********** %d SUCCESSFUL step %s on %s'%(plc_counter,stepname,plcname))
                             status="OK"
