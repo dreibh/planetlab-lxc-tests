@@ -68,7 +68,7 @@ def slice_mapper (method):
 def ignore_result (method):
     def wrappee (self):
         # ssh_slice_ignore->ssh_slice
-        ref_name=method.__name__.replace('_ignore','').replace('ignore_','')
+        ref_name=method.__name__.replace('_ignore','').replace('force_','')
         ref_method=TestPlc.__dict__[ref_name]
         result=ref_method(self)
         print "Actual - but ignored - result for %(ref_name)s is %(result)s"%locals()
@@ -1187,9 +1187,10 @@ class TestPlc:
     @slice_mapper__tasks(20,19,15)
     def ssh_slice_off (self): pass
 
-    # this is semantically just equivalent to ssh_slice
-    # but we use another name so we can exclude it from the tests on the nightly command line
-    ssh_slice_again=ssh_slice
+    # use another name so we can exclude/ignore it from the tests on the nightly command line
+    def ssh_slice_again(self): return self.ssh_slice()
+    # note that simply doing ssh_slice_again=ssh_slice would kind od work too
+    # but for some reason the ignore-wrapping thing would not
 
     @slice_mapper
     def ssh_slice_basics(self): pass
