@@ -11,7 +11,7 @@ import readline
 import glob
 
 import utils
-from TestPlc import TestPlc
+from TestPlc import TestPlc, Ignored
 from TestSite import TestSite
 from TestNode import TestNode
 from macros import sequences
@@ -127,8 +127,8 @@ class TestMain:
                     try:        (step,qualifier)=step.split('@')
                     except:     pass
                     stepname=step
-                    for special in ['force']:
-                        stepname = stepname.replace(special+'_',"")
+                    for special in ['force','ignore']:
+                        stepname = stepname.replace('_'+special,"")
                     Step(stepname).print_doc()
 
     def run (self):
@@ -159,6 +159,8 @@ steps refer to a method in TestPlc or to a step_* module
                           help="fcdistro - as in vbuild-nightly")
         parser.add_option("-e","--exclude",action="append", dest="exclude", default=[],
                           help="steps to exclude - can be set multiple times, or use quotes")
+        parser.add_option("-i","--ignore",action="append", dest="ignore", default=[],
+                          help="steps to run but ignore - can be set multiple times, or use quotes")
         parser.add_option("-a","--all",action="store_true",dest="all_steps", default=False,
                           help="Run all default steps")
         parser.add_option("-l","--list",action="store_true",dest="list_steps", default=False,
@@ -187,7 +189,7 @@ steps refer to a method in TestPlc or to a step_* module
                            help="Used by plc_db_dump and plc_db_restore")
         parser.add_option("-v","--verbose", action="store_true", dest="verbose", default=False, 
                           help="Run in verbose mode")
-        parser.add_option("-i","--interactive",action="store_true",dest="interactive",default=False,
+        parser.add_option("-I","--interactive",action="store_true",dest="interactive",default=False,
                           help="prompts before each step")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
@@ -208,7 +210,7 @@ steps refer to a method in TestPlc or to a step_* module
                     result.append(el)
             return result
         # flatten relevant options
-        for optname in ['config','exclude','ips_bplc','ips_vplc','ips_bnode','ips_vnode']:
+        for optname in ['config','exclude','ignore','ips_bplc','ips_vplc','ips_bnode','ips_vnode']:
             setattr(self.options,optname, flatten ( [ arg.split() for arg in getattr(self.options,optname) ] ))
 
         if not self.options.rspec_styles:
@@ -295,6 +297,9 @@ steps refer to a method in TestPlc or to a step_* module
         # rewrite '-' into '_' in step names
         self.options.steps = [ step.replace('-','_') for step in self.options.steps ]
         self.options.exclude = [ step.replace('-','_') for step in self.options.exclude ]
+        self.options.ignore = [ step.replace('-','_') for step in self.options.ignore ]
+
+        TestPlc.create_ignore_steps()
 
         # exclude
         selected=[]
@@ -305,6 +310,11 @@ steps refer to a method in TestPlc or to a step_* module
                     keep=False
                     break
             if keep: selected.append(step)
+
+        # ignore
+        selected = [ step if step not in self.options.ignore else step+"_ignore"
+                     for step in selected ]
+
         self.options.steps=selected
 
         # this is useful when propagating on host boxes, to avoid conflicts
@@ -369,8 +379,8 @@ steps refer to a method in TestPlc or to a step_* module
                 continue
             # some steps need to be done regardless of the previous ones: we force them
             force=False
-            if step.find("force_") == 0:
-                step=step.replace("force_","")
+            if step.endswith("_force"):
+                step=step.replace("_force","")
                 force=True
             # allow for steps to specify an index like in 
             # run checkslice@2
@@ -457,7 +467,12 @@ steps refer to a method in TestPlc or to a step_* module
                         utils.header("********** %d RUNNING step %s%s on plc %s"%(plc_counter,stepname,force_msg,plcname))
                         if not cross:   step_result = method(plc_obj)
                         else:           step_result = method(plc_obj,across_plcs)
-                        if step_result:
+                        if isinstance (step_result,Ignored):
+                            step_result=step_result.result
+                            msg="OK" if step_result else "KO"
+                            utils.header('********** %d IGNORED (%s) step %s on %s'%(plc_counter,msg,stepname,plcname))
+                            status="I[%s]"%msg
+                        elif step_result:
                             utils.header('********** %d SUCCESSFUL step %s on %s'%(plc_counter,stepname,plcname))
                             status="OK"
                         else:

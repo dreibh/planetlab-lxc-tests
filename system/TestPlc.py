@@ -72,7 +72,7 @@ def ignore_result (method):
         ref_method=TestPlc.__dict__[ref_name]
         result=ref_method(self)
         print "Actual - but ignored - result for %(ref_name)s is %(result)s"%locals()
-        return True
+        return Ignored (result)
     wrappee.__doc__="ignored version of " + method.__name__.replace('_ignore','').replace('ignore_','')
     return wrappee
 
@@ -117,6 +117,10 @@ def auth_sfa_mapper (method):
     actual.__doc__=TestAuthSfa.__dict__[method.__name__].__doc__
     return actual
 
+class Ignored:
+    def __init__ (self,result):
+        self.result=result
+
 SEP='<sep>'
 SEPSFA='<sep_sfa>'
 
@@ -150,7 +154,7 @@ class TestPlc:
         'empty_slices', 'ssh_slice_off', SEP,
         # check they are properly re-created with the same name
         'fill_slices', 'ssh_slice_again_ignore', SEP,
-        'force_gather_logs', SEP,
+        'gather_logs_force', SEP,
         ]
     other_steps = [ 
         'export', 'show_boxes', SEP,
@@ -1708,10 +1712,25 @@ class TestPlc:
 
         utils.header('Database restored from ' + dump)
 
-    @ignore_result
-    def ssh_slice_again_ignore (self): pass
-    @ignore_result
-    def check_initscripts_ignore (self): pass
+    @staticmethod
+    def create_ignore_steps ():
+        for step in TestPlc.default_steps + TestPlc.other_steps:
+            # default step can have a plc qualifier
+            if '@' in step: (step,qualifier)=step.split('@')
+            # or be defined as forced or ignored by default
+            for keyword in ['_ignore','_force']:
+                if step.endswith (keyword): step=step.replace(keyword,'')
+            if step == SEP or step == SEPSFA : continue
+            method=getattr(TestPlc,step)
+            name=step+'_ignore'
+            wrapped=ignore_result(method)
+#            wrapped.__doc__ = method.__doc__ + " (run in ignore-result mode)"
+            setattr(TestPlc, name, wrapped)
+            
+#    @ignore_result
+#    def ssh_slice_again_ignore (self): pass
+#    @ignore_result
+#    def check_initscripts_ignore (self): pass
     
     def standby_1_through_20(self):
         """convenience function to wait for a specified number of minutes"""
