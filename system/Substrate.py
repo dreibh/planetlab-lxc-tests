@@ -952,7 +952,7 @@ class TestBox (Box):
         # let's try to be robust here -- tests that fail very early like e.g.
         # "Cannot make space for a PLC instance: vplc IP pool exhausted", that occurs as part of provision
         # will result in a 'trace' symlink to an inexisting 'trace-<>.txt' because no step has gone through
-        # simple 'trace' sohuld exist though as it is created by run_log
+        # simple 'trace' should exist though as it is created by run_log
         command=['bash','-c',"grep KO /root/*/logs/trace /dev/null 2>&1" ]
         trace_lines=self.backquote_ssh (command).split('\n')
         for line in trace_lines:
