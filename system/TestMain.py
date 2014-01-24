@@ -372,7 +372,7 @@ steps refer to a method in TestPlc or to a step_* module
         # pass options to utils as well
         utils.init_options(self.options)
 
-        overall_result = True
+        overall_result = 'SUCCESS'
         all_step_infos=[]
         for step in self.options.steps:
             if not TestPlc.valid_step(step):
@@ -399,7 +399,7 @@ steps refer to a method in TestPlc or to a step_* module
             except :
                 utils.header("********** FAILED step %s (NOT FOUND) -- won't be run"%step)
                 traceback.print_exc()
-                overall_result = False
+                overall_result = 'FAILURE'
             
         if self.options.dry_run:
             self.show_env(self.options,"Dry run")
@@ -469,20 +469,24 @@ steps refer to a method in TestPlc or to a step_* module
                         else:           step_result = method(plc_obj,across_plcs)
                         if isinstance (step_result,Ignored):
                             step_result=step_result.result
-                            msg="OK" if step_result else "KO"
+                            if step_result:
+                                msg="OK"
+                            else:
+                                msg="KO"
+                                overall_result='IGNORED'
                             utils.header('********** %d IGNORED (%s) step %s on %s'%(plc_counter,msg,stepname,plcname))
                             status="%s[I]"%msg
                         elif step_result:
                             utils.header('********** %d SUCCESSFUL step %s on %s'%(plc_counter,stepname,plcname))
                             status="OK"
                         else:
-                            overall_result = False
+                            overall_result = 'FAILURE'
                             spec['failed_step'] = stepname
                             utils.header('********** %d FAILED Step %s on %s (discarded from further steps)'\
                                              %(plc_counter,stepname,plcname))
                             status="KO"
                     except:
-                        overall_result=False
+                        overall_result='FAILURE'
                         spec['failed_step'] = stepname
                         traceback.print_exc()
                         utils.header ('********** %d FAILED (exception) Step %s on %s (discarded from further steps)'\
@@ -512,19 +516,23 @@ steps refer to a method in TestPlc or to a step_* module
         return overall_result
 
     # wrapper to run, returns a shell-compatible result
+    # retcod:
+    # 0: SUCCESS
+    # 1: SUCCESS but some ignored steps failed
+    # 2: FAILED STEP
+    # 3: OTHER ERROR
     def main(self):
         try:
             success=self.run()
-            if success:
-                return 0
-            else:
-                return 1 
+            if success == 'SUCCESS':    return 0
+            elif success == 'IGNORED':  return 2
+            else:                       return 1
         except SystemExit:
             print 'Caught SystemExit'
-            raise
+            return 3
         except:
             traceback.print_exc()
-            return 2
+            return 3
 
 if __name__ == "__main__":
     sys.exit(TestMain().main())
