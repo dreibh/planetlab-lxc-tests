@@ -71,7 +71,7 @@ def ignore_result (method):
         ref_name=method.__name__.replace('_ignore','').replace('force_','')
         ref_method=TestPlc.__dict__[ref_name]
         result=ref_method(self)
-        print "Actual - but ignored - result for %(ref_name)s is %(result)s"%locals()
+        print "Actual (but ignored) result for %(ref_name)s is %(result)s"%locals()
         return Ignored (result)
     wrappee.__doc__="ignored version of " + method.__name__.replace('_ignore','').replace('ignore_','')
     return wrappee
@@ -170,7 +170,7 @@ class TestPlc:
         'plc_db_dump' , 'plc_db_restore', SEP,
         'check_netflow','check_drl', SEP,
         'debug_nodemanager', SEP,
-        'standby_1_through_20',SEP,
+        'standby_1_through_20','yes','no',SEP,
         ]
 
     @staticmethod
@@ -1776,3 +1776,7 @@ class TestPlc:
     def standby_19(): pass
     @standby_generic 
     def standby_20(): pass
+
+    # convenience for debugging the test logic
+    def yes (self): return True
+    def no (self): return False

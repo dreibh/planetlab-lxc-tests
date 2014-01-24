@@ -525,8 +525,8 @@ steps refer to a method in TestPlc or to a step_* module
         try:
             success=self.run()
             if success == 'SUCCESS':    return 0
-            elif success == 'IGNORED':  return 2
-            else:                       return 1
+            elif success == 'IGNORED':  return 1
+            else:                       return 2
         except SystemExit:
             print 'Caught SystemExit'
             return 3
