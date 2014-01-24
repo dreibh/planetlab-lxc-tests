@@ -535,4 +535,6 @@ steps refer to a method in TestPlc or to a step_* module
             return 3
 
 if __name__ == "__main__":
+    exit_code = TestMain().main()
+    print 'run_log is exiting',exit_code
     sys.exit(TestMain().main())
