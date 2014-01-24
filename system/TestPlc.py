@@ -638,7 +638,7 @@ class TestPlc:
 	    repo_url = os.path.dirname(repo_url)
 
         # invoke initvm (drop support for vs)
-        script="ltest-initvm.sh"
+        script="lbuild-initvm.sh"
         script_options=""
         # pass the vbuild-nightly options to [lv]test-initvm
         script_options += " -p %s"%self.options.personality
