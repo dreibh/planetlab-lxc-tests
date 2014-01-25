@@ -473,7 +473,9 @@ steps refer to a method in TestPlc or to a step_* module
                                 msg="OK"
                             else:
                                 msg="KO"
-                                overall_result='IGNORED'
+                                # do not overwrite if FAILURE
+                                if overall_result=='SUCCESS': 
+                                    overall_result='IGNORED'
                             utils.header('********** %d IGNORED (%s) step %s on %s'%(plc_counter,msg,stepname,plcname))
                             status="%s[I]"%msg
                         elif step_result:
@@ -518,15 +520,16 @@ steps refer to a method in TestPlc or to a step_* module
     # wrapper to run, returns a shell-compatible result
     # retcod:
     # 0: SUCCESS
-    # 1: SUCCESS but some ignored steps failed
-    # 2: FAILED STEP
+    # 1: FAILURE
+    # 2: SUCCESS but some ignored steps failed
     # 3: OTHER ERROR
     def main(self):
         try:
             success=self.run()
+            print 'run has returned %s'%success
             if success == 'SUCCESS':    return 0
-            elif success == 'IGNORED':  return 1
-            else:                       return 2
+            elif success == 'IGNORED':  return 2
+            else:                       return 1
         except SystemExit:
             print 'Caught SystemExit'
             return 3
