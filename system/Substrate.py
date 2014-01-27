@@ -869,10 +869,20 @@ class TestInstance:
     def set_broken (self, plcindex, step): 
         self.broken_steps.append ( (plcindex, step,) )
 
+    def second_letter (self):
+        if not self.broken_steps: return '='
+        else:
+            really_broken = [ step for (i,step) in self.broken_steps if '_ignore' not in step ]
+            # W is for warning like what's in the build mail
+            if len(really_broken)==0: return 'W'
+            else: return 'B'
+
     def line (self):
-        double='=='
-        if self.pids: double='*'+double[1]
-        if self.broken_steps: double=double[0]+'B'
+        # make up a 2-letter sign
+        # first letter : '=', unless build is running : '*'
+        double = '*' if self.pids else '='
+        # second letter : '=' if fine, 'W' for warnings (only ignored steps) 'B' for broken
+        double += self.second_letter()
         msg = " %s %s =="%(double,self.buildname)
         if not self.pids:       pass
         elif len(self.pids)==1: msg += " (pid=%s)"%self.pids[0]
