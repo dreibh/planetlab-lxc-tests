@@ -1344,7 +1344,7 @@ class Substrate:
         parser.add_option ('-r',"--reboot",action='store_true',dest='reboot',default=False,
                            help='reboot mode (use shutdown -r)')
         parser.add_option ('-s',"--soft",action='store_true',dest='soft',default=False,
-                           help='soft mode for reboot (vserver stop or kill qemus)')
+                           help='soft mode for reboot (terminates processes)')
         parser.add_option ('-t',"--testbox",action='store_true',dest='testbox',default=False,
                            help='add test box') 
         parser.add_option ('-b',"--build",action='store_true',dest='builds',default=False,
