@@ -12,11 +12,9 @@ tracelast=trace
 rm -f logs/success
 rm -f logs/$runlast; (cd logs; ln -s $runfile $runlast)
 rm -f logs/$tracelast; (cd logs; ln -s $tracefile $tracelast)
-python -u TestMain.py -t logs/$tracefile "$@" &> logs/$runfile && touch logs/success
+python -u TestMain.py -t logs/$tracefile "$@" &> logs/$runfile ; retcod=$?
 cat logs/$runfile
+[ "$retcod" == 0 ] && touch logs/success
 
-if [ -f logs/success ] ; then
-    exit 0
-else
-    exit 1
-fi
+echo "run_log is exiting" $retcod
+exit $retcod

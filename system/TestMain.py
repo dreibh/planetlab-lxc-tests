@@ -286,7 +286,7 @@ steps refer to a method in TestPlc or to a step_* module
         if self.options.list_steps:
             self.init_steps()
             self.list_steps()
-            return True
+            return 'SUCCESS'
 
         # steps
         if not self.options.steps:
@@ -299,6 +299,7 @@ steps refer to a method in TestPlc or to a step_* module
         self.options.exclude = [ step.replace('-','_') for step in self.options.exclude ]
         self.options.ignore = [ step.replace('-','_') for step in self.options.ignore ]
 
+        # technicality, decorate known steps to produce the '_ignore' version
         TestPlc.create_ignore_steps()
 
         # exclude
@@ -441,7 +442,7 @@ steps refer to a method in TestPlc or to a step_* module
                                 skip_step=True
                             elif answer in ['q','b']:   # quit/bye
                                 print 'Exiting'
-                                return
+                                return 'FAILURE'
                             elif answer in ['d']:       # dry_run
                                 dry_run=self.options.dry_run
                                 self.options.dry_run=True
@@ -540,4 +541,4 @@ steps refer to a method in TestPlc or to a step_* module
 if __name__ == "__main__":
     exit_code = TestMain().main()
     print 'run_log is exiting',exit_code
-    sys.exit(TestMain().main())
+    sys.exit(exit_code)
