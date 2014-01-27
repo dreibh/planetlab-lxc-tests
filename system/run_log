@@ -19,4 +19,5 @@ case "$retcod" in
     2) touch logs/warning ;;
 esac
 
+echo run_log exit_code $retcod
 exit $retcod
