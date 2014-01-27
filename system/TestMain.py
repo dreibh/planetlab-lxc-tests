@@ -527,7 +527,6 @@ steps refer to a method in TestPlc or to a step_* module
     def main(self):
         try:
             success=self.run()
-            print 'run has returned %s'%success
             if success == 'SUCCESS':    return 0
             elif success == 'IGNORED':  return 2
             else:                       return 1
@@ -540,5 +539,4 @@ steps refer to a method in TestPlc or to a step_* module
 
 if __name__ == "__main__":
     exit_code = TestMain().main()
-    print 'run_log is exiting',exit_code
     sys.exit(exit_code)
