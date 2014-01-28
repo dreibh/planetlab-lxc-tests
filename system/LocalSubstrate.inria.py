@@ -33,7 +33,7 @@ class OnelabSubstrate (Substrate):
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
       return [ 
-#         ('gotan', 10),         # how many plcs max in this box 
+         ('gotan', 10),         # how many plcs max in this box 
          ('deathvegas', 10),    
          ]  
 
@@ -47,6 +47,8 @@ class OnelabSubstrate (Substrate):
       return [ # how many qemus max in this box
 # enfoui runs f18 - also can't seem to enter BIOS on that one
          ('kvm64-6', 4), # 4 cores, 8Gb
+# this used to be kruder, which is broken/dead
+# we now have speedball installed but it is reserved for manual trials of libvirt/qemu
 # this one is down         ('kvm64-1', 3), # 4 cores, 4Gb
          ('kvm64-2', 3), # 4 cores, 4Gb
          ('kvm64-4', 2), # 4 cores, 8Gb
