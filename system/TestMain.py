@@ -173,10 +173,6 @@ steps refer to a method in TestPlc or to a step_* module
                           help="Specify the set of hostnames for the boxes that host the nodes")
         parser.add_option("-N","--nodes",action="append", dest="ips_vnode", default=[],
                           help="Specify the set of hostname/IP's to use for vnodes")
-        parser.add_option ('-X', "--lxc",action='store_true',dest='plcs_use_lxc',default=True,
-                           help='use lxc-enabled plc boxes instead of vs-enabled ones')
-        parser.add_option ('-S', "--vs",action='store_false',dest='plcs_use_lxc',
-                           help='use lxc-enabled plc boxes instead of vs-enabled ones')
         parser.add_option("-s","--size",action="store",type="int",dest="size",default=1,
                           help="sets test size in # of plcs - default is 1")
         parser.add_option("-q","--qualifier",action="store",type="int",dest="qualifier",default=None,
@@ -228,7 +224,6 @@ steps refer to a method in TestPlc or to a step_* module
             ('personality','arg-personality',"linux64",None),
             ('pldistro','arg-pldistro',"onelab",None),
             ('fcdistro','arg-fcdistro','f14',None),
-            ('plcs_use_lxc','arg-plcs-use-lxc',False,None),
             ) :
 #            print 'handling',recname
             path=filename
@@ -337,7 +332,6 @@ steps refer to a method in TestPlc or to a step_* module
                 raise
 
         # provision on local substrate
-        if self.options.plcs_use_lxc: LocalSubstrate.local_substrate.rescope (plcs_on_vs=False, plcs_on_lxc=True)
         all_plc_specs = LocalSubstrate.local_substrate.provision(all_plc_specs,self.options)
 
         # remember substrate IP address(es) for next run

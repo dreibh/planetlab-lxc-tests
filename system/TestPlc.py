@@ -244,35 +244,22 @@ class TestPlc:
 
     #command gets run in the plc's vm
     def host_to_guest(self,command):
-        if self.options.plcs_use_lxc:
-            return "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s %s"%(self.vserverip,command)
-        else:
-            return "vserver %s exec %s"%(self.vservername,command)
+        return "virsh -c lxc:/// lxc-enter-namespace %s %s" %(self.vservername,command)
+#        return "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s %s"%(self.vserverip,command)
     
+    # this /vservers thing is legacy...
     def vm_root_in_host(self):
-        if self.options.plcs_use_lxc:
-            return "/vservers/%s/"%(self.vservername)
-        else:
-            return "/vservers/%s"%(self.vservername)
+        return "/vservers/%s/"%(self.vservername)
 
     def vm_timestamp_path (self):
-        if self.options.plcs_use_lxc:
-            return "/vservers/%s/%s.timestamp"%(self.vservername,self.vservername)
-        else:
-            return "/vservers/%s.timestamp"%(self.vservername)
+        return "/vservers/%s/%s.timestamp"%(self.vservername,self.vservername)
 
     #start/stop the vserver
     def start_guest_in_host(self):
-        if self.options.plcs_use_lxc:
-            return "virsh -c lxc:// start %s"%(self.vservername)
-        else:
-            return "vserver %s start"%(self.vservername)
+        return "virsh -c lxc:/// start %s"%(self.vservername)
     
     def stop_guest_in_host(self):
-        if self.options.plcs_use_lxc:
-            return "virsh -c lxc:// destroy %s"%(self.vservername)
-        else:
-            return "vserver %s stop"%(self.vservername)
+        return "virsh -c lxc:/// destroy %s"%(self.vservername)
     
     # xxx quick n dirty
     def run_in_guest_piped (self,local,remote):
@@ -467,10 +454,7 @@ class TestPlc:
         domain=socket.gethostname().split('.',1)[1]
         fqdn="%s.%s"%(self.plc_spec['host_box'],domain)
         print "export BUILD=%s"%self.options.buildname
-        if self.options.plcs_use_lxc:
-            print "export PLCHOSTLXC=%s"%fqdn
-        else:
-            print "export PLCHOSTVS=%s"%fqdn
+        print "export PLCHOSTLXC=%s"%fqdn
         print "export GUESTNAME=%s"%self.plc_spec['vservername']
         vplcname=self.plc_spec['vservername'].split('-')[-1]
         print "export GUESTHOSTNAME=%s.%s"%(vplcname,domain)
@@ -602,14 +586,10 @@ class TestPlc:
         "vserver delete the test myplc"
         stamp_path=self.vm_timestamp_path()
         self.run_in_host("rm -f %s"%stamp_path)
-        if self.options.plcs_use_lxc:
-            self.run_in_host("virsh -c lxc:// destroy %s"%self.vservername)
-            self.run_in_host("virsh -c lxc:// undefine %s"%self.vservername)
-            self.run_in_host("rm -fr /vservers/%s"%self.vservername)
-            return True
-        else:
-            self.run_in_host("vserver --silent %s delete"%self.vservername)
-            return True
+        self.run_in_host("virsh -c lxc:// destroy %s"%self.vservername)
+        self.run_in_host("virsh -c lxc:// undefine %s"%self.vservername)
+        self.run_in_host("rm -fr /vservers/%s"%self.vservername)
+        return True
 
     ### install
     # historically the build was being fetched by the tests
@@ -718,14 +698,35 @@ class TestPlc:
         utils.system('rm %s'%tmpname)
         return True
 
+# f14 is a bit odd in this respect, although this worked fine in guests up to f18
+# however using a vplc guest under f20 requires this trick
+# the symptom is this: service plc start
+# Starting plc (via systemctl):  Failed to get D-Bus connection: \
+#    Failed to connect to socket /org/freedesktop/systemd1/private: Connection refused
+# weird thing is the doc says f14 uses upstart by default and not systemd
+# so this sounds kind of harmless
     def plc_start(self):
-        "service plc start"
-        self.run_in_guest('service plc start')
+        "service plc start (use a special trick to set SYSTEMCTL_SKIP_REDIRECT on f14)"
+        if self.options.fcdistro != 'f14':
+            self.run_in_guest ("service plc start")
+        else:
+            # patch /sbin/service so it does not reset environment
+            # this is because our own scripts in turn call service 
+            self.run_in_guest ("sed -i -e 's,env -i ,,' /sbin/service")
+            self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true /etc/init.d/plc start")
+        # retcod of service is not meaningful
         return True
 
     def plc_stop(self):
-        "service plc stop"
-        self.run_in_guest('service plc stop')
+        "service plc stop (use a special trick to set SYSTEMCTL_SKIP_REDIRECT on f14)"
+        if self.options.fcdistro != 'f14':
+            self.run_in_guest ("service plc stop")
+        else:
+            # patch /sbin/service so it does not reset environment
+            # this is because our own scripts in turn call service 
+            self.run_in_guest ("sed -i -e 's,env -i ,,' /sbin/service")
+            self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true /etc/init.d/plc stop")
+        # retcod of service is not meaningful
         return True
         
     def vs_start (self):

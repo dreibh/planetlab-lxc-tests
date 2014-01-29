@@ -1031,7 +1031,7 @@ class Options: pass
 
 class Substrate:
 
-    def __init__ (self, plcs_on_vs=True, plcs_on_lxc=False):
+    def __init__ (self, plcs_on_vs=False, plcs_on_lxc=True):
         self.options=Options()
         self.options.dry_run=False
         self.options.verbose=False
