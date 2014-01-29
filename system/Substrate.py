@@ -1031,16 +1031,14 @@ class Options: pass
 
 class Substrate:
 
-    def __init__ (self, plcs_on_vs=False, plcs_on_lxc=True):
+    def __init__ (self):
         self.options=Options()
         self.options.dry_run=False
         self.options.verbose=False
         self.options.reboot=False
         self.options.soft=False
         self.test_box = TestBox (self.test_box_spec())
-        self.build_vs_boxes = [ BuildVsBox(h) for h in self.build_vs_boxes_spec() ]
         self.build_lxc_boxes = [ BuildLxcBox(h) for h in self.build_lxc_boxes_spec() ]
-        self.plc_vs_boxes = [ PlcVsBox (h,m) for (h,m) in self.plc_vs_boxes_spec ()]
         self.plc_lxc_boxes = [ PlcLxcBox (h,m) for (h,m) in self.plc_lxc_boxes_spec ()]
         self.qemu_boxes = [ QemuBox (h,m) for (h,m) in self.qemu_boxes_spec ()]
         self._sensed=False
@@ -1048,20 +1046,13 @@ class Substrate:
         self.vplc_pool = Pool (self.vplc_ips(),"for vplcs",self)
         self.vnode_pool = Pool (self.vnode_ips(),"for vnodes",self)
         
-        self.rescope (plcs_on_vs=plcs_on_vs, plcs_on_lxc=plcs_on_lxc)
-
-    # which plc boxes are we interested in ?
-    def rescope (self, plcs_on_vs, plcs_on_lxc):
-        self.build_boxes = self.build_vs_boxes + self.build_lxc_boxes
-        self.plc_boxes=[]
-        if plcs_on_vs: self.plc_boxes += self.plc_vs_boxes
-        if plcs_on_lxc: self.plc_boxes += self.plc_lxc_boxes
+        self.build_boxes = self.build_lxc_boxes
+        self.plc_boxes = self.plc_lxc_boxes
         self.default_boxes = self.plc_boxes + self.qemu_boxes
         self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
 
     def summary_line (self):
         msg  = "["
-        msg += " %d vp"%len(self.plc_vs_boxes)
         msg += " %d xp"%len(self.plc_lxc_boxes)
         msg += " %d tried plc boxes"%len(self.plc_boxes)
         msg += "]"
@@ -1362,8 +1353,6 @@ class Substrate:
         parser.add_option ('-n',"--dry_run",action='store_true',dest='dry_run',default=False,
                            help='dry run mode')
         (self.options,args)=parser.parse_args()
-
-        self.rescope (plcs_on_vs=True, plcs_on_lxc=True)
 
         boxes=args
         if self.options.testbox: boxes += [self.test_box]

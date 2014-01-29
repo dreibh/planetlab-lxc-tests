@@ -18,17 +18,9 @@ class OnelabSubstrate (Substrate):
    def test_box_spec (self):
       return 'testmaster'
 
-   # the build boxes we use 
-   def build_vs_boxes_spec (self):
-      return []
-
    # the experimental lxc-based build box
    def build_lxc_boxes_spec (self):
       return [ 'liquid', 'reed', 'velvet' ]
-
-   # the vs-capable box for PLCs
-   def plc_vs_boxes_spec (self):
-      return [ ]
 
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):

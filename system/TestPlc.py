@@ -244,7 +244,7 @@ class TestPlc:
 
     #command gets run in the plc's vm
     def host_to_guest(self,command):
-        return "virsh -c lxc:/// lxc-enter-namespace %s %s" %(self.vservername,command)
+        return "virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c '%s'" %(self.vservername,command)
 #        return "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s %s"%(self.vserverip,command)
     
     # this /vservers thing is legacy...
