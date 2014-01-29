@@ -882,15 +882,17 @@ class TestInstance:
         # first letter : '=', unless build is running : '*'
         double = '*' if self.pids else '='
         # second letter : '=' if fine, 'W' for warnings (only ignored steps) 'B' for broken
-        double += self.second_letter()
+        letter2 = self.second_letter()
+        double += letter2
         msg = " %s %s =="%(double,self.buildname)
         if not self.pids:       pass
         elif len(self.pids)==1: msg += " (pid=%s)"%self.pids[0]
         else:                   msg += " !!!pids=%s!!!"%self.pids
         msg += " @%s"%self.pretty_timestamp()
-        if self.broken_steps:
+        if letter2 != '=':
+            msg = 'BROKEN' if letter2 == 'B' else 'WARNING'
             # sometimes we have an empty plcindex
-            msg += " [BROKEN=" + " ".join( [ "%s@%s"%(s,i) if i else s for (i,s) in self.broken_steps ] ) + "]"
+            msg += " [%s="%msg + " ".join( [ "%s@%s"%(s,i) if i else s for (i,s) in self.broken_steps ] ) + "]"
         return msg
 
 class TestBox (Box):
