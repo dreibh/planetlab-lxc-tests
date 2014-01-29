@@ -227,8 +227,10 @@ class TestPlc:
     def connect (self):
 	pass
 
-    def actual_command_in_guest (self,command):
-        return self.test_ssh.actual_command(self.host_to_guest(command),dry_run=self.options.dry_run)
+    def actual_command_in_guest (self,command, backslash=False):
+        raw1=self.host_to_guest(command)
+        raw2=self.test_ssh.actual_command(raw1,dry_run=self.options.dry_run, backslash=backslash)
+        return raw2
     
     def start_guest (self):
       return utils.system(self.test_ssh.actual_command(self.start_guest_in_host(),dry_run=self.options.dry_run))
@@ -236,16 +238,23 @@ class TestPlc:
     def stop_guest (self):
       return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host(),dry_run=self.options.dry_run))
     
-    def run_in_guest (self,command):
-        return utils.system(self.actual_command_in_guest(command))
+    def run_in_guest (self,command,backslash=False):
+        raw=self.actual_command_in_guest(command,backslash)
+        return utils.system(raw)
     
     def run_in_host (self,command):
         return self.test_ssh.run_in_buildname(command, dry_run=self.options.dry_run)
 
     #command gets run in the plc's vm
     def host_to_guest(self,command):
-        return "virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c '%s'" %(self.vservername,command)
-#        return "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s %s"%(self.vserverip,command)
+        # need to backslash stuff here and not later on
+        backslashed_command=TestSsh.backslash_shell_specials(command)
+        # f14 still needs some extra help
+        if self.options.fcdistro == 'f14':
+            raw="virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c \\'PATH=/bin:/sbin:/usr/bin:/usr/sbin %s\\'" %(self.vservername,backslashed_command)
+        else:
+            raw="virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c \\'%s\\'" %(self.vservername,backslashed_command)
+        return raw
     
     # this /vservers thing is legacy...
     def vm_root_in_host(self):

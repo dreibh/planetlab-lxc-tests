@@ -77,7 +77,7 @@ class TestSsh:
             return "%s@%s"%(self.username,self.hostname)
     
     # command gets run on the right box
-    def actual_command (self, command, keep_stdin=False, dry_run=False):
+    def actual_command (self, command, keep_stdin=False, dry_run=False,backslash=True):
         if self.is_local():
             return command
         ssh_command = "ssh "
@@ -87,7 +87,11 @@ class TestSsh:
             ssh_command += TestSsh.std_options
             if self.unknown_host: ssh_command += TestSsh.unknown_option
         ssh_command += self.key_part()
-        ssh_command += "%s %s" %(self.hostname_part(),TestSsh.backslash_shell_specials(command))
+        ssh_command += self.hostname_part() + " "
+        if backslash:
+            ssh_command += TestSsh.backslash_shell_specials(command)
+        else:
+            ssh_command += command
         return ssh_command
 
     # same in argv form
