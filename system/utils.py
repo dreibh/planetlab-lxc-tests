@@ -44,13 +44,8 @@ def system(command,background=False,silent=False):
 ### WARNING : this ALWAYS does its job, even in dry_run mode
 def output_of (command):
     import commands
-#    if options.dry_run:
-#        print 'dry_run',command
-#        return (0,'[[dry-run - fake output]]')
-#    else:
     (code,string) = commands.getstatusoutput(command)
     return (code,string)
-
 
 
 # convenience: translating shell-like pattern into regexp

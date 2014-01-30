@@ -29,9 +29,9 @@ class TestSsh:
         result=''
         for char in command:
             if char in "\\\"'<>&|;()$*~":
-                result +='\\'+char
+                result += '\\'+char
             else:
-                result +=char
+                result += char
         return result
 
     # check main IP address against the provided hostname
