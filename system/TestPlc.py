@@ -250,9 +250,9 @@ class TestPlc:
     def host_to_guest(self,command):
         # f14 still needs some extra help
         if self.options.fcdistro == 'f14':
-            raw="virsh -c lxc:/// lxc-enter-namespace %s /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %s" %(self.vservername,command)
+            raw="virsh -c lxc:/// lxc-enter-namespace %s -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %s" %(self.vservername,command)
         else:
-            raw="virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c \\'%s\\'" %(self.vservername,command)
+            raw="virsh -c lxc:/// lxc-enter-namespace %s -- /usr/bin/env %s" %(self.vservername,command)
         return raw
     
     # this /vservers thing is legacy...
@@ -722,8 +722,8 @@ class TestPlc:
             return self.run_in_guest ("service %s %s"%(service,start_or_stop))==0
         else:
             # patch /sbin/service so it does not reset environment
-            # this is because our own scripts in turn call service 
             self.run_in_guest ('sed -i -e \\"s,env -i,env,\\" /sbin/service')
+            # this is because our own scripts in turn call service 
             return self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true service %s %s"%(service,start_or_stop))==0
 
     def plc_start(self):
