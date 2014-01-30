@@ -128,7 +128,6 @@ class TestPlc:
     default_steps = [
         'show', SEP,
         'vs_delete','timestamp_vs','vs_create', SEP,
-#        'plc_install', 'mod_python', 'plc_configure', 'plc_start', SEP,
         'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls','speed_up_slices', SEP,
@@ -245,15 +244,15 @@ class TestPlc:
     def run_in_host (self,command):
         return self.test_ssh.run_in_buildname(command, dry_run=self.options.dry_run)
 
+    # backslashing turned out so awful at some point that I've turned off auto-backslashing
+    # see e.g. plc_start esp. the version for f14
     #command gets run in the plc's vm
     def host_to_guest(self,command):
-        # need to backslash stuff here and not later on
-        backslashed_command=TestSsh.backslash_shell_specials(command)
         # f14 still needs some extra help
         if self.options.fcdistro == 'f14':
-            raw="virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c \\'PATH=/bin:/sbin:/usr/bin:/usr/sbin %s\\'" %(self.vservername,backslashed_command)
+            raw="virsh -c lxc:/// lxc-enter-namespace %s /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %s" %(self.vservername,command)
         else:
-            raw="virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c \\'%s\\'" %(self.vservername,backslashed_command)
+            raw="virsh -c lxc:/// lxc-enter-namespace %s /bin/bash -c \\'%s\\'" %(self.vservername,command)
         return raw
     
     # this /vservers thing is legacy...
@@ -714,30 +713,27 @@ class TestPlc:
 #    Failed to connect to socket /org/freedesktop/systemd1/private: Connection refused
 # weird thing is the doc says f14 uses upstart by default and not systemd
 # so this sounds kind of harmless
-    def plc_start(self):
-        "service plc start (use a special trick to set SYSTEMCTL_SKIP_REDIRECT on f14)"
+    def start_service (self,service): return self.start_stop_service (service,'start')
+    def stop_service  (self,service): return self.start_stop_service (service,'stop')
+
+    def start_stop_service (self, service,start_or_stop):
+        "utility to start/stop a service with the special trick for f14"
         if self.options.fcdistro != 'f14':
-            self.run_in_guest ("service plc start")
+            return self.run_in_guest ("service %s %s"%(service,start_or_stop))==0
         else:
             # patch /sbin/service so it does not reset environment
             # this is because our own scripts in turn call service 
-            self.run_in_guest ("sed -i -e 's,env -i ,,' /sbin/service")
-            self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true /etc/init.d/plc start")
-        # retcod of service is not meaningful
-        return True
+            self.run_in_guest ('sed -i -e \\"s,env -i,env,\\" /sbin/service')
+            return self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true service %s %s"%(service,start_or_stop))==0
+
+    def plc_start(self):
+        "service plc start"
+        return self.start_service ('plc')
 
     def plc_stop(self):
-        "service plc stop (use a special trick to set SYSTEMCTL_SKIP_REDIRECT on f14)"
-        if self.options.fcdistro != 'f14':
-            self.run_in_guest ("service plc stop")
-        else:
-            # patch /sbin/service so it does not reset environment
-            # this is because our own scripts in turn call service 
-            self.run_in_guest ("sed -i -e 's,env -i ,,' /sbin/service")
-            self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true /etc/init.d/plc stop")
-        # retcod of service is not meaningful
-        return True
-        
+        "service plc stop"
+        return self.stop_service ('plc')
+
     def vs_start (self):
         "start the PLC vserver"
         self.start_guest()
@@ -1531,14 +1527,12 @@ class TestPlc:
     def sfa_import(self):
         "use sfaadmin to import from plc"
         auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
-        return \
-            self.run_in_guest('sfaadmin reg import_registry')==0 
-# not needed anymore
-#        self.run_in_guest('cp /etc/sfa/authorities/%s/%s.pkey /etc/sfa/authorities/server.key'%(auth,auth))
+        return self.run_in_guest('sfaadmin reg import_registry')==0 
 
     def sfa_start(self):
         "service sfa start"
-        return self.run_in_guest('service sfa start')==0
+        return self.start_service('sfa')
+
 
     def sfi_configure(self):
         "Create /root/sfi on the plc side for sfi client configuration"
@@ -1599,8 +1593,7 @@ class TestPlc:
 
     def sfa_stop(self):
         "service sfa stop"
-        self.run_in_guest('service sfa stop')==0
-        return True
+        return self.stop_service ('sfa')
 
     def populate (self):
         "creates random entries in the PLCAPI"
