@@ -890,9 +890,9 @@ class TestInstance:
         else:                   msg += " !!!pids=%s!!!"%self.pids
         msg += " @%s"%self.pretty_timestamp()
         if letter2 != '=':
-            msg += ( ' BROKEN' if letter2 == 'B' else ' WARNING' )
+            msg2 = ( ' BROKEN' if letter2 == 'B' else ' WARNING' )
             # sometimes we have an empty plcindex
-            msg += " [%s="%msg + " ".join( [ "%s@%s"%(s,i) if i else s for (i,s) in self.broken_steps ] ) + "]"
+            msg += " [%s="%msg2 + " ".join( [ "%s@%s"%(s,i) if i else s for (i,s) in self.broken_steps ] ) + "]"
         return msg
 
 class TestBox (Box):
