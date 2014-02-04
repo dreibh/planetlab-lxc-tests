@@ -37,20 +37,20 @@ class OnelabSubstrate (Substrate):
 
 # as of jan 2014 this is renumbered so that 1 is preferred
    def qemu_boxes_spec (self):
-      return [ # how many qemus max in this box
-# enfoui - can't seem to enter BIOS on that one
-         ('kvm64-1', 4), # 4 cores, 8Gb
+      return [ # (hostname, how many qemus max in this box)
+# speedball - old school but robust and a big disk
+         ('kvm64-1', 3), # 4 cores, 4Gb, 840 Gb
 # used to have kruder too, but it is broken/dead
 # dorfmeister
          ('kvm64-2', 3), # 4 cores, 4Gb
-# estran - big meme but small disk
-         ('kvm64-3', 2), # 4 cores, 8Gb
+# enfoui - can't seem to enter BIOS on that one
+         ('kvm64-3', 4), # 4 cores, 8Gb
+# estran - big mem but small disk
+         ('kvm64-4', 2), # 4 cores, 8Gb
 # lodos - rather old/small
-         ('kvm64-4', 1), # 2 cores, 4Gb
-# cyblok         
          ('kvm64-5', 1), # 2 cores, 4Gb
-# we also have speedball installed but it is reserved for manual trials of libvirt/qemu
-#         ('kvm64-6', 3), # 4 cores, 4Gb
+# cyblok         
+         ('kvm64-6', 1), # 2 cores, 4Gb
          ]
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
