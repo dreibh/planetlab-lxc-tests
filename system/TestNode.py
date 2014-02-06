@@ -227,7 +227,7 @@ class TestNode:
             utils.header("TestNode.qemu_start : %s model %s taken as real node"%(self.name(),model))
         return True
 
-    def timestamp_qemu (self):
+    def qemu_timestamp (self):
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         test_box = self.test_box()
         test_box.run_in_buildname("mkdir -p %s"%self.nodedir(), dry_run=self.dry_run())

@@ -3,8 +3,8 @@
 
 sequences={}
 
-"release local resources (stop vs, kill qemus, clean trackers)"
-sequences['free_all'] = [ 'vs_stop', 'qemu_kill_mine', ]
+"release local resources (stop vs, kill qemus)"
+sequences['free_all'] = [ 'plcvm_stop', 'qemu_kill_mine', ]
 
 sequences['sfa_restart'] = [
     'sfa_stop',
@@ -62,12 +62,12 @@ sequences['sfa_provision'] = [
 # run the whole SFA stuff but from scratch, new vs all reinstalled and all
 sequences['sfa_scratch'] = [
     'show',
-    'vs_delete','timestamp_vs','vs_create', 
+    'plcvm_delete','plcvm_timestamp','plcvm_create', 
     'plc_install', 'plc_configure', 'plc_start', 
     'keys_fetch', 'keys_store', 'keys_clear_known_hosts', 
     'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', 
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
-    'qemu_export', 'qemu_kill_mine', 'qemu_start', 'timestamp_qemu', 
+    'qemu_export', 'qemu_kill_mine', 'qemu_start', 'qemu_timestamp', 
     'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', 
     'sfi_configure', 'sfa_add_user', 'sfa_add_slice', 'sfa_discover', 
     'sfa_create_slice', 'sfa_check_slice_plc', 
@@ -87,9 +87,9 @@ sequences['sfi_view_all'] = [
 # clearly there is a lot more to check here in terms of consistency
 sequences['sfa_standalone'] = [
     'show',
-    'vs_delete',
-    'timestamp_vs',
-    'vs_create',
+    'plcvm_delete',
+    'plcvm_timestamp',
+    'plcvm_create',
     'sfa_install_client',
     'sfa_install_core',
     'sfa_configure',
@@ -108,3 +108,32 @@ sequences['sfa_standalone'] = [
     'sfi_list',
     'sfi_show',
 ]
+
+# re-run a qemu node when things go wrong
+# we need a scheme where we can select another qemu box
+# this is based on a 2-step mechanism
+#
+# run qemu_again1
+# rm arg-ips-bnode (or echo anotherbox > arg-ips-bnode)
+# run qemu-again2
+
+sequences['qemu_again1'] = [
+    'qemu-kill-mine',
+]
+
+sequences['qemu_again2']=[
+    'qemu-clean-mine',
+    'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
+    'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 
+    'ping_node', 'ssh_node_debug',
+    'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore',
+]
+
+# same but only up to ping 
+sequences['qemu_again2_ping']=[
+    'qemu-clean-mine',
+    'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
+    'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 
+    'ping_node',
+]
+    

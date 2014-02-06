@@ -127,16 +127,18 @@ class TestPlc:
 
     default_steps = [
         'show', SEP,
-        'vs_delete','timestamp_vs','vs_create', SEP,
+        'plcvm_delete','plcvm_timestamp','plcvm_create', SEP,
         'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls','speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
 # slices created under plcsh interactively seem to be fine but these ones don't have the tags
 # keep this our of the way for now
-#        'check_vsys_defaults', SEP,
+        'check_vsys_defaults_ignore', SEP,
+# run this first off so it's easier to re-run on another qemu box        
+        'qemu_kill_mine', SEP,
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
-        'qemu_kill_mine','qemu_clean_mine', 'qemu_export', 'qemu_start', 'timestamp_qemu', SEP,
+        'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_add_site@1','sfa_add_pi@1', SEPSFA,
         'sfa_add_user@1', 'sfa_update_user@1', 'sfa_add_slice@1', 'sfa_renew_slice@1', SEPSFA,
@@ -144,8 +146,8 @@ class TestPlc:
         'sfi_list@1', 'sfi_show@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
-        'ssh_node_debug@1', 'plcsh_stress_test@1', SEP,
-        'ssh_node_boot@1', 'node_bmlogs@1', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore', SEP,
+        'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
+        'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
         # check slices are turned off properly
@@ -156,7 +158,7 @@ class TestPlc:
         ]
     other_steps = [ 
         'export', 'show_boxes', SEP,
-        'check_hooks', 'plc_stop', 'vs_start', 'vs_stop', SEP,
+        'check_hooks', 'plc_stop', 'plcvm_start', 'plcvm_stop', SEP,
         'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
         'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
         'delete_leases', 'list_leases', SEP,
@@ -578,7 +580,7 @@ class TestPlc:
 
     # write a timestamp in /vservers/<>.timestamp
     # cannot be inside the vserver, that causes vserver .. build to cough
-    def timestamp_vs (self):
+    def plcvm_timestamp (self):
         "Create a timestamp to remember creation date for this plc"
         now=int(time.time())
         # TODO-lxc check this one
@@ -590,7 +592,7 @@ class TestPlc:
         
     # this is called inconditionnally at the beginning of the test sequence 
     # just in case this is a rerun, so if the vm is not running it's fine
-    def vs_delete(self):
+    def plcvm_delete(self):
         "vserver delete the test myplc"
         stamp_path=self.vm_timestamp_path()
         self.run_in_host("rm -f %s"%stamp_path)
@@ -603,7 +605,7 @@ class TestPlc:
     # historically the build was being fetched by the tests
     # now the build pushes itself as a subdir of the tests workdir
     # so that the tests do not have to worry about extracting the build (svn, git, or whatever)
-    def vs_create (self):
+    def plcvm_create (self):
         "vserver creation (no install done)"
         # push the local build/ dir to the testplc box 
         if self.is_local():
@@ -734,12 +736,12 @@ class TestPlc:
         "service plc stop"
         return self.stop_service ('plc')
 
-    def vs_start (self):
+    def plcvm_start (self):
         "start the PLC vserver"
         self.start_guest()
         return True
 
-    def vs_stop (self):
+    def plcvm_stop (self):
         "stop the PLC vserver"
         self.stop_guest()
         return True
@@ -1029,6 +1031,28 @@ class TestPlc:
     def nodes_booted(self):
         return self.nodes_check_boot_state('boot',timeout_minutes=30,silent_minutes=28)
 
+    # probing nodes
+    def check_nodes_ping(self,timeout_seconds=120,period_seconds=10):
+        class CompleterTaskPingNode (CompleterTask):
+            def __init__ (self, hostname):
+                self.hostname=hostname
+            def run(self,silent):
+                command="ping -c 1 -w 1 %s >& /dev/null"%self.hostname
+                return utils.system (command, silent=silent)==0
+            def failure_message (self):
+                return "Cannot ping node with name %s"%self.hostname
+        timeout=timedelta (seconds=timeout_seconds)
+        graceout=timeout
+        period=timedelta (seconds=period_seconds)
+        node_infos = self.all_node_infos()
+        tasks = [ CompleterTaskPingNode (h) for (h,_) in node_infos ]
+        return Completer (tasks).run (timeout, graceout, period)
+
+    # ping node before we try to reach ssh, helpful for troubleshooting failing bootCDs
+    def ping_node (self):
+        "Ping nodes"
+        return self.check_nodes_ping ()
+
     def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period_seconds=15):
         class CompleterTaskNodeSsh (CompleterTask):
             def __init__ (self, hostname, qemuname, boot_state, local_key):
@@ -1241,7 +1265,7 @@ class TestPlc:
     def qemu_start (self) : pass
 
     @node_mapper
-    def timestamp_qemu (self) : pass
+    def qemu_timestamp (self) : pass
 
     # when a spec refers to a node possibly on another plc
     def locate_sliver_obj_cross (self, nodename, slicename, other_plcs):

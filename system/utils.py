@@ -39,7 +39,9 @@ def system(command,background=False,silent=False):
         # don't show in summary
         print "->",now,'--',
         sys.stdout.flush()
-    return os.system("set -x; " + command)
+    if not silent:
+        command = "set -x; " + command
+    return os.system(command)
 
 ### WARNING : this ALWAYS does its job, even in dry_run mode
 def output_of (command):
