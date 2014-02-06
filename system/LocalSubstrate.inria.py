@@ -44,7 +44,8 @@ class OnelabSubstrate (Substrate):
 # dorfmeister
          ('kvm64-2', 3), # 4 cores, 4Gb
 # enfoui - can't seem to enter BIOS on that one
-         ('kvm64-3', 4), # 4 cores, 8Gb
+# won't reboot - needs to be fixed
+#         ('kvm64-3', 4), # 4 cores, 8Gb
 # estran - big mem but small disk
          ('kvm64-4', 2), # 4 cores, 8Gb
 # lodos - rather old/small
