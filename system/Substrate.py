@@ -610,6 +610,9 @@ class QemuBox (Box):
                 return
         self.qemu_instances.append(QemuInstance(nodename,pid,self))
 
+    def node_names (self):
+        return [ qi.nodename for qi in self.qemu_instances ]
+
     def forget (self, qemu_instance):
         self.qemu_instances.remove(qemu_instance)
 
@@ -1186,23 +1189,51 @@ class Substrate:
         print "Could not find box %s"%boxname
         return None
 
-    def list_boxes(self,box_or_names):
-        print 'Sensing',
+    # deal with the mix of boxes and names and stores the current focus 
+    # as a list of Box instances in self.focus_all
+    def normalize (self, box_or_names):
+        self.focus_all=[]
         for box in box_or_names:
             if not isinstance(box,Box): box=self.get_box(box)
-            if not box: continue
+            if not box: 
+                print 'Warning - could not handle box',box
+            self.focus_all.append(box)
+        # elaborate by type
+        self.focus_build = [ x for x in self.focus_all if isinstance(x,BuildBox) ]
+        self.focus_plc = [ x for x in self.focus_all if isinstance(x,PlcBox) ]
+        self.focus_qemu = [ x for x in self.focus_all if isinstance(x,QemuBox) ]
+                             
+    def list_boxes(self):
+        print 'Sensing',
+        for box in self.focus_all:
             box.sense(self.options)
         print 'Done'
-        for box in box_or_names:
-            if not isinstance(box,Box): box=self.get_box(box)
-            if not box: continue
+        for box in self.focus_all:
             box.list(self.options.verbose)
 
-    def reboot_boxes(self,box_or_names):
-        for box in box_or_names:
-            if not isinstance(box,Box): box=self.get_box(box)
-            if not box: continue
+    def reboot_boxes(self):
+        for box in self.focus_all:
             box.reboot(self.options)
+
+    def sanity_check (self):
+        print 'Sanity check'
+        self.sanity_check_plc()
+        self.sanity_check_qemu()
+
+    def sanity_check_plc (self):
+        pass
+
+    def sanity_check_qemu (self):
+        all_nodes=[]
+        for box in self.focus_qemu:
+            all_nodes += box.node_names()
+        hash={}
+        for node in all_nodes:
+            if node not in hash: hash[node]=0
+            hash[node]+=1
+        for (node,count) in hash.items():
+            if count!=1: print 'WARNING - duplicate node',node
+        
 
     ####################
     # can be run as a utility to probe/display/manage the local infrastructure
@@ -1241,5 +1272,10 @@ class Substrate:
         if not boxes:
             boxes = self.build_boxes + self.plc_boxes + self.qemu_boxes + [self.test_box]
 
-        if self.options.reboot: self.reboot_boxes (boxes)
-        else:                   self.list_boxes (boxes)
+        self.normalize (boxes)
+
+        if self.options.reboot:
+            self.reboot_boxes ()
+        else:
+            self.list_boxes ()
+            self.sanity_check ()
