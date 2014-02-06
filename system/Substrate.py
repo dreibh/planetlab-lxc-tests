@@ -233,7 +233,7 @@ class Pool:
         print 'Done'
         for (vname,bname) in self.load_starting():
             self.substrate.add_starting_dummy (bname, vname)
-        print 'After starting: IP pool'
+        print "After having loaded 'starting': IP pool"
         print self.line()
     # OS-dependent ping option (support for macos, for convenience)
     ping_timeout_option = None
