@@ -407,34 +407,6 @@ class BuildBox (Box):
 build_matcher=re.compile("\s*(?P<pid>[0-9]+).*-[bo]\s+(?P<buildname>[^\s]+)(\s|\Z)")
 build_matcher_initvm=re.compile("\s*(?P<pid>[0-9]+).*initvm.*\s+(?P<buildname>[^\s]+)\s*\Z")
 
-class BuildVsBox (BuildBox):
-    def soft_reboot (self, options):
-            command=['pkill','vbuild']
-            self.run_ssh(command,"Terminating vbuild processes",dry_run=options.dry_run)
-
-    # inspect box and find currently running builds
-    def sense(self, options):
-        print 'vb',
-        pids=self.backquote_ssh(['pgrep','vbuild'],trash_err=True)
-        if not pids: return
-        command=['ps','-o','pid,command'] + [ pid for pid in pids.split("\n") if pid]
-        ps_lines=self.backquote_ssh (command).split('\n')
-        for line in ps_lines:
-            if not line.strip() or line.find('PID')>=0: continue
-            m=build_matcher.match(line)
-            if m: 
-                date=time.strftime('%Y-%m-%d',time.localtime(time.time()))
-                buildname=m.group('buildname').replace('@DATE@',date)
-                self.add_build (buildname,m.group('pid'))
-                continue
-            m=build_matcher_initvm.match(line)
-            if m: 
-                # buildname is expansed here
-                self.add_build (buildname,m.group('pid'))
-                continue
-            header('BuildVsBox.sense: command %r returned line that failed to match'%command)
-            header(">>%s<<"%line)
-
 class BuildLxcBox (BuildBox):
     def soft_reboot (self, options):
             command=['pkill','lbuild']
@@ -473,31 +445,6 @@ class PlcInstance:
     def set_timestamp (self,timestamp): self.timestamp=timestamp
     def set_now (self): self.timestamp=int(time.time())
     def pretty_timestamp (self): return time.strftime("%Y-%m-%d:%H-%M",time.localtime(self.timestamp))
-
-class PlcVsInstance (PlcInstance):
-    def __init__ (self, plcbox, vservername, ctxid):
-        PlcInstance.__init__(self,plcbox)
-        self.vservername=vservername
-        self.ctxid=ctxid
-
-    def vplcname (self):
-        return self.vservername.split('-')[-1]
-    def buildname (self):
-        return self.vservername.rsplit('-',2)[0]
-
-    def line (self):
-        msg="== %s =="%(self.vplcname())
-        msg += " [=%s]"%self.vservername
-        if self.ctxid==0:  msg+=" not (yet?) running"
-        else:              msg+=" (ctx=%s)"%self.ctxid     
-        if self.timestamp: msg += " @ %s"%self.pretty_timestamp()
-        else:              msg += " *unknown timestamp*"
-        return msg
-
-    def kill (self):
-        msg="vserver stopping %s on %s"%(self.vservername,self.plc_box.hostname)
-        self.plc_box.run_ssh(['vserver',self.vservername,'stop'],msg)
-        self.plc_box.forget(self)
 
 class PlcLxcInstance (PlcInstance):
     # does lxc have a context id of any kind ?
@@ -539,7 +486,7 @@ class PlcBox (Box):
 
     # fill one slot even though this one is not started yet
     def add_dummy (self, plcname):
-        dummy=PlcVsInstance(self,'dummy_'+plcname,0)
+        dummy=PlcLxcInstance(self,'dummy_'+plcname,0)
         dummy.set_now()
         self.plc_instances.append(dummy)
 
@@ -561,80 +508,7 @@ class PlcBox (Box):
             for p in self.plc_instances: 
                 header (p.line(),banner=False)
 
-# we do not this at INRIA any more
-class PlcVsBox (PlcBox):
-
-    def add_vserver (self,vservername,ctxid):
-        for plc in self.plc_instances:
-            if plc.vservername==vservername: 
-                header("WARNING, duplicate myplc %s running on %s"%\
-                           (vservername,self.hostname),banner=False)
-                return
-        self.plc_instances.append(PlcVsInstance(self,vservername,ctxid))
-    
-    def line(self): 
-        msg="%s [max=%d,free=%d] (%s)"%(self.hostname_fedora(virt="vs"), self.max_plcs,self.free_slots(),self.uptime())
-        return msg
-        
-    def plc_instance_by_vservername (self, vservername):
-        for p in self.plc_instances:
-            if p.vservername==vservername: return p
-        return None
-
-    def soft_reboot (self, options):
-        self.run_ssh(['service','util-vserver','stop'],"Stopping all running vservers on %s"%(self.hostname,),
-                     dry_run=options.dry_run)
-
-    def sense (self, options):
-        print 'vp',
-        # try to find fullname (vserver_stat truncates to a ridiculously short name)
-        # fetch the contexts for all vservers on that box
-        map_command=['grep','.','/etc/vservers/*/context','/dev/null',]
-        context_map=self.backquote_ssh (map_command)
-        # at this point we have a set of lines like
-        # /etc/vservers/2010.01.20--k27-f12-32-vplc03/context:40144
-        ctx_dict={}
-        for map_line in context_map.split("\n"):
-            if not map_line: continue
-            [path,xid] = map_line.split(':')
-            ctx_dict[xid]=os.path.basename(os.path.dirname(path))
-        # at this point ctx_id maps context id to vservername
-
-        command=['vserver-stat']
-        vserver_stat = self.backquote_ssh (command)
-        for vserver_line in vserver_stat.split("\n"):
-            if not vserver_line: continue
-            context=vserver_line.split()[0]
-            if context=="CTX": continue
-            try:
-                longname=ctx_dict[context]
-                self.add_vserver(longname,context)
-            except:
-                print 'WARNING: found ctx %s in vserver_stat but was unable to figure a corresp. vserver'%context
-
-        # scan timestamps 
-        running_vsnames = [ i.vservername for i in self.plc_instances ]
-        command=   ['grep','.']
-        command += ['/vservers/%s.timestamp'%vs for vs in running_vsnames]
-        command += ['/dev/null']
-        ts_lines=self.backquote_ssh(command,trash_err=True).split('\n')
-        for ts_line in ts_lines:
-            if not ts_line.strip(): continue
-            # expect /vservers/<vservername>.timestamp:<timestamp>
-            try:
-                (ts_file,timestamp)=ts_line.split(':')
-                ts_file=os.path.basename(ts_file)
-                (vservername,_)=os.path.splitext(ts_file)
-                timestamp=int(timestamp)
-                p=self.plc_instance_by_vservername(vservername)
-                if not p: 
-                    print 'WARNING zombie plc',self.hostname,ts_line
-                    print '... was expecting',vservername,'in',[i.vservername for i in self.plc_instances]
-                    continue
-                p.set_timestamp(timestamp)
-            except:  print 'WARNING, could not parse ts line',ts_line
-        
-
+## we do not this at INRIA any more
 class PlcLxcBox (PlcBox):
 
     def add_lxc (self,lxcname,pid):
