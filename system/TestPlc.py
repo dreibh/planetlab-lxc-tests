@@ -40,18 +40,20 @@ def standby_generic (func):
     return actual
 
 def node_mapper (method):
-    def actual(self,*args, **kwds):
+    def map_on_nodes(self,*args, **kwds):
         overall=True
         node_method = TestNode.__dict__[method.__name__]
         for test_node in self.all_nodes():
             if not node_method(test_node, *args, **kwds): overall=False
         return overall
+    # maintain __name__ for ignore_result
+    map_on_nodes.__name__=method.__name__
     # restore the doc text
-    actual.__doc__=TestNode.__dict__[method.__name__].__doc__
-    return actual
+    map_on_nodes.__doc__=TestNode.__dict__[method.__name__].__doc__
+    return map_on_nodes
 
 def slice_mapper (method):
-    def actual(self):
+    def map_on_slices(self):
         overall=True
         slice_method = TestSlice.__dict__[method.__name__]
         for slice_spec in self.plc_spec['slices']:
@@ -60,21 +62,25 @@ def slice_mapper (method):
             test_slice=TestSlice(self,test_site,slice_spec)
             if not slice_method(test_slice,self.options): overall=False
         return overall
+    # maintain __name__ for ignore_result
+    map_on_slices.__name__=method.__name__
     # restore the doc text
-    actual.__doc__=TestSlice.__dict__[method.__name__].__doc__
-    return actual
+    map_on_slices.__doc__=TestSlice.__dict__[method.__name__].__doc__
+    return map_on_slices
 
 # run a step but return True so that we can go on
 def ignore_result (method):
-    def wrappee (self):
+    def ignoring (self):
         # ssh_slice_ignore->ssh_slice
         ref_name=method.__name__.replace('_ignore','').replace('force_','')
         ref_method=TestPlc.__dict__[ref_name]
         result=ref_method(self)
         print "Actual (but ignored) result for %(ref_name)s is %(result)s"%locals()
         return Ignored (result)
-    wrappee.__doc__="ignored version of " + method.__name__.replace('_ignore','').replace('ignore_','')
-    return wrappee
+    name=method.__name__.replace('_ignore','').replace('force_','')
+    ignoring.__name__=name
+    ignoring.__doc__="ignored version of " + name
+    return ignoring
 
 # a variant that expects the TestSlice method to return a list of CompleterTasks that
 # are then merged into a single Completer run to avoid wating for all the slices
