@@ -184,7 +184,8 @@ class TestSsh:
                                       self.fullname(self.buildname),os.path.basename(local_file) or ".")
         if dry_run:
             utils.header ("DRY RUN TestSsh.copy %s"%scp_command)
-            return True
+            # need to be consistent with the non-dry-run mode
+            return 0
         return utils.system(scp_command)
 
     def copy_abs (self,local_file,remote_file,recursive=False):
