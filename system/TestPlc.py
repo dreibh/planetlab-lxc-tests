@@ -23,6 +23,8 @@ from TestAuthSfa import TestAuthSfa
 from PlcapiUrlScanner import PlcapiUrlScanner
 from Completer import Completer, CompleterTask
 
+has_sfa_cache_filename="sfa-cache"
+
 # step methods must take (self) and return a boolean (options is a member of the class)
 
 def standby(minutes,dry_run):
@@ -191,12 +193,23 @@ class TestPlc:
     # this was originally for centos5 but is still valid
     # for up to f12 as recent SFAs with sqlalchemy won't build before f14
     @staticmethod
-    def check_whether_build_has_sfa (rpms_url):
-        utils.header ("Checking if build provides SFA package...")
+    def _has_sfa_cached (rpms_url):
+        if os.path.isfile(has_sfa_cache_filename):
+            cached=file(has_sfa_cache_filename).read()=="yes"
+            utils.header("build provides SFA (cached):%s"%cached)
+            return cached
         # warning, we're now building 'sface' so let's be a bit more picky
-        retcod=os.system ("curl --silent %s/ | grep -q sfa-"%rpms_url)
         # full builds are expected to return with 0 here
-        if retcod==0:
+        utils.header ("Checking if build provides SFA package...")
+        retcod=os.system ("curl --silent %s/ | grep -q sfa-"%rpms_url)==0
+        encoded='yes' if retcod else 'no'
+        file(has_sfa_cache_filename,'w').write(encoded)
+        return retcod
+        
+    @staticmethod
+    def check_whether_build_has_sfa (rpms_url):
+        has_sfa=TestPlc._has_sfa_cached(rpms_url)
+        if has_sfa:
             utils.header("build does provide SFA")
         else:
             # move all steps containing 'sfa' from default_steps to other_steps
