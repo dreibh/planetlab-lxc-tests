@@ -271,9 +271,9 @@ class TestPlc:
     def host_to_guest(self,command):
         # f14 still needs some extra help
         if self.options.fcdistro == 'f14':
-            raw="virsh -c lxc:/// lxc-enter-namespace %s -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %s" %(self.vservername,command)
+            raw="virsh -c lxc:/// lxc-enter-namespace %s --noseclabel -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %s" %(self.vservername,command)
         else:
-            raw="virsh -c lxc:/// lxc-enter-namespace %s -- /usr/bin/env %s" %(self.vservername,command)
+            raw="virsh -c lxc:/// lxc-enter-namespace %s --noseclabel -- /usr/bin/env %s" %(self.vservername,command)
         return raw
     
     # this /vservers thing is legacy...
