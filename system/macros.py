@@ -126,7 +126,7 @@ sequences['qemu_again2']=[
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
     'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 
     'ping_node', 'ssh_node_debug',
-    'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore',
+    'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts',
 ]
 
 # same but only up to ping 
