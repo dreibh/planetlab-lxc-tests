@@ -25,8 +25,9 @@ class OnelabSubstrate (Substrate):
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
       return [ 
-         ('gotan', 10),         # how many plcs max in this box 
-         ('deathvegas', 10),    
+         ('gotan', 20),         # how many plcs max in this box 
+# deathvegas is used at least temporarily for 'real' VMs
+#         ('deathvegas', 10),    
          ]  
 
    # vplc01 to 40
@@ -43,8 +44,10 @@ class OnelabSubstrate (Substrate):
 # used to have kruder too, but it is broken/dead
 # dorfmeister
          ('kvm64-2', 3), # 4 cores, 4Gb
-# enfoui - can't seem to enter BIOS on that one
-# won't reboot - needs to be fixed
+# enfoui - this HP box behaves weird at boot-time
+# we don't get to see much of the boot process
+# use F10 to enter BIOS setup
+# nodes spawned in this box won't get network connectivity
 #         ('kvm64-3', 4), # 4 cores, 8Gb
 # estran - big mem but small disk
          ('kvm64-4', 2), # 4 cores, 8Gb
