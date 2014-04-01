@@ -60,13 +60,12 @@ class TestAuthSfa:
         return self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
 
     # the hrn for the auth/site
-    def hrn (self):
+    def auth_hrn (self):
         return "%s.%s"%(self.root_hrn(),self.login_base)
 
-    # something in this site (users typically)
-    def qualified (self, name):
-#        return "%s.%s"%(self.auth_sfa_spec['hrn_prefix'],name)
-        return "%s.%s"%(self.hrn(),name)
+    # something in this site (users typically); for use by classes for subobjects
+    def obj_hrn (self, name):
+        return "%s.%s"%(self.auth_hrn(),name)
 
     # xxx this needs tweaks with more recent versions of sfa that have pgv2 as the default ?
     # dir_name is local and will be pushed later on by TestPlc
@@ -84,7 +83,7 @@ class TestAuthSfa:
             key_spec = self.test_plc.locate_key (key_name)
             for (kind,ext) in [ ('private', 'pkey'), ('public', 'pub') ] :
                 contents=key_spec[kind]
-                file_name=os.path.join(dir_name,self.qualified(user_leaf))+"."+ext
+                file_name=os.path.join(dir_name,self.obj_hrn(user_leaf))+"."+ext
                 fileconf=open(file_name,'w')
                 fileconf.write (contents)
                 fileconf.close()
@@ -92,11 +91,11 @@ class TestAuthSfa:
         #
 	file_name=dir_name + os.sep + 'sfi_config'
         fileconf=open(file_name,'w')
-	SFI_AUTH=self.hrn()
+	SFI_AUTH=self.auth_hrn()
         fileconf.write ("SFI_AUTH='%s'"%SFI_AUTH)
 	fileconf.write('\n')
         # default is to run as a PI
-	SFI_USER=self.qualified(self.auth_sfa_spec['pi_spec']['name'])
+	SFI_USER=self.obj_hrn(self.auth_sfa_spec['pi_spec']['name'])
         fileconf.write ("SFI_USER='%s'"%SFI_USER)
 	fileconf.write('\n')
 	SFI_REGISTRY='http://' + sfa_spec['SFA_REGISTRY_HOST'] + ':12345/'
@@ -111,29 +110,29 @@ class TestAuthSfa:
     # using sfaadmin to bootstrap
     def sfa_add_site (self, options):
         "bootstrap a site using sfaadmin"
-        command="sfaadmin reg register -t authority -x %s"%self.hrn()
+        command="sfaadmin reg register -t authority -x %s"%self.auth_hrn()
         return self.test_plc.run_in_guest(command)==0
 
     def sfa_add_pi (self, options):
         "bootstrap a PI user for that site"
         pi_spec = self.auth_sfa_spec['pi_spec']
-        pi_hrn=self.qualified(pi_spec['name'])
+        pi_hrn=self.obj_hrn(pi_spec['name'])
         pi_mail=pi_spec['email']
         # as installed by sfi_config
-        pi_key=os.path.join(self.sfi_path(),self.qualified(pi_spec['name']+'.pub'))
+        pi_key=os.path.join(self.sfi_path(),self.obj_hrn(pi_spec['name']+'.pub'))
         command="sfaadmin reg register -t user -x %s --email %s --key %s"%(pi_hrn,pi_mail,pi_key)
         if self.test_plc.run_in_guest(command)!=0: return False
-        command="sfaadmin reg update -t authority -x %s --pi %s"%(self.hrn(),pi_hrn)
+        command="sfaadmin reg update -t authority -x %s --pi %s"%(self.auth_hrn(),pi_hrn)
         return self.test_plc.run_in_guest(command)==0
 
     # run as pi
     def sfi_pi (self, command):
         pi_name=self.auth_sfa_spec['pi_spec']['name']
-        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.qualified(pi_name), command,)
+        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.obj_hrn(pi_name), command,)
     # the sfi command line option to run as a regular user
     def sfi_user (self, command):
         user_name=self.auth_sfa_spec['user_spec']['name']
-        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.qualified(user_name), command,)
+        return "sfi -d %s -u %s %s"%(self.sfi_path(),self.obj_hrn(user_name), command,)
 
     # user management
     @user_sfa_mapper
@@ -147,12 +146,12 @@ class TestAuthSfa:
         "run (as regular user) sfi list (on Registry)"
 	return \
             self.test_plc.run_in_guest(self.sfi_user("list -r %s"%self.root_hrn()))==0 and \
-            self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.hrn())))==0
+            self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.auth_hrn())))==0
 
     def sfi_show (self, options):
         "run (as regular user) sfi show (on Registry)"
 	return \
-            self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.hrn())))==0
+            self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.auth_hrn())))==0
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
     @slice_sfa_mapper

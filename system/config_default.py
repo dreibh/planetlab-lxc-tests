@@ -539,7 +539,7 @@ def sfa (options,index) :
                              for rspec_style in options.rspec_styles ]
     }
 
-# rspecstyle is 'pl' for sfav1 or 'pg' for pgv2
+# rspec_style is 'pl' for sfav1 or 'pg' for pgv2
 def test_auth_sfa_spec (options,index,rspec_style):
     # the auth/site part per se
     login_base=sfa_login_base(index,rspec_style)
@@ -547,16 +547,20 @@ def test_auth_sfa_spec (options,index,rspec_style):
     def full_hrn(x):  return "%s.%s"%(hrn_prefix,x)
     def full_mail(x): return "%s@test.%s"%(x,domain)
 
-    # 2 users
+    # 2 users; we use dashes on purpose, as it might show up in email addresses
+#    pi_alias = 'pi-user'
+#    user_alias = 'reg-user'
+    pi_alias = 'pi'
+    user_alias = 'user'
+    # 
     pi_spec = {
-        'name':         'pi',
-        'email':        full_mail ('piuser'),
+        'name':         pi_alias,
+        'email':        full_mail (pi_alias),
         'key_name':     'key_sfapi',
         }
-    user_hrn = full_hrn ('us')
     user_spec = {
-        'name':         'us',
-        'email':        full_mail ('regularuser'),
+        'name':         user_alias,
+        'email':        full_mail (user_alias),
         'key_name':     'key_sfauser',
         'add_options':  [ '--extra',"first_name=Fake",
                           '--extra',"last_name=SFA-style-%s"%rspec_style,
@@ -567,7 +571,7 @@ def test_auth_sfa_spec (options,index,rspec_style):
 
     slice_spec = {
         'name':          'sl',
-        'add_options':  [ '--researchers', user_hrn,
+        'add_options':  [ '--researchers', full_hrn (user_alias),
                           # xxx
                           '--extra', "description=SFA-testing-%s"%rspec_style,
                           '--extra', "url=http://slice%d.test.onelab.eu/"%index,

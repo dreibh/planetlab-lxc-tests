@@ -514,7 +514,7 @@ class TestPlc:
                     for key in val:
                         self.display_key_spec (key)
             elif passno == 1:
-                if key not in ['sites','initscripts','slices','keys', 'sfa']:
+                if key not in ['sites','initscripts','slices','keys']:
                     print '+   ',key,':',val
 
     def display_site_spec (self,site):

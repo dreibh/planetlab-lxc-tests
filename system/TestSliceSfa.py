@@ -22,9 +22,10 @@ class TestSliceSfa:
         # shortcuts
         self.test_plc=self.test_auth_sfa.test_plc
 
-    def qualified(self,name): return self.test_auth_sfa.qualified(name)
-    def hrn (self): return self.qualified(self.slice_spec['name'])
-    def sfi_path (self): return self.test_auth_sfa.sfi_path()
+    def hrn (self): 
+        return self.test_auth_sfa.obj_hrn(self.slice_spec['name'])
+    def sfi_path (self):
+        return self.test_auth_sfa.sfi_path()
 
     # send back up to the TestAuthSfa
     def rspec_style (self): return self.test_auth_sfa.rspec_style()
