@@ -548,10 +548,10 @@ def test_auth_sfa_spec (options,index,rspec_style):
     def full_mail(x): return "%s@test.%s"%(x,domain)
 
     # 2 users; we use dashes on purpose, as it might show up in email addresses
-#    pi_alias = 'pi-user'
-#    user_alias = 'reg-user'
-    pi_alias = 'pi'
-    user_alias = 'user'
+    pi_alias = 'pi-user'
+    user_alias = 'reg-user'
+#    pi_alias = 'pi'
+#    user_alias = 'user'
     # 
     pi_spec = {
         'name':         pi_alias,
