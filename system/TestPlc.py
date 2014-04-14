@@ -154,6 +154,7 @@ class TestPlc:
         'sfi_list@1', 'sfi_show@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
+        'probe_kvm_iptables',
         'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore', SEP,
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
@@ -1049,6 +1050,11 @@ class TestPlc:
 
     def nodes_booted(self):
         return self.nodes_check_boot_state('boot',timeout_minutes=30,silent_minutes=28)
+
+    def probe_kvm_iptables (self):
+        (_,kvmbox) = self.all_node_infos()[0]
+        TestSsh(kvmbox).run("iptables-save")
+        return True
 
     # probing nodes
     def check_nodes_ping(self,timeout_seconds=120,period_seconds=10):
