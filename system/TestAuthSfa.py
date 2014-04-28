@@ -13,7 +13,7 @@ def slice_sfa_mapper (method):
     def actual(self,*args, **kwds):
         overall=True
         slice_method = TestSliceSfa.__dict__[method.__name__]
-        for slice_spec in [ self.auth_sfa_spec['slice_spec'] ]:
+        with self.auth_sfa_spec['slice_spec'] as slice_spec:
             test_slice_sfa = TestSliceSfa(self,slice_spec)
             if not slice_method(test_slice_sfa, *args, **kwds): overall=False
         return overall
@@ -148,7 +148,14 @@ class TestAuthSfa:
             self.test_plc.run_in_guest(self.sfi_user("list -r %s"%self.root_hrn()))==0 and \
             self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.auth_hrn())))==0
 
-    def sfi_show (self, options):
+    def sfi_show_slice (self, options):
+        "run (as PI) sfi show -n <slice> (on Registry)"
+        slice_spec=self.auth_sfa_spec['slice_spec']
+        slice_hrn=self.obj_hrn(slice_spec['name'])
+        return \
+            self.test_plc.run_in_guest(self.sfi_pi("show -n %s"%slice_hrn))==0
+
+    def sfi_show_site (self, options):
         "run (as regular user) sfi show (on Registry)"
 	return \
             self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.auth_hrn())))==0

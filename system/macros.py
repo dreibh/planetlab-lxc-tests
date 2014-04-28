@@ -76,7 +76,8 @@ sequences['sfa_scratch'] = [
 
 sequences['sfi_view_all'] = [
     'sfi_list',
-    'sfi_show',
+    'sfi_show_site',
+    'sfi_show_slice',
 ]
 
 # macro to exercice the registry only
@@ -102,11 +103,13 @@ sequences['sfa_standalone'] = [
     'sfa_add_user',
     'sfa_add_slice',
     'sfi_list',
-    'sfi_show',
+    'sfi_show_site',
+    'sfi_show_slice',
     'sfa_delete_slice',
     'sfa_delete_user',
     'sfi_list',
-    'sfi_show',
+    'sfi_show_site',
+#    'sfi_show_slice',
 ]
 
 # re-run a qemu node when things go wrong
