@@ -549,7 +549,7 @@ def test_auth_sfa_spec (options,index,rspec_style):
 
     # 2 users; we use dashes on purpose, as it might show up in email addresses
     pi_alias = 'pi-user'
-    user_alias = 'reg-user'
+    user_alias = 'regular-user'
 #    pi_alias = 'pi'
 #    user_alias = 'user'
     # 
