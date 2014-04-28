@@ -11,11 +11,12 @@ from TestSliceSfa import TestSliceSfa
 
 def slice_sfa_mapper (method):
     def actual(self,*args, **kwds):
+        # used to map on several slices...
         overall=True
         slice_method = TestSliceSfa.__dict__[method.__name__]
-        with self.auth_sfa_spec['slice_spec'] as slice_spec:
-            test_slice_sfa = TestSliceSfa(self,slice_spec)
-            if not slice_method(test_slice_sfa, *args, **kwds): overall=False
+        slice_spec=self.auth_sfa_spec['slice_spec']
+        test_slice_sfa = TestSliceSfa(self,slice_spec)
+        if not slice_method(test_slice_sfa, *args, **kwds): overall=False
         return overall
     # restore the doc text
     actual.__doc__=TestSliceSfa.__dict__[method.__name__].__doc__
