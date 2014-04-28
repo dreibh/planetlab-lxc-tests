@@ -46,10 +46,6 @@ class TestAuthSfa:
         self.login_base=self.auth_sfa_spec['login_base']
 #        self.piuser=self.auth_sfa_spec['piuser']
 #        self.regularuser=self.auth_sfa_spec['regularuser']
-#        self.slicename=self.auth_sfa_spec['slicename']
-#        
-#    def plc_name(self):
-#        return self.auth_sfa_spec['plc_slicename']
     
     def rspec_style (self): return self.auth_sfa_spec['rspec_style']
 
