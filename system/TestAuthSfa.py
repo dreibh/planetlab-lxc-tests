@@ -64,6 +64,11 @@ class TestAuthSfa:
     def obj_hrn (self, name):
         return "%s.%s"%(self.auth_hrn(),name)
 
+    def regular_user_hrn(self):
+        return self.obj_hrn(self.auth_sfa_spec['user_spec']['name'])
+    def slice_hrn(self):
+        return self.obj_hrn(self.auth_sfa_spec['slice_spec']['name'])
+
     # xxx this needs tweaks with more recent versions of sfa that have pgv2 as the default ?
     # dir_name is local and will be pushed later on by TestPlc
     # by default set SFI_USER to the pi, we'll overload this
@@ -139,23 +144,41 @@ class TestAuthSfa:
     @user_sfa_mapper
     def sfa_delete_user (self, *args, **kwds): pass
 
+    def sfa_remove_user_from_slice (self, options):
+        "remove regular user from slice"
+        command="update -t slice -x %s -r none"%(self.slice_hrn())
+        # xxx should check result other than visually
+        return self.test_plc.run_in_guest(self.sfi_pi(command))==0
+
+    def sfa_insert_user_in_slice (self, options):
+        "defines regular user as unique user in slice"
+        command="update -t slice -x %s -r %s"%(self.slice_hrn(),self.regular_user_hrn())
+        # xxx should check result other than visually
+        return self.test_plc.run_in_guest(self.sfi_pi(command))==0
+
     def sfi_list (self, options):
         "run (as regular user) sfi list (on Registry)"
 	return \
             self.test_plc.run_in_guest(self.sfi_user("list -r %s"%self.root_hrn()))==0 and \
             self.test_plc.run_in_guest(self.sfi_user("list %s"%(self.auth_hrn())))==0
 
-    def sfi_show_slice (self, options):
-        "run (as PI) sfi show -n <slice> (on Registry)"
-        slice_spec=self.auth_sfa_spec['slice_spec']
-        slice_hrn=self.obj_hrn(slice_spec['name'])
-        return \
-            self.test_plc.run_in_guest(self.sfi_pi("show -n %s"%slice_hrn))==0
-
     def sfi_show_site (self, options):
         "run (as regular user) sfi show (on Registry)"
 	return \
             self.test_plc.run_in_guest(self.sfi_user("show %s"%(self.auth_hrn())))==0
+
+
+    def sfi_show_slice (self, options):
+        "run (as PI) sfi show -n <slice> (on Registry)"
+        return \
+            self.test_plc.run_in_guest(self.sfi_pi("show -n %s"%self.slice_hrn()))==0
+
+    # checks if self.regular_user is found in registry's reg-researchers
+    def sfi_show_slice_researchers (self, options):
+        "run (as PI) sfi show <slice> -k researcher -k reg-researchers (on Registry)"
+        return \
+            self.test_plc.run_in_guest(self.sfi_pi("show %s -k researcher -k reg-researchers"%self.slice_hrn()))==0
+        
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
     @slice_sfa_mapper

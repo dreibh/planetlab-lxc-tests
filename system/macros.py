@@ -52,6 +52,13 @@ sequences['sfa_create'] = [
     'sfa_add_slice',
 ]
 
+sequences['sfa_user_slice'] = [
+    'sfa_remove_user_from_slice',
+    'sfi_show_slice_researchers', 
+    'sfa_insert_user_in_slice',
+    'sfi_show_slice_researchers', 
+]
+
 sequences['sfa_provision'] = [ 
     'sfa-discover',
     'sfa-create_slice',

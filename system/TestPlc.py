@@ -150,6 +150,8 @@ class TestPlc:
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_add_site@1','sfa_add_pi@1', SEPSFA,
         'sfa_add_user@1', 'sfa_update_user@1', 'sfa_add_slice@1', 'sfa_renew_slice@1', SEPSFA,
+        'sfa_remove_user_from_slice@1','sfi_show_slice_researchers@1', 
+        'sfa_insert_user_in_slice@1','sfi_show_slice_researchers@1', SEPSFA,
         'sfa_discover@1', 'sfa_create_slice@1', 'sfa_check_slice_plc@1', 'sfa_update_slice@1', SEPSFA,
         'sfi_list@1', 'sfi_show_site@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
@@ -1630,11 +1632,17 @@ class TestPlc:
     @auth_sfa_mapper
     def sfa_update_slice(self): pass
     @auth_sfa_mapper
+    def sfa_remove_user_from_slice(self): pass
+    @auth_sfa_mapper
+    def sfa_insert_user_in_slice(self): pass
+    @auth_sfa_mapper
     def sfi_list(self): pass
     @auth_sfa_mapper
     def sfi_show_site(self): pass
     @auth_sfa_mapper
     def sfi_show_slice(self): pass
+    @auth_sfa_mapper
+    def sfi_show_slice_researchers(self): pass
     @auth_sfa_mapper
     def ssh_slice_sfa(self): pass
     @auth_sfa_mapper
