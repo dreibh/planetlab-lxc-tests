@@ -148,8 +148,8 @@ class TestPlc:
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
-        'sfi_configure@1', 'sfa_add_site@1','sfa_add_pi@1', SEPSFA,
-        'sfa_add_user@1', 'sfa_update_user@1', 'sfa_add_slice@1', 'sfa_renew_slice@1', SEPSFA,
+        'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
+        'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
         'sfa_remove_user_from_slice@1','sfi_show_slice_researchers@1', 
         'sfa_insert_user_in_slice@1','sfi_show_slice_researchers@1', SEPSFA,
         'sfa_discover@1', 'sfa_create_slice@1', 'sfa_check_slice_plc@1', 'sfa_update_slice@1', SEPSFA,
@@ -1612,15 +1612,15 @@ class TestPlc:
         return True
 
     @auth_sfa_mapper
-    def sfa_add_site (self): pass
+    def sfa_register_site (self): pass
     @auth_sfa_mapper
-    def sfa_add_pi (self): pass
+    def sfa_register_pi (self): pass
     @auth_sfa_mapper
-    def sfa_add_user(self): pass
+    def sfa_register_user(self): pass
     @auth_sfa_mapper
     def sfa_update_user(self): pass
     @auth_sfa_mapper
-    def sfa_add_slice(self): pass
+    def sfa_register_slice(self): pass
     @auth_sfa_mapper
     def sfa_renew_slice(self): pass
     @auth_sfa_mapper

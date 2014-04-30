@@ -25,14 +25,14 @@ class TestUserSfa:
         return self.test_auth_sfa.sfi_user(*args, **kwds)
 
     # xxx todo - not the right place any longer - or is it ?
-    def sfa_add_user (self,options):
-        "add a regular user using sfi add"
+    def sfa_register_user (self,options):
+        "add a regular user using sfi register"
         user_hrn = self.hrn()
-        command="add"
+        command="register"
         command += " --type user"
         command += " --xrn %s"%user_hrn
         command += " --email %s"%self.user_spec['email']
-        command += " " + " ".join(self.user_spec['add_options'])
+        command += " " + " ".join(self.user_spec['register_options'])
         # handle key separately because of embedded whitespace
         # hack - the user's pubkey is avail from his hrn
         command += " -k %s/%s.pub"%(self.sfi_path(),user_hrn)

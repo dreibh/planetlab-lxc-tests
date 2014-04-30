@@ -19,23 +19,35 @@ sequences['sfa_restart'] = [
     ]
 
 "re-run a complete sfa cycle from a nightly test"
-sequences['sfa'] = [ 
-    'sfa_restart',
-    'sfa_add_site',
-    'sfa_add_pi',
-    'sfa_add_user', 
-    'sfa_add_slice',
+sequences['sfa_populate'] = [ 
+    'sfa_register_site',
+    'sfa_register_pi',
+    'sfa_register_user', 
+    'sfa_update_user', 
+    'sfa_register_slice',
     'sfa_renew_slice',
     'sfa_discover', 
     'sfa_create_slice', 
     'sfa_check_slice_plc', 
     'sfa_update_user',
     'sfa_update_slice', 
+# xxx this behaves weird in this context, needs more care apparently
+# looks like at that point the PI is not allowed, while the regular is allowed to
+# remove himself (!) and to add himself back in (!!)
+#    'sfa_user_slice',
     'sfi_view_all', 
     'sfa_utest', 
+    ]
+
+sequences['sfa-delete'] = [
     'sfa_delete_slice', 
     'sfa_delete_user',
-    ]
+]
+
+sequences['sfa'] = [
+    'sfa_restart',
+    'sfa_populate',
+]
 
 sequences['sfa_create'] = [
     'sfa_plcclean', 
@@ -46,10 +58,10 @@ sequences['sfa_create'] = [
     'sfa_import', 
     'sfi_clean',
     'sfi_configure', 
-    'sfa_add_site',
-    'sfa_add_pi',
-    'sfa_add_user', 
-    'sfa_add_slice',
+    'sfa_register_site',
+    'sfa_register_pi',
+    'sfa_register_user', 
+    'sfa_register_slice',
 ]
 
 sequences['sfa_user_slice'] = [
@@ -76,7 +88,7 @@ sequences['sfa_scratch'] = [
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
     'qemu_export', 'qemu_kill_mine', 'qemu_start', 'qemu_timestamp', 
     'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', 
-    'sfi_configure', 'sfa_add_user', 'sfa_add_slice', 'sfa_discover', 
+    'sfi_configure', 'sfa_register_user', 'sfa_register_slice', 'sfa_discover', 
     'sfa_create_slice', 'sfa_check_slice_plc', 
     'sfa_update_user', 'sfa_update_slice', 'sfi_view_all', 'sfa_utest',
 ]
@@ -105,10 +117,10 @@ sequences['sfa_standalone'] = [
     'sfa_start',
     'sfa_import',
     'sfi_configure',
-    'sfa_add_site',
-    'sfa_add_pi',
-    'sfa_add_user',
-    'sfa_add_slice',
+    'sfa_register_site',
+    'sfa_register_pi',
+    'sfa_register_user',
+    'sfa_register_slice',
     'sfi_list',
     'sfi_show_site',
     'sfi_show_slice',

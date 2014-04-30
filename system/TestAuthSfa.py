@@ -110,12 +110,12 @@ class TestAuthSfa:
         utils.header ("(Over)wrote %s"%file_name)
 
     # using sfaadmin to bootstrap
-    def sfa_add_site (self, options):
+    def sfa_register_site (self, options):
         "bootstrap a site using sfaadmin"
         command="sfaadmin reg register -t authority -x %s"%self.auth_hrn()
         return self.test_plc.run_in_guest(command)==0
 
-    def sfa_add_pi (self, options):
+    def sfa_register_pi (self, options):
         "bootstrap a PI user for that site"
         pi_spec = self.auth_sfa_spec['pi_spec']
         pi_hrn=self.obj_hrn(pi_spec['name'])
@@ -138,7 +138,7 @@ class TestAuthSfa:
 
     # user management
     @user_sfa_mapper
-    def sfa_add_user (self, *args, **kwds): pass
+    def sfa_register_user (self, *args, **kwds): pass
     @user_sfa_mapper
     def sfa_update_user (self, *args, **kwds): pass
     @user_sfa_mapper
@@ -182,7 +182,7 @@ class TestAuthSfa:
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
     @slice_sfa_mapper
-    def sfa_add_slice (self, *args, **kwds): pass
+    def sfa_register_slice (self, *args, **kwds): pass
     @slice_sfa_mapper
     def sfa_renew_slice (self, *args, **kwds): pass
     @slice_sfa_mapper

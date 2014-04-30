@@ -39,12 +39,12 @@ class TestSliceSfa:
     # those are step names exposed as methods of TestPlc, hence the _sfa
 
     # needs to be run as pi
-    def sfa_add_slice(self,options):
-        "run sfi add (on Registry)"
-        sfi_command="add"
+    def sfa_register_slice(self,options):
+        "run sfi register (on Registry)"
+        sfi_command="register"
         sfi_command += " --type slice"
         sfi_command += " --xrn %s"%self.hrn()
-        for opt in self.slice_spec['add_options']:
+        for opt in self.slice_spec['register_options']:
             sfi_command += " %s"%(opt)
 	return self.test_plc.run_in_guest(self.sfi_pi(sfi_command))==0
 

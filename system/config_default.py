@@ -10,7 +10,9 @@
 
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
-domain="onelab.eu"
+# so that sfa users get different mails whether they are based on pl or pg
+pldomain="onelab.eu"
+pgdomain="emulab.eu"
 
 ### for the sfa dual setup
 def login_base (index): 
@@ -74,14 +76,14 @@ def users (options) :
          'user_fields' : {'first_name':'Admin',
                           'last_name':'Admin',
                           'enabled':'true',
-                          'email':'admin@%s'%domain,
+                          'email':'admin@%s'%pldomain,
                           'password':'testuseradmin'},
          'roles':['admin']},
 
         {'name' : 'pi', 'key_names' : [ 'key_pi' ],
          'user_fields' : {'first_name':'PI', 'last_name':'PI',
                           'enabled':'True',
-                          'email':'fake-pi1@%s'%domain,
+                          'email':'fake-pi1@%s'%pldomain,
                           'password':'testpi'},
          'roles':['pi']},
 
@@ -89,28 +91,28 @@ def users (options) :
          'user_fields' : {'first_name':'PiTech',
                           'last_name':'PiTech',
                           'enabled':'true',
-                          'email':'fake-pi2@%s'%domain,
+                          'email':'fake-pi2@%s'%pldomain,
                           'password':'testusertech'},
          'roles':['pi','tech']},
 
         {'name' : 'tech', 'key_names' : [ 'key_user' ],
          'user_fields' : {'first_name':'Tech', 'last_name':'Tech',
                           'enabled':'true',
-                          'email':'fake-tech1@%s'%domain,
+                          'email':'fake-tech1@%s'%pldomain,
                           'password':'testtech'},
          'roles':['tech']},
 
         {'name':'user', 'key_names' : [ 'key_user' ],
          'user_fields' : {'first_name':'User', 'last_name':'User',
                           'enabled':'true',
-                          'email':'fake-user1@%s'%domain,
+                          'email':'fake-user1@%s'%pldomain,
                           'password':'testuser'},
          'roles':['user']},
 
         {'name':'techuser', 'key_names' : [ 'key_user' ],
          'user_fields' : {'first_name':'UserTech', 'last_name':'UserTech',
                           'enabled':'true',
-                          'email':'fake-tech2@%s'%domain,
+                          'email':'fake-tech2@%s'%pldomain,
                           'password':'testusertech'},
          'roles':['tech','user']},
 
@@ -126,7 +128,7 @@ def sites (options,index):
                                'login_base':login_base(index),
                                'abbreviated_name':'PlanetTest%d'%index,
                                'max_slices':100,
-                               'url':'http://test.%s'%domain,
+                               'url':'http://test.%s'%pldomain,
                                'latitude':float(latitude),
                                'longitude':float(longitude),
                                },
@@ -541,6 +543,7 @@ def sfa (options,index) :
 
 # rspec_style is 'pl' for sfav1 or 'pg' for pgv2
 def test_auth_sfa_spec (options,index,rspec_style):
+    domain=pldomain if rspec_style=='pl' else pgdomain
     # the auth/site part per se
     login_base=sfa_login_base(index,rspec_style)
     hrn_prefix='%s.%s'%(sfa_root(index),login_base)
@@ -562,7 +565,7 @@ def test_auth_sfa_spec (options,index,rspec_style):
         'name':         user_alias,
         'email':        full_mail (user_alias),
         'key_name':     'key_sfauser',
-        'add_options':  [ '--extra',"first_name=Fake",
+        'register_options':  [ '--extra',"first_name=Fake",
                           '--extra',"last_name=SFA-style-%s"%rspec_style,
                           ],
         'update_options': [ '--extra',"enabled=true",
@@ -571,7 +574,7 @@ def test_auth_sfa_spec (options,index,rspec_style):
 
     slice_spec = {
         'name':          'sl',
-        'add_options':  [ '--researchers', full_hrn (user_alias),
+        'register_options':  [ '--researchers', full_hrn (user_alias),
                           # xxx
                           '--extra', "description=SFA-testing-%s"%rspec_style,
                           '--extra', "url=http://slice%d.test.onelab.eu/"%index,
