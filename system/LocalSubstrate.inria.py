@@ -25,9 +25,9 @@ class OnelabSubstrate (Substrate):
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
       return [ 
-         ('gotan', 20),         # how many plcs max in this box 
-# deathvegas is used at least temporarily for 'real' VMs
-#         ('deathvegas', 10),    
+# gotan looks in bad shape and I can't use its drac from the US
+#         ('gotan', 20),         # how many plcs max in this box 
+         ('deathvegas', 12),    
          ]  
 
    # vplc01 to 40
