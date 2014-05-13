@@ -162,7 +162,7 @@ class TestPlc:
         'ssh_slice_sfa@1', 'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
         # check slices are turned off properly
-        'empty_slices', 'ssh_slice_off', SEP,
+        'empty_slices', 'ssh_slice_off', 'slice_fs_deleted', SEP,
         # check they are properly re-created with the same name
         'fill_slices', 'ssh_slice_again_ignore', SEP,
         'gather_logs_force', SEP,
@@ -180,7 +180,7 @@ class TestPlc:
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
         'check_netflow','check_drl', SEP,
-        'debug_nodemanager', SEP,
+        'debug_nodemanager', 'slice_fs_present', SEP,
         'standby_1_through_20','yes','no',SEP,
         ]
 
@@ -1250,7 +1250,10 @@ class TestPlc:
 
     @slice_mapper
     def ssh_slice_basics(self): pass
-
+    @slice_mapper
+    def slice_fs_present(self): pass
+    @slice_mapper
+    def slice_fs_deleted(self): pass
     @slice_mapper
     def check_vsys_defaults(self): pass
 

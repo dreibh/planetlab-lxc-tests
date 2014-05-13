@@ -113,7 +113,7 @@ class TestSlice:
         hostnames=[]
         for nodename in self.slice_spec['nodenames']:
             node_spec=self.test_site.locate_node(nodename)
-            test_node=TestNode(self,self.test_site,node_spec)
+            test_node=TestNode(self.test_plc,self.test_site,node_spec)
             hostnames += [test_node.name()]
         utils.header("Adding %r in %s"%(hostnames,slice_name))
         self.test_plc.apiserver.AddSliceToNodes(auth, slice_name, hostnames)
@@ -221,3 +221,25 @@ class TestSlice:
         else:           success = retcod!=0
         if not success: utils.header ("WRONG RESULT for %s"%msg)
         return success
+
+    def check_rootfs (self, expected):
+        overall=True
+        for nodename in self.slice_spec['nodenames']:
+            node_spec=self.test_site.locate_node(nodename)
+            test_node=TestNode(self.test_plc,self.test_site,node_spec)
+            test_node_ssh=test_node.create_test_ssh()
+            command="ls /vservers/%s"%self.name()
+            full_command = test_node_ssh.actual_command(command)
+            retcod=utils.system(full_command,silent=True)
+            # we expect the fs to be present, retcod should be 0
+            if expected:        fine=(retcod==0)
+            else:               fine=(retcod!=0)
+            if not fine: overall=False
+        return overall
+
+    def slice_fs_present (self, options): 
+        "check that /vservers/<slicename> can be found"
+        return self.check_rootfs (expected=True)
+    def slice_fs_deleted (self, options): 
+        "check that /vservers/<slicename> has been properly wiped off on all nodes"
+        return self.check_rootfs (expected=False)

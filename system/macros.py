@@ -39,7 +39,7 @@ sequences['sfa_populate'] = [
     'sfa_utest', 
     ]
 
-sequences['sfa-delete'] = [
+sequences['sfa_delete'] = [
     'sfa_delete_slice', 
     'sfa_delete_user',
 ]
@@ -72,8 +72,8 @@ sequences['sfa_user_slice'] = [
 ]
 
 sequences['sfa_provision'] = [ 
-    'sfa-discover',
-    'sfa-create_slice',
+    'sfa_discover',
+    'sfa_create_slice',
     'sfa_check_slice_plc',
     'sfi_view_all',
 ]
@@ -140,11 +140,11 @@ sequences['sfa_standalone'] = [
 # run qemu-again2
 
 sequences['qemu_again1'] = [
-    'qemu-kill-mine',
+    'qemu_kill_mine',
 ]
 
 sequences['qemu_again2']=[
-    'qemu-clean-mine',
+    'qemu_clean_mine',
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
     'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 
     'ping_node', 'ssh_node_debug',
@@ -153,9 +153,22 @@ sequences['qemu_again2']=[
 
 # same but only up to ping 
 sequences['qemu_again2_ping']=[
-    'qemu-clean-mine',
+    'qemu_clean_mine',
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
     'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 
     'ping_node',
+]
+    
+sequences['slice_up']=[
+    'fill_slices',
+    'ssh_slice',
+]
+sequences['slice_down']=[
+    'empty_slices',
+    'ssh_slice_off',
+]
+sequences['slice_up_down']=[
+    'slice_up',
+    'slice_down',
 ]
     
