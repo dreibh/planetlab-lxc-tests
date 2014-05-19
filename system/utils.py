@@ -22,8 +22,9 @@ def pprint(message,spec,depth=2):
 
 
 
-def system(command,background=False,silent=False):
-    if getattr(options,'dry_run',None):
+def system(command,background=False,silent=False, dry_run=None):
+    dry_run = dry_run if dry_run is not None else getattr(options,'dry_run',False)
+    if dry_run:
         print 'dry_run:',command
         return 0
     

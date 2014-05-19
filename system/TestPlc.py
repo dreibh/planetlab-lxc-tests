@@ -10,8 +10,9 @@ from datetime import datetime, timedelta
 from types import StringTypes
 
 import utils
+from Completer import Completer, CompleterTask
 from TestSite import TestSite
-from TestNode import TestNode
+from TestNode import TestNode, CompleterTaskNodeSsh
 from TestUser import TestUser
 from TestKey import TestKey
 from TestSlice import TestSlice
@@ -21,7 +22,6 @@ from TestSsh import TestSsh
 from TestApiserver import TestApiserver
 from TestAuthSfa import TestAuthSfa
 from PlcapiUrlScanner import PlcapiUrlScanner
-from Completer import Completer, CompleterTask
 
 has_sfa_cache_filename="sfa-cache"
 
@@ -1081,18 +1081,6 @@ class TestPlc:
         return self.check_nodes_ping ()
 
     def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period_seconds=15):
-        class CompleterTaskNodeSsh (CompleterTask):
-            def __init__ (self, hostname, qemuname, boot_state, local_key):
-                self.hostname=hostname
-                self.qemuname=qemuname
-                self.boot_state=boot_state
-                self.local_key=local_key
-            def run (self, silent):
-                command = TestSsh (self.hostname,key=self.local_key).actual_command("hostname;uname -a")
-                return utils.system (command, silent=silent)==0
-            def failure_message (self):
-                return "Cannot reach %s @ %s in %s mode"%(self.hostname, self.qemuname, self.boot_state)
-
         # various delays 
         timeout  = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
@@ -1106,7 +1094,7 @@ class TestPlc:
 	    local_key = "keys/key_admin.rsa"
         utils.header("checking ssh access to nodes (expected in %s mode)"%message)
         node_infos = self.all_node_infos()
-        tasks = [ CompleterTaskNodeSsh (nodename, qemuname, message, local_key) \
+        tasks = [ CompleterTaskNodeSsh (nodename, qemuname, local_key, boot_state=message) \
                       for (nodename,qemuname) in node_infos ]
         return Completer (tasks).run (timeout, graceout, period)
         
@@ -1242,6 +1230,10 @@ class TestPlc:
     def ssh_slice(self): pass
     @slice_mapper__tasks(20,19,15)
     def ssh_slice_off (self): pass
+    @slice_mapper__tasks(2,1,15)
+    def slice_fs_present(self): pass
+    @slice_mapper__tasks(2,1,15)
+    def slice_fs_deleted(self): pass
 
     # use another name so we can exclude/ignore it from the tests on the nightly command line
     def ssh_slice_again(self): return self.ssh_slice()
@@ -1250,10 +1242,6 @@ class TestPlc:
 
     @slice_mapper
     def ssh_slice_basics(self): pass
-    @slice_mapper
-    def slice_fs_present(self): pass
-    @slice_mapper
-    def slice_fs_deleted(self): pass
     @slice_mapper
     def check_vsys_defaults(self): pass
 

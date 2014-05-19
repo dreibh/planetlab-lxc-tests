@@ -7,6 +7,24 @@ import utils
 from TestUser import TestUser
 from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
+from Completer import CompleterTask
+
+class CompleterTaskNodeSsh (CompleterTask):
+    def __init__ (self, hostname, qemuname, local_key, command=None,boot_state="boot", expected=True, dry_run=False):
+        self.hostname=hostname
+        self.qemuname=qemuname
+        self.boot_state=boot_state
+        self.local_key=local_key
+        self.command=command if command is not None else "hostname;uname -a"
+        self.expected=expected
+        self.dry_run = dry_run
+    def run (self, silent):
+        command = TestSsh (self.hostname,key=self.local_key).actual_command(self.command)
+        retcod=utils.system (command, silent=silent, dry_run=self.dry_run)
+        if self.expected:       return retcod==0
+        else:                   return retcod !=0
+    def failure_message (self):
+        return "Cannot reach %s @ %s in %s mode"%(self.hostname, self.qemuname, self.boot_state)
 
 class TestNode:
 

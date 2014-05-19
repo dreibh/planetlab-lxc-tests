@@ -12,7 +12,7 @@ from TestBoxQemu import TestBoxQemu
 from TestSsh import TestSsh
 
 from Completer import Completer, CompleterTask
-from TestSlice import CompleterTaskSshSlice
+from TestSlice import CompleterTaskSliceSsh
 
 class TestSliceSfa:
 
@@ -143,6 +143,6 @@ class TestSliceSfa:
         dry_run = getattr(options,'dry_run',False)
         for nodename in self.slice_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
-            tasks.append( CompleterTaskSshSlice(self.test_plc,node_spec['node_fields']['hostname'],
+            tasks.append( CompleterTaskSliceSsh(self.test_plc,node_spec['node_fields']['hostname'],
                                                 slicename,private_key,command,expected=True,dry_run=dry_run))
         return Completer (tasks).run (timeout, graceout, period)

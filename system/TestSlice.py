@@ -8,11 +8,11 @@ import time
 
 from TestKey import TestKey
 from TestUser import TestUser
-from TestNode import TestNode
+from TestNode import TestNode, CompleterTaskNodeSsh
 from TestSsh import TestSsh
 from Completer import Completer, CompleterTask
 
-class CompleterTaskSshSlice (CompleterTask):
+class CompleterTaskSliceSsh (CompleterTask):
 
     def __init__ (self, test_plc, hostname, slicename, private_key,command, expected, dry_run):
         self.test_plc=test_plc
@@ -143,7 +143,7 @@ class TestSlice:
             key_names += user_spec['key_names']
         return self.test_plc.locate_private_key_from_key_names (key_names)
 
-    # to be used through TestPlc.slice_mapper_tasks
+    # for TestPlc.slice_mapper__tasks
     # i.e. returns a list of CompleterTasks that are merged into the same Completer run
     # to avoid waiting for as many slices as the Plc has
     # also the __doc__ lines are used for the TestPlc methods, e.g. just 'ssh_slice'
@@ -179,7 +179,7 @@ class TestSlice:
         dry_run = getattr(options,'dry_run',False)
         for nodename in self.slice_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
-            tasks.append( CompleterTaskSshSlice(self.test_plc,node_spec['node_fields']['hostname'],
+            tasks.append( CompleterTaskSliceSsh(self.test_plc,node_spec['node_fields']['hostname'],
                                                 slicename,private_key,command,expected,dry_run))
         return tasks
 #        return Completer (tasks).run (timeout, graceout, period)
@@ -222,7 +222,23 @@ class TestSlice:
         if not success: utils.header ("WRONG RESULT for %s"%msg)
         return success
 
-    def check_rootfs (self, expected):
+    # for TestPlc.slice_mapper__tasks
+    # check that /vservers/<> is present/deleted
+    def slice_fs_present__tasks (self, options): 
+        "checks that /vservers/<slicename> exists on the filesystem"
+        return self.check_rootfs_tasks(options,expected=True)
+    def slice_fs_deleted__tasks (self, options): 
+        "checks that /vservers/<slicename> has been properly wiped off"
+        return self.check_rootfs_tasks (options,expected=False)
+
+    def check_rootfs_tasks (self, options, expected):
+        # use constant admin key
+        local_key = "keys/key_admin.rsa"
+        node_infos = self.test_plc.all_node_infos()
+        return [ CompleterTaskNodeSsh (nodename, qemuname, local_key, expected=expected,
+                                       command="ls -d /vservers/%s"%self.name()) \
+                 for (nodename,qemuname) in node_infos ]
+        
         overall=True
         for nodename in self.slice_spec['nodenames']:
             node_spec=self.test_site.locate_node(nodename)
@@ -237,9 +253,3 @@ class TestSlice:
             if not fine: overall=False
         return overall
 
-    def slice_fs_present (self, options): 
-        "check that /vservers/<slicename> can be found"
-        return self.check_rootfs (expected=True)
-    def slice_fs_deleted (self, options): 
-        "check that /vservers/<slicename> has been properly wiped off on all nodes"
-        return self.check_rootfs (expected=False)
