@@ -1073,12 +1073,12 @@ class Substrate:
                                    'vservername':vservername,
                                    'vserverip':vplc_ip,
 #                                   'settings': {
-                                   'PLC_DB_HOST':vplc_hostname,
-                                   'PLC_API_HOST':vplc_hostname,
-                                   'PLC_BOOT_HOST':vplc_hostname,
-                                   'PLC_WWW_HOST':vplc_hostname,
-                                   'PLC_NET_DNS1' : self.network_settings() [ 'interface_fields:dns1' ],
-                                   'PLC_NET_DNS2' : self.network_settings() [ 'interface_fields:dns2' ],
+                                   'settings:PLC_DB_HOST':vplc_hostname,
+                                   'settings:PLC_API_HOST':vplc_hostname,
+                                   'settings:PLC_BOOT_HOST':vplc_hostname,
+                                   'settings:PLC_WWW_HOST':vplc_hostname,
+                                   'settings:PLC_NET_DNS1' : self.network_settings() [ 'interface_fields:dns1' ],
+                                   'settings:PLC_NET_DNS2' : self.network_settings() [ 'interface_fields:dns2' ],
 #                                      }
                                    } ) ]
                   }
