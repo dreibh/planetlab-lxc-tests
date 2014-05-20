@@ -1508,11 +1508,11 @@ class TestPlc:
     def aggregate_xml_line(self):
         port=self.plc_spec['sfa']['neighbours-port']
         return '<aggregate addr="%s" hrn="%s" port="%r"/>' % \
-            (self.vserverip,self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'],port)
+            (self.vserverip,self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH'],port)
 
     def registry_xml_line(self):
         return '<registry addr="%s" hrn="%s" port="12345"/>' % \
-            (self.vserverip,self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH'])
+            (self.vserverip,self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH'])
 
 
     # a cross step that takes all other plcs in argument
@@ -1534,7 +1534,7 @@ class TestPlc:
 
     def sfa_import(self):
         "use sfaadmin to import from plc"
-        auth=self.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+        auth=self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH']
         return self.run_in_guest('sfaadmin reg import_registry')==0 
 
     def sfa_start(self):
