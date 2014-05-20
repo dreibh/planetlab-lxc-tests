@@ -109,6 +109,7 @@ class slice_mapper__tasks (object):
                 tasks += slice_method (test_slice, self.options)
             return Completer (tasks).run (decorator_self.timeout, decorator_self.silent, decorator_self.period)
         # restore the doc text from the TestSlice method even if a bit odd
+        wrappee.__name__ = method.__name__
         wrappee.__doc__ = slice_method.__doc__
         return wrappee
 
@@ -1237,7 +1238,7 @@ class TestPlc:
 
     # use another name so we can exclude/ignore it from the tests on the nightly command line
     def ssh_slice_again(self): return self.ssh_slice()
-    # note that simply doing ssh_slice_again=ssh_slice would kind od work too
+    # note that simply doing ssh_slice_again=ssh_slice would kind of work too
     # but for some reason the ignore-wrapping thing would not
 
     @slice_mapper
