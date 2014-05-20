@@ -341,7 +341,7 @@ steps refer to a method in TestPlc or to a step_* module
         ips_bplc_file.close()
         ips_vplc_file=open('arg-ips-vplc','w')
         for plc_spec in all_plc_specs:
-            ips_vplc_file.write("%s\n"%plc_spec['PLC_API_HOST'])
+            ips_vplc_file.write("%s\n"%plc_spec['settings']['PLC_API_HOST'])
         ips_vplc_file.close()
         # ditto for nodes
         ips_bnode_file=open('arg-ips-bnode','w')

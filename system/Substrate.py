@@ -1072,12 +1072,14 @@ class Substrate:
                                    'name': plc_name,
                                    'vservername':vservername,
                                    'vserverip':vplc_ip,
+#                                   'settings': {
                                    'PLC_DB_HOST':vplc_hostname,
                                    'PLC_API_HOST':vplc_hostname,
                                    'PLC_BOOT_HOST':vplc_hostname,
                                    'PLC_WWW_HOST':vplc_hostname,
                                    'PLC_NET_DNS1' : self.network_settings() [ 'interface_fields:dns1' ],
                                    'PLC_NET_DNS2' : self.network_settings() [ 'interface_fields:dns2' ],
+#                                      }
                                    } ) ]
                   }
 
@@ -1166,11 +1168,11 @@ class Substrate:
 
     def localize_sfa_rspec (self,plc,options):
        
-        plc['sfa']['SFA_REGISTRY_HOST'] = plc['PLC_DB_HOST']
-        plc['sfa']['SFA_AGGREGATE_HOST'] = plc['PLC_DB_HOST']
-        plc['sfa']['SFA_SM_HOST'] = plc['PLC_DB_HOST']
-        plc['sfa']['SFA_DB_HOST'] = plc['PLC_DB_HOST']
-        plc['sfa']['SFA_PLC_URL'] = 'https://' + plc['PLC_API_HOST'] + ':443/PLCAPI/' 
+        plc['sfa']['settings']['SFA_REGISTRY_HOST'] = plc['settings']['PLC_DB_HOST']
+        plc['sfa']['settings']['SFA_AGGREGATE_HOST'] = plc['settings']['PLC_DB_HOST']
+        plc['sfa']['settings']['SFA_SM_HOST'] = plc['settings']['PLC_DB_HOST']
+        plc['sfa']['settings']['SFA_DB_HOST'] = plc['settings']['PLC_DB_HOST']
+        plc['sfa']['settings']['SFA_PLC_URL'] = 'https://%s:443/PLCAPI/' % plc['settings']['PLC_API_HOST']
 	return plc
 
     #################### release:

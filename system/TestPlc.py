@@ -313,9 +313,9 @@ class TestPlc:
         return self.yum_check_installed (rpms)
 
     def auth_root (self):
-	return {'Username':self.plc_spec['PLC_ROOT_USER'],
+	return {'Username':self.plc_spec['settings']['PLC_ROOT_USER'],
 		'AuthMethod':'password',
-		'AuthString':self.plc_spec['PLC_ROOT_PASSWORD'],
+		'AuthString':self.plc_spec['settings']['PLC_ROOT_PASSWORD'],
                 'Role' : self.plc_spec['role']
                 }
     def locate_site (self,sitename):
@@ -590,7 +590,7 @@ class TestPlc:
         print '+ MyPLC',plc_spec['name']
         # WARNING this would not be right for lxc-based PLC's - should be harmless though
         print '+\tvserver address = root@%s:/vservers/%s'%(plc_spec['host_box'],plc_spec['vservername'])
-        print '+\tIP = %s/%s'%(plc_spec['PLC_API_HOST'],plc_spec['vserverip'])
+        print '+\tIP = %s/%s'%(plc_spec['settings']['PLC_API_HOST'],plc_spec['vserverip'])
         for site_spec in plc_spec['sites']:
             for node_spec in site_spec['nodes']:
                 TestPlc.display_mapping_node(node_spec)
@@ -703,26 +703,8 @@ class TestPlc:
         "run plc-config-tty"
         tmpname='%s.plc-config-tty'%(self.name())
         fileconf=open(tmpname,'w')
-        for var in [ 'PLC_NAME',
-                     'PLC_ROOT_USER',
-                     'PLC_ROOT_PASSWORD',
-                     'PLC_SLICE_PREFIX',
-                     'PLC_MAIL_ENABLED',
-                     'PLC_MAIL_SUPPORT_ADDRESS',
-                     'PLC_DB_HOST',
-#                     'PLC_DB_PASSWORD',
-		     # Above line was added for integrating SFA Testing
-                     'PLC_API_HOST',
-                     'PLC_WWW_HOST',
-                     'PLC_BOOT_HOST',
-                     'PLC_NET_DNS1',
-                     'PLC_NET_DNS2',
-                     'PLC_RESERVATION_GRANULARITY',
-                     'PLC_OMF_ENABLED',
-                     'PLC_OMF_XMPP_SERVER',
-                     'PLC_VSYS_DEFAULTS',
-                     ]:
-            fileconf.write ('e %s\n%s\n'%(var,self.plc_spec[var]))
+        for (var,value) in self.plc_spec['settings'].iteritems():
+            fileconf.write ('e %s\n%s\n'%(var,value))
         fileconf.write('w\n')
         fileconf.write('q\n')
         fileconf.close()
@@ -827,7 +809,7 @@ class TestPlc:
         sites = self.apiserver.GetSites(self.auth_root(), {}, ['site_id','login_base'])
         for site in sites:
             # keep automatic site - otherwise we shoot in our own foot, root_auth is not valid anymore
-            if site['login_base']==self.plc_spec['PLC_SLICE_PREFIX']: continue
+            if site['login_base']==self.plc_spec['settings']['PLC_SLICE_PREFIX']: continue
             site_id=site['site_id']
             print 'Deleting site_id',site_id
             self.apiserver.DeleteSite(self.auth_root(),site_id)
@@ -1508,30 +1490,13 @@ class TestPlc:
         "run sfa-config-tty"
         tmpname=self.conffile("sfa-config-tty")
         fileconf=open(tmpname,'w')
-        for var in [ 'SFA_REGISTRY_ROOT_AUTH',
-                     'SFA_INTERFACE_HRN',
-                     'SFA_REGISTRY_LEVEL1_AUTH',
-		     'SFA_REGISTRY_HOST',
-		     'SFA_AGGREGATE_HOST',
-                     'SFA_SM_HOST',
-		     'SFA_PLC_URL',
-                     'SFA_PLC_USER',
-                     'SFA_PLC_PASSWORD',
-                     'SFA_DB_HOST',
-                     'SFA_DB_USER',
-                     'SFA_DB_PASSWORD',
-                     'SFA_DB_NAME',
-                     'SFA_API_LOGLEVEL',
-                     'SFA_GENERIC_FLAVOUR',
-                     'SFA_AGGREGATE_ENABLED',
-                     ]:
-            if self.plc_spec['sfa'].has_key(var):
-                fileconf.write ('e %s\n%s\n'%(var,self.plc_spec['sfa'][var]))
-        # the way plc_config handles booleans just sucks..
-        for var in []:
-            val='false'
-            if self.plc_spec['sfa'][var]: val='true'
-            fileconf.write ('e %s\n%s\n'%(var,val))
+        for (var,value) in self.plc_spec['sfa']['settings'].iteritems():
+            fileconf.write ('e %s\n%s\n'%(var,value))
+#        # the way plc_config handles booleans just sucks..
+#        for var in []:
+#            val='false'
+#            if self.plc_spec['sfa'][var]: val='true'
+#            fileconf.write ('e %s\n%s\n'%(var,val))
         fileconf.write('w\n')
         fileconf.write('R\n')
         fileconf.write('q\n')
