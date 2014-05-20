@@ -54,7 +54,7 @@ class TestAuthSfa:
 
     # the hrn for the root authority
     def root_hrn (self):
-        return self.test_plc.plc_spec['sfa']['SFA_REGISTRY_ROOT_AUTH']
+        return self.test_plc.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH']
 
     # the hrn for the auth/site
     def auth_hrn (self):
@@ -100,10 +100,10 @@ class TestAuthSfa:
 	SFI_USER=self.obj_hrn(self.auth_sfa_spec['pi_spec']['name'])
         fileconf.write ("SFI_USER='%s'"%SFI_USER)
 	fileconf.write('\n')
-	SFI_REGISTRY='http://' + sfa_spec['SFA_REGISTRY_HOST'] + ':12345/'
+	SFI_REGISTRY='http://' + sfa_spec['settings']['SFA_REGISTRY_HOST'] + ':12345/'
         fileconf.write ("SFI_REGISTRY='%s'"%SFI_REGISTRY)
 	fileconf.write('\n')
-	SFI_SM='http://' + sfa_spec['SFA_SM_HOST'] + ':12347/'
+	SFI_SM='http://' + sfa_spec['settings']['SFA_SM_HOST'] + ':12347/'
         fileconf.write ("SFI_SM='%s'"%SFI_SM)
 	fileconf.write('\n')
         fileconf.close()

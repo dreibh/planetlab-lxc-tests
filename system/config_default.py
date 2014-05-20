@@ -519,7 +519,6 @@ def plc (options,index) :
         'ssh_node_debug_timers': (10,8),
     }
 
-# NOTE: SFA currently has SFA_AGGREGATE_API_VERSION=2 baked into the code
 def sfa (options,index) :
     return { 
         # the default is to use AMs in the various aggregates.xml
