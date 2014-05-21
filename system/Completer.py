@@ -31,7 +31,6 @@ class Completer:
             if not tasks: return True
             if datetime.now() > timeout:
                 for task in tasks: 
-                    print task.failure_message()
                     task.failure_epilogue()
                 return False
             if self.verbose:
@@ -64,8 +63,7 @@ class CompleterTask:
             print self.message(),"->","OK" if result else "KO"
         return result
     def message (self): return "you-need-to-redefine-message"
-    def failure_message (self): return "you-need-to-redefine-failure_message"
-    def failure_epilogue (self): pass
+    def failure_epilogue (self): print "you-need-to-redefine-failure_epilogue"
 
 # random result
 class TaskTest (CompleterTask):
@@ -81,7 +79,7 @@ class TaskTest (CompleterTask):
     def message (self):
         return "Task %d - delay was %d s"%(self.counter,self.delay)
 
-    def failure_message (self): return "BOTTOM LINE: FAILURE with task (%s)"%self.counter
+    def failure_epilogue (self): print "BOTTOM LINE: FAILURE with task (%s)"%self.counter
 
 def main ():
     import sys

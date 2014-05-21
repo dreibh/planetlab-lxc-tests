@@ -1021,8 +1021,8 @@ class TestPlc:
                     return False
             def message (self):
                 return "CompleterTaskBootState with node %s"%self.hostname
-            def failure_message (self):
-                return "node %s in state %s - expected %s"%(self.hostname,self.last_boot_state,target_boot_state)
+            def failure_epilogue (self):
+                print "node %s in state %s - expected %s"%(self.hostname,self.last_boot_state,target_boot_state)
                 
         timeout = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
@@ -1049,8 +1049,8 @@ class TestPlc:
             def run(self,silent):
                 command="ping -c 1 -w 1 %s >& /dev/null"%self.hostname
                 return utils.system (command, silent=silent)==0
-            def failure_message (self):
-                return "Cannot ping node with name %s"%self.hostname
+            def failure_epilogue (self):
+                print "Cannot ping node with name %s"%self.hostname
         timeout=timedelta (seconds=timeout_seconds)
         graceout=timeout
         period=timedelta (seconds=period_seconds)
@@ -1134,8 +1134,8 @@ class TestPlc:
                 return self.test_sliver.check_initscript_stamp (self.stamp)
             def message (self):
                 return "initscript checker for %s"%self.test_sliver.name()
-            def failure_message (self):
-                return "initscript stamp %s not found in sliver %s"%(self.stamp,self.test_sliver.name())
+            def failure_epilogue (self):
+                print "initscript stamp %s not found in sliver %s"%(self.stamp,self.test_sliver.name())
             
         tasks=[]
         for slice_spec in self.plc_spec['slices']:
@@ -1327,8 +1327,8 @@ class TestPlc:
                 return self.test_node._check_system_slice (slicename, dry_run=self.dry_run)
             def message (self): 
                 return "System slice %s @ %s"%(slicename, self.test_node.name())
-            def failure_message (self): 
-                return "COULD not find system slice %s @ %s"%(slicename, self.test_node.name())
+            def failure_epilogue (self): 
+                print "COULD not find system slice %s @ %s"%(slicename, self.test_node.name())
         timeout = timedelta(minutes=timeout_minutes)
         silent  = timedelta (0)
         period  = timedelta (seconds=period_seconds)

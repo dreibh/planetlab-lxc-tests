@@ -30,11 +30,11 @@ class CompleterTaskSliceSsh (CompleterTask):
         if self.dry_run: return True
         if self.expected:       return retcod==0
         else:                   return retcod!=0
-    def failure_message (self):
+    def failure_epilogue (self):
         if self.expected:
-            return "Could not ssh into sliver %s@%s"%(self.slicename,self.hostname)
+            print "Could not ssh into sliver %s@%s"%(self.slicename,self.hostname)
         else:
-            return "Could still ssh into sliver%s@%s (that was expected to be down)"%(self.slicename,self.hostname)
+            print "Could still ssh into sliver%s@%s (that was expected to be down)"%(self.slicename,self.hostname)
 
 class TestSlice:
 
@@ -236,14 +236,14 @@ class TestSlice:
         local_key = "keys/key_admin.rsa"
         node_infos = self.test_plc.all_node_infos()
         rootfs="/vservers/%s"%self.name()
-        if expected:
-            failure_message = "Could not stat %s"%rootfs
-        else:
-            failure_message = "Sliver rootfs still present in %s"%rootfs
         class CompleterTaskRootfs (CompleterTaskNodeSsh):
             def __init__ (self, nodename, qemuname):
                 CompleterTaskNodeSsh.__init__(self,nodename, qemuname, local_key, expected=expected,
-                                              message=failure_message, command="ls -d %s"%rootfs)
+                                              command="ls -d %s"%rootfs)
             def failure_epilogue (self):
-                utils.system(self.test_ssh.actual_command("ls -l %s; du -hs %s"%(rootfs,rootfs),dry_run=self.dry_run))
+                if expected:
+                    print "Could not stat %s - was expected to be present"%rootfs
+                else:
+                    print "Sliver rootfs %s still present - this is unexpected"%rootfs
+                    utils.system(self.test_ssh.actual_command("ls -l %s; du -hs %s"%(rootfs,rootfs),dry_run=self.dry_run))
         return [ CompleterTaskRootfs (nodename, qemuname) for (nodename,qemuname) in node_infos ]
