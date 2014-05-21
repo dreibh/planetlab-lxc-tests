@@ -32,6 +32,7 @@ class Completer:
             if datetime.now() > timeout:
                 for task in tasks: 
                     print task.failure_message()
+                    task.failure_epilogue()
                 return False
             if self.verbose:
                 print '%ds..'%period_seconds,
@@ -64,6 +65,7 @@ class CompleterTask:
         return result
     def message (self): return "you-need-to-redefine-message"
     def failure_message (self): return "you-need-to-redefine-failure_message"
+    def failure_epilogue (self): pass
 
 # random result
 class TaskTest (CompleterTask):

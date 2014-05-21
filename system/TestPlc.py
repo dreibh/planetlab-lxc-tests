@@ -1213,9 +1213,9 @@ class TestPlc:
     def ssh_slice(self): pass
     @slice_mapper__tasks(20,19,15)
     def ssh_slice_off (self): pass
-    @slice_mapper__tasks(2,1,15)
+    @slice_mapper__tasks(1,1,15)
     def slice_fs_present(self): pass
-    @slice_mapper__tasks(2,1,15)
+    @slice_mapper__tasks(1,1,15)
     def slice_fs_deleted(self): pass
 
     # use another name so we can exclude/ignore it from the tests on the nightly command line
