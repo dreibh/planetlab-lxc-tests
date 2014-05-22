@@ -267,7 +267,7 @@ class Box:
     def hostname_fedora (self,virt=None):
         result = "%s {"%self.hostname
         if virt: result += "%s-"%virt
-        result += "%s"%self.fedora()
+        result += "%s %s"%(self.fedora(),self.memory())
         # too painful to propagate this cleanly
         global verbose
         if verbose:
@@ -290,6 +290,8 @@ class Box:
         composite_command += [ "uname", "-r"]
         composite_command += [ ";" , "echo", Box.separator , ";" ]
         composite_command += [ "cat" , "/etc/fedora-release" ]
+        composite_command += [ ";" , "echo", Box.separator , ";" ]
+        composite_command += [ "grep", "MemTotal", "/proc/meminfo" ]
 
         # due to colons and all, this is going wrong on the local box (typically testmaster)
         # I am reluctant to change TestSsh as it might break all over the place, so
@@ -298,7 +300,7 @@ class Box:
         else:
             probe_argv=self.test_ssh().actual_argv(composite_command)
         composite=self.backquote ( probe_argv, trash_err=True )
-        self._hostname = self._uptime = self._uname = self._fedora = "** Unknown **"
+        self._hostname = self._uptime = self._uname = self._fedora = self._memory = "** Unknown **"
         if not composite: 
             print "root@%s unreachable"%self.hostname
             self._probed=''
@@ -306,10 +308,15 @@ class Box:
             try:
                 pieces = composite.split(Box.separator)
                 pieces = [ x.strip() for x in pieces ]
-                [self._hostname, self._uptime, self._uname, self._fedora] = pieces
+                # get raw data
+                [hostname, uptime, uname, fedora, memory] = pieces
                 # customize
-                self._uptime = ', '.join([ x.strip() for x in self._uptime.split(',')[2:]])
-                self._fedora = self._fedora.replace("Fedora release ","f").split(" ")[0]
+                self._hostname = hostname
+                self._uptime = ', '.join([ x.strip() for x in uptime.split(',')[2:]]).replace("load average","load")
+                self._uname = uname
+                self._fedora = fedora.replace("Fedora release ","f").split(" ")[0]
+                # translate into Mb
+                self._memory = int(memory.split()[1])/(1024)
             except:
                 import traceback
                 print 'BEG issue with pieces',pieces
@@ -331,6 +338,10 @@ class Box:
         self.probe()
         if hasattr(self,'_fedora') and self._fedora: return self._fedora
         return '*unprobed* fedora'
+    def memory(self):
+        self.probe()
+        if hasattr(self,'_memory') and self._memory: return "%s Mb"%self._memory
+        return '*unprobed* memory'
 
     def run(self,argv,message=None,trash_err=False,dry_run=False):
         if dry_run:
