@@ -47,7 +47,7 @@ class OnelabSubstrate (Substrate):
 # enfoui - L119 as it won't work well under the KVM in L102A
 # use F10 to enter BIOS setup
 # nodes spawned in this box won't get network connectivity
-         ('enfoui', 4), # 4 cores, 8Gb
+#         ('enfoui', 4), # 4 cores, 8Gb
 # estran (4) - big mem but small disk
          ('estran', 3), # 4 cores, 8Gb
 # lodos (5) - rather old/small
