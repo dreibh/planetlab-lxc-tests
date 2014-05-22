@@ -727,9 +727,13 @@ class QemuBox (Box):
                 timestamp=int(timestamp)
                 q=self.qemu_instance_by_nodename_buildname(nodename,buildname)
                 if not q: 
-                    print 'WARNING zombie qemu',self.hostname,ts_line
-                    print '... was expecting (',short_hostname(nodename),buildname,') in',\
-                        [ (short_hostname(i.nodename),i.buildname) for i in self.qemu_instances ]
+                    # this warning corresponds to qemu instances that were not killed properly 
+                    # and that have a dangling qemu.pid - and not even all of them as they need
+                    # to be attached to a build that has a node running...
+                    # it is more confusing than helpful, so let's just trash it
+                    #print 'WARNING zombie qemu',self.hostname,ts_line
+                    #print '... was expecting (',short_hostname(nodename),buildname,') in',\
+                    #    [ (short_hostname(i.nodename),i.buildname) for i in self.qemu_instances ]
                     continue
                 q.set_timestamp(timestamp)
             except:  print 'WARNING, could not parse ts line',ts_line
