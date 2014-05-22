@@ -14,8 +14,9 @@ COMMAND=$(basename $0)
 cd $(dirname $0)
 
 ########## globals
-# 2 gigabytes ram
-RAM=2048
+# historically we used 1Gb nodes but with fedora20 bootcd with qemu this is not enough
+# OTOH our test infra is old so 2Gb would be a lot
+RAM=$((1024+512))
 DISK_SIZE=100G
 DISK_FORMAT=qcow2
 DISK_IMAGE=hdd-${DISK_FORMAT}-${DISK_SIZE}.img

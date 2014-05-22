@@ -39,22 +39,22 @@ class OnelabSubstrate (Substrate):
 # as of jan 2014 this is renumbered so that 1 is preferred
    def qemu_boxes_spec (self):
       return [ # (hostname, how many qemus max in this box)
-# speedball - old school but robust and a big disk
-         ('kvm64-1', 3), # 4 cores, 4Gb, 840 Gb
+# speedball (1) - old school but robust and a big disk
+         ('speedball', 2), # 4 cores, 4Gb, 840 Gb
 # used to have kruder too, but it is broken/dead
-# dorfmeister
-         ('kvm64-2', 3), # 4 cores, 4Gb
+# dorfmeister (2)
+         ('dorfmeister', 2), # 4 cores, 4Gb
 # enfoui - this HP box behaves weird at boot-time
 # we don't get to see much of the boot process
 # use F10 to enter BIOS setup
 # nodes spawned in this box won't get network connectivity
-#         ('kvm64-3', 4), # 4 cores, 8Gb
-# estran - big mem but small disk
-         ('kvm64-4', 2), # 4 cores, 8Gb
-# lodos - rather old/small
-         ('kvm64-5', 1), # 2 cores, 4Gb
-# cyblok         
-         ('kvm64-6', 1), # 2 cores, 4Gb
+#         ('enfoui', 4), # 4 cores, 8Gb
+# estran (4) - big mem but small disk
+         ('estran', 3), # 4 cores, 8Gb
+# lodos (5) - rather old/small
+         ('lodos', 1), # 2 cores, 4Gb
+# cyblok (6)        
+         ('cyblok', 1), # 2 cores, 4Gb
          ]
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
