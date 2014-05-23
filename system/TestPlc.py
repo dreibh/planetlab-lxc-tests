@@ -169,7 +169,7 @@ class TestPlc:
         'gather_logs_force', SEP,
         ]
     other_steps = [ 
-        'export', 'show_boxes', SEP,
+        'export', 'show_boxes', 'super_speed_up_slices', SEP,
         'check_hooks', 'plc_stop', 'plcvm_start', 'plcvm_stop', SEP,
         'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
         'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
@@ -1235,20 +1235,28 @@ class TestPlc:
         return PlcapiUrlScanner (self.auth_root(),ip=self.vserverip).scan()
 
     def speed_up_slices (self):
-        "tweak nodemanager settings on all nodes using a conf file"
+        "tweak nodemanager cycle (wait time) to 30+/-10 s"
+        return self._speed_up_slices (30,10)
+    def super_speed_up_slices (self):
+        "dev mode: tweak nodemanager cycle (wait time) to 5+/-1 s"
+        return self._speed_up_slices (5,1)
+
+    def _speed_up_slices (self, p, r):
         # create the template on the server-side 
         template="%s.nodemanager"%self.name()
         template_file = open (template,"w")
-        template_file.write('OPTIONS="-p 30 -r 11 -d"\n')
+        template_file.write('OPTIONS="-p %s -r %s -d"\n'%(p,r))
         template_file.close()
         in_vm="/var/www/html/PlanetLabConf/nodemanager"
         remote="%s/%s"%(self.vm_root_in_host(),in_vm)
         self.test_ssh.copy_abs(template,remote)
         # Add a conf file
-        self.apiserver.AddConfFile (self.auth_root(),
-                                    {'dest':'/etc/sysconfig/nodemanager',
-                                     'source':'PlanetLabConf/nodemanager',
-                                     'postinstall_cmd':'service nm restart',})
+        if not self.apiserver.GetConfFiles (self.auth_root(),
+                                        {'dest':'/etc/sysconfig/nodemanager'}):
+            self.apiserver.AddConfFile (self.auth_root(),
+                                        {'dest':'/etc/sysconfig/nodemanager',
+                                         'source':'PlanetLabConf/nodemanager',
+                                         'postinstall_cmd':'service nm restart',})
         return True
 
     def debug_nodemanager (self):
