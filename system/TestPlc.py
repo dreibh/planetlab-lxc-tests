@@ -165,7 +165,7 @@ class TestPlc:
         # check slices are turned off properly
         'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
         # check they are properly re-created with the same name
-        'fill_slices', 'ssh_slice_again_ignore', SEP,
+        'fill_slices', 'ssh_slice_again', SEP,
         'gather_logs_force', SEP,
         ]
     other_steps = [ 
