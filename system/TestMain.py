@@ -90,7 +90,8 @@ class TestMain:
     subversion_id = "Now using git -- version tracker broken"
 
     default_config = [ 'default' ] 
-    default_rspec_styles = [ 'pl', 'pg' ]
+#    default_rspec_styles = [ 'pl', 'pg' ]
+    default_rspec_styles = [ 'pg' ]
 
     default_build_url = "git://git.onelab.eu/tests"
 
