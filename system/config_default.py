@@ -521,9 +521,12 @@ def plc (options,index) :
 
 def sfa (options,index) :
     return { 
-        # the default is to use AMs in the various aggregates.xml
+        # the port used to generate the various aggregates.xml
         # stack config_sfamesh to point to SMs instead
         'neighbours-port':12346,
+        # the port that sfi connects to - used to be 12347 when the SM was still running
+        # but now the SM is just turned off for these tests
+        'sfi-connects-to-port' : 12346,
         ## global sfa-config-tty stuff
         'settings': {
             'SFA_REGISTRY_ROOT_AUTH' : sfa_root(index),
@@ -531,6 +534,8 @@ def sfa (options,index) :
             'SFA_REGISTRY_HOST' : 'deferred-myplc-hostname',
             'SFA_AGGREGATE_HOST': 'deferred-myplc-hostname',
             'SFA_SM_HOST': 'deferred-myplc-hostname',
+# turning off SM and using only AM; be explicit on this as the default has changed in the code
+            'SFA_SM_ENABLED' : 'false',
             'SFA_PLC_URL' : 'deferred-myplc-api-url',
             'SFA_PLC_USER' : 'root@test.onelab.eu',
             'SFA_PLC_PASSWORD' : 'test++',
