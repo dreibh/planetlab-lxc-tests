@@ -179,6 +179,7 @@ class TestPlc:
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
 	'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
+        'sfa_get_expires', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
         'check_netflow','check_drl', SEP,
         'debug_nodemanager', 'slice_fs_present', SEP,
@@ -1588,6 +1589,8 @@ class TestPlc:
     def sfa_register_slice(self): pass
     @auth_sfa_mapper
     def sfa_renew_slice(self): pass
+    @auth_sfa_mapper
+    def sfa_get_expires(self): pass
     @auth_sfa_mapper
     def sfa_discover(self): pass
     @auth_sfa_mapper

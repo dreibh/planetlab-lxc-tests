@@ -2,8 +2,11 @@
 # Copyright (C) 2010 INRIA 
 #
 
+import os.path
 import time
 from datetime import datetime, timedelta
+import json
+import traceback
 
 import utils
 from TestNode import TestNode
@@ -28,6 +31,7 @@ class TestSliceSfa:
         return self.test_auth_sfa.sfi_path()
 
     # send back up to the TestAuthSfa
+    def sfi_path (self): return self.test_auth_sfa.sfi_path()
     def rspec_style (self): return self.test_auth_sfa.rspec_style()
     def sfi_pi(self,*args,**kwds): return self.test_auth_sfa.sfi_pi(*args, **kwds)
     def sfi_user(self,*args,**kwds): return self.test_auth_sfa.sfi_user(*args, **kwds)
@@ -50,23 +54,49 @@ class TestSliceSfa:
 
     def sfa_renew_slice(self, options):
         "run sfi renew (on Aggregates)"
-        too_late =  datetime.now() + timedelta(weeks=52)
-        one_month = datetime.now() + timedelta(weeks=4)
+#        too_late =  (datetime.now() + timedelta(weeks=52)).strftime("%Y-%m-%d")
+        one_month = (datetime.now() + timedelta(weeks=4)).strftime("%Y-%m-%d")
+        too_late =  "+12m"
+#        one_month = "+4w"
         # we expect this to fail on too long term attemps, but to succeed otherwise
         overall=True
         for ( renew_until, expected) in [ (too_late, False), (one_month, True) ] :
             sfi_command="renew"
             sfi_command += " %s"%self.hrn()
-            sfi_command += " %s"%renew_until.strftime("%Y-%m-%d")
+            sfi_command += " %s"%renew_until
             succeeded = self.test_plc.run_in_guest(self.sfi_user(sfi_command))==0
             if succeeded!=expected:
                 utils.header ("Expecting success=%s, got %s"%(expected,succeeded))
                 # however it turns out sfi renew always returns fine....
                 #overall=False
             # so for helping manual checks:
+            # xxx this should use sfa_get_expires below and actually check the expected result
             sfi_command="show -k hrn -k expires %s"%self.hrn()
             self.test_plc.run_in_guest(self.sfi_user(sfi_command))
         return overall
+
+    def sfa_get_expires (self, options):
+        filename="%s.json"%self.hrn()
+        # /root/sfi/pg/<>
+        inplc_filename=os.path.join(self.sfi_path(),filename)
+        # /vservers/<>/root/sfi/... - cannot use os.path 
+        inbox_filename="%s%s"%(self.test_plc.vm_root_in_host(),inplc_filename)
+        sfi_command  =""
+        sfi_command += "-R %s --rawformat json"%inplc_filename
+        sfi_command += " status"
+        sfi_command += " %s"%self.hrn()
+        # cannot find it if sfi status returns an error
+        if self.test_plc.run_in_guest (self.sfi_user(sfi_command)) !=0: return
+        if self.test_plc.test_ssh.fetch(inbox_filename,filename)!=0: return 
+        try:
+            with file(filename) as f: status = json.loads(f.read())
+            value=status['value']
+            sliver=value['geni_slivers'][0]
+            expires=sliver['geni_expires']
+            print " * expiration for %s (first sliver) -> %s"%(self.hrn(),expires)
+            return expires
+        except:
+            traceback.print_exc()
 
     # helper - filename to store a given result
     def _resname (self,name,ext): return "%s.%s"%(name,ext)
