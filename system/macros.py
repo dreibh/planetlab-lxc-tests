@@ -18,6 +18,12 @@ sequences['sfa_restart'] = [
     'sfi_configure',
     ]
 
+sequences ['sfa_create_slice'] = [
+    'sfa_rspec',
+    'sfa_allocate',
+    'sfa_provision',
+]
+
 "re-run a complete sfa cycle from a nightly test"
 sequences['sfa_populate'] = [ 
     'sfa_register_site',

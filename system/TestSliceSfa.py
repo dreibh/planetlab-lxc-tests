@@ -110,26 +110,33 @@ class TestSliceSfa:
         return self.test_plc.run_in_guest(self.sfi_user(\
                 "resources %s -o %s/%s"% (self.discover_option(),self.sfi_path(),self.adfile())))==0
 
-    # run sfi create as a regular user
-    def sfa_create_slice(self,options):
-        "run sfi create (on SM) - 1st time"
+    def sfa_rspec(self,options):
+        "invoke sfiListNodes and sfiAddSlivers to prepare a rspec"
         commands=[
             "sfiListNodes.py -i %s/%s -o %s/%s"%(self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile()),
             "sfiAddSliver.py -i %s/%s -n %s/%s -o %s/%s"%\
                 (self.sfi_path(),self.adfile(),self.sfi_path(),self.nodefile(),self.sfi_path(),self.reqfile()),
-            self.sfi_user("allocate %s %s"%(self.hrn(),self.reqfile())),
-            self.sfi_user("provision %s"%(self.hrn())),
             ]
         for command in commands:
             if self.test_plc.run_in_guest(command)!=0: return False
         return True
+
+    def sfa_allocate(self,options):
+        "invoke run sfi allocate (on SM)"
+        command=self.sfi_user("allocate %s %s"%(self.hrn(),self.reqfile()))
+        return self.test_plc.run_in_guest(command)==0
+
+    def sfa_provision(self,options):
+        "invoke run sfi provision (on SM)"
+        command=self.sfi_user("provision %s"%(self.hrn()))
+        return self.test_plc.run_in_guest(command)==0
 
     def plc_name (self):
         return "%s_%s"%(self.test_auth_sfa.login_base,self.slice_spec['name'])
 
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
-        "check sfa_create_slice at the plcs - all local nodes should be in slice"
+        "check the slices have been created at the plcs - all local nodes should be in slice"
         slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), self.plc_name())[0]
         nodes=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), {'peer_id':None})
         result=True
@@ -141,10 +148,12 @@ class TestSliceSfa:
                 result=False
         return result
 
-    # actually the same for now
+    # xxx historically this used to do the same as sfa-create-slice
+    # which was later on split into 3 distinct steps, 
+    # and we can ignore the first that is about setting up the rspec
     def sfa_update_slice(self,options):
-        "run sfi create (on SM) on existing object"
-        return self.sfa_create_slice(options)
+        "re-run sfi allocate and provision (on SM) on existing object"
+        return self.sfa_allocate(options) and self.sfa_provision(options)
 
     # run as pi
     def sfa_delete_slice(self,options):
