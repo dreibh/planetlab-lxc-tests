@@ -275,11 +275,14 @@ class TestPlc:
     # see e.g. plc_start esp. the version for f14
     #command gets run in the plc's vm
     def host_to_guest(self,command):
+        vservername=self.vservername
+        personality=self.options.personality
+        raw="%(personality)s virsh -c lxc:/// lxc-enter-namespace %(vservername)s"%locals()
         # f14 still needs some extra help
         if self.options.fcdistro == 'f14':
-            raw="virsh -c lxc:/// lxc-enter-namespace %s -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %s" %(self.vservername,command)
+            raw +=" -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %(command)s" %locals()
         else:
-            raw="virsh -c lxc:/// lxc-enter-namespace %s -- /usr/bin/env %s" %(self.vservername,command)
+            raw +=" -- /usr/bin/env %(command)s"%locals()
         return raw
     
     # this /vservers thing is legacy...
