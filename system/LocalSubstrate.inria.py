@@ -20,7 +20,9 @@ class OnelabSubstrate (Substrate):
 
    # the experimental lxc-based build box
    def build_lxc_boxes_spec (self):
-      return [ 'liquid', 'reed', 'velvet' ]
+# velvet needs attention
+#      return [ 'liquid', 'reed', 'velvet' ]
+      return [ 'liquid', 'reed' ]
 
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
