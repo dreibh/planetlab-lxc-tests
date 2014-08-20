@@ -12,7 +12,6 @@ import utils
 from TestNode import TestNode
 from TestUser import TestUser
 from TestBoxQemu import TestBoxQemu
-from TestSsh import TestSsh
 
 from Completer import Completer, CompleterTask
 from TestSlice import CompleterTaskSliceSsh
@@ -102,6 +101,7 @@ class TestSliceSfa:
     def _resname (self,name,ext): return "%s.%s"%(name,ext)
     def adfile (self): return self._resname("ad","rspec")
     def reqfile (self): return self._resname("req","rspec")
+    def empty_reqfile (self): return "empty-rspec.xml"
     def nodefile (self): return self._resname("nodes","txt")
     
     # run as user
@@ -121,22 +121,30 @@ class TestSliceSfa:
             if self.test_plc.run_in_guest(command)!=0: return False
         return True
 
+    def _sfa_allocate(self,file,options):
+        command=self.sfi_user("allocate %s %s"%(self.hrn(),file))
+        return self.test_plc.run_in_guest(command)==0
+
     def sfa_allocate(self,options):
         "invoke run sfi allocate (on SM)"
-        command=self.sfi_user("allocate %s %s"%(self.hrn(),self.reqfile()))
-        return self.test_plc.run_in_guest(command)==0
+        return self._sfa_allocate(self.reqfile(),options)
+    def sfa_allocate_empty(self,options):
+        "invoke run sfi allocate (on SM) with an empty rspec"
+        return self._sfa_allocate(self.empty_reqfile(),options)
 
     def sfa_provision(self,options):
         "invoke run sfi provision (on SM)"
         command=self.sfi_user("provision %s"%(self.hrn()))
         return self.test_plc.run_in_guest(command)==0
+    # just a synonym
+    sfa_provision_empty = sfa_provision
 
     def plc_name (self):
         return "%s_%s"%(self.test_auth_sfa.login_base,self.slice_spec['name'])
 
     # all local nodes in slice ?
     def sfa_check_slice_plc (self,options):
-        "check the slices have been created at the plcs - all local nodes should be in slice"
+        "check the slice has been created at the plc - all local nodes should be in slice"
         slice=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), self.plc_name())[0]
         nodes=self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), {'peer_id':None})
         result=True
@@ -147,6 +155,14 @@ class TestSliceSfa:
                 utils.header("ERROR - local node %s NOT FOUND in slice %s"%(node['hostname'],slice['name']))
                 result=False
         return result
+
+    # no node left in slice ?
+    def sfa_check_slice_plc_empty (self,options):
+        "check the slice have been emptied at the plcs - no node should be in slice"
+        slices=self.test_plc.apiserver.GetSlices(self.test_plc.auth_root(), 
+                                                 self.plc_name(),
+                                                 ['node_ids'])
+        return not slices[0]['node_ids']
 
     # xxx historically this used to do the same as sfa-create-slice
     # which was later on split into 3 distinct steps, 

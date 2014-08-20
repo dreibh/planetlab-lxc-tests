@@ -155,6 +155,7 @@ class TestPlc:
         'sfa_insert_user_in_slice@1','sfi_show_slice_researchers@1', SEPSFA,
         'sfa_discover@1', 'sfa_rspec@1', 'sfa_allocate@1', 'sfa_provision@1', SEPSFA,
         'sfa_check_slice_plc@1', 'sfa_update_slice@1', SEPSFA,
+        'sfa_rspec_empty@1','sfa_allocate_empty@1', 'sfa_provision_empty@1','sfa_check_slice_plc_empty@1', SEPSFA,
         'sfi_list@1', 'sfi_show_site@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
@@ -1543,7 +1544,7 @@ class TestPlc:
                                      " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
         utils.header ("(Over)wrote %s"%reg_fname)
         return self.test_ssh.copy_abs(agg_fname,'/%s/etc/sfa/aggregates.xml'%self.vm_root_in_host())==0 \
-            and  self.test_ssh.copy_abs(reg_fname,'/%s/etc/sfa/registries.xml'%self.vm_root_in_host())==0
+           and self.test_ssh.copy_abs(reg_fname,'/%s/etc/sfa/registries.xml'%self.vm_root_in_host())==0
 
     def sfa_import(self):
         "use sfaadmin to import from plc"
@@ -1581,6 +1582,17 @@ class TestPlc:
         self.run_in_guest("rm -rf /root/sfi")
         return True
 
+    def sfa_rspec_empty(self):
+        "expose a static empty rspec (ships with the tests module) in the sfi directory"
+        filename="empty-rspec.xml"
+        overall=True
+        for slice_spec in self.plc_spec['sfa']['auth_sfa_specs']:
+            test_slice=TestAuthSfa(self,slice_spec)
+            in_vm = test_slice.sfi_path()
+            remote="%s/%s"%(self.vm_root_in_host(),in_vm)
+            if self.test_ssh.copy_abs (filename, remote) !=0: overall=False
+        return overall
+
     @auth_sfa_mapper
     def sfa_register_site (self): pass
     @auth_sfa_mapper
@@ -1602,9 +1614,15 @@ class TestPlc:
     @auth_sfa_mapper
     def sfa_allocate(self): pass
     @auth_sfa_mapper
+    def sfa_allocate_empty(self): pass
+    @auth_sfa_mapper
     def sfa_provision(self): pass
     @auth_sfa_mapper
+    def sfa_provision_empty(self): pass
+    @auth_sfa_mapper
     def sfa_check_slice_plc(self): pass
+    @auth_sfa_mapper
+    def sfa_check_slice_plc_empty(self): pass
     @auth_sfa_mapper
     def sfa_update_slice(self): pass
     @auth_sfa_mapper
