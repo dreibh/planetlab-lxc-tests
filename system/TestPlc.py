@@ -149,7 +149,7 @@ class TestPlc:
         'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
-        'sfa_rspec_empty@1', 'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
+        'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
         'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
         'sfa_remove_user_from_slice@1','sfi_show_slice_researchers@1', 
         'sfa_insert_user_in_slice@1','sfi_show_slice_researchers@1', SEPSFA,
@@ -162,7 +162,7 @@ class TestPlc:
         'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore', SEP,
         'ssh_slice_sfa@1', SEPSFA, 
-        'sfa_allocate_empty@1', 'sfa_provision_empty@1','sfa_check_slice_plc_empty@1', SEPSFA,
+        'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1','sfa_check_slice_plc_empty@1', SEPSFA,
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
         # check slices are turned off properly
