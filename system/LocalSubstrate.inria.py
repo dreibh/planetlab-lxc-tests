@@ -51,7 +51,8 @@ class OnelabSubstrate (Substrate):
 # nodes spawned in this box won't get network connectivity
 #         ('enfoui', 4), # 4 cores, 8Gb
 # estran (4) - big mem but small disk
-         ('estran', 2), # 4 cores, 8Gb
+# take it out because it takes much of the load and then gets full..
+#         ('estran', 2), # 4 cores, 8Gb
 # lodos (5) - rather old/small
          ('lodos', 1), # 2 cores, 4Gb
 # cyblok (6)        
