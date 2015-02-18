@@ -168,7 +168,7 @@ class TestPlc:
         # check slices are turned off properly
         'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
         # xxx for Thomas
-        'fail',
+        # 'fail',
         # check they are properly re-created with the same name
         'fill_slices', 'ssh_slice_again', SEP,
         'gather_logs_force', SEP,
