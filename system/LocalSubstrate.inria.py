@@ -38,14 +38,18 @@ class OnelabSubstrate (Substrate):
                   'unused')                     # MAC address 
                 for i in range(1,41) ] 
 
-# as of jan 2014 this is renumbered so that 1 is preferred
    def qemu_boxes_spec (self):
       return [ # (hostname, how many qemus max in this box)
+         ('buzzcocks', 12),
+         ]
+
+# these boxes are going on a well deserved retirement
+# as of jan 2014 this is renumbered so that 1 is preferred
 # speedball (1) - old school but robust and a big disk
-         ('speedball', 2), # 4 cores, 4Gb, 840 Gb
+#         ('speedball', 2), # 4 cores, 4Gb, 840 Gb
 # used to have kruder too, but it is broken/dead
 # dorfmeister (2)
-         ('dorfmeister', 2), # 4 cores, 4Gb
+#         ('dorfmeister', 2), # 4 cores, 4Gb
 # enfoui - L119 as it won't work well under the KVM in L102A
 # use F10 to enter BIOS setup
 # nodes spawned in this box won't get network connectivity
@@ -54,10 +58,9 @@ class OnelabSubstrate (Substrate):
 # take it out because it takes much of the load and then gets full..
 #         ('estran', 2), # 4 cores, 8Gb
 # lodos (5) - rather old/small
-         ('lodos', 1), # 2 cores, 4Gb
+#         ('lodos', 1), # 2 cores, 4Gb
 # cyblok (6)        
-         ('cyblok', 1), # 2 cores, 4Gb
-         ]
+#         ('cyblok', 1), # 2 cores, 4Gb
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
    def vnode_ips (self):
