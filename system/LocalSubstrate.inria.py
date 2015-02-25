@@ -40,7 +40,7 @@ class OnelabSubstrate (Substrate):
 
    def qemu_boxes_spec (self):
       return [ # (hostname, how many qemus max in this box)
-         ('buzzcocks', 12),
+         ('boxtops', 12),
          ]
 
 # these boxes are going on a well deserved retirement
