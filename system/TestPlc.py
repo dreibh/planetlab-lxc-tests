@@ -166,7 +166,7 @@ class TestPlc:
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
         # for inspecting the slice while it runs the first time
-        'fail',
+        #'fail',
         # check slices are turned off properly
         'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
         # check they are properly re-created with the same name
