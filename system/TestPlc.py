@@ -1051,11 +1051,11 @@ class TestPlc:
         return True
 
     # probing nodes
-    def check_nodes_ping(self,timeout_seconds=120,period_seconds=10):
-        class CompleterTaskPingNode (CompleterTask):
+    def check_nodes_ping(self, timeout_seconds=240, period_seconds=10):
+        class CompleterTaskPingNode(CompleterTask):
             def __init__ (self, hostname):
                 self.hostname=hostname
-            def run(self,silent):
+            def run(self, silent):
                 command="ping -c 1 -w 1 %s >& /dev/null"%self.hostname
                 return utils.system (command, silent=silent)==0
             def failure_epilogue (self):
@@ -1072,7 +1072,7 @@ class TestPlc:
         "Ping nodes"
         return self.check_nodes_ping ()
 
-    def check_nodes_ssh(self,debug,timeout_minutes,silent_minutes,period_seconds=15):
+    def check_nodes_ssh(self, debug, timeout_minutes, silent_minutes, period_seconds=15):
         # various delays 
         timeout  = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
