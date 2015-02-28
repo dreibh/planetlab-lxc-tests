@@ -13,7 +13,8 @@ class Completer:
         self.tasks=tasks
         self.verbose=verbose
     def run (self, timeout_timedelta, silent_timedelta, period=None):
-        timeout = datetime.now()+timeout_timedelta
+        begin = datetime.now()
+        timeout = begin+timeout_timedelta
         timeout_minutes = timeout_timedelta.total_seconds()/60
         graceout = datetime.now()+silent_timedelta
         silent_minutes = silent_timedelta.total_seconds()/60
@@ -28,7 +29,9 @@ class Completer:
                 success=task.run (silent=datetime.now() <= graceout)
                 if success: fine.append(task)
             for task in fine: tasks.remove(task)
-            if not tasks: return True
+            if not tasks:
+                print "Completer duration = {}".format(int(datetime.now()-begin))
+                return True
             if datetime.now() > timeout:
                 for task in tasks: 
                     task.failure_epilogue()
