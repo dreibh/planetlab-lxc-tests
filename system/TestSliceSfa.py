@@ -200,4 +200,4 @@ class TestSliceSfa:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)
             tasks.append( CompleterTaskSliceSsh(self.test_plc,node_spec['node_fields']['hostname'],
                                                 slicename,private_key,command,expected=True,dry_run=dry_run))
-        return Completer (tasks).run (timeout, graceout, period)
+        return Completer (tasks, message='ssh_slice_sfa').run (timeout, graceout, period)

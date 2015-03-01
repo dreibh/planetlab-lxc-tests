@@ -107,7 +107,7 @@ class slice_mapper__tasks (object):
                 test_site = TestSite(self,site_spec)
                 test_slice=TestSlice(self,test_site,slice_spec)
                 tasks += slice_method (test_slice, self.options)
-            return Completer (tasks).run (decorator_self.timeout, decorator_self.silent, decorator_self.period)
+            return Completer (tasks, message=method.__name__).run (decorator_self.timeout, decorator_self.silent, decorator_self.period)
         # restore the doc text from the TestSlice method even if a bit odd
         wrappee.__name__ = method.__name__
         wrappee.__doc__ = slice_method.__doc__
@@ -1040,7 +1040,8 @@ class TestPlc:
         utils.header("checking nodes boot state (expected %s)"%target_boot_state)
         tasks = [ CompleterTaskBootState (self,hostname) \
                       for (hostname,_) in self.all_node_infos() ]
-        return Completer (tasks).run (timeout, graceout, period)
+        message = 'check_boot_state={}'.format(target_boot_state)
+        return Completer (tasks, message=message).run (timeout, graceout, period)
 
     def nodes_booted(self):
         return self.nodes_check_boot_state('boot',timeout_minutes=30,silent_minutes=28)
@@ -1065,7 +1066,7 @@ class TestPlc:
         period=timedelta (seconds=period_seconds)
         node_infos = self.all_node_infos()
         tasks = [ CompleterTaskPingNode (h) for (h,_) in node_infos ]
-        return Completer (tasks).run (timeout, graceout, period)
+        return Completer (tasks, message='ping_node').run (timeout, graceout, period)
 
     # ping node before we try to reach ssh, helpful for troubleshooting failing bootCDs
     def ping_node (self):
@@ -1080,15 +1081,17 @@ class TestPlc:
         vservername=self.vservername
         if debug: 
             message="debug"
+            completer_message = 'ssh_node_debug'
             local_key = "keys/%(vservername)s-debug.rsa"%locals()
         else: 
             message="boot"
+            completer_message = 'ssh_node_boot'
 	    local_key = "keys/key_admin.rsa"
         utils.header("checking ssh access to nodes (expected in %s mode)"%message)
         node_infos = self.all_node_infos()
         tasks = [ CompleterTaskNodeSsh (nodename, qemuname, local_key, boot_state=message) \
                       for (nodename,qemuname) in node_infos ]
-        return Completer (tasks).run (timeout, graceout, period)
+        return Completer (tasks, message=completer_message).run (timeout, graceout, period)
         
     def ssh_node_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
@@ -1161,7 +1164,7 @@ class TestPlc:
                 test_node = TestNode (self,test_site,node)
                 test_sliver = TestSliver (self, test_node, test_slice)
                 tasks.append ( CompleterTaskInitscript (test_sliver, stamp))
-        return Completer (tasks).run (timedelta(minutes=5), timedelta(minutes=4), timedelta(seconds=10))
+        return Completer (tasks, message='check_initscripts').run (timedelta(minutes=5), timedelta(minutes=4), timedelta(seconds=10))
 	    
     def check_initscripts(self):
         "check that the initscripts have triggered"
@@ -1351,7 +1354,7 @@ class TestPlc:
         period  = timedelta (seconds=period_seconds)
         tasks = [ CompleterTaskSystemSlice (test_node, self.options.dry_run) \
                       for test_node in self.all_nodes() ]
-        return Completer (tasks) . run (timeout, silent, period)
+        return Completer (tasks, message='_check_system_slice') . run (timeout, silent, period)
 
     def plcsh_stress_test (self):
         "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"

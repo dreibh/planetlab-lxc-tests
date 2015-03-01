@@ -6,9 +6,9 @@
 import sys, os, os.path
 from optparse import OptionParser
 import traceback
-from time import strftime
 import readline
 import glob
+from datetime import datetime
 
 import utils
 from TestPlc import TestPlc, Ignored
@@ -190,9 +190,6 @@ steps refer to a method in TestPlc or to a step_* module
                           help="prompts before each step")
         parser.add_option("-n","--dry-run", action="store_true", dest="dry_run", default=False,
                           help="Show environment and exits")
-# dropped when added Completer.py
-#        parser.add_option("-r","--restart-nm", action="store_true", dest="forcenm", default=False, 
-#                          help="Force the NM to restart in ssh_slices step")
         parser.add_option("-t","--trace", action="store", dest="trace_file", default=None,
                           help="Trace file location")
         (self.options, self.args) = parser.parse_args()
@@ -410,7 +407,7 @@ steps refer to a method in TestPlc or to a step_* module
 
         # do all steps on all plcs
         TIME_FORMAT="%H-%M-%S"
-        TRACE_FORMAT="TRACE: %(plc_counter)d %(beg)s->%(end)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
+        TRACE_FORMAT="TRACE: %(plc_counter)d %(begin)s->%(seconds)ss=%(duration)s status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
         for (stepname,method,force,cross,qualifier) in all_step_infos:
             plc_counter=0
             for (spec,plc_obj) in all_plcs:
@@ -422,7 +419,8 @@ steps refer to a method in TestPlc or to a step_* module
                 across_plcs = [ o for (s,o) in all_plcs if o!=plc_obj ]
 
                 # run the step
-                beg=strftime(TIME_FORMAT)
+                beg_time = datetime.now()
+                begin = beg_time.strftime(TIME_FORMAT)
                 if not spec['failed_step'] or force or self.options.interactive or self.options.keep_going:
                     skip_step=False
                     if self.options.interactive:
@@ -497,7 +495,9 @@ steps refer to a method in TestPlc or to a step_* module
                     utils.header("********** %d SKIPPED Step %s on %s (%s)"%(plc_counter,stepname,plcname,why))
                     status="UNDEF"
                 if not self.options.dry_run:
-                    end=strftime(TIME_FORMAT)
+                    delay = datetime.now()-beg_time
+                    seconds = int(delay.total_seconds())
+                    duration = str(delay)
                     # always do this on stdout
                     print TRACE_FORMAT%locals()
                     # duplicate on trace_file if provided

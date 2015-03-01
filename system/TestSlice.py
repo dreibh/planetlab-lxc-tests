@@ -10,7 +10,7 @@ from TestKey import TestKey
 from TestUser import TestUser
 from TestNode import TestNode, CompleterTaskNodeSsh
 from TestSsh import TestSsh
-from Completer import Completer, CompleterTask
+from Completer import CompleterTask
 
 class CompleterTaskSliceSsh (CompleterTask):
 
@@ -182,7 +182,6 @@ class TestSlice:
             tasks.append( CompleterTaskSliceSsh(self.test_plc,node_spec['node_fields']['hostname'],
                                                 slicename,private_key,command,expected,dry_run))
         return tasks
-#        return Completer (tasks).run (timeout, graceout, period)
 
     def ssh_slice_basics (self, options, *args, **kwds):
         "the slice is expected to be UP and we just check a few simple sanity commands, including 'ps' to check for /proc"

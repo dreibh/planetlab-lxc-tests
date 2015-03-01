@@ -9,9 +9,10 @@ import utils
 ### takes in argument a list of tasks that are instances 
 ### of a CompleterTask subclass
 class Completer:
-    def __init__ (self, tasks, verbose=True):
+    def __init__ (self, tasks, verbose=True, message=None):
         self.tasks=tasks
         self.verbose=verbose
+        self.message="({})".format(message) if message else ""
     def run (self, timeout_timedelta, silent_timedelta, period=None):
         begin = datetime.now()
         timeout = begin+timeout_timedelta
@@ -30,7 +31,10 @@ class Completer:
                 if success: fine.append(task)
             for task in fine: tasks.remove(task)
             if not tasks:
-                print "Completer duration = {}".format(int(datetime.now()-begin))
+                if self.verbose:
+                    duration = datetime.now()-begin
+                    print "total completer {} {}s".format(self.message,
+                                                          int(duration.total_seconds()))
                 return True
             if datetime.now() > timeout:
                 for task in tasks: 
