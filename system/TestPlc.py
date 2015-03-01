@@ -1089,7 +1089,8 @@ class TestPlc:
 	    local_key = "keys/key_admin.rsa"
         utils.header("checking ssh access to nodes (expected in %s mode)"%message)
         node_infos = self.all_node_infos()
-        tasks = [ CompleterTaskNodeSsh (nodename, qemuname, local_key, boot_state=message) \
+        tasks = [ CompleterTaskNodeSsh (nodename, qemuname, local_key,
+                                        boot_state=message, dry_run=self.options.dry_run) \
                       for (nodename,qemuname) in node_infos ]
         return Completer (tasks, message=completer_message).run (timeout, graceout, period)
         
