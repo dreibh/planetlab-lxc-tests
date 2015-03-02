@@ -15,6 +15,9 @@ cd $(dirname $0)
 
 ########## globals
 # use 2Gb to be safe now that we have a big infra
+# 1Gb used to be anough up to f18
+# with f20 we went to 1.5 Gb
+# with f21 1.5 Gb might be enough too, but we now have much more memory space so WTH
 RAM=2048
 DISK_SIZE=100G
 DISK_FORMAT=qcow2
