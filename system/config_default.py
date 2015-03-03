@@ -65,6 +65,9 @@ def nodes(options,index):
              'route_fields' :           { 'subnet' : '0.0.0.0/0',
                                           'next_hop' : 'xxx-deferred-xxx',
                                           },
+             # boot cd settings
+             # we should have tags here instead of the hard-wired
+             # options set for GetBootMedium in TestNode.py
              }]
 
 def all_nodenames (options,index):

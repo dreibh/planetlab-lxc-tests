@@ -156,6 +156,7 @@ class TestNode:
         if self.is_qemu():
             options.append('serial')
             options.append('no-hangcheck')
+            options.append('systemd-debug')
         encoded=self.test_plc.apiserver.GetBootMedium(self.test_plc.auth_root(), 
                                                       self.name(), 'node-iso', '', options)
         if (encoded == ''):
