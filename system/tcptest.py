@@ -5,18 +5,21 @@
 #
 import sys
 import time
-from optparse import OptionParser    
+import subprocess
 import socket
 import SocketServer
+from optparse import OptionParser    
 
-def myprint(message):
+def myprint(message, is_client=True):
     now=time.strftime("%H:%M:%S", time.localtime())
-    print "*",now,'--',message
+    id = 'tcpclient' if is_client else 'tcpserver'
+    print "*",now,'(%s)' % id, '--',message
+    sys.stdout.flush()
 
-def show_network_status():
-    print "ip address show"
+def show_network_status(is_client):
+    myprint("ip address show", is_client=is_client)
     subprocess.call(['ip','address','show'])
-    print "ip route show"
+    myprint("ip route show", is_client=is_client)
     subprocess.call(['ip','route','show'])
 
 class EchoRequestHandler(SocketServer.StreamRequestHandler):
@@ -34,12 +37,12 @@ class Server:
     def main(self):
         import threading
 
-        parser=OptionParser()
-        parser.add_option("-p","--port", action="store", dest="port", type="int",
+        parser = OptionParser()
+        parser.add_option("-p", "--port", action="store", dest="port", type="int",
                           default=10000, help="port number")
-        parser.add_option("-a","--address", action="store", dest="address", 
+        parser.add_option("-a", "--address", action="store", dest="address", 
                           default=socket.gethostname(), help="address")
-        parser.add_option("-t","--timeout", action="store", dest="timeout", type="int",
+        parser.add_option("-t", "--timeout", action="store", dest="timeout", type="int",
                           default="0")
         
         (options, args) = parser.parse_args()
@@ -47,7 +50,7 @@ class Server:
             parser.print_help()
             sys.exit(1)
 
-        show_network_status()
+        show_network_status(is_client=False)
 
         server = SocketServer.TCPServer((options.address, options.port),
                                         UppercaseRequestHandler)
@@ -67,9 +70,7 @@ class Server:
             
 class Client:
     def main(self):
-        from optparse import OptionParser    
-
-        parser=OptionParser()
+        parser = OptionParser()
         parser.add_option("-p","--port", action="store", dest="port", type="int",
                           default=10000, help="port number")
         parser.add_option("-a","--address", action="store", dest="address", 
@@ -107,7 +108,8 @@ class Client:
             s.close()
         myprint("Done")
         exit_return=0
-        if not result: exit_return=1
+        if not result:
+            exit_return=1
         sys.exit(exit_return)
 
 if __name__ == '__main__':
