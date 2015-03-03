@@ -478,14 +478,14 @@ steps refer to a method in TestPlc or to a step_* module
                         else:
                             overall_result = 'FAILURE'
                             spec['failed_step'] = stepname
-                            utils.header('********** %d FAILED Step %s on %s (discarded from further steps)'\
+                            utils.header('********** %d FAILED step %s on %s (discarded from further steps)'\
                                              %(plc_counter,stepname,plcname))
                             status="KO"
                     except:
                         overall_result='FAILURE'
                         spec['failed_step'] = stepname
                         traceback.print_exc()
-                        utils.header ('********** %d FAILED (exception) Step %s on %s (discarded from further steps)'\
+                        utils.header ('********** %d FAILED (exception) step %s on %s (discarded from further steps)'\
                                           %(plc_counter,stepname,plcname))
                         status="KO"
 
