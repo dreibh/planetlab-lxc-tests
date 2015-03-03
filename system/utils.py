@@ -22,8 +22,8 @@ def pprint(message,spec,depth=2):
 
 
 
-def system(command,background=False,silent=False, dry_run=None):
-    dry_run = dry_run if dry_run is not None else getattr(options,'dry_run',False)
+def system(command, background=False, silent=False, dry_run=None):
+    dry_run = dry_run if dry_run is not None else getattr(options, 'dry_run', False)
     if dry_run:
         print 'dry_run:',command
         return 0
@@ -59,7 +59,7 @@ def match (string, pattern):
     pattern=pattern.replace("?",".")
     return re.compile(pattern).match(string)
     
-def locate_hooks_scripts (message,path,extensions):
+def locate_hooks_scripts (message, path, extensions):
     print message,'searching',path,'for extensions',extensions
     scripts=[]
     for ext in extensions:
@@ -70,7 +70,7 @@ def locate_hooks_scripts (message,path,extensions):
 # quick & dirty - should probably use the parseroption object instead
 # and move to TestMain as well
 exclude_options_keys = [ 'ensure_value' , 'read_file', 'read_module' ]
-def show_options (message,options):
+def show_options (message, options):
     now=time.strftime("%H:%M:%S", time.localtime())
     print ">",now,"--",message
     for k in dir(options):
