@@ -1140,14 +1140,14 @@ class TestPlc:
     ### initscripts
     def do_check_initscripts(self):
         class CompleterTaskInitscript (CompleterTask):
-            def __init__ (self, test_sliver, stamp):
+            def __init__(self, test_sliver, stamp):
                 self.test_sliver=test_sliver
                 self.stamp=stamp
-            def actual_run (self):
-                return self.test_sliver.check_initscript_stamp (self.stamp)
-            def message (self):
+            def actual_run(self):
+                return self.test_sliver.check_initscript_stamp(self.stamp)
+            def message(self):
                 return "initscript checker for %s"%self.test_sliver.name()
-            def failure_epilogue (self):
+            def failure_epilogue(self):
                 print "initscript stamp %s not found in sliver %s"%(self.stamp,self.test_sliver.name())
             
         tasks=[]
@@ -1164,8 +1164,9 @@ class TestPlc:
                 test_slice = TestSlice (self,test_site,slice_spec)
                 test_node = TestNode (self,test_site,node)
                 test_sliver = TestSliver (self, test_node, test_slice)
-                tasks.append ( CompleterTaskInitscript (test_sliver, stamp))
-        return Completer (tasks, message='check_initscripts').run (timedelta(minutes=5), timedelta(minutes=4), timedelta(seconds=10))
+                tasks.append(CompleterTaskInitscript(test_sliver, stamp))
+        return Completer(tasks, message='check_initscripts').\
+            run (timedelta(minutes=5), timedelta(minutes=4), timedelta(seconds=10))
 	    
     def check_initscripts(self):
         "check that the initscripts have triggered"
@@ -1306,26 +1307,54 @@ class TestPlc:
             utils.header ("check_tcp: no/empty config found")
             return True
         specs = self.plc_spec['tcp_specs']
-        overall=True
+        overall = True
+
+        # first wait for the network to be up and ready from the slices
+        class CompleterTaskNetworkReadyInSliver(CompleterTask):
+            def __init__(self, test_sliver):
+                self.test_sliver = test_sliver
+            def actual_run(self):
+                return self.test_sliver.check_tcp_ready(port=9999)
+            def message(self):
+                return "network ready checker for %s" % self.test_sliver.name()
+            def failure_epilogue(self):
+                print "could not bind port from sliver %s" % self.test_sliver.name()
+
+        tasks = []
+        for spec in specs:
+            # locate the TestSliver instances involved, and cache them in the spec instance
+            spec['s_sliver'] = self.locate_sliver_obj_cross (spec['server_node'], spec['server_slice'], other_plcs)
+            spec['c_sliver'] = self.locate_sliver_obj_cross (spec['client_node'], spec['client_slice'], other_plcs)
+            message = "Will check TCP between s=%s and c=%s" % \
+                      (spec['s_sliver'].name(), spec['c_sliver'].name())
+            if 'client_connect' in spec:
+                message += " (using %s)" % spec['client_connect']
+            utils.header(message)
+            tasks.append(CompleterTaskNetworkReadyInSliver (spec['s_sliver']))
+
+        # wait for the netork to be OK in all server sides
+        if not Completer(tasks, message='check for network readiness in slivers').\
+           run(timedelta(seconds=30), timedelta(seconds=24), period=timedelta(seconds=5)):
+            return False
+            
+        # run server and client
         for spec in specs:
             port = spec['port']
             # server side
             # the issue here is that we have the server run in background
             # and so we have no clue if it took off properly or not
             # looks like in some cases it does not
-            s_test_sliver = self.locate_sliver_obj_cross (spec['server_node'], spec['server_slice'], other_plcs)
-            if not s_test_sliver.run_tcp_server(port, timeout=20):
+            if not spec['s_sliver'].run_tcp_server(port, timeout=20):
                 overall = False
                 break
 
             # idem for the client side
-            c_test_sliver = self.locate_sliver_obj_cross (spec['client_node'], spec['client_slice'], other_plcs)
-            # use nodename from locatesd sliver, unless 'client_connect' is set
+            # use nodename from located sliver, unless 'client_connect' is set
             if 'client_connect' in spec:
                 destination = spec['client_connect']
             else:
-                destination = s_test_sliver.test_node.name()
-            if not c_test_sliver.run_tcp_client(destination, port):
+                destination = spec['s_sliver'].test_node.name()
+            if not spec['c_sliver'].run_tcp_client(destination, port):
                 overall = False
         return overall
 

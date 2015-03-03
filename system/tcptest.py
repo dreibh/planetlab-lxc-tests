@@ -8,19 +8,19 @@ import time
 import subprocess
 import socket
 import SocketServer
+import threading
 from optparse import OptionParser    
 
-def myprint(message, is_client=True):
+def myprint(message, id='client'):
     now=time.strftime("%H:%M:%S", time.localtime())
-    id = 'tcpclient' if is_client else 'tcpserver'
     print "*",now,'(%s)' % id, '--',message
     sys.stdout.flush()
 
-def show_network_status(is_client):
-    myprint("ip address show", is_client=is_client)
-    subprocess.call(['ip','address','show'])
-    myprint("ip route show", is_client=is_client)
-    subprocess.call(['ip','route','show'])
+def show_network_status(id):
+    myprint("ip address show", id=id)
+    subprocess.call(['ip', 'address', 'show'])
+    myprint("ip route show", id=id)
+    subprocess.call(['ip', 'route', 'show'])
 
 class EchoRequestHandler(SocketServer.StreamRequestHandler):
     def handle(self):
@@ -33,10 +33,10 @@ class UppercaseRequestHandler(SocketServer.StreamRequestHandler):
         self.wfile.write(line.upper())
 
 class Server:
-
+    """
+    A TCP server, running for some finite amount of time
+    """
     def main(self):
-        import threading
-
         parser = OptionParser()
         parser.add_option("-p", "--port", action="store", dest="port", type="int",
                           default=10000, help="port number")
@@ -44,17 +44,15 @@ class Server:
                           default=socket.gethostname(), help="address")
         parser.add_option("-t", "--timeout", action="store", dest="timeout", type="int",
                           default="0")
-        
         (options, args) = parser.parse_args()
+
         if len(args) != 0:
             parser.print_help()
             sys.exit(1)
 
-        show_network_status(is_client=False)
-
+        show_network_status(id='server')
         server = SocketServer.TCPServer((options.address, options.port),
                                         UppercaseRequestHandler)
-
         try:
             if options.timeout:
                 t = threading.Thread(target=server.serve_forever)
@@ -68,7 +66,34 @@ class Server:
             print 'Bailing out on keyboard interrupt'
             sys.exit(1)
             
+class Ready:
+    """
+    A utility that does exit(0) iff network as perceived
+    from the sliver is ready. Designed to be run before Server,
+    so one can wait for the right conditions.
+    """
+    def main(self):
+        parser = OptionParser()
+        # by default use another port so we don't run into
+        # the SO_LINGER kind of trouble
+        parser.add_option("-p", "--port", action="store", dest="port", type="int",
+                          default=9999, help="port number")
+        parser.add_option("-a", "--address", action="store", dest="address", 
+                          default=socket.gethostname(), help="address")
+        (options, args) = parser.parse_args()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.bind((options.address, options.port))
+            sys.exit(0)
+        except Exception as e:
+            print e
+            sys.exit(1)
+        
 class Client:
+    """
+    Runs a client against a Server instance
+    """
     def main(self):
         parser = OptionParser()
         parser.add_option("-p","--port", action="store", dest="port", type="int",
@@ -88,7 +113,7 @@ class Client:
         result=True
         for i in range(1,options.loops+1):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((options.address , options.port))
+            s.connect((options.address, options.port))
             mout=i*'ping ' + '\n'
             min=mout.upper()
             if s.send(mout) != len(mout):
@@ -113,12 +138,15 @@ class Client:
         sys.exit(exit_return)
 
 if __name__ == '__main__':
-    for argv in sys.argv[1:]:
-        if argv.find("client") >= 0:
-            sys.argv.remove(argv)
+    for arg in sys.argv[1:]:
+        if arg.find("client") >= 0:
+            sys.argv.remove(arg)
             Client().main()
-        elif argv.find("server") >= 0:
-            sys.argv.remove(argv)
+        elif arg.find("server") >= 0:
+            sys.argv.remove(arg)
             Server().main()
+        elif arg.find("ready") >= 0:
+            sys.argv.remove(arg)
+            Ready().main()
     print 'you must specify either --client or --server'
     sys.exit(1)

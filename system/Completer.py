@@ -13,7 +13,7 @@ class Completer:
         self.tasks=tasks
         self.verbose=verbose
         self.message="({})".format(message) if message else ""
-    def run (self, timeout_timedelta, silent_timedelta, period=None):
+    def run (self, timeout_timedelta, silent_timedelta, period):
         begin = datetime.now()
         timeout = begin+timeout_timedelta
         timeout_minutes = timeout_timedelta.total_seconds()/60

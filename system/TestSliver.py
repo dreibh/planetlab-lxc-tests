@@ -31,7 +31,7 @@ class TestSliver:
                         # so that copies end up in the home dir
                         buildname=".")
 
-    def name (self):
+    def name(self):
         return "%s@%s"%(self.test_slice.name(),self.test_node.name())
 
     def check_initscript_stamp(self, stamp):
@@ -39,19 +39,27 @@ class TestSliver:
         return self.test_ssh.run("ls -l /var/tmp/%s.stamp"%stamp)==0
     
     def run_tcp_server (self, port, timeout=10):
-        server_command = "./tcptest.py server -p %d -t %d"%(port,timeout)
-        return self.test_ssh.copy("tcptest.py")==0 and \
+        server_command = "./tcptest.py server -p %d -t %d"%(port, timeout)
+        return self.test_ssh.copy("tcptest.py") == 0 and \
             self.test_ssh.run(server_command, background=True)==0
+
+    def check_tcp_ready (self, port):
+        server_command = "./tcptest.py ready -p %d"%(port)
+        return self.test_ssh.copy("tcptest.py") == 0 and \
+            self.test_ssh.run(server_command) == 0
 
     def run_tcp_client (self, servername, port, retry=5):
         client_command="./tcptest.py client -a %s -p %d"%(servername, port)
-        if self.test_ssh.copy("tcptest.py")!=0: return False
-        utils.header ("tcp client - first attempt")
-        if self.test_ssh.run(client_command, background=False)==0: return True
-        # if first try has failed, wait for <retry> s an try again
-        time.sleep(retry)
-        utils.header ("tcp client - second attempt")
-        if self.test_ssh.run(client_command, background=False)==0: return True
+        if self.test_ssh.copy("tcptest.py") != 0:
+            return False
+        # allow for 2 attempts
+        attempts = 2
+        for attempt in range (attempts):
+            if attempt != 0:
+                time.sleep(retry)
+            utils.header ("tcp client - attempt # %s" % (attempt+1))
+            if self.test_ssh.run(client_command) == 0:
+                return True
         return False
 
     # use the node's main ssh root entrance, as the slice entrance might be down

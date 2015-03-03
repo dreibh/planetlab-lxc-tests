@@ -434,6 +434,9 @@ def tcp_specs (options,index):
     # with the addition of omf-friendly slices..
     slice3='%s_sl4'%login_base(2)
     slice4='%s_sl5'%login_base(2)
+
+# NOTE: port 9999 is hard-wired in the code to be used for checking network readiness
+# so it is not to be used here
 # bind on 0.0.0.0 and try to reach this on localhost
 # not expected to work
     same_node_same_slice_lo =   { 'server_node': 'node1', 'server_slice': slice1,

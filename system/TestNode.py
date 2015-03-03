@@ -21,9 +21,9 @@ class CompleterTaskNodeSsh (CompleterTask):
         self.test_ssh =  TestSsh (self.hostname,key=self.local_key)
     def run (self, silent):
         command = self.test_ssh.actual_command(self.command)
-        retcod=utils.system (command, silent=silent, dry_run=self.dry_run)
-        if self.expected:       return retcod==0
-        else:                   return retcod !=0
+        retcod = utils.system (command, silent=silent, dry_run=self.dry_run)
+        if self.expected:       return retcod == 0
+        else:                   return retcod != 0
     def failure_epilogue (self):
         print "Cannot reach %s in %s mode"%(self.hostname, self.boot_state)
 
