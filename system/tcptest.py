@@ -13,6 +13,12 @@ def myprint(message):
     now=time.strftime("%H:%M:%S", time.localtime())
     print "*",now,'--',message
 
+def show_network_status():
+    print "ip address show"
+    subprocess.call(['ip','address','show'])
+    print "ip route show"
+    subprocess.call(['ip','route','show'])
+
 class EchoRequestHandler(SocketServer.StreamRequestHandler):
     def handle(self):
         line = self.rfile.readline()
@@ -41,6 +47,8 @@ class Server:
             parser.print_help()
             sys.exit(1)
 
+        show_network_status()
+
         server = SocketServer.TCPServer((options.address, options.port),
                                         UppercaseRequestHandler)
 
@@ -53,10 +61,10 @@ class Server:
                 sys.exit(0)
             else:
                 server.serve_forever()        
-        except KeyboardInterrupt:
-            print 'Bailing out'
+        except KeyboardInterrupt as e:
+            print 'Bailing out on keyboard interrupt'
             sys.exit(1)
-
+            
 class Client:
     def main(self):
         from optparse import OptionParser    
