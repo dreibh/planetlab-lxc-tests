@@ -82,13 +82,20 @@ class Ready:
                           default=socket.gethostname(), help="address")
         (options, args) = parser.parse_args()
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.bind((options.address, options.port))
-            sys.exit(0)
-        except Exception as e:
-            print e
-            sys.exit(1)
+        def can_bind ():
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                s.bind((options.address, options.port))
+                return True
+            except Exception as e:
+                print e
+                return False
+
+        def eth0_has_ipv4():
+            command = "ip address show eth0 | grep -q ' inet '"
+            return subprocess.check_call(command, shell=True) == 0
+
+        sys.exit(0 if can_bind() and eth0_has_ipv4() else 1)
         
 class Client:
     """
