@@ -16,13 +16,19 @@ class Completer:
     def run (self, timeout_timedelta, silent_timedelta, period):
         begin = datetime.now()
         timeout = begin+timeout_timedelta
-        timeout_minutes = timeout_timedelta.total_seconds()/60
+        timeout_seconds = timeout_timedelta.total_seconds()
+        timeout_minutes = timeout_seconds/60
         graceout = datetime.now()+silent_timedelta
-        silent_minutes = silent_timedelta.total_seconds()/60
+        silent_seconds = silent_timedelta.total_seconds()
+        silent_minutes = silent_seconds/60
         period_seconds=int(period.total_seconds())
         if self.verbose:
-            utils.header("max timeout is %d minutes, silent for %d minutes (period is %s s)"%\
+            if timeout_seconds >= 120:
+                utils.header("max timeout is %d minutes, silent for %d minutes (period is %s s)"%\
                              (timeout_minutes,silent_minutes,period_seconds))
+            else:
+                utils.header("max timeout is %d seconds, silent for %d seconds (period is %s s)"%\
+                             (timeout_seconds,silent_seconds,period_seconds))
         tasks=self.tasks
         while tasks:
             fine=[]
