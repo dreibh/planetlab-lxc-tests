@@ -1,6 +1,13 @@
 #!/bin/bash
 
-# do be run on testmaster in a buildname/
+# to be run on testmaster in a buildname/
+
+if [ "$1" == "-o" ] ; then
+    shift
+    logdir="$1"
+    shift
+    mkdir -p $logdir
+fi
 
 [[ -n "$@" ]] && iterations=$1 || iterations=10
 
@@ -28,6 +35,11 @@ for attempt in $(seq $iterations); do
 
     log=$buildname-$attempt-$msg.log.txt
     rsync boxtops:/vservers/$buildname/\*/log.txt $log
+
+    if [ -n "$logdir" ] ; then
+	mv $log $logdir
+	log=$logdir/$log
+    fi
 
     echo ==================== attempt $attempt $msg - see $log
 
