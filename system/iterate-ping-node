@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# do be run on testmaster in a buildname/
+
+[[ -n "$@" ]] && iterations=$1 || iterations=10
+
+buildname=$(basename $(pwd))
+
+echo buildname=$buildname, $iterations iterations
+
+for attempt in $(seq $iterations); do
+
+    attempt=$(printf "%02d" $attempt)
+    
+    echo ======================================== attempt $attempt
+
+    run qemu-kill-mine >& /dev/null
+    echo KILLED
+    ssh boxtops rm /vservers/$buildname/\*/log.txt
+    echo CLEANED
+#    run qemu-list-mine
+    sleep 5
+    run qemu-start >& /dev/null
+    echo RESTARTED
+#    run qemu-list-mine
+    sleep 40
+    run ping-node >& /dev/null && msg=OK || msg=KO
+
+    log=$buildname-$attempt-$msg.log.txt
+    rsync boxtops:/vservers/$buildname/\*/log.txt $log
+
+    echo ==================== attempt $attempt $msg - see $log
+
+done
