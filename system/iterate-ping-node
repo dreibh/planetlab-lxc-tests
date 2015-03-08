@@ -7,13 +7,14 @@ if [ "$1" == "-o" ] ; then
     logdir="$1"
     shift
     mkdir -p $logdir
+    extra_message="logdir=$logdir"
 fi
 
 [[ -n "$@" ]] && iterations=$1 || iterations=10
 
 buildname=$(basename $(pwd))
 
-echo buildname=$buildname, $iterations iterations
+echo "buildname=$buildname, $iterations iterations" $extra_message
 
 for attempt in $(seq $iterations); do
 
