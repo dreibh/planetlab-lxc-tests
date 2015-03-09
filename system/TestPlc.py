@@ -1320,7 +1320,9 @@ class TestPlc:
             def failure_epilogue(self):
                 print "could not bind port from sliver %s" % self.test_sliver.name()
 
+        sliver_specs = {}
         tasks = []
+        managed_sliver_names = set()
         for spec in specs:
             # locate the TestSliver instances involved, and cache them in the spec instance
             spec['s_sliver'] = self.locate_sliver_obj_cross (spec['server_node'], spec['server_slice'], other_plcs)
@@ -1330,7 +1332,13 @@ class TestPlc:
             if 'client_connect' in spec:
                 message += " (using %s)" % spec['client_connect']
             utils.header(message)
-            tasks.append(CompleterTaskNetworkReadyInSliver (spec['s_sliver']))
+            # we need to check network presence in both slivers, but also
+            # avoid to insert a sliver several times
+            for sliver in [ spec['s_sliver'], spec['c_sliver'] ]:
+                if sliver.name() not in managed_sliver_names:
+                    tasks.append(CompleterTaskNetworkReadyInSliver(sliver))
+                    # add this sliver's name in the set
+                    managed_sliver_names .update ( {sliver.name()} )
 
         # wait for the netork to be OK in all server sides
         if not Completer(tasks, message='check for network readiness in slivers').\

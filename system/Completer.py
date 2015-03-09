@@ -24,11 +24,15 @@ class Completer:
         period_seconds=int(period.total_seconds())
         if self.verbose:
             if timeout_seconds >= 120:
-                utils.header("max timeout is %d minutes, silent for %d minutes (period is %s s)"%\
-                             (timeout_minutes,silent_minutes,period_seconds))
+                utils.header("Completer [%d tasks]: max timeout is %d minutes, "
+                             "silent for %d minutes (period is %s s)"%\
+                             (len(self.tasks), timeout_minutes,
+                              silent_minutes, period_seconds))
             else:
-                utils.header("max timeout is %d seconds, silent for %d seconds (period is %s s)"%\
-                             (timeout_seconds,silent_seconds,period_seconds))
+                utils.header("Completer [%d tasks]: max timeout is %d seconds, "
+                             "silent for %d seconds (period is %s s)"%\
+                             (len(self.tasks), timeout_seconds,
+                              silent_seconds, period_seconds))
         tasks=self.tasks
         while tasks:
             fine=[]

@@ -461,7 +461,7 @@ def tcp_specs (options,index):
     specs += [ same_node_same_slice ]
 # worth another try
     specs += [ same_node_2_slices ]
-    if options.size >1 :
+    if options.size > 1:
         specs += [ two_nodes_same_slice, two_nodes_2_slices ]
     return specs
 

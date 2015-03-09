@@ -50,6 +50,7 @@ class Server:
             parser.print_help()
             sys.exit(1)
 
+        myprint("==================== tcptest.py server", id='server')
         show_network_status(id='server')
         server = SocketServer.TCPServer((options.address, options.port),
                                         UppercaseRequestHandler)
@@ -82,6 +83,7 @@ class Ready:
                           default=socket.gethostname(), help="address")
         (options, args) = parser.parse_args()
 
+        myprint("==================== tcptest.py ready", id='ready')
         def can_bind ():
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
@@ -117,6 +119,7 @@ class Client:
             parser.print_help()
             sys.exit(1)
 
+        myprint("==================== tcptest.py client", id='client')
         result=True
         for i in range(1,options.loops+1):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
