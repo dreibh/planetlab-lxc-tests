@@ -160,7 +160,7 @@ class TestPlc:
         # but as the stress test might take a while, we sometimes missed the debug mode..
         'probe_kvm_iptables',
         'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
-        'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts_ignore', SEP,
+        'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts', SEP,
         'ssh_slice_sfa@1', SEPSFA, 
         'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1','sfa_check_slice_plc_empty@1', SEPSFA,
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
