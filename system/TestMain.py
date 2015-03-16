@@ -4,7 +4,7 @@
 # Copyright (C) 2010 INRIA 
 #
 import sys, os, os.path
-from optparse import OptionParser
+from argparse import ArgumentParser
 import traceback
 import readline
 import glob
@@ -90,8 +90,6 @@ class Step:
 
 class TestMain:
 
-    subversion_id = "Now using git -- version tracker broken"
-
     default_config = [ 'default' ] 
 #    default_rspec_styles = [ 'pl', 'pg' ]
     default_rspec_styles = [ 'pg' ]
@@ -117,7 +115,7 @@ class TestMain:
 
     def list_steps(self):
         if not self.options.verbose:
-            print self.steps_message,
+            print self.steps_message
         else:
             # steps mentioned on the command line
             if self.options.args:
@@ -154,55 +152,59 @@ steps refer to a method in TestPlc or to a step_* module
 """%(TestMain.default_config)
         usage += self.steps_message
 
-        parser = OptionParser(usage=usage, version=self.subversion_id)
-        parser.add_option("-u", "--url", action="store",  dest="arch_rpms_url", 
-                          help="URL of the arch-dependent RPMS area - for locating what to test")
-        parser.add_option("-b", "--build", action="store", dest="build_url", 
-                          help="ignored, for legacy only")
-        parser.add_option("-c", "--config", action="append", dest="config", default=[],
-                          help="Config module - can be set multiple times, or use quotes")
-        parser.add_option("-p", "--personality", action="store", dest="personality", 
-                          help="personality - as in vbuild-nightly")
-        parser.add_option("-d", "--pldistro", action="store", dest="pldistro", 
-                          help="pldistro - as in vbuild-nightly")
-        parser.add_option("-f", "--fcdistro", action="store", dest="fcdistro", 
-                          help="fcdistro - as in vbuild-nightly")
-        parser.add_option("-e", "--exclude", action="append", dest="exclude", default=[],
-                          help="steps to exclude - can be set multiple times, or use quotes")
-        parser.add_option("-i", "--ignore", action="append", dest="ignore", default=[],
-                          help="steps to run but ignore - can be set multiple times, or use quotes")
-        parser.add_option("-a", "--all", action="store_true", dest="all_steps", default=False,
-                          help="Run all default steps")
-        parser.add_option("-l", "--list", action="store_true", dest="list_steps", default=False,
-                          help="List known steps")
-        parser.add_option("-V", "--vserver", action="append", dest="ips_bplc", default=[],
-                          help="Specify the set of hostnames for the boxes that host the plcs")
-        parser.add_option("-P", "--plcs", action="append", dest="ips_vplc", default=[],
-                          help="Specify the set of hostname/IP's to use for vplcs")
-        parser.add_option("-Q", "--qemus", action="append", dest="ips_bnode", default=[],
-                          help="Specify the set of hostnames for the boxes that host the nodes")
-        parser.add_option("-N", "--nodes", action="append", dest="ips_vnode", default=[],
-                          help="Specify the set of hostname/IP's to use for vnodes")
-        parser.add_option("-s", "--size", action="store", type="int", dest="size", default=1,
-                          help="sets test size in # of plcs - default is 1")
-        parser.add_option("-q", "--qualifier", action="store", dest="qualifier", default=None,
-                          type="int", 
-                          help="run steps only on plc numbered <qualifier>, starting at 1")
-        parser.add_option("-y", "--rspec-style", action="append", dest="rspec_styles", default=[],
-                          help="pl is for planetlab rspecs, pg is for protogeni")
-        parser.add_option("-k", "--keep-going", action="store", dest="keep_going", default=False,
-                          help="proceeds even if some steps are failing")
-        parser.add_option("-D", "--dbname", action="store", dest="dbname", default=None,
-                           help="Used by plc_db_dump and plc_db_restore")
-        parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, 
-                          help="Run in verbose mode")
-        parser.add_option("-I", "--interactive", action="store_true", dest="interactive", default=False,
-                          help="prompts before each step")
-        parser.add_option("-n", "--dry-run", action="store_true", dest="dry_run", default=False,
-                          help="Show environment and exits")
-        parser.add_option("-t", "--trace", action="store", dest="trace_file", default=None,
-                          help="Trace file location")
-        self.options, self.args = parser.parse_args()
+        parser = ArgumentParser(usage = usage)
+        parser.add_argument("-u", "--url", action="store",  dest="arch_rpms_url", 
+                            help="URL of the arch-dependent RPMS area - for locating what to test")
+        parser.add_argument("-b", "--build", action="store", dest="build_url", 
+                            help="ignored, for legacy only")
+        parser.add_argument("-c", "--config", action="append", dest="config", default=[],
+                            help="Config module - can be set multiple times, or use quotes")
+        parser.add_argument("-p", "--personality", action="store", dest="personality", 
+                            help="personality - as in vbuild-nightly")
+        parser.add_argument("-d", "--pldistro", action="store", dest="pldistro", 
+                            help="pldistro - as in vbuild-nightly")
+        parser.add_argument("-f", "--fcdistro", action="store", dest="fcdistro", 
+                            help="fcdistro - as in vbuild-nightly")
+        parser.add_argument("-e", "--exclude", action="append", dest="exclude", default=[],
+                            help="steps to exclude - can be set multiple times, or use quotes")
+        parser.add_argument("-i", "--ignore", action="append", dest="ignore", default=[],
+                            help="steps to run but ignore - can be set multiple times, or use quotes")
+        parser.add_argument("-a", "--all", action="store_true", dest="all_steps", default=False,
+                            help="Run all default steps")
+        parser.add_argument("-l", "--list", action="store_true", dest="list_steps", default=False,
+                            help="List known steps")
+        parser.add_argument("-V", "--vserver", action="append", dest="ips_bplc", default=[],
+                            help="Specify the set of hostnames for the boxes that host the plcs")
+        parser.add_argument("-P", "--plcs", action="append", dest="ips_vplc", default=[],
+                            help="Specify the set of hostname/IP's to use for vplcs")
+        parser.add_argument("-Q", "--qemus", action="append", dest="ips_bnode", default=[],
+                            help="Specify the set of hostnames for the boxes that host the nodes")
+        parser.add_argument("-N", "--nodes", action="append", dest="ips_vnode", default=[],
+                            help="Specify the set of hostname/IP's to use for vnodes")
+        parser.add_argument("-s", "--size", action="store", dest="size", default=1,
+                            type=int, 
+                            help="set test size in # of plcs - default is 1")
+        parser.add_argument("-q", "--qualifier", action="store", dest="qualifier", default=None,
+                            type=int, 
+                            help="run steps only on plc numbered <qualifier>, starting at 1")
+        parser.add_argument("-y", "--rspec-style", action="append", dest="rspec_styles", default=[],
+                            help="pl is for planetlab rspecs, pg is for protogeni")
+        parser.add_argument("-k", "--keep-going", action="store", dest="keep_going", default=False,
+                            help="proceeds even if some steps are failing")
+        parser.add_argument("-D", "--dbname", action="store", dest="dbname", default=None,
+                            help="Used by plc_db_dump and plc_db_restore")
+        parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False, 
+                            help="Run in verbose mode")
+        parser.add_argument("-I", "--interactive", action="store_true", dest="interactive", default=False,
+                            help="prompts before each step")
+        parser.add_argument("-n", "--dry-run", action="store_true", dest="dry_run", default=False,
+                            help="Show environment and exits")
+        parser.add_argument("-t", "--trace", action="store", dest="trace_file", default=None,
+                            help="Trace file location")
+#        parser.add_argument("-g", "--bonding", action='store', dest='bonding', default=None,
+#                            help="specify build to bond with")
+        parser.add_argument("steps", nargs='*')
+        self.options = parser.parse_args()
 
         # allow things like "run -c 'c1 c2' -c c3"
         def flatten (x):
@@ -280,12 +282,9 @@ steps refer to a method in TestPlc or to a step_* module
         # hack : if sfa is not among the published rpms, skip these tests
         TestPlc.check_whether_build_has_sfa(self.options.arch_rpms_url)
 
-        # no step specified
-        self.options.args = self.args
-        if len(self.args) == 0:
+        # use the default list of steps if unspecified
+        if len(self.options.steps) == 0:
             self.options.steps = TestPlc.default_steps
-        else:
-            self.options.steps = self.args
 
         if self.options.list_steps:
             self.init_steps()
@@ -299,9 +298,9 @@ steps refer to a method in TestPlc or to a step_* module
             self.options.steps = TestPlc.default_steps
 
         # rewrite '-' into '_' in step names
-        self.options.steps = [ step.replace('-', '_') for step in self.options.steps ]
+        self.options.steps   = [ step.replace('-', '_') for step in self.options.steps ]
         self.options.exclude = [ step.replace('-', '_') for step in self.options.exclude ]
-        self.options.ignore = [ step.replace('-', '_') for step in self.options.ignore ]
+        self.options.ignore  = [ step.replace('-', '_') for step in self.options.ignore ]
 
         # technicality, decorate known steps to produce the '_ignore' version
         TestPlc.create_ignore_steps()
