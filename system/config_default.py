@@ -611,9 +611,26 @@ def test_auth_sfa_spec (options,index,rspec_style):
              } 
 
 
-def config (plc_specs,options):
-    result=plc_specs
+def config (plc_specs, options):
+    result = plc_specs
     # plc 'index' starts with 1 
-    for i in range (options.size):
-        result.append(plc(options,i+1))
+    for i in range(options.size):
+        result.append(plc(options, i+1))
     return result
+
+### for creating a sample config interactively
+def sample_test_plc ():
+    class Void: pass
+
+    options = Void()
+    options.size = 1
+    options.rspec_styles = ['pg']
+
+    return config([], options)[0]
+
+if __name__ == '__main__':
+    s = sample_test_plc()
+    print 'Sample plc_spec has the following keys'
+    for k in sorted(s.keys()):
+        print k    
+
