@@ -619,7 +619,7 @@ def config (plc_specs, options):
     return result
 
 ### for creating a sample config interactively
-def sample_test_plc ():
+def sample_test_plc_spec ():
     class Void: pass
 
     options = Void()
@@ -629,7 +629,7 @@ def sample_test_plc ():
     return config([], options)[0]
 
 if __name__ == '__main__':
-    s = sample_test_plc()
+    s = sample_test_plc_spec()
     print 'Sample plc_spec has the following keys'
     for k in sorted(s.keys()):
         print k    
