@@ -12,8 +12,8 @@ import threading
 from optparse import OptionParser    
 
 def myprint(message, id='client'):
-    now=time.strftime("%H:%M:%S", time.localtime())
-    print "*",now,'(%s)' % id, '--',message
+    now = time.strftime("%H:%M:%S", time.localtime())
+    print "* {now} ({id}) -- {message}".format(**locals())
     sys.stdout.flush()
 
 def show_network_status(id):
@@ -127,15 +127,15 @@ class Client:
             mout=i*'ping ' + '\n'
             min=mout.upper()
             if s.send(mout) != len(mout):
-                myprint("cannot send %s"%mout.strip())
+                myprint("cannot send {}".format(mout.strip()))
                 result=False
                 break
             line=s.recv(len(min))
             if line is not line:
-                myprint("unexpected reception\ngot:%s\nexpected: %s",line,min)
-                result=False
+                myprint("unexpected reception\ngot:{}\nexpected: {}".format(line, min))
+                result = False
             else:
-                myprint("OK:%s"%mout.strip())
+                myprint("OK:{}".format(mout.strip()))
             # leave the connection open, but the last one (so 1 iter returns fast)
             if i != options.loops:
                 time.sleep(options.sleep)

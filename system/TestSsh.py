@@ -45,7 +45,7 @@ class TestSsh:
             remote_ip = socket.gethostbyname(hostname)
             return local_ip == remote_ip
         except:
-            utils.header("WARNING : something wrong in is_local_hostname with hostname=%s"%hostname)
+            utils.header("WARNING : something wrong in is_local_hostname with hostname={}".format(hostname))
             return False
 
     # some boxes have their working space in user's homedir (/root), 
@@ -74,13 +74,13 @@ class TestSsh:
     def key_part(self):
         if not self.key:
             return ""
-        return "-i %s " % self.key
+        return "-i {} ".format(self.key)
 
     def hostname_part(self):
         if not self.username:
             return self.hostname
         else:
-            return "%s@%s" % (self.username,self.hostname)
+            return "{}@{}".format(self.username,self.hostname)
     
     # command gets run on the right box
     def actual_command(self, command, keep_stdin=False, dry_run=False, backslash=True):
@@ -136,7 +136,7 @@ class TestSsh:
         if self.is_local():
             return utils.system(command, background)
         self.create_buildname_once(dry_run)
-        return self.run("cd %s ; %s" % (self.fullname(self.buildname), command),
+        return self.run("cd {} ; {}".format(self.fullname(self.buildname), command),
                         background=background, dry_run=dry_run)
 
     def fullname(self, dirname):
@@ -153,13 +153,13 @@ class TestSsh:
         # ab. paths remain as-is
         if not abs:
             if dirname:
-                dirname = "%s/%s" % (self.buildname,dirname)
+                dirname = "{}/{}".format(self.buildname, dirname)
             else:
                 dirname = self.buildname
             dirname = self.fullname(dirname)
         if dirname == '.':
             return
-        return self.run("mkdir -p %s" % dirname, dry_run=dry_run)
+        return self.run("mkdir -p {}".format(dirname), dry_run=dry_run)
 
     def rmdir(self, dirname=None, dry_run=False):
         if self.is_local():
@@ -167,11 +167,11 @@ class TestSsh:
                 return shutil.rmtree(dirname)
             return 0
         if dirname:
-            dirname = "%s/%s" % (self.buildname,dirname)
+            dirname = "{}/{}".format(self.buildname, dirname)
         else:
             dirname = self.buildname
         dirname = self.fullname(dirname)
-        return self.run("rm -rf %s" % dirname, dry_run=dry_run)
+        return self.run("rm -rf {}".format(dirname), dry_run=dry_run)
 
     def create_buildname_once(self, dry_run):
         if self.is_local():
@@ -193,11 +193,11 @@ class TestSsh:
         if recursive:
             scp_command += "-r "
         scp_command += self.key_part()
-        scp_command += "%s %s:%s/%s" % (local_file, self.hostname_part(),
-                                        self.fullname(self.buildname),
-                                        os.path.basename(local_file) or ".")
+        scp_command += "{} {}:{}/{}".format(local_file, self.hostname_part(),
+                                            self.fullname(self.buildname),
+                                            os.path.basename(local_file) or ".")
         if dry_run:
-            utils.header("DRY RUN TestSsh.copy %s" % scp_command)
+            utils.header("DRY RUN TestSsh.copy {}".format(scp_command))
             # need to be consistent with the non-dry-run mode
             return 0
         return utils.system(scp_command)
@@ -207,15 +207,15 @@ class TestSsh:
         if self.is_local():
             dest = ""
         else:
-            dest = "%s:" % self.hostname_part()
+            dest = "{}:".format(self.hostname_part())
         scp_command = "scp "
         scp_command += TestSsh.std_options
         if recursive:
             scp_command += "-r "
         scp_command += self.key_part()
-        scp_command += "%s %s%s" % (local_file, dest, remote_file)
+        scp_command += "{} {}{}".format(local_file, dest, remote_file)
         if dry_run:
-            utils.header("DRY RUN TestSsh.copy %s" % scp_command)
+            utils.header("DRY RUN TestSsh.copy {}".format(scp_command))
             # need to be consistent with the non-dry-run mode
             return 0
         return utils.system(scp_command)
@@ -228,7 +228,7 @@ class TestSsh:
             command="cp "
             if recursive:
                 command += "-r "
-            command += "%s %s" % (remote_file,local_file)
+            command += "{} {}".format(remote_file, local_file)
         else:
             command = "scp "
             if not dry_run:
@@ -240,9 +240,9 @@ class TestSsh:
             if remote_file.find("/") == 0:
                 remote_path = remote_file
             else:
-                remote_path = "%s/%s" % (self.buildname, remote_file)
+                remote_path = "{}/{}".format(self.buildname, remote_file)
                 remote_path = self.fullname(remote_path)
-            command += "%s:%s %s" % (self.hostname_part(), remote_path, local_file)
+            command += "{}:{} {}".format(self.hostname_part(), remote_path, local_file)
         return utils.system(command)
 
     # this is only to avoid harmless message when host cannot be identified
@@ -250,7 +250,7 @@ class TestSsh:
     # the only place where this is needed is when tring to reach a slice in a node,
     # which is done from the test master box
     def clear_known_hosts(self):
-        known_hosts = "%s/.ssh/known_hosts" % os.getenv("HOME")
-        utils.header("Clearing entry for %s in %s" % (self.hostname, known_hosts))
-        return utils.system("sed -i -e /^%s/d %s" % (self.hostname, known_hosts))
+        known_hosts = "{}/.ssh/known_hosts".format(os.getenv("HOME"))
+        utils.header("Clearing entry for {} in {}".format(self.hostname, known_hosts))
+        return utils.system("sed -i -e /^{}/d {}".format(self.hostname, known_hosts))
         

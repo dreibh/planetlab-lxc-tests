@@ -30,7 +30,7 @@ has_sfa_cache_filename="sfa-cache"
 # step methods must take (self) and return a boolean (options is a member of the class)
 
 def standby(minutes, dry_run):
-    utils.header('Entering StandBy for %d mn'%minutes)
+    utils.header('Entering StandBy for {:d} mn'.format(minutes))
     if dry_run:
         print 'dry_run'
     else:
@@ -92,7 +92,7 @@ def ignore_result(method):
         ref_name = method.__name__.replace('_ignore', '').replace('force_', '')
         ref_method = TestPlc.__dict__[ref_name]
         result = ref_method(self)
-        print "Actual (but ignored) result for %(ref_name)s is %(result)s" % locals()
+        print "Actual (but ignored) result for {ref_name} is {result}".format(**locals())
         return Ignored(result)
     name = method.__name__.replace('_ignore', '').replace('force_', '')
     ignoring.__name__ = name
@@ -228,12 +228,12 @@ class TestPlc:
     def _has_sfa_cached(rpms_url):
         if os.path.isfile(has_sfa_cache_filename):
             cached = file(has_sfa_cache_filename).read() == "yes"
-            utils.header("build provides SFA (cached):%s" % cached)
+            utils.header("build provides SFA (cached):{}".format(cached))
             return cached
         # warning, we're now building 'sface' so let's be a bit more picky
         # full builds are expected to return with 0 here
         utils.header("Checking if build provides SFA package...")
-        retcod = os.system("curl --silent %s/ | grep -q sfa-"%rpms_url) == 0
+        retcod = os.system("curl --silent {}/ | grep -q sfa-".format(rpms_url)) == 0
         encoded = 'yes' if retcod else 'no'
         with open(has_sfa_cache_filename,'w')as out:
             out.write(encoded)
@@ -259,7 +259,7 @@ class TestPlc:
 	self.test_ssh = TestSsh(self.plc_spec['host_box'], self.options.buildname)
         self.vserverip = plc_spec['vserverip']
         self.vservername = plc_spec['vservername']
-        self.url = "https://%s:443/PLCAPI/" % plc_spec['vserverip']
+        self.url = "https://{}:443/PLCAPI/".format(plc_spec['vserverip'])
 	self.apiserver = TestApiserver(self.url, options.dry_run)
         (self.ssh_node_boot_timeout, self.ssh_node_boot_silent) = plc_spec['ssh_node_boot_timers']
         (self.ssh_node_debug_timeout, self.ssh_node_debug_silent) = plc_spec['ssh_node_debug_timers']
@@ -269,7 +269,7 @@ class TestPlc:
 
     def name(self):
         name = self.plc_spec['name']
-        return "%s.%s" % (name,self.vservername)
+        return "{}.{}".format(name,self.vservername)
 
     def hostname(self):
         return self.plc_spec['host_box']
@@ -308,27 +308,27 @@ class TestPlc:
     def host_to_guest(self, command):
         vservername = self.vservername
         personality = self.options.personality
-        raw = "%(personality)s virsh -c lxc:/// lxc-enter-namespace %(vservername)s" % locals()
+        raw = "{personality} virsh -c lxc:/// lxc-enter-namespace {vservername}".format(**locals())
         # f14 still needs some extra help
         if self.options.fcdistro == 'f14':
-            raw +=" -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin %(command)s" % locals()
+            raw +=" -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin {command}".format(**locals())
         else:
-            raw +=" -- /usr/bin/env %(command)s" % locals()
+            raw +=" -- /usr/bin/env {command}".format(**locals())
         return raw
     
     # this /vservers thing is legacy...
     def vm_root_in_host(self):
-        return "/vservers/%s/" % (self.vservername)
+        return "/vservers/{}/".format(self.vservername)
 
     def vm_timestamp_path(self):
-        return "/vservers/%s/%s.timestamp" % (self.vservername,self.vservername)
+        return "/vservers/{}/{}.timestamp".format(self.vservername, self.vservername)
 
     #start/stop the vserver
     def start_guest_in_host(self):
-        return "virsh -c lxc:/// start %s" % (self.vservername)
+        return "virsh -c lxc:/// start {}".format(self.vservername)
     
     def stop_guest_in_host(self):
-        return "virsh -c lxc:/// destroy %s" % (self.vservername)
+        return "virsh -c lxc:/// destroy {}".format(self.vservername)
     
     # xxx quick n dirty
     def run_in_guest_piped(self,local,remote):
@@ -338,13 +338,13 @@ class TestPlc:
     def yum_check_installed(self, rpms):
         if isinstance(rpms, list): 
             rpms=" ".join(rpms)
-        return self.run_in_guest("rpm -q %s"%rpms) == 0
+        return self.run_in_guest("rpm -q {}".format(rpms)) == 0
         
     # does a yum install in the vs, ignore yum retcod, check with rpm
     def yum_install(self, rpms):
         if isinstance(rpms, list): 
             rpms=" ".join(rpms)
-        self.run_in_guest("yum -y install %s" % rpms)
+        self.run_in_guest("yum -y install {}".format(rpms))
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
         self.run_in_guest("yum-complete-transaction -y")
         return self.yum_check_installed(rpms)
@@ -362,27 +362,27 @@ class TestPlc:
                 return site
             if site['site_fields']['login_base'] == sitename:
                 return site
-        raise Exception,"Cannot locate site %s" % sitename
+        raise Exception,"Cannot locate site {}".format(sitename)
         
     def locate_node(self, nodename):
         for site in self.plc_spec['sites']:
             for node in site['nodes']:
                 if node['name'] == nodename:
                     return site, node
-        raise Exception, "Cannot locate node %s" % nodename
+        raise Exception, "Cannot locate node {}".format(nodename)
         
     def locate_hostname(self, hostname):
         for site in self.plc_spec['sites']:
             for node in site['nodes']:
                 if node['node_fields']['hostname'] == hostname:
                     return(site, node)
-        raise Exception,"Cannot locate hostname %s" % hostname
+        raise Exception,"Cannot locate hostname {}".format(hostname)
         
     def locate_key(self, key_name):
         for key in self.plc_spec['keys']:
             if key['key_name'] == key_name:
                 return key
-        raise Exception,"Cannot locate key %s" % key_name
+        raise Exception,"Cannot locate key {}".format(key_name)
 
     def locate_private_key_from_key_names(self, key_names):
         # locate the first avail. key
@@ -403,7 +403,7 @@ class TestPlc:
         for slice in self.plc_spec['slices']:
             if slice['slice_fields']['name'] == slicename:
                 return slice
-        raise Exception,"Cannot locate slice %s" % slicename
+        raise Exception,"Cannot locate slice {}".format(slicename)
 
     def all_sliver_objs(self):
         result = []
@@ -521,20 +521,20 @@ class TestPlc:
         "print cut'n paste-able stuff to export env variables to your shell"
         # guess local domain from hostname
         if TestPlc.exported_id > 1: 
-            print "export GUESTHOSTNAME%d=%s" % (TestPlc.exported_id, self.plc_spec['vservername'])
+            print "export GUESTHOSTNAME{:d}={}".format(TestPlc.exported_id, self.plc_spec['vservername'])
             return True
         TestPlc.exported_id += 1
         domain = socket.gethostname().split('.',1)[1]
-        fqdn   = "%s.%s" % (self.plc_spec['host_box'], domain)
-        print "export BUILD=%s" % self.options.buildname
-        print "export PLCHOSTLXC=%s" % fqdn
-        print "export GUESTNAME=%s" % self.plc_spec['vservername']
+        fqdn   = "{}.{}".format(self.plc_spec['host_box'], domain)
+        print "export BUILD={}".format(self.options.buildname)
+        print "export PLCHOSTLXC={}".format(fqdn)
+        print "export GUESTNAME={}".format(self.plc_spec['vservername'])
         vplcname = self.plc_spec['vservername'].split('-')[-1]
-        print "export GUESTHOSTNAME=%s.%s"%(vplcname, domain)
+        print "export GUESTHOSTNAME={}.{}".format(vplcname, domain)
         # find hostname of first node
         hostname, qemubox = self.all_node_infos()[0]
-        print "export KVMHOST=%s.%s" % (qemubox, domain)
-        print "export NODE=%s" % (hostname)
+        print "export KVMHOST={}.{}".format(qemubox, domain)
+        print "export NODE={}".format(hostname)
         return True
 
     # entry point
@@ -616,7 +616,7 @@ class TestPlc:
                 print '+       ',k,v
 
     def display_node_spec(self, node):
-        print "+           node=%s host_box=%s" % (node['name'],node['host_box']),
+        print "+           node={} host_box={}".format(node['name'], node['host_box']),
         print "hostname=", node['node_fields']['hostname'],
         print "ip=", node['interface_fields']['ip']
         if self.options.verbose:
@@ -631,17 +631,17 @@ class TestPlc:
     def display_mapping_plc(plc_spec):
         print '+ MyPLC',plc_spec['name']
         # WARNING this would not be right for lxc-based PLC's - should be harmless though
-        print '+\tvserver address = root@%s:/vservers/%s' % (plc_spec['host_box'], plc_spec['vservername'])
-        print '+\tIP = %s/%s' % (plc_spec['settings']['PLC_API_HOST'], plc_spec['vserverip'])
+        print '+\tvserver address = root@{}:/vservers/{}'.format(plc_spec['host_box'], plc_spec['vservername'])
+        print '+\tIP = {}/{}'.format(plc_spec['settings']['PLC_API_HOST'], plc_spec['vserverip'])
         for site_spec in plc_spec['sites']:
             for node_spec in site_spec['nodes']:
                 TestPlc.display_mapping_node(node_spec)
 
     @staticmethod
     def display_mapping_node(node_spec):
-        print '+   NODE %s' % (node_spec['name'])
-        print '+\tqemu box %s' % node_spec['host_box']
-        print '+\thostname=%s' % node_spec['node_fields']['hostname']
+        print '+   NODE {}'.format(node_spec['name'])
+        print '+\tqemu box {}'.format(node_spec['host_box'])
+        print '+\thostname={}'.format(node_spec['node_fields']['hostname'])
 
     # write a timestamp in /vservers/<>.timestamp
     # cannot be inside the vserver, that causes vserver .. build to cough
@@ -652,18 +652,18 @@ class TestPlc:
         # a first approx. is to store the timestamp close to the VM root like vs does
         stamp_path = self.vm_timestamp_path()
         stamp_dir = os.path.dirname(stamp_path)
-        utils.system(self.test_ssh.actual_command("mkdir -p %s" % stamp_dir))
-        return utils.system(self.test_ssh.actual_command("echo %d > %s" % (now, stamp_path))) == 0
+        utils.system(self.test_ssh.actual_command("mkdir -p {}".format(stamp_dir)))
+        return utils.system(self.test_ssh.actual_command("echo {:d} > {}".format(now, stamp_path))) == 0
         
     # this is called inconditionnally at the beginning of the test sequence 
     # just in case this is a rerun, so if the vm is not running it's fine
     def plcvm_delete(self):
         "vserver delete the test myplc"
         stamp_path = self.vm_timestamp_path()
-        self.run_in_host("rm -f %s" % stamp_path)
-        self.run_in_host("virsh -c lxc:// destroy %s" % self.vservername)
-        self.run_in_host("virsh -c lxc:// undefine %s" % self.vservername)
-        self.run_in_host("rm -fr /vservers/%s" % self.vservername)
+        self.run_in_host("rm -f {}".format(stamp_path))
+        self.run_in_host("virsh -c lxc:// destroy {}".format(self.vservername))
+        self.run_in_host("virsh -c lxc:// undefine {}".format(self.vservername))
+        self.run_in_host("rm -fr /vservers/{}".format(self.vservername))
         return True
 
     ### install
@@ -696,19 +696,19 @@ class TestPlc:
         script = "lbuild-initvm.sh"
         script_options = ""
         # pass the vbuild-nightly options to [lv]test-initvm
-        script_options += " -p %s" % self.options.personality
-        script_options += " -d %s" % self.options.pldistro
-        script_options += " -f %s" % self.options.fcdistro
-        script_options += " -r %s" % repo_url
+        script_options += " -p {}".format(self.options.personality)
+        script_options += " -d {}".format(self.options.pldistro)
+        script_options += " -f {}".format(self.options.fcdistro)
+        script_options += " -r {}".format(repo_url)
         vserver_name = self.vservername
         try:
             vserver_hostname = socket.gethostbyaddr(self.vserverip)[0]
-            script_options += " -n %s" % vserver_hostname
+            script_options += " -n {}".format(vserver_hostname)
         except:
-            print "Cannot reverse lookup %s" % self.vserverip
+            print "Cannot reverse lookup {}".format(self.vserverip)
             print "This is considered fatal, as this might pollute the test results"
             return False
-        create_vserver="%(build_dir)s/%(script)s %(script_options)s %(vserver_name)s" % locals()
+        create_vserver="{build_dir}/{script} {script_options} {vserver_name}".format(**locals())
         return self.run_in_host(create_vserver) == 0
 
     ### install_rpm 
@@ -725,14 +725,14 @@ class TestPlc:
         elif self.options.personality == "linux64":
             arch = "x86_64"
         else:
-            raise Exception, "Unsupported personality %r"%self.options.personality
-        nodefamily = "%s-%s-%s" % (self.options.pldistro, self.options.fcdistro, arch)
+            raise Exception, "Unsupported personality {}".format(self.options.personality)
+        nodefamily = "{}-{}-{}".format(self.options.pldistro, self.options.fcdistro, arch)
 
         pkgs_list=[]
-        pkgs_list.append("slicerepo-%s" % nodefamily)
+        pkgs_list.append("slicerepo-{}".format(nodefamily))
         pkgs_list.append("myplc")
-        pkgs_list.append("noderepo-%s" % nodefamily)
-        pkgs_list.append("nodeimage-%s-plain" % nodefamily)
+        pkgs_list.append("noderepo-{}".format(nodefamily))
+        pkgs_list.append("nodeimage-{}-plain".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install(pkgs_list)
 
@@ -744,15 +744,15 @@ class TestPlc:
     ### 
     def plc_configure(self):
         "run plc-config-tty"
-        tmpname = '%s.plc-config-tty' % self.name()
+        tmpname = '{}.plc-config-tty'.format(self.name())
         with open(tmpname,'w') as fileconf:
             for (var,value) in self.plc_spec['settings'].iteritems():
-                fileconf.write('e %s\n%s\n'%(var,value))
+                fileconf.write('e {}\n{}\n'.format(var, value))
             fileconf.write('w\n')
             fileconf.write('q\n')
-        utils.system('cat %s' % tmpname)
-        self.run_in_guest_piped('cat %s' % tmpname, 'plc-config-tty')
-        utils.system('rm %s' % tmpname)
+        utils.system('cat {}'.format(tmpname))
+        self.run_in_guest_piped('cat {}'.format(tmpname), 'plc-config-tty')
+        utils.system('rm {}'.format(tmpname))
         return True
 
 # f14 is a bit odd in this respect, although this worked fine in guests up to f18
@@ -770,13 +770,13 @@ class TestPlc:
     def start_stop_service(self, service, start_or_stop):
         "utility to start/stop a service with the special trick for f14"
         if self.options.fcdistro != 'f14':
-            return self.run_in_guest("service %s %s" % (service, start_or_stop)) == 0
+            return self.run_in_guest("service {} {}".format(service, start_or_stop)) == 0
         else:
             # patch /sbin/service so it does not reset environment
             self.run_in_guest('sed -i -e \\"s,env -i,env,\\" /sbin/service')
             # this is because our own scripts in turn call service 
-            return self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true service %s %s" % \
-                                     (service, start_or_stop)) == 0
+            return self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true service {} {}"\
+                                     .format(service, start_or_stop)) == 0
 
     def plc_start(self):
         "service plc start"
@@ -820,8 +820,8 @@ class TestPlc:
         overall = True
         prefix = 'debug_ssh_key'
         for ext in ['pub', 'rsa'] :
-            src = "%(vm_root)s/etc/planetlab/%(prefix)s.%(ext)s" % locals()
-            dst = "keys/%(vservername)s-debug.%(ext)s" % locals()
+            src = "{vm_root}/etc/planetlab/{prefix}.{ext}".format(**locals())
+            dst = "keys/{vservername}-debug.{ext}".format(**locals())
             if self.test_ssh.fetch(src, dst) != 0:
                 overall=False
         return overall
@@ -838,13 +838,13 @@ class TestPlc:
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite(self,site_spec)
             if (action != "add"):
-                utils.header("Deleting site %s in %s" % (test_site.name(), self.name()))
+                utils.header("Deleting site {} in {}".format(test_site.name(), self.name()))
                 test_site.delete_site()
                 # deleted with the site
                 #test_site.delete_users()
                 continue
             else:
-                utils.header("Creating site %s & users in %s" % (test_site.name(), self.name()))
+                utils.header("Creating site {} & users in {}".format(test_site.name(), self.name()))
                 test_site.create_site()
                 test_site.create_users()
         return True
@@ -873,15 +873,15 @@ class TestPlc:
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite(self, site_spec)
             if action != "add":
-                utils.header("Deleting nodes in site %s" % test_site.name())
+                utils.header("Deleting nodes in site {}".format(test_site.name()))
                 for node_spec in site_spec['nodes']:
                     test_node = TestNode(self, test_site, node_spec)
-                    utils.header("Deleting %s" % test_node.name())
+                    utils.header("Deleting {}".format(test_node.name()))
                     test_node.delete_node()
             else:
-                utils.header("Creating nodes for site %s in %s" % (test_site.name(), self.name()))
+                utils.header("Creating nodes for site {} in {}".format(test_site.name(), self.name()))
                 for node_spec in site_spec['nodes']:
-                    utils.pprint('Creating node %s' % node_spec, node_spec)
+                    utils.pprint('Creating node {}'.format(node_spec), node_spec)
                     test_node = TestNode(self, test_site, node_spec)
                     test_node.create_node()
         return True
@@ -929,20 +929,20 @@ class TestPlc:
             lease_addition = self.apiserver.AddLeases(self.auth_root(), nodes, lease_spec['slice'],
                                                       lease_spec['t_from'],lease_spec['t_until'])
             if lease_addition['errors']:
-                utils.header("Cannot create leases, %s"%lease_addition['errors'])
+                utils.header("Cannot create leases, {}".format(lease_addition['errors']))
                 ok = False
             else:
-                utils.header('Leases on nodes %r for %s from %d (%s) until %d (%s)' % \
-                              (nodes, lease_spec['slice'],
-                               lease_spec['t_from'],  TestPlc.timestamp_printable(lease_spec['t_from']),
-                               lease_spec['t_until'], TestPlc.timestamp_printable(lease_spec['t_until'])))
+                utils.header('Leases on nodes {} for {} from {:d} ({}) until {:d} ({})'\
+                             .format(nodes, lease_spec['slice'],
+                                     lease_spec['t_from'],  TestPlc.timestamp_printable(lease_spec['t_from']),
+                                     lease_spec['t_until'], TestPlc.timestamp_printable(lease_spec['t_until'])))
                 
         return ok
 
     def delete_leases(self):
         "remove all leases in the myplc side"
         lease_ids = [ l['lease_id'] for l in self.apiserver.GetLeases(self.auth_root())]
-        utils.header("Cleaning leases %r" % lease_ids)
+        utils.header("Cleaning leases {}".format(lease_ids))
         self.apiserver.DeleteLeases(self.auth_root(), lease_ids)
         return True
 
@@ -953,10 +953,10 @@ class TestPlc:
         for l in leases:
             current = l['t_until'] >= now
             if self.options.verbose or current:
-                utils.header("%s %s from %s until %s" % \
-                             (l['hostname'], l['name'],
-                              TestPlc.timestamp_printable(l['t_from']), 
-                              TestPlc.timestamp_printable(l['t_until'])))
+                utils.header("{} {} from {} until {}"\
+                             .format(l['hostname'], l['name'],
+                                     TestPlc.timestamp_printable(l['t_from']), 
+                                     TestPlc.timestamp_printable(l['t_until'])))
         return True
 
     # create nodegroups if needed, and populate
@@ -988,7 +988,7 @@ class TestPlc:
                 else:
                     tag_type_id = self.apiserver.AddTagType(auth,
                                                             {'tagname' : nodegroupname,
-                                                             'description' : 'for nodegroup %s' % nodegroupname,
+                                                             'description' : 'for nodegroup {}'.format(nodegroupname),
                                                              'category' : 'test'})
                 print 'located tag (type)', nodegroupname, 'as', tag_type_id
                 # create nodegroup
@@ -1076,16 +1076,16 @@ class TestPlc:
                 except:
                     return False
             def message(self):
-                return "CompleterTaskBootState with node %s" % self.hostname
+                return "CompleterTaskBootState with node {}".format(self.hostname)
             def failure_epilogue(self):
-                print "node %s in state %s - expected %s" %\
-                    (self.hostname, self.last_boot_state, target_boot_state)
+                print "node {} in state {} - expected {}"\
+                    .format(self.hostname, self.last_boot_state, target_boot_state)
                 
         timeout = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
         period   = timedelta(seconds=period_seconds)
         # the nodes that haven't checked yet - start with a full list and shrink over time
-        utils.header("checking nodes boot state (expected %s)" % target_boot_state)
+        utils.header("checking nodes boot state (expected {})".format(target_boot_state))
         tasks = [ CompleterTaskBootState(self,hostname) \
                       for (hostname,_) in self.all_node_infos() ]
         message = 'check_boot_state={}'.format(target_boot_state)
@@ -1105,10 +1105,10 @@ class TestPlc:
             def __init__(self, hostname):
                 self.hostname = hostname
             def run(self, silent):
-                command="ping -c 1 -w 1 %s >& /dev/null" % self.hostname
+                command="ping -c 1 -w 1 {} >& /dev/null".format(self.hostname)
                 return utils.system(command, silent=silent) == 0
             def failure_epilogue(self):
-                print "Cannot ping node with name %s" % self.hostname
+                print "Cannot ping node with name {}".format(self.hostname)
         timeout = timedelta(seconds = timeout_seconds)
         graceout = timeout
         period = timedelta(seconds = period_seconds)
@@ -1130,12 +1130,12 @@ class TestPlc:
         if debug: 
             message = "debug"
             completer_message = 'ssh_node_debug'
-            local_key = "keys/%(vservername)s-debug.rsa" % locals()
+            local_key = "keys/{vservername}-debug.rsa".format(**locals())
         else: 
             message = "boot"
             completer_message = 'ssh_node_boot'
 	    local_key = "keys/key_admin.rsa"
-        utils.header("checking ssh access to nodes (expected in %s mode)" % message)
+        utils.header("checking ssh access to nodes (expected in {} mode)".format(message))
         node_infos = self.all_node_infos()
         tasks = [ CompleterTaskNodeSsh(nodename, qemuname, local_key,
                                         boot_state=message, dry_run=self.options.dry_run) \
@@ -1194,10 +1194,10 @@ class TestPlc:
             def actual_run(self):
                 return self.test_sliver.check_initscript_stamp(self.stamp)
             def message(self):
-                return "initscript checker for %s" % self.test_sliver.name()
+                return "initscript checker for {}".format(self.test_sliver.name())
             def failure_epilogue(self):
-                print "initscript stamp %s not found in sliver %s"%\
-                    (self.stamp, self.test_sliver.name())
+                print "initscript stamp {} not found in sliver {}"\
+                    .format(self.stamp, self.test_sliver.name())
             
         tasks = []
         for slice_spec in self.plc_spec['slices']:
@@ -1224,7 +1224,7 @@ class TestPlc:
     def initscripts(self):
         "create initscripts with PLCAPI"
         for initscript in self.plc_spec['initscripts']:
-            utils.pprint('Adding Initscript in plc %s' % self.plc_spec['name'], initscript)
+            utils.pprint('Adding Initscript in plc {}'.format(self.plc_spec['name']), initscript)
             self.apiserver.AddInitScript(self.auth_root(), initscript['initscript_fields'])
         return True
 
@@ -1232,7 +1232,7 @@ class TestPlc:
         "delete initscripts with PLCAPI"
         for initscript in self.plc_spec['initscripts']:
             initscript_name = initscript['initscript_fields']['name']
-            print('Attempting to delete %s in plc %s' % (initscript_name, self.plc_spec['name']))
+            print('Attempting to delete {} in plc {}'.format(initscript_name, self.plc_spec['name']))
             try:
                 self.apiserver.DeleteInitScript(self.auth_root(), initscript_name)
                 print initscript_name, 'deleted'
@@ -1306,11 +1306,11 @@ class TestPlc:
 
     def _speed_up_slices(self, p, r):
         # create the template on the server-side 
-        template = "%s.nodemanager" % self.name()
+        template = "{}.nodemanager".format(self.name())
         with open(template,"w") as template_file:
-            template_file.write('OPTIONS="-p %s -r %s -d"\n'%(p,r))
+            template_file.write('OPTIONS="-p {} -r {} -d"\n'.format(p, r))
         in_vm = "/var/www/html/PlanetLabConf/nodemanager"
-        remote = "%s/%s" % (self.vm_root_in_host(), in_vm)
+        remote = "{}/{}".format(self.vm_root_in_host(), in_vm)
         self.test_ssh.copy_abs(template, remote)
         # Add a conf file
         if not self.apiserver.GetConfFiles(self.auth_root(),
@@ -1323,11 +1323,11 @@ class TestPlc:
 
     def debug_nodemanager(self):
         "sets verbose mode for nodemanager, and speeds up cycle even more (needs speed_up_slices first)"
-        template = "%s.nodemanager" % self.name()
+        template = "{}.nodemanager".format(self.name())
         with open(template,"w") as template_file:
             template_file.write('OPTIONS="-p 10 -r 6 -v -d"\n')
         in_vm = "/var/www/html/PlanetLabConf/nodemanager"
-        remote = "%s/%s" % (self.vm_root_in_host(), in_vm)
+        remote = "{}/{}".format(self.vm_root_in_host(), in_vm)
         self.test_ssh.copy_abs(template, remote)
         return True
 
@@ -1344,7 +1344,7 @@ class TestPlc:
                 return plc.locate_sliver_obj(nodename, slicename)
             except:
                 pass
-        raise Exception, "Cannot locate sliver %s@%s among all PLCs" % (nodename, slicename)
+        raise Exception, "Cannot locate sliver {}@{} among all PLCs".format(nodename, slicename)
 
     # implement this one as a cross step so that we can take advantage of different nodes
     # in multi-plcs mode
@@ -1363,9 +1363,9 @@ class TestPlc:
             def actual_run(self):
                 return self.test_sliver.check_tcp_ready(port = 9999)
             def message(self):
-                return "network ready checker for %s" % self.test_sliver.name()
+                return "network ready checker for {}".format(self.test_sliver.name())
             def failure_epilogue(self):
-                print "could not bind port from sliver %s" % self.test_sliver.name()
+                print "could not bind port from sliver {}".format(self.test_sliver.name())
 
         sliver_specs = {}
         tasks = []
@@ -1374,10 +1374,10 @@ class TestPlc:
             # locate the TestSliver instances involved, and cache them in the spec instance
             spec['s_sliver'] = self.locate_sliver_obj_cross(spec['server_node'], spec['server_slice'], other_plcs)
             spec['c_sliver'] = self.locate_sliver_obj_cross(spec['client_node'], spec['client_slice'], other_plcs)
-            message = "Will check TCP between s=%s and c=%s" % \
-                      (spec['s_sliver'].name(), spec['c_sliver'].name())
+            message = "Will check TCP between s={} and c={}"\
+                      .format(spec['s_sliver'].name(), spec['c_sliver'].name())
             if 'client_connect' in spec:
-                message += " (using %s)" % spec['client_connect']
+                message += " (using {})".format(spec['client_connect'])
             utils.header(message)
             # we need to check network presence in both slivers, but also
             # avoid to insert a sliver several times
@@ -1434,9 +1434,9 @@ class TestPlc:
             def actual_run(self): 
                 return self.test_node._check_system_slice(slicename, dry_run=self.dry_run)
             def message(self): 
-                return "System slice %s @ %s" % (slicename, self.test_node.name())
+                return "System slice {} @ {}".format(slicename, self.test_node.name())
             def failure_epilogue(self): 
-                print "COULD not find system slice %s @ %s"%(slicename, self.test_node.name())
+                print "COULD not find system slice {} @ {}".format(slicename, self.test_node.name())
         timeout = timedelta(minutes=timeout_minutes)
         silent  = timedelta(0)
         period  = timedelta(seconds=period_seconds)
@@ -1448,7 +1448,7 @@ class TestPlc:
         "runs PLCAPI stress test, that checks Add/Update/Delete on all types - preserves contents"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
-        remote = "%s/%s" % (self.vm_root_in_host(), location)
+        remote = "{}/{}".format(self.vm_root_in_host(), location)
         self.test_ssh.copy_abs("plcsh_stress_test.py", remote)
         command = location
         command += " -- --check"
@@ -1503,16 +1503,17 @@ class TestPlc:
         utils.header("********** Regular yum failed - special workaround in place, 2nd chance")
         code, cached_rpm_path = \
                 utils.output_of(self.actual_command_in_guest('find /var/cache/yum -name sfa-client\*.rpm'))
-        utils.header("rpm_path=<<%s>>" % rpm_path)
+        utils.header("rpm_path=<<{}>>".format(rpm_path))
         # just for checking 
-        self.run_in_guest("rpm -i %s" % cached_rpm_path)
+        self.run_in_guest("rpm -i {}".format(cached_rpm_path))
         return self.yum_check_installed("sfa-client")
 
     def sfa_dbclean(self):
         "thoroughly wipes off the SFA database"
         return self.run_in_guest("sfaadmin reg nuke") == 0 or \
             self.run_in_guest("sfa-nuke.py") == 0 or \
-            self.run_in_guest("sfa-nuke-plc.py") == 0
+            self.run_in_guest("sfa-nuke-plc.py") == 0 or \
+            self.run_in_guest("sfaadmin registry nuke") == 0             
 
     def sfa_fsclean(self):
         "cleanup /etc/sfa/trusted_roots and /var/lib/sfa"
@@ -1529,7 +1530,7 @@ class TestPlc:
             try:
                 self.apiserver.DeleteSite(self.auth_root(),login_base)
             except:
-                print "Site %s already absent from PLC db"%login_base
+                print "Site {} already absent from PLC db".format(login_base)
 
             for spec_name in ['pi_spec','user_spec']:
                 user_spec = auth_sfa_spec[spec_name]
@@ -1538,7 +1539,7 @@ class TestPlc:
                     self.apiserver.DeletePerson(self.auth_root(),username)
                 except: 
                     # this in fact is expected as sites delete their members
-                    #print "User %s already absent from PLC db"%username
+                    #print "User {} already absent from PLC db".format(username)
                     pass
 
         print "REMEMBER TO RUN sfa_import AGAIN"
@@ -1575,28 +1576,28 @@ class TestPlc:
 
     ###
     def confdir(self):
-        dirname = "conf.%s" % self.plc_spec['name']
+        dirname = "conf.{}".format(self.plc_spec['name'])
         if not os.path.isdir(dirname):
-            utils.system("mkdir -p %s" % dirname)
+            utils.system("mkdir -p {}".format(dirname))
         if not os.path.isdir(dirname):
-            raise Exception,"Cannot create config dir for plc %s" % self.name()
+            raise Exception,"Cannot create config dir for plc {}".format(self.name())
         return dirname
 
     def conffile(self, filename):
-        return "%s/%s" % (self.confdir(),filename)
+        return "{}/{}".format(self.confdir(), filename)
     def confsubdir(self, dirname, clean, dry_run=False):
-        subdirname = "%s/%s" % (self.confdir(),dirname)
+        subdirname = "{}/{}".format(self.confdir(), dirname)
         if clean:
-            utils.system("rm -rf %s" % subdirname)
+            utils.system("rm -rf {}".format(subdirname))
         if not os.path.isdir(subdirname): 
-            utils.system("mkdir -p %s" % subdirname)
+            utils.system("mkdir -p {}".format(subdirname))
         if not dry_run and not os.path.isdir(subdirname):
-            raise "Cannot create config subdir %s for plc %s" % (dirname,self.name())
+            raise "Cannot create config subdir {} for plc {}".format(dirname, self.name())
         return subdirname
         
     def conffile_clean(self, filename):
         filename=self.conffile(filename)
-        return utils.system("rm -rf %s" % filename)==0
+        return utils.system("rm -rf {}".format(filename))==0
     
     ###
     def sfa_configure(self):
@@ -1604,22 +1605,22 @@ class TestPlc:
         tmpname = self.conffile("sfa-config-tty")
         with open(tmpname,'w') as fileconf:
             for (var,value) in self.plc_spec['sfa']['settings'].iteritems():
-                fileconf.write('e %s\n%s\n'%(var,value))
+                fileconf.write('e {}\n{}\n'.format(var, value))
             fileconf.write('w\n')
             fileconf.write('R\n')
             fileconf.write('q\n')
-        utils.system('cat %s' % tmpname)
-        self.run_in_guest_piped('cat %s' % tmpname, 'sfa-config-tty')
+        utils.system('cat {}'.format(tmpname))
+        self.run_in_guest_piped('cat {}'.format(tmpname), 'sfa-config-tty')
         return True
 
     def aggregate_xml_line(self):
         port = self.plc_spec['sfa']['neighbours-port']
-        return '<aggregate addr="%s" hrn="%s" port="%r"/>' % \
-            (self.vserverip, self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH'], port)
+        return '<aggregate addr="{}" hrn="{}" port="{}"/>'\
+            .format(self.vserverip, self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH'], port)
 
     def registry_xml_line(self):
-        return '<registry addr="%s" hrn="%s" port="12345"/>' % \
-            (self.vserverip, self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH'])
+        return '<registry addr="{}" hrn="{}" port="12345"/>'\
+            .format(self.vserverip, self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH'])
 
 
     # a cross step that takes all other plcs in argument
@@ -1630,18 +1631,18 @@ class TestPlc:
             return True
         agg_fname = self.conffile("agg.xml")
         with open(agg_fname,"w") as out:
-            out.write("<aggregates>%s</aggregates>\n" % \
-                      " ".join([ plc.aggregate_xml_line() for plc in other_plcs ]))
-        utils.header("(Over)wrote %s" % agg_fname)
+            out.write("<aggregates>{}</aggregates>\n"\
+                      .format(" ".join([ plc.aggregate_xml_line() for plc in other_plcs ])))
+        utils.header("(Over)wrote {}".format(agg_fname))
         reg_fname=self.conffile("reg.xml")
         with open(reg_fname,"w") as out:
-            out.write("<registries>%s</registries>\n" % \
-                      " ".join([ plc.registry_xml_line() for plc in other_plcs ]))
-        utils.header("(Over)wrote %s" % reg_fname)
+            out.write("<registries>{}</registries>\n"\
+                      .format(" ".join([ plc.registry_xml_line() for plc in other_plcs ])))
+        utils.header("(Over)wrote {}".format(reg_fname))
         return self.test_ssh.copy_abs(agg_fname,
-                                      '/%s/etc/sfa/aggregates.xml' % self.vm_root_in_host()) == 0 \
+                                      '/{}/etc/sfa/aggregates.xml'.format(self.vm_root_in_host())) == 0 \
            and self.test_ssh.copy_abs(reg_fname,
-                                      '/%s/etc/sfa/registries.xml' % self.vm_root_in_host()) == 0
+                                      '/{}/etc/sfa/registries.xml'.format(self.vm_root_in_host())) == 0
 
     def sfa_import(self):
         "use sfaadmin to import from plc"
@@ -1663,12 +1664,12 @@ class TestPlc:
         for slice_spec in self.plc_spec['sfa']['auth_sfa_specs']:
             test_slice = TestAuthSfa(self, slice_spec)
             dir_basename = os.path.basename(test_slice.sfi_path())
-            dir_name = self.confsubdir("dot-sfi/%s" % dir_basename,
+            dir_name = self.confsubdir("dot-sfi/{}".format(dir_basename),
                                        clean=True, dry_run=self.options.dry_run)
             test_slice.sfi_configure(dir_name)
             # push into the remote /root/sfi area
             location = test_slice.sfi_path()
-            remote = "%s/%s" % (self.vm_root_in_host(), location)
+            remote = "{}/{}".format(self.vm_root_in_host(), location)
             self.test_ssh.mkdir(remote, abs=True)
             # need to strip last level or remote otherwise we get an extra dir level
             self.test_ssh.copy_abs(dir_name, os.path.dirname(remote), recursive=True)
@@ -1687,7 +1688,7 @@ class TestPlc:
         for slice_spec in self.plc_spec['sfa']['auth_sfa_specs']:
             test_slice = TestAuthSfa(self, slice_spec)
             in_vm = test_slice.sfi_path()
-            remote = "%s/%s" % (self.vm_root_in_host(), in_vm)
+            remote = "{}/{}".format(self.vm_root_in_host(), in_vm)
             if self.test_ssh.copy_abs(filename, remote) !=0:
                 overall = False
         return overall
@@ -1751,7 +1752,7 @@ class TestPlc:
         "creates random entries in the PLCAPI"
         # install the stress-test in the plc image
         location = "/usr/share/plc_api/plcsh_stress_test.py"
-        remote = "%s/%s" % (self.vm_root_in_host(), location)
+        remote = "{}/{}".format(self.vm_root_in_host(), location)
         self.test_ssh.copy_abs("plcsh_stress_test.py", remote)
         command = location
         command += " -- --preserve --short-names"
@@ -1809,29 +1810,29 @@ class TestPlc:
     def gather_slivers_var_logs(self):
         for test_sliver in self.all_sliver_objs():
             remote = test_sliver.tar_var_logs()
-            utils.system("mkdir -p logs/sliver.var-log.%s" % test_sliver.name())
-            command = remote + " | tar -C logs/sliver.var-log.%s -xf -" % test_sliver.name()
+            utils.system("mkdir -p logs/sliver.var-log.{}".format(test_sliver.name()))
+            command = remote + " | tar -C logs/sliver.var-log.{} -xf -".format(test_sliver.name())
             utils.system(command)
         return True
 
     def gather_var_logs(self):
-        utils.system("mkdir -p logs/myplc.var-log.%s" % self.name())
+        utils.system("mkdir -p logs/myplc.var-log.{}".format(self.name()))
         to_plc = self.actual_command_in_guest("tar -C /var/log/ -cf - .")        
-        command = to_plc + "| tar -C logs/myplc.var-log.%s -xf -" % self.name()
+        command = to_plc + "| tar -C logs/myplc.var-log.{} -xf -".format(self.name())
         utils.system(command)
-        command = "chmod a+r,a+x logs/myplc.var-log.%s/httpd" % self.name()
+        command = "chmod a+r,a+x logs/myplc.var-log.{}/httpd".format(self.name())
         utils.system(command)
 
     def gather_pgsql_logs(self):
-        utils.system("mkdir -p logs/myplc.pgsql-log.%s" % self.name())
+        utils.system("mkdir -p logs/myplc.pgsql-log.{}".format(self.name()))
         to_plc = self.actual_command_in_guest("tar -C /var/lib/pgsql/data/pg_log/ -cf - .")        
-        command = to_plc + "| tar -C logs/myplc.pgsql-log.%s -xf -" % self.name()
+        command = to_plc + "| tar -C logs/myplc.pgsql-log.{} -xf -".format(self.name())
         utils.system(command)
 
     def gather_root_sfi(self):
-        utils.system("mkdir -p logs/sfi.%s"%self.name())
+        utils.system("mkdir -p logs/sfi.{}".format(self.name()))
         to_plc = self.actual_command_in_guest("tar -C /root/sfi/ -cf - .")        
-        command = to_plc + "| tar -C logs/sfi.%s -xf -"%self.name()
+        command = to_plc + "| tar -C logs/sfi.{} -xf -".format(self.name())
         utils.system(command)
 
     def gather_nodes_var_logs(self):
@@ -1841,8 +1842,8 @@ class TestPlc:
                 test_node = TestNode(self, test_site, node_spec)
                 test_ssh = TestSsh(test_node.name(), key="keys/key_admin.rsa")
                 command = test_ssh.actual_command("tar -C /var/log -cf - .")
-                command = command + "| tar -C logs/node.var-log.%s -xf -" % test_node.name()
-                utils.system("mkdir -p logs/node.var-log.%s" % test_node.name())
+                command = command + "| tar -C logs/node.var-log.{} -xf -".format(test_node.name())
+                utils.system("mkdir -p logs/node.var-log.{}".format(test_node.name()))
                 utils.system(command)
 
 
@@ -1857,13 +1858,13 @@ class TestPlc:
             t = datetime.now()
             d = t.date()
             name = str(d)
-        return "/root/%s-%s.sql" % (database, name)
+        return "/root/{}-{}.sql".format(database, name)
 
     def plc_db_dump(self):
         'dump the planetlab5 DB in /root in the PLC - filename has time'
         dump=self.dbfile("planetab5")
         self.run_in_guest('pg_dump -U pgsqluser planetlab5 -f '+ dump)
-        utils.header('Dumped planetlab5 database in %s' % dump)
+        utils.header('Dumped planetlab5 database in {}'.format(dump))
         return True
 
     def plc_db_restore(self):

@@ -20,9 +20,7 @@ class OnelabSubstrate (Substrate):
 
    # the experimental lxc-based build box
    def build_lxc_boxes_spec (self):
-# velvet needs attention
-#      return [ 'liquid', 'reed', 'velvet' ]
-# reed out of the pool, liquid only used for the last f18 build      
+# liquid only used for the last f18 build      
       return [ 'buzzcocks', 'liquid' ]
 
    # the lxc-capable box for PLCs
@@ -35,7 +33,7 @@ class OnelabSubstrate (Substrate):
 
    # vplc01 to 40
    def vplc_ips (self):
-      return [  ( 'vplc%02d'%i,                 # DNS name
+      return [  ( 'vplc{:02d}'.format(i),       # DNS name
                   'unused')                     # MAC address 
                 for i in range(1,41) ] 
 
@@ -65,8 +63,8 @@ class OnelabSubstrate (Substrate):
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
    def vnode_ips (self):
-      return [ ( 'vnode%02d'%i,                 # DNS name               
-                 '02:34:56:00:00:%02d'%i)       # MAC address
+      return [ ( 'vnode{:02d}'.format(i),            # DNS name               
+                 '02:34:56:00:00:{:02d}'.format(i))  # MAC address
                for i in range(1,21) ] 
    
    # local network settings

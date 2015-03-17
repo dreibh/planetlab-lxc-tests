@@ -26,7 +26,7 @@ class TestBoxQemu:
         return self.test_ssh.is_local()
     
     def run_in_buildname (self,command,background=False, dry_run=False):
-        message="On %s: running %s"%(self.hostname(),command)
+        message="On {}: running {}".format(self.hostname(), command)
         if background: message += " &"
         utils.header(message)
         return self.test_ssh.run_in_buildname (command,background, dry_run)
@@ -43,7 +43,7 @@ class TestBoxQemu:
 
     # we need at least one nodename, as template-qemu is not synced on remote testboxes
     def qemu_kill_all(self,nodedir):
-        self.run_in_buildname("%s/qemu-kill-node"%nodedir)
+        self.run_in_buildname("{}/qemu-kill-node".format(nodedir))
         return True
 
     def qemu_list_all(self):

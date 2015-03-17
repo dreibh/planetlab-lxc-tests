@@ -40,7 +40,7 @@ class Step:
             try:
                 self.substeps = sequences[self.internal()]
             except Exception,e:
-                print "macro step %s not found in macros.py (%s) - exiting" % (self.display(),e)
+                print "macro step {} not found in macros.py ({}) - exiting".format(self.display(),e)
                 raise
 
     def print_doc (self, level=0):
@@ -124,8 +124,8 @@ class TestMain:
             print self.steps_message
         else:
             # steps mentioned on the command line
-            if self.options.args:
-                scopes = [("Argument steps",self.options.args)]
+            if self.options.steps:
+                scopes = [("Argument steps",self.options.steps)]
             else:
                 scopes = [("Default steps", TestPlc.default_steps)]
                 if self.options.all_steps:
@@ -149,14 +149,15 @@ class TestMain:
 arch-rpms-url defaults to the last value used, as stored in arg-arch-rpms-url,
    no default
 config defaults to the last value used, as stored in arg-config,
-   or %r
-ips_vnode, ips_vplc and ips_qemu defaults to the last value used, as stored in arg-ips-{bplc,vplc,bnode,vnode},
+   or {}
+ips_vnode, ips_vplc and ips_qemu defaults to the last value used, 
+   as stored in arg-ips-{{bplc,vplc,bnode,vnode}},
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
 
 run with -l to see a list of available steps
 ===
-"""%(TestMain.default_config)
+""".format(TestMain.default_config)
 
         parser = ArgumentParser(usage = usage)
         parser.add_argument("-u", "--url", action="store",  dest="arch_rpms_url", 
@@ -253,7 +254,7 @@ run with -l to see a list of available steps
                         parsed = [x.strip() for x in parsed]
                     else:               # strings and booleans
                         if len(parsed) != 1:
-                            print "%s - error when parsing %s" % (sys.argv[1],path)
+                            print "{} - error when parsing {}".format(sys.argv[1], path)
                             sys.exit(1)
                         parsed = parsed[0].strip()
                         if is_bool:
@@ -264,7 +265,7 @@ run with -l to see a list of available steps
                         setattr(self.options, recname, default)
                     else:
                         print "Cannot determine", recname
-                        print "Run %s --help for help" % sys.argv[0]                        
+                        print "Run {} --help for help".format(sys.argv[0])
                         sys.exit(1)
 
             # save for next run
@@ -275,7 +276,7 @@ run with -l to see a list of available steps
             else:                       # strings and booleans - just call str()
                 fsave.write(str(getattr(self.options, recname)) + "\n")
             fsave.close()
-#            utils.header('Saved %s into %s'%(recname,filename))
+#            utils.header('Saved {} into {}'.format(recname, filename))
 
             # lists need be reversed
             # I suspect this is useful for the various pools but for config, it's painful
@@ -283,7 +284,7 @@ run with -l to see a list of available steps
                 getattr(self.options, recname).reverse()
 
             if self.options.verbose:
-                utils.header('* Using %s = %s' % (recname, getattr(self.options, recname)))
+                utils.header('* Using {} = {}'.format(recname, getattr(self.options, recname)))
 
         # hack : if sfa is not among the published rpms, skip these tests
         TestPlc.check_whether_build_has_sfa(self.options.arch_rpms_url)
@@ -341,7 +342,7 @@ run with -l to see a list of available steps
                 all_plc_specs = m.config(all_plc_specs, self.options)
             except :
                 traceback.print_exc()
-                print 'Cannot load config %s -- ignored' % modulename
+                print 'Cannot load config {} -- ignored'.format(modulename)
                 raise
 
         # provision on local substrate
@@ -350,18 +351,18 @@ run with -l to see a list of available steps
         # remember substrate IP address(es) for next run
         ips_bplc_file = open('arg-ips-bplc', 'w')
         for plc_spec in all_plc_specs:
-            ips_bplc_file.write("%s\n" % plc_spec['host_box'])
+            ips_bplc_file.write("{}\n".format(plc_spec['host_box']))
         ips_bplc_file.close()
         ips_vplc_file = open('arg-ips-vplc', 'w')
         for plc_spec in all_plc_specs:
-            ips_vplc_file.write("%s\n" % plc_spec['settings']['PLC_API_HOST'])
+            ips_vplc_file.write("{}\n".format(plc_spec['settings']['PLC_API_HOST']))
         ips_vplc_file.close()
         # ditto for nodes
         ips_bnode_file = open('arg-ips-bnode', 'w')
         for plc_spec in all_plc_specs:
             for site_spec in plc_spec['sites']:
                 for node_spec in site_spec['nodes']:
-                    ips_bnode_file.write("%s\n" % node_spec['host_box'])
+                    ips_bnode_file.write("{}\n".format(node_spec['host_box']))
         ips_bnode_file.close()
         ips_vnode_file = open('arg-ips-vnode','w')
         for plc_spec in all_plc_specs:
@@ -369,7 +370,7 @@ run with -l to see a list of available steps
                 for node_spec in site_spec['nodes']:
                     # back to normal (unqualified) form
                     stripped = node_spec['node_fields']['hostname'].split('.')[0]
-                    ips_vnode_file.write("%s\n" % stripped)
+                    ips_vnode_file.write("{}\n".format(stripped))
         ips_vnode_file.close()
 
         # build a TestPlc object from the result, passing options
@@ -418,7 +419,7 @@ run with -l to see a list of available steps
                         cross = True
                     all_step_infos.append ( (substep, method, force, cross, qualifier, ) )
             except :
-                utils.header("********** FAILED step %s (NOT FOUND) -- won't be run" % step)
+                utils.header("********** FAILED step {} (NOT FOUND) -- won't be run".format(step))
                 traceback.print_exc()
                 overall_result = 'FAILURE'
             
@@ -435,8 +436,8 @@ run with -l to see a list of available steps
 
         # do all steps on all plcs
         TIME_FORMAT = "%H-%M-%S"
-        TRACE_FORMAT = "TRACE: %(plc_counter)d %(begin)s->%(seconds)ss=%(duration)s " + \
-                       "status=%(status)s step=%(stepname)s plc=%(plcname)s force=%(force)s\n"
+        TRACE_FORMAT = "TRACE: {plc_counter:d} {begin}->{seconds}s={duration}s " + \
+                       "status={status} step={stepname} plc={plcname} force={force}\n"
         for stepname, method, force, cross, qualifier in all_step_infos:
             plc_counter = 0
             for spec, plc_obj in all_plcs:
@@ -456,12 +457,12 @@ run with -l to see a list of available steps
                     if self.options.interactive:
                         prompting = True
                         while prompting:
-                            msg="%d Run step %s on %s [r](un)/d(ry_run)/p(roceed)/s(kip)/q(uit) ? " % \
-                                (plc_counter,stepname,plcname)
+                            msg="{:d} Run step {} on {} [r](un)/d(ry_run)/p(roceed)/s(kip)/q(uit) ? "\
+                                .format(plc_counter, stepname, plcname)
                             answer = raw_input(msg).strip().lower() or "r"
                             answer = answer[0]
                             if answer in ['s','n']:     # skip/no/next
-                                print '%s on %s skipped' % (stepname, plcname)
+                                print '{} on {} skipped'.format(stepname, plcname)
                                 prompting = False
                                 skip_step = True
                             elif answer in ['q','b']:   # quit/bye
@@ -491,9 +492,9 @@ run with -l to see a list of available steps
                     try:
                         force_msg = ""
                         if force and spec['failed_step']:
-                            force_msg=" (forced after %s has failed)" % spec['failed_step']
-                        utils.header("********** %d RUNNING step %s%s on plc %s" % \
-                                     (plc_counter, stepname, force_msg, plcname))
+                            force_msg=" (forced after {} has failed)".format(spec['failed_step'])
+                        utils.header("********** {:d} RUNNING step {}{} on plc {}"\
+                                     .format(plc_counter, stepname, force_msg, plcname))
                         if not cross:
                             step_result = method(plc_obj)
                         else:
@@ -507,42 +508,42 @@ run with -l to see a list of available steps
                                 # do not overwrite if FAILURE
                                 if overall_result == 'SUCCESS': 
                                     overall_result = 'IGNORED'
-                            utils.header('********** %d IGNORED (%s) step %s on %s' % \
-                                         (plc_counter, msg, stepname, plcname))
-                            status="%s[I]" % msg
+                            utils.header('********** {} IGNORED ({}) step {} on {}'\
+                                         .format(plc_counter, msg, stepname, plcname))
+                            status="{}[I]".format(msg)
                         elif step_result:
-                            utils.header('********** %d SUCCESSFUL step %s on %s' % \
-                                         (plc_counter, stepname, plcname))
+                            utils.header('********** {:d} SUCCESSFUL step {} on {}'\
+                                         .format(plc_counter, stepname, plcname))
                             status = "OK"
                         else:
                             overall_result = 'FAILURE'
                             spec['failed_step'] = stepname
-                            utils.header('********** %d FAILED step %s on %s (discarded from further steps)' % \
-                                         (plc_counter, stepname, plcname))
+                            utils.header('********** {:d} FAILED step {} on {} (discarded from further steps)'\
+                                         .format(plc_counter, stepname, plcname))
                             status = "KO"
                     except:
                         overall_result = 'FAILURE'
                         spec['failed_step'] = stepname
                         traceback.print_exc()
-                        utils.header ('********** %d FAILED (exception) step %s on %s (discarded from further steps)' % \
-                                      (plc_counter, stepname, plcname))
+                        utils.header ('********** {} FAILED (exception) step {} on {} (discarded from further steps)'\
+                                      .format(plc_counter, stepname, plcname))
                         status = "KO"
 
                 # do not run, just display it's skipped
                 else:
-                    why = "has failed %s" % spec['failed_step']
-                    utils.header("********** %d SKIPPED Step %s on %s (%s)" % \
-                                 (plc_counter, stepname, plcname, why))
+                    why = "has failed {}".format(spec['failed_step'])
+                    utils.header("********** {} SKIPPED Step {} on {} ({})"\
+                                 .format(plc_counter, stepname, plcname, why))
                     status = "UNDEF"
                 if not self.options.dry_run:
                     delay = datetime.now()-beg_time
                     seconds = int(delay.total_seconds())
                     duration = str(delay)
                     # always do this on stdout
-                    print TRACE_FORMAT % locals()
+                    print TRACE_FORMAT.format(**locals())
                     # duplicate on trace_file if provided
                     if self.options.trace_file:
-                        trace.write(TRACE_FORMAT % locals())
+                        trace.write(TRACE_FORMAT.format(**locals()))
                         trace.flush()
 
         if self.options.trace_file and not self.options.dry_run:
