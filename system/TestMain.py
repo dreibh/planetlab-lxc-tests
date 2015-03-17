@@ -12,6 +12,7 @@ from datetime import datetime
 
 import utils
 from TestPlc import TestPlc, Ignored
+from TestBonding import TestBonding, onelab_bonding_spec
 from TestSite import TestSite
 from TestNode import TestNode
 from macros import sequences
@@ -106,12 +107,17 @@ class TestMain:
             utils.show_options("main options", options)
 
     def init_steps(self):
-        self.steps_message  = 20*'x' + " Defaut steps are\n" + \
-                              TestPlc.printable_steps(TestPlc.default_steps)
-        self.steps_message += 20*'x' + " Other useful steps are\n" + \
-                              TestPlc.printable_steps(TestPlc.other_steps)
-        self.steps_message += 20*'x' + " Macro steps are\n" + \
-                              " ".join(Step.list_macros())
+        self.steps_message  = ""
+        if not self.options.bonding:
+            self.steps_message += 20*'x' + " Defaut steps are\n" + \
+                                  TestPlc.printable_steps(TestPlc.default_steps)
+            self.steps_message += 20*'x' + " Other useful steps are\n" + \
+                                  TestPlc.printable_steps(TestPlc.other_steps)
+            self.steps_message += 20*'x' + " Macro steps are\n" + \
+                                  " ".join(Step.list_macros())
+        else:
+            self.steps_message += 20*'x' + " Default steps with bonding are\n" + \
+                                  TestPlc.printable_steps(TestPlc.bonding_steps)
 
     def list_steps(self):
         if not self.options.verbose:
@@ -139,7 +145,6 @@ class TestMain:
                     Step(stepname).print_doc()
 
     def run (self):
-        self.init_steps()
         usage = """usage: %%prog [options] steps
 arch-rpms-url defaults to the last value used, as stored in arg-arch-rpms-url,
    no default
@@ -148,9 +153,10 @@ config defaults to the last value used, as stored in arg-config,
 ips_vnode, ips_vplc and ips_qemu defaults to the last value used, as stored in arg-ips-{bplc,vplc,bnode,vnode},
    default is to use IP scanning
 steps refer to a method in TestPlc or to a step_* module
+
+run with -l to see a list of available steps
 ===
 """%(TestMain.default_config)
-        usage += self.steps_message
 
         parser = ArgumentParser(usage = usage)
         parser.add_argument("-u", "--url", action="store",  dest="arch_rpms_url", 
@@ -201,8 +207,8 @@ steps refer to a method in TestPlc or to a step_* module
                             help="Show environment and exits")
         parser.add_argument("-t", "--trace", action="store", dest="trace_file", default=None,
                             help="Trace file location")
-#        parser.add_argument("-g", "--bonding", action='store', dest='bonding', default=None,
-#                            help="specify build to bond with")
+        parser.add_argument("-g", "--bonding", action='store', dest='bonding', default=None,
+                            help="specify build to bond with")
         parser.add_argument("steps", nargs='*')
         self.options = parser.parse_args()
 
@@ -282,20 +288,18 @@ steps refer to a method in TestPlc or to a step_* module
         # hack : if sfa is not among the published rpms, skip these tests
         TestPlc.check_whether_build_has_sfa(self.options.arch_rpms_url)
 
-        # use the default list of steps if unspecified
-        if len(self.options.steps) == 0:
-            self.options.steps = TestPlc.default_steps
+        # initialize steps
+        if not self.options.steps:
+            # defaults, depends on using bonding or not
+            if self.options.bonding:
+                self.options.steps = TestPlc.bonding_steps
+            else:
+                self.options.steps = TestPlc.default_steps
 
         if self.options.list_steps:
             self.init_steps()
             self.list_steps()
             return 'SUCCESS'
-
-        # steps
-        if not self.options.steps:
-            #default (all) steps
-            #self.options.steps=['dump','clean','install','populate']
-            self.options.steps = TestPlc.default_steps
 
         # rewrite '-' into '_' in step names
         self.options.steps   = [ step.replace('-', '_') for step in self.options.steps ]
@@ -376,6 +380,17 @@ steps refer to a method in TestPlc or to a step_* module
         # pass options to utils as well
         utils.init_options(self.options)
 
+        # populate TestBonding objects
+        # need to wait until here as we need all_plcs
+        if self.options.bonding:
+            ## allow to pass -g ../2015.03.15--f18 so we can use bash completion
+            self.options.bonding = os.path.basename(self.options.bonding)
+            # this will fail if ../{bonding} has not the right arg- files
+            for spec, test_plc in all_plcs:
+                test_plc.test_bonding = TestBonding (test_plc,
+                                                     onelab_bonding_spec(self.options.bonding),
+                                                     self.options)
+        
         overall_result = 'SUCCESS'
         all_step_infos = []
         for step in self.options.steps:

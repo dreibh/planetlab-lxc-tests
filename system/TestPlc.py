@@ -23,6 +23,8 @@ from TestApiserver import TestApiserver
 from TestAuthSfa import TestAuthSfa
 from PlcapiUrlScanner import PlcapiUrlScanner
 
+from TestBonding import TestBonding
+
 has_sfa_cache_filename="sfa-cache"
 
 # step methods must take (self) and return a boolean (options is a member of the class)
@@ -71,6 +73,17 @@ def slice_mapper(method):
     # restore the doc text
     map_on_slices.__doc__ = TestSlice.__dict__[method.__name__].__doc__
     return map_on_slices
+
+def bonding_redirector(method):
+    bonding_name = method.__name__.replace('bonding_', '')
+    def redirect(self):
+        bonding_method = TestBonding.__dict__[bonding_name]
+        return bonding_method(self.test_bonding)
+    # maintain __name__ for ignore_result
+    redirect.__name__ = method.__name__
+    # restore the doc text
+    redirect.__doc__ = TestBonding.__dict__[bonding_name].__doc__
+    return redirect
 
 # run a step but return True so that we can go on
 def ignore_result(method):
@@ -193,6 +206,11 @@ class TestPlc:
         'check_netflow','check_drl', SEP,
         'debug_nodemanager', 'slice_fs_present', SEP,
         'standby_1_through_20','yes','no',SEP,
+        ]
+    bonding_steps = [
+        'bonding_init_partial',
+        'bonding_add_yum',
+        'bonding_install_rpms', SEP,
         ]
 
     @staticmethod
@@ -507,20 +525,20 @@ class TestPlc:
             return True
         TestPlc.exported_id += 1
         domain = socket.gethostname().split('.',1)[1]
-        fqdn   = "%s.%s" % (self.plc_spec['host_box'],domain)
+        fqdn   = "%s.%s" % (self.plc_spec['host_box'], domain)
         print "export BUILD=%s" % self.options.buildname
         print "export PLCHOSTLXC=%s" % fqdn
         print "export GUESTNAME=%s" % self.plc_spec['vservername']
         vplcname = self.plc_spec['vservername'].split('-')[-1]
-        print "export GUESTHOSTNAME=%s.%s"%(vplcname,domain)
+        print "export GUESTHOSTNAME=%s.%s"%(vplcname, domain)
         # find hostname of first node
-        hostname,qemubox = self.all_node_infos()[0]
-        print "export KVMHOST=%s.%s" % (qemubox,domain)
+        hostname, qemubox = self.all_node_infos()[0]
+        print "export KVMHOST=%s.%s" % (qemubox, domain)
         print "export NODE=%s" % (hostname)
         return True
 
     # entry point
-    always_display_keys=['PLC_WWW_HOST','nodes','sites',]
+    always_display_keys=['PLC_WWW_HOST', 'nodes', 'sites']
     def show_pass(self, passno):
         for (key,val) in self.plc_spec.iteritems():
             if not self.options.verbose and key not in TestPlc.always_display_keys:
@@ -531,18 +549,18 @@ class TestPlc:
                         self.display_site_spec(site)
                         for node in site['nodes']:
                             self.display_node_spec(node)
-                elif key=='initscripts':
+                elif key == 'initscripts':
                     for initscript in val:
                         self.display_initscript_spec(initscript)
-                elif key=='slices':
+                elif key == 'slices':
                     for slice in val:
                         self.display_slice_spec(slice)
-                elif key=='keys':
+                elif key == 'keys':
                     for key in val:
                         self.display_key_spec(key)
             elif passno == 1:
                 if key not in ['sites', 'initscripts', 'slices', 'keys']:
-                    print '+   ',key,':',val
+                    print '+   ', key, ':', val
 
     def display_site_spec(self, site):
         print '+ ======== site', site['site_fields']['name']
@@ -562,7 +580,7 @@ class TestPlc:
                         print user['name'],'',
                     print ''
             elif k == 'site_fields':
-                print '+       login_base',':',v['login_base']
+                print '+       login_base', ':', v['login_base']
             elif k == 'address_fields':
                 pass
             else:
@@ -1742,6 +1760,19 @@ class TestPlc:
         command += ' --foreign'
         remote = (self.run_in_guest(command) == 0);
         return local and remote
+
+
+    ####################
+    @bonding_redirector
+    def bonding_init_partial(self): pass
+
+    @bonding_redirector
+    def bonding_add_yum(self): pass
+
+    @bonding_redirector
+    def bonding_install_rpms(self): pass
+
+    ####################
 
     def gather_logs(self):
         "gets all possible logs from plc's/qemu node's/slice's for future reference"
