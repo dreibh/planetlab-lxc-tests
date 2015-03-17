@@ -217,7 +217,7 @@ class TestNode:
             print "dry_run: skipped actual storage of qemu.conf"
             return True
         utils.header('Storing qemu config for {} in {}'.format(self.name(), conf_filename))
-        with open(conf_filename,'w') as f:
+        with open(conf_filename,'w') as file:
             file.write('MACADDR={}\n'.format(mac))
             file.write('NODE_ISO={}.iso\n'.format(self.name()))
             file.write('HOSTNAME={}\n'.format(hostname))
