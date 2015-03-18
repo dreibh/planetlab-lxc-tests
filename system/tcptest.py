@@ -7,9 +7,11 @@ import sys
 import time
 import subprocess
 import socket
-import socketserver
+import SocketServer
 import threading
 from optparse import OptionParser    
+
+from __future__ import print_function
 
 def myprint(message, id='client'):
     now = time.strftime("%H:%M:%S", time.localtime())
@@ -22,12 +24,12 @@ def show_network_status(id):
     myprint("ip route show", id=id)
     subprocess.call(['ip', 'route', 'show'])
 
-class EchoRequestHandler(socketserver.StreamRequestHandler):
+class EchoRequestHandler(SocketServer.StreamRequestHandler):
     def handle(self):
         line = self.rfile.readline()
         self.wfile.write(line)
 
-class UppercaseRequestHandler(socketserver.StreamRequestHandler):
+class UppercaseRequestHandler(SocketServer.StreamRequestHandler):
     def handle(self):
         line = self.rfile.readline()
         self.wfile.write(line.upper())
@@ -52,7 +54,7 @@ class Server:
 
         myprint("==================== tcptest.py server", id='server')
         show_network_status(id='server')
-        server = socketserver.TCPServer((options.address, options.port),
+        server = SocketServer.TCPServer((options.address, options.port),
                                         UppercaseRequestHandler)
         try:
             if options.timeout:
