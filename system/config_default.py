@@ -518,7 +518,7 @@ def plc (options,index) :
         'initscripts': initscripts(options,index),
         'slices' : slices(options,index),
         'tcp_specs' : tcp_specs(options,index),
-	'sfa' : sfa(options,index),
+        'sfa' : sfa(options,index),
         'leases' : leases (options, index),
         # big distros need more time to install nodes
         'ssh_node_boot_timers': (40,38),
@@ -630,7 +630,7 @@ def sample_test_plc_spec ():
 
 if __name__ == '__main__':
     s = sample_test_plc_spec()
-    print 'Sample plc_spec has the following keys'
+    print('Sample plc_spec has the following keys')
     for k in sorted(s.keys()):
-        print k    
+        print(k)    
 

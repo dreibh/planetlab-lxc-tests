@@ -51,7 +51,7 @@ class TestSliceSfa:
         sfi_command += " --xrn {}".format(self.hrn())
         for opt in self.slice_spec['register_options']:
             sfi_command += " {}".format(opt)
-	return self.test_plc.run_in_guest(self.sfi_pi(sfi_command))==0
+        return self.test_plc.run_in_guest(self.sfi_pi(sfi_command))==0
 
     def sfa_renew_slice(self, options):
         "run sfi renew (on Aggregates)"
@@ -90,12 +90,12 @@ class TestSliceSfa:
         if self.test_plc.run_in_guest (self.sfi_user(sfi_command)) !=0: return
         if self.test_plc.test_ssh.fetch(inbox_filename,filename)!=0: return 
         try:
-            with file(filename) as f:
+            with open(filename) as f:
                 status = json.loads(f.read())
             value = status['value']
             sliver = value['geni_slivers'][0]
             expires = sliver['geni_expires']
-            print " * expiration for {} (first sliver) -> {}".format(self.hrn(), expires)
+            print(" * expiration for {} (first sliver) -> {}".format(self.hrn(), expires))
             return expires
         except:
             traceback.print_exc()
@@ -180,16 +180,16 @@ class TestSliceSfa:
 
     # run as pi
     def sfa_delete_slice(self,options):
-	"run sfi delete"
-	self.test_plc.run_in_guest(self.sfi_pi("delete {}".format(self.hrn())))
-	return self.test_plc.run_in_guest(self.sfi_pi("remove -t slice {}".format(self.hrn()))) == 0
+        "run sfi delete"
+        self.test_plc.run_in_guest(self.sfi_pi("delete {}".format(self.hrn())))
+        return self.test_plc.run_in_guest(self.sfi_pi("remove -t slice {}".format(self.hrn()))) == 0
 
     def locate_private_key(self):
         return self.test_plc.locate_private_key_from_key_names ( [ self.slice_spec['key_name'] ] )
 
     # check the resulting sliver
     def ssh_slice_sfa(self, options, timeout_minutes=40, silent_minutes=0, period_seconds=15):
-	"tries to ssh-enter the SFA slice"
+        "tries to ssh-enter the SFA slice"
         timeout  = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
         period   = timedelta(seconds=period_seconds)

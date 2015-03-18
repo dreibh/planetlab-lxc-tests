@@ -14,14 +14,14 @@ from TestKey import TestKey
 class TestSite:
 
     def __init__ (self, test_plc, site_spec):
-	self.test_plc = test_plc
-	self.site_spec = site_spec
+        self.test_plc = test_plc
+        self.site_spec = site_spec
         
     def name(self):
         return self.site_spec['site_fields']['login_base']
 
     def create_site (self):
-        print self.test_plc.auth_root()
+        print(self.test_plc.auth_root())
         self.test_plc.apiserver.AddSite(self.test_plc.auth_root(),
                                         self.site_spec['site_fields'])
         self.test_plc.apiserver.AddSiteAddress(self.test_plc.auth_root(),
@@ -35,7 +35,7 @@ class TestSite:
             test_user.add_keys()            
 
     def delete_site (self):
-        print self.test_plc.auth_root()
+        print(self.test_plc.auth_root())
         self.test_plc.apiserver.DeleteSite(self.test_plc.auth_root(), self.name())
         return True
             
@@ -50,13 +50,13 @@ class TestSite:
                 return user
             if user['user_fields']['email'] == username:
                 return user
-        raise Exception,"Cannot locate user {}".format(username)
+        raise Exception("Cannot locate user {}".format(username))
         
     def locate_node (self, nodename):
         for node in self.site_spec['nodes']:
             if node['name'] == nodename:
                 return node
-        raise Exception,"Cannot locate node {}".format(nodename)
+        raise Exception("Cannot locate node {}".format(nodename))
         
            
     

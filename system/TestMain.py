@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
@@ -39,8 +39,8 @@ class Step:
         else:
             try:
                 self.substeps = sequences[self.internal()]
-            except Exception,e:
-                print "macro step {} not found in macros.py ({}) - exiting".format(self.display(),e)
+            except Exception as e:
+                print("macro step {} not found in macros.py ({}) - exiting".format(self.display(),e))
                 raise
 
     def print_doc (self, level=0):
@@ -52,11 +52,11 @@ class Step:
             width = tab - level - 2
             format = "%%-%ds" % width
             line = start + format % self.display()
-            print line,
+            print(line, end=' ')
             try:
-                print self.method.__doc__
+                print(self.method.__doc__)
             except:
-                print "*** no doc found"
+                print("*** no doc found")
         else:
             beg_start = level*' ' + '>>> '
             end_start = level*' ' + '<<< '
@@ -66,10 +66,10 @@ class Step:
             format = "%%-%ds" % width
             beg_line = beg_start + format % self.display() + trail*'>'
             end_line = end_start + format % self.display() + trail*'<'
-            print beg_line
+            print(beg_line)
             for step in self.substeps:
                 Step(step).print_doc(level+1)
-            print end_line
+            print(end_line)
 
     # return a list of (name, method) for all native steps involved
     def tuples (self):
@@ -85,7 +85,7 @@ class Step:
     # just do a listdir, hoping we're in the right directory...
     @staticmethod
     def list_macros ():
-        names= sequences.keys()
+        names= list(sequences.keys())
         names.sort()
         return names
 
@@ -98,7 +98,7 @@ class TestMain:
     default_build_url = "git://git.onelab.eu/tests"
 
     def __init__(self):
-	self.path = os.path.dirname(sys.argv[0]) or "."
+        self.path = os.path.dirname(sys.argv[0]) or "."
         os.chdir(self.path)
 
     def show_env(self, options, message):
@@ -121,7 +121,7 @@ class TestMain:
 
     def list_steps(self):
         if not self.options.verbose:
-            print self.steps_message
+            print(self.steps_message)
         else:
             # steps mentioned on the command line
             if self.options.steps:
@@ -133,7 +133,7 @@ class TestMain:
                     # try to list macro steps as well
                     scopes.append ( ("Macro steps", Step.list_macros()) )
             for (scope, steps) in scopes:
-                print '--------------------', scope
+                print('--------------------', scope)
                 for step in [step for step in steps if TestPlc.valid_step(step)]:
                     try:
                         (step, qualifier) = step.split('@')
@@ -217,7 +217,7 @@ run with -l to see a list of available steps
         def flatten (x):
             result = []
             for el in x:
-                if hasattr(el, "__iter__") and not isinstance(el, basestring):
+                if hasattr(el, "__iter__") and not isinstance(el, str):
                     result.extend(flatten(el))
                 else:
                     result.append(el)
@@ -243,29 +243,30 @@ run with -l to see a list of available steps
             ('pldistro', 'arg-pldistro', "onelab", None),
             ('fcdistro', 'arg-fcdistro', 'f14', None),
             ):
-#            print 'handling',recname
+#            print('handling', recname)
             path = filename
             is_list = isinstance(default, list)
             is_bool = isinstance(default, bool)
             if not getattr(self.options, recname):
                 try:
-                    parsed = file(path).readlines()
+                    with open(path) as file:
+                        parsed = file.readlines()
                     if is_list:         # lists
                         parsed = [x.strip() for x in parsed]
                     else:               # strings and booleans
                         if len(parsed) != 1:
-                            print "{} - error when parsing {}".format(sys.argv[1], path)
+                            print("{} - error when parsing {}".format(sys.argv[1], path))
                             sys.exit(1)
                         parsed = parsed[0].strip()
                         if is_bool:
                             parsed = parsed.lower() == 'true'
                     setattr(self.options, recname, parsed)
-                except:
+                except  Exception as e:
                     if default != "":
                         setattr(self.options, recname, default)
                     else:
-                        print "Cannot determine", recname
-                        print "Run {} --help for help".format(sys.argv[0])
+                        print("Cannot determine", recname, e)
+                        print("Run {} --help for help".format(sys.argv[0]))
                         sys.exit(1)
 
             # save for next run
@@ -342,36 +343,32 @@ run with -l to see a list of available steps
                 all_plc_specs = m.config(all_plc_specs, self.options)
             except :
                 traceback.print_exc()
-                print 'Cannot load config {} -- ignored'.format(modulename)
+                print('Cannot load config {} -- ignored'.format(modulename))
                 raise
 
         # provision on local substrate
         all_plc_specs = LocalSubstrate.local_substrate.provision(all_plc_specs, self.options)
 
         # remember substrate IP address(es) for next run
-        ips_bplc_file = open('arg-ips-bplc', 'w')
-        for plc_spec in all_plc_specs:
-            ips_bplc_file.write("{}\n".format(plc_spec['host_box']))
-        ips_bplc_file.close()
-        ips_vplc_file = open('arg-ips-vplc', 'w')
-        for plc_spec in all_plc_specs:
-            ips_vplc_file.write("{}\n".format(plc_spec['settings']['PLC_API_HOST']))
-        ips_vplc_file.close()
+        with open('arg-ips-bplc', 'w') as ips_bplc_file:
+            for plc_spec in all_plc_specs:
+                ips_bplc_file.write("{}\n".format(plc_spec['host_box']))
+        with open('arg-ips-vplc', 'w') as ips_vplc_file:
+            for plc_spec in all_plc_specs:
+                ips_vplc_file.write("{}\n".format(plc_spec['settings']['PLC_API_HOST']))
         # ditto for nodes
-        ips_bnode_file = open('arg-ips-bnode', 'w')
-        for plc_spec in all_plc_specs:
-            for site_spec in plc_spec['sites']:
-                for node_spec in site_spec['nodes']:
-                    ips_bnode_file.write("{}\n".format(node_spec['host_box']))
-        ips_bnode_file.close()
-        ips_vnode_file = open('arg-ips-vnode','w')
-        for plc_spec in all_plc_specs:
-            for site_spec in plc_spec['sites']:
-                for node_spec in site_spec['nodes']:
-                    # back to normal (unqualified) form
-                    stripped = node_spec['node_fields']['hostname'].split('.')[0]
-                    ips_vnode_file.write("{}\n".format(stripped))
-        ips_vnode_file.close()
+        with open('arg-ips-bnode', 'w') as ips_bnode_file:
+            for plc_spec in all_plc_specs:
+                for site_spec in plc_spec['sites']:
+                    for node_spec in site_spec['nodes']:
+                        ips_bnode_file.write("{}\n".format(node_spec['host_box']))
+        with open('arg-ips-vnode','w') as ips_vnode_file:
+            for plc_spec in all_plc_specs:
+                for site_spec in plc_spec['sites']:
+                    for node_spec in site_spec['nodes']:
+                        # back to normal (unqualified) form
+                        stripped = node_spec['node_fields']['hostname'].split('.')[0]
+                        ips_vnode_file.write("{}\n".format(stripped))
 
         # build a TestPlc object from the result, passing options
         for spec in all_plc_specs:
@@ -459,14 +456,14 @@ run with -l to see a list of available steps
                         while prompting:
                             msg="{:d} Run step {} on {} [r](un)/d(ry_run)/p(roceed)/s(kip)/q(uit) ? "\
                                 .format(plc_counter, stepname, plcname)
-                            answer = raw_input(msg).strip().lower() or "r"
+                            answer = input(msg).strip().lower() or "r"
                             answer = answer[0]
                             if answer in ['s','n']:     # skip/no/next
-                                print '{} on {} skipped'.format(stepname, plcname)
+                                print('{} on {} skipped'.format(stepname, plcname))
                                 prompting = False
                                 skip_step = True
                             elif answer in ['q','b']:   # quit/bye
-                                print 'Exiting'
+                                print('Exiting')
                                 return 'FAILURE'
                             elif answer in ['d']:       # dry_run
                                 dry_run = self.options.dry_run
@@ -477,7 +474,7 @@ run with -l to see a list of available steps
                                     step_result=method(plc_obj)
                                 else:
                                     step_result=method(plc_obj, across_plcs)
-                                print 'dry_run step ->', step_result
+                                print('dry_run step ->', step_result)
                                 self.options.dry_run = dry_run
                                 plc_obj.options.dry_run = dry_run
                                 plc_obj.apiserver.set_dry_run(dry_run)
@@ -540,7 +537,7 @@ run with -l to see a list of available steps
                     seconds = int(delay.total_seconds())
                     duration = str(delay)
                     # always do this on stdout
-                    print TRACE_FORMAT.format(**locals())
+                    print(TRACE_FORMAT.format(**locals()))
                     # duplicate on trace_file if provided
                     if self.options.trace_file:
                         trace.write(TRACE_FORMAT.format(**locals()))
@@ -570,7 +567,7 @@ run with -l to see a list of available steps
             else:
                 return 1
         except SystemExit:
-            print 'Caught SystemExit'
+            print('Caught SystemExit')
             return 3
         except:
             traceback.print_exc()
@@ -578,5 +575,5 @@ run with -l to see a list of available steps
 
 if __name__ == "__main__":
     exit_code = TestMain().main()
-    print "TestMain exit code", exit_code
+    print("TestMain exit code", exit_code)
     sys.exit(exit_code)

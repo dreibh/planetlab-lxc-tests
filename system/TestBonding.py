@@ -165,7 +165,7 @@ if __name__ == '__main__':
     test_plc = TestPlc (test_plc_spec)
     test_plc.show()
 
-    print test_plc.host_box
+    print(test_plc.host_box)
 
     from argparse import ArgumentParser
     parser = ArgumentParser()

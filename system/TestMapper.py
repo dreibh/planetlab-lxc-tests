@@ -39,13 +39,13 @@ class TestMapper:
                 if self.options.verbose:
                     utils.header("TestMapper/{} : applying rules '{}' on {}"\
                                  .format(type, map_pattern, name))
-                for (k,v) in rename_dict.iteritems():
+                for (k,v) in rename_dict.items():
                     # apply : separator
                     path = k.split(':')
                     # step down but last step in path
                     o = obj
                     for step in path[:-1]:
-                        if not o.has_key(step):
+                        if step not in o:
                             o[step] = {}
                             if self.options.verbose:
                                 utils.header ("WARNING : created step {} in path {} on {} {}"\
@@ -54,18 +54,18 @@ class TestMapper:
                     # last step is the one for side-effect
                     step = path[-1]
                     if self.options.verbose:
-                        if not o.has_key(step):
+                        if step not in o:
                             utils.header ("WARNING : inserting key {} for path {} on {} {}"\
                                           .format(step, path, type, name))
                     # apply formatting if '%s' found in the value
                     if v is None:
-                        if self.options.verbose: print "TestMapper WARNING - None value - ignored, key=",k
+                        if self.options.verbose: print("TestMapper WARNING - None value - ignored, key=",k)
                         continue
                     if v.find('%s') >= 0:
                         v = v % obj[k]
                     if self.options.verbose:
-                        print("TestMapper, rewriting {}: {} into {}"\
-                              .format(name, k, v))
+                        print(("TestMapper, rewriting {}: {} into {}"\
+                              .format(name, k, v)))
                     o[step] = v
                 # only apply first rule
                 return

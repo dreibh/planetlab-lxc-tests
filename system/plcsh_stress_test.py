@@ -6,6 +6,12 @@
 # Copyright (C) 2006 The Trustees of Princeton University
 #
 
+# NOTE on porting to python3
+#
+# this file gets fed to plcsh on the tested myplc, so
+# it needs to remain python2 for now
+#
+
 from pprint import pprint
 from string import letters, digits, punctuation, whitespace
 from traceback import print_exc

@@ -11,7 +11,7 @@ class TestSliver:
 
     def __init__(self, test_plc, test_node, test_slice):
         self.test_plc = test_plc
-	self.test_node = test_node
+        self.test_node = test_node
         self.test_slice = test_slice
         self.test_ssh = self.create_test_ssh()
 
@@ -20,13 +20,13 @@ class TestSliver:
         try:
             (found, privatekey) = self.test_slice.locate_key()
             return (found, privatekey)
-        except Exception,e:
-            print str(e)
+        except Exception as e:
+            print(str(e))
             
     def create_test_ssh(self):
         private_key = self.test_slice.locate_private_key()
         if not private_key:
-            raise Exception,"Cannot find the private key for slice {}".format(self.test_slice.name())
+            raise Exception("Cannot find the private key for slice {}".format(self.test_slice.name()))
         return TestSsh (self.test_node.name(), key=private_key, username=self.test_slice.name(),
                         # so that copies end up in the home dir
                         buildname=".")
@@ -65,7 +65,7 @@ class TestSliver:
         return test_ssh.actual_command("tar -C {} -cf - .".format(dir_to_tar))
     
     def check_hooks (self):
-        print 'NOTE: slice hooks check scripts NOT (yet?) run in sudo'
+        print('NOTE: slice hooks check scripts NOT (yet?) run in sudo')
         extensions = [ 'py','pl','sh' ]
         path = 'hooks/slice/'
         scripts = utils.locate_hooks_scripts ('sliver '+self.name(), path,extensions)

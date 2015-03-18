@@ -7,7 +7,6 @@ import os, os.path
 import traceback
 import socket
 from datetime import datetime, timedelta
-from types import StringTypes
 
 import utils
 from Completer import Completer, CompleterTask
@@ -32,7 +31,7 @@ has_sfa_cache_filename="sfa-cache"
 def standby(minutes, dry_run):
     utils.header('Entering StandBy for {:d} mn'.format(minutes))
     if dry_run:
-        print 'dry_run'
+        print('dry_run')
     else:
         time.sleep(60*minutes)
     return True
@@ -92,7 +91,7 @@ def ignore_result(method):
         ref_name = method.__name__.replace('_ignore', '').replace('force_', '')
         ref_method = TestPlc.__dict__[ref_name]
         result = ref_method(self)
-        print "Actual (but ignored) result for {ref_name} is {result}".format(**locals())
+        print("Actual (but ignored) result for {ref_name} is {result}".format(**locals()))
         return Ignored(result)
     name = method.__name__.replace('_ignore', '').replace('force_', '')
     ignoring.__name__ = name
@@ -199,7 +198,7 @@ class TestPlc:
         'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
-	'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
+        'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
         'sfa_get_expires', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
@@ -227,7 +226,8 @@ class TestPlc:
     @staticmethod
     def _has_sfa_cached(rpms_url):
         if os.path.isfile(has_sfa_cache_filename):
-            cached = file(has_sfa_cache_filename).read() == "yes"
+            with open(has_sfa_cache_filename) as cache:
+                cached = cache.read() == "yes"
             utils.header("build provides SFA (cached):{}".format(cached))
             return cached
         # warning, we're now building 'sface' so let's be a bit more picky
@@ -235,8 +235,8 @@ class TestPlc:
         utils.header("Checking if build provides SFA package...")
         retcod = os.system("curl --silent {}/ | grep -q sfa-".format(rpms_url)) == 0
         encoded = 'yes' if retcod else 'no'
-        with open(has_sfa_cache_filename,'w')as out:
-            out.write(encoded)
+        with open(has_sfa_cache_filename,'w') as cache:
+            cache.write(encoded)
         return retcod
         
     @staticmethod
@@ -254,13 +254,13 @@ class TestPlc:
                 TestPlc.default_steps.remove(step)
 
     def __init__(self, plc_spec, options):
-	self.plc_spec = plc_spec
+        self.plc_spec = plc_spec
         self.options = options
-	self.test_ssh = TestSsh(self.plc_spec['host_box'], self.options.buildname)
+        self.test_ssh = TestSsh(self.plc_spec['host_box'], self.options.buildname)
         self.vserverip = plc_spec['vserverip']
         self.vservername = plc_spec['vservername']
         self.url = "https://{}:443/PLCAPI/".format(plc_spec['vserverip'])
-	self.apiserver = TestApiserver(self.url, options.dry_run)
+        self.apiserver = TestApiserver(self.url, options.dry_run)
         (self.ssh_node_boot_timeout, self.ssh_node_boot_silent) = plc_spec['ssh_node_boot_timers']
         (self.ssh_node_debug_timeout, self.ssh_node_debug_silent) = plc_spec['ssh_node_debug_timers']
         
@@ -280,7 +280,7 @@ class TestPlc:
     # define the API methods on this object through xmlrpc
     # would help, but not strictly necessary
     def connect(self):
-	pass
+        pass
 
     def actual_command_in_guest(self,command, backslash=False):
         raw1 = self.host_to_guest(command)
@@ -350,9 +350,9 @@ class TestPlc:
         return self.yum_check_installed(rpms)
 
     def auth_root(self):
-	return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
-		'AuthMethod' : 'password',
-		'AuthString' : self.plc_spec['settings']['PLC_ROOT_PASSWORD'],
+        return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
+                'AuthMethod' : 'password',
+                'AuthString' : self.plc_spec['settings']['PLC_ROOT_PASSWORD'],
                 'Role'       : self.plc_spec['role'],
                 }
     
@@ -362,27 +362,27 @@ class TestPlc:
                 return site
             if site['site_fields']['login_base'] == sitename:
                 return site
-        raise Exception,"Cannot locate site {}".format(sitename)
+        raise Exception("Cannot locate site {}".format(sitename))
         
     def locate_node(self, nodename):
         for site in self.plc_spec['sites']:
             for node in site['nodes']:
                 if node['name'] == nodename:
                     return site, node
-        raise Exception, "Cannot locate node {}".format(nodename)
+        raise Exception("Cannot locate node {}".format(nodename))
         
     def locate_hostname(self, hostname):
         for site in self.plc_spec['sites']:
             for node in site['nodes']:
                 if node['node_fields']['hostname'] == hostname:
                     return(site, node)
-        raise Exception,"Cannot locate hostname {}".format(hostname)
+        raise Exception("Cannot locate hostname {}".format(hostname))
         
     def locate_key(self, key_name):
         for key in self.plc_spec['keys']:
             if key['key_name'] == key_name:
                 return key
-        raise Exception,"Cannot locate key {}".format(key_name)
+        raise Exception("Cannot locate key {}".format(key_name))
 
     def locate_private_key_from_key_names(self, key_names):
         # locate the first avail. key
@@ -403,7 +403,7 @@ class TestPlc:
         for slice in self.plc_spec['slices']:
             if slice['slice_fields']['name'] == slicename:
                 return slice
-        raise Exception,"Cannot locate slice {}".format(slicename)
+        raise Exception("Cannot locate slice {}".format(slicename))
 
     def all_sliver_objs(self):
         result = []
@@ -449,7 +449,7 @@ class TestPlc:
         # transform into a dict { 'host_box' -> [ test_node .. ] }
         result = {}
         for (box,node) in tuples:
-            if not result.has_key(box):
+            if box not in result:
                 result[box] = [node]
             else:
                 result[box].append(node)
@@ -458,15 +458,15 @@ class TestPlc:
     # a step for checking this stuff
     def show_boxes(self):
         'print summary of nodes location'
-        for box,nodes in self.get_BoxNodes().iteritems():
-            print box,":"," + ".join( [ node.name() for node in nodes ] )
+        for box,nodes in self.get_BoxNodes().items():
+            print(box,":"," + ".join( [ node.name() for node in nodes ] ))
         return True
 
     # make this a valid step
     def qemu_kill_all(self):
         'kill all qemu instances on the qemu boxes involved by this setup'
         # this is the brute force version, kill all qemus on that host box
-        for (box,nodes) in self.get_BoxNodes().iteritems():
+        for (box,nodes) in self.get_BoxNodes().items():
             # pass the first nodename, as we don't push template-qemu on testboxes
             nodedir = nodes[0].nodedir()
             TestBoxQemu(box, self.options.buildname).qemu_kill_all(nodedir)
@@ -475,7 +475,7 @@ class TestPlc:
     # make this a valid step
     def qemu_list_all(self):
         'list all qemu instances on the qemu boxes involved by this setup'
-        for box,nodes in self.get_BoxNodes().iteritems():
+        for box,nodes in self.get_BoxNodes().items():
             # this is the brute force version, kill all qemus on that host box
             TestBoxQemu(box, self.options.buildname).qemu_list_all()
         return True
@@ -483,7 +483,7 @@ class TestPlc:
     # kill only the qemus related to this test
     def qemu_list_mine(self):
         'list qemu instances for our nodes'
-        for (box,nodes) in self.get_BoxNodes().iteritems():
+        for (box,nodes) in self.get_BoxNodes().items():
             # the fine-grain version
             for node in nodes:
                 node.list_qemu()
@@ -492,7 +492,7 @@ class TestPlc:
     # kill only the qemus related to this test
     def qemu_clean_mine(self):
         'cleanup (rm -rf) qemu instances for our nodes'
-        for box,nodes in self.get_BoxNodes().iteritems():
+        for box,nodes in self.get_BoxNodes().items():
             # the fine-grain version
             for node in nodes:
                 node.qemu_clean()
@@ -501,7 +501,7 @@ class TestPlc:
     # kill only the right qemus
     def qemu_kill_mine(self):
         'kill the qemu instances for our nodes'
-        for box,nodes in self.get_BoxNodes().iteritems():
+        for box,nodes in self.get_BoxNodes().items():
             # the fine-grain version
             for node in nodes:
                 node.kill_qemu()
@@ -521,26 +521,26 @@ class TestPlc:
         "print cut'n paste-able stuff to export env variables to your shell"
         # guess local domain from hostname
         if TestPlc.exported_id > 1: 
-            print "export GUESTHOSTNAME{:d}={}".format(TestPlc.exported_id, self.plc_spec['vservername'])
+            print("export GUESTHOSTNAME{:d}={}".format(TestPlc.exported_id, self.plc_spec['vservername']))
             return True
         TestPlc.exported_id += 1
         domain = socket.gethostname().split('.',1)[1]
         fqdn   = "{}.{}".format(self.plc_spec['host_box'], domain)
-        print "export BUILD={}".format(self.options.buildname)
-        print "export PLCHOSTLXC={}".format(fqdn)
-        print "export GUESTNAME={}".format(self.plc_spec['vservername'])
+        print("export BUILD={}".format(self.options.buildname))
+        print("export PLCHOSTLXC={}".format(fqdn))
+        print("export GUESTNAME={}".format(self.plc_spec['vservername']))
         vplcname = self.plc_spec['vservername'].split('-')[-1]
-        print "export GUESTHOSTNAME={}.{}".format(vplcname, domain)
+        print("export GUESTHOSTNAME={}.{}".format(vplcname, domain))
         # find hostname of first node
         hostname, qemubox = self.all_node_infos()[0]
-        print "export KVMHOST={}.{}".format(qemubox, domain)
-        print "export NODE={}".format(hostname)
+        print("export KVMHOST={}.{}".format(qemubox, domain))
+        print("export NODE={}".format(hostname))
         return True
 
     # entry point
     always_display_keys=['PLC_WWW_HOST', 'nodes', 'sites']
     def show_pass(self, passno):
-        for (key,val) in self.plc_spec.iteritems():
+        for (key,val) in self.plc_spec.items():
             if not self.options.verbose and key not in TestPlc.always_display_keys:
                 continue
             if passno == 2:
@@ -560,65 +560,65 @@ class TestPlc:
                         self.display_key_spec(key)
             elif passno == 1:
                 if key not in ['sites', 'initscripts', 'slices', 'keys']:
-                    print '+   ', key, ':', val
+                    print('+   ', key, ':', val)
 
     def display_site_spec(self, site):
-        print '+ ======== site', site['site_fields']['name']
-        for k,v in site.iteritems():
+        print('+ ======== site', site['site_fields']['name'])
+        for k,v in site.items():
             if not self.options.verbose and k not in TestPlc.always_display_keys:
                 continue
             if k == 'nodes':
                 if v: 
-                    print '+       ','nodes : ',
+                    print('+       ','nodes : ', end=' ')
                     for node in v:  
-                        print node['node_fields']['hostname'],'',
-                    print ''
+                        print(node['node_fields']['hostname'],'', end=' ')
+                    print('')
             elif k == 'users':
                 if v: 
-                    print '+       users : ',
+                    print('+       users : ', end=' ')
                     for user in v:  
-                        print user['name'],'',
-                    print ''
+                        print(user['name'],'', end=' ')
+                    print('')
             elif k == 'site_fields':
-                print '+       login_base', ':', v['login_base']
+                print('+       login_base', ':', v['login_base'])
             elif k == 'address_fields':
                 pass
             else:
-                print '+       ',
+                print('+       ', end=' ')
                 utils.pprint(k, v)
         
     def display_initscript_spec(self, initscript):
-        print '+ ======== initscript', initscript['initscript_fields']['name']
+        print('+ ======== initscript', initscript['initscript_fields']['name'])
 
     def display_key_spec(self, key):
-        print '+ ======== key', key['key_name']
+        print('+ ======== key', key['key_name'])
 
     def display_slice_spec(self, slice):
-        print '+ ======== slice', slice['slice_fields']['name']
-        for k,v in slice.iteritems():
+        print('+ ======== slice', slice['slice_fields']['name'])
+        for k,v in slice.items():
             if k == 'nodenames':
                 if v: 
-                    print '+       nodes : ',
+                    print('+       nodes : ', end=' ')
                     for nodename in v:  
-                        print nodename,'',
-                    print ''
+                        print(nodename,'', end=' ')
+                    print('')
             elif k == 'usernames':
                 if v: 
-                    print '+       users : ',
+                    print('+       users : ', end=' ')
                     for username in v:  
-                        print username,'',
-                    print ''
+                        print(username,'', end=' ')
+                    print('')
             elif k == 'slice_fields':
-                print '+       fields',':',
-                print 'max_nodes=',v['max_nodes'],
-                print ''
+                print('+       fields',':', end=' ')
+                print('max_nodes=',v['max_nodes'], end=' ')
+                print('')
             else:
-                print '+       ',k,v
+                print('+       ',k,v)
 
     def display_node_spec(self, node):
-        print "+           node={} host_box={}".format(node['name'], node['host_box']),
-        print "hostname=", node['node_fields']['hostname'],
-        print "ip=", node['interface_fields']['ip']
+        print("+           node={} host_box={}".format(node['name'], node['host_box']), end=' ')
+        print("hostname=", node['node_fields']['hostname'], end=' ')
+        print("ip=", node['interface_fields']['ip'])
         if self.options.verbose:
             utils.pprint("node details", node, depth=3)
 
@@ -629,19 +629,19 @@ class TestPlc:
 
     @staticmethod
     def display_mapping_plc(plc_spec):
-        print '+ MyPLC',plc_spec['name']
+        print('+ MyPLC',plc_spec['name'])
         # WARNING this would not be right for lxc-based PLC's - should be harmless though
-        print '+\tvserver address = root@{}:/vservers/{}'.format(plc_spec['host_box'], plc_spec['vservername'])
-        print '+\tIP = {}/{}'.format(plc_spec['settings']['PLC_API_HOST'], plc_spec['vserverip'])
+        print('+\tvserver address = root@{}:/vservers/{}'.format(plc_spec['host_box'], plc_spec['vservername']))
+        print('+\tIP = {}/{}'.format(plc_spec['settings']['PLC_API_HOST'], plc_spec['vserverip']))
         for site_spec in plc_spec['sites']:
             for node_spec in site_spec['nodes']:
                 TestPlc.display_mapping_node(node_spec)
 
     @staticmethod
     def display_mapping_node(node_spec):
-        print '+   NODE {}'.format(node_spec['name'])
-        print '+\tqemu box {}'.format(node_spec['host_box'])
-        print '+\thostname={}'.format(node_spec['node_fields']['hostname'])
+        print('+   NODE {}'.format(node_spec['name']))
+        print('+\tqemu box {}'.format(node_spec['host_box']))
+        print('+\thostname={}'.format(node_spec['node_fields']['hostname']))
 
     # write a timestamp in /vservers/<>.timestamp
     # cannot be inside the vserver, that causes vserver .. build to cough
@@ -690,7 +690,7 @@ class TestPlc:
         # with the last step (i386) removed
         repo_url = self.options.arch_rpms_url
         for level in [ 'arch' ]:
-	    repo_url = os.path.dirname(repo_url)
+            repo_url = os.path.dirname(repo_url)
 
         # invoke initvm (drop support for vs)
         script = "lbuild-initvm.sh"
@@ -705,8 +705,8 @@ class TestPlc:
             vserver_hostname = socket.gethostbyaddr(self.vserverip)[0]
             script_options += " -n {}".format(vserver_hostname)
         except:
-            print "Cannot reverse lookup {}".format(self.vserverip)
-            print "This is considered fatal, as this might pollute the test results"
+            print("Cannot reverse lookup {}".format(self.vserverip))
+            print("This is considered fatal, as this might pollute the test results")
             return False
         create_vserver="{build_dir}/{script} {script_options} {vserver_name}".format(**locals())
         return self.run_in_host(create_vserver) == 0
@@ -725,7 +725,7 @@ class TestPlc:
         elif self.options.personality == "linux64":
             arch = "x86_64"
         else:
-            raise Exception, "Unsupported personality {}".format(self.options.personality)
+            raise Exception("Unsupported personality {}".format(self.options.personality))
         nodefamily = "{}-{}-{}".format(self.options.pldistro, self.options.fcdistro, arch)
 
         pkgs_list=[]
@@ -746,7 +746,7 @@ class TestPlc:
         "run plc-config-tty"
         tmpname = '{}.plc-config-tty'.format(self.name())
         with open(tmpname,'w') as fileconf:
-            for (var,value) in self.plc_spec['settings'].iteritems():
+            for (var,value) in self.plc_spec['settings'].items():
                 fileconf.write('e {}\n{}\n'.format(var, value))
             fileconf.write('w\n')
             fileconf.write('q\n')
@@ -800,7 +800,7 @@ class TestPlc:
     def keys_store(self):
         "stores test users ssh keys in keys/"
         for key_spec in self.plc_spec['keys']:
-		TestKey(self,key_spec).store_key()
+                TestKey(self,key_spec).store_key()
         return True
 
     def keys_clean(self):
@@ -851,14 +851,14 @@ class TestPlc:
 
     def delete_all_sites(self):
         "Delete all sites in PLC, and related objects"
-        print 'auth_root', self.auth_root()
+        print('auth_root', self.auth_root())
         sites = self.apiserver.GetSites(self.auth_root(), {}, ['site_id','login_base'])
         for site in sites:
             # keep automatic site - otherwise we shoot in our own foot, root_auth is not valid anymore
             if site['login_base'] == self.plc_spec['settings']['PLC_SLICE_PREFIX']:
                 continue
             site_id = site['site_id']
-            print 'Deleting site_id', site_id
+            print('Deleting site_id', site_id)
             self.apiserver.DeleteSite(self.auth_root(), site_id)
         return True
 
@@ -909,7 +909,7 @@ class TestPlc:
         "create leases (on reservable nodes only, use e.g. run -c default -c resa)"
         now = int(time.time())
         grain = self.apiserver.GetLeaseGranularity(self.auth_root())
-        print 'API answered grain=', grain
+        print('API answered grain=', grain)
         start = (now/grain)*grain
         start += grain
         # find out all nodes that are reservable
@@ -967,20 +967,20 @@ class TestPlc:
             test_site = TestSite(self,site_spec)
             for node_spec in site_spec['nodes']:
                 test_node = TestNode(self, test_site, node_spec)
-                if node_spec.has_key('nodegroups'):
+                if 'nodegroups' in node_spec:
                     nodegroupnames = node_spec['nodegroups']
-                    if isinstance(nodegroupnames, StringTypes):
+                    if isinstance(nodegroupnames, str):
                         nodegroupnames = [ nodegroupnames ]
                     for nodegroupname in nodegroupnames:
-                        if not groups_dict.has_key(nodegroupname):
+                        if nodegroupname not in groups_dict:
                             groups_dict[nodegroupname] = []
                         groups_dict[nodegroupname].append(test_node.name())
         auth = self.auth_root()
         overall = True
-        for (nodegroupname,group_nodes) in groups_dict.iteritems():
+        for (nodegroupname,group_nodes) in groups_dict.items():
             if action == "add":
-                print 'nodegroups:', 'dealing with nodegroup',\
-                    nodegroupname, 'on nodes', group_nodes
+                print('nodegroups:', 'dealing with nodegroup',\
+                    nodegroupname, 'on nodes', group_nodes)
                 # first, check if the nodetagtype is here
                 tag_types = self.apiserver.GetTagTypes(auth, {'tagname':nodegroupname})
                 if tag_types:
@@ -990,20 +990,20 @@ class TestPlc:
                                                             {'tagname' : nodegroupname,
                                                              'description' : 'for nodegroup {}'.format(nodegroupname),
                                                              'category' : 'test'})
-                print 'located tag (type)', nodegroupname, 'as', tag_type_id
+                print('located tag (type)', nodegroupname, 'as', tag_type_id)
                 # create nodegroup
                 nodegroups = self.apiserver.GetNodeGroups(auth, {'groupname' : nodegroupname})
                 if not nodegroups:
                     self.apiserver.AddNodeGroup(auth, nodegroupname, tag_type_id, 'yes')
-                    print 'created nodegroup', nodegroupname, \
-                        'from tagname', nodegroupname, 'and value', 'yes'
+                    print('created nodegroup', nodegroupname, \
+                        'from tagname', nodegroupname, 'and value', 'yes')
                 # set node tag on all nodes, value='yes'
                 for nodename in group_nodes:
                     try:
                         self.apiserver.AddNodeTag(auth, nodename, nodegroupname, "yes")
                     except:
                         traceback.print_exc()
-                        print 'node', nodename, 'seems to already have tag', nodegroupname
+                        print('node', nodename, 'seems to already have tag', nodegroupname)
                     # check anyway
                     try:
                         expect_yes = self.apiserver.GetNodeTags(auth,
@@ -1011,15 +1011,15 @@ class TestPlc:
                                                                  'tagname'  : nodegroupname},
                                                                 ['value'])[0]['value']
                         if expect_yes != "yes":
-                            print 'Mismatch node tag on node',nodename,'got',expect_yes
+                            print('Mismatch node tag on node',nodename,'got',expect_yes)
                             overall = False
                     except:
                         if not self.options.dry_run:
-                            print 'Cannot find tag', nodegroupname, 'on node', nodename
+                            print('Cannot find tag', nodegroupname, 'on node', nodename)
                             overall = False
             else:
                 try:
-                    print 'cleaning nodegroup', nodegroupname
+                    print('cleaning nodegroup', nodegroupname)
                     self.apiserver.DeleteNodeGroup(auth, nodegroupname)
                 except:
                     traceback.print_exc()
@@ -1058,7 +1058,7 @@ class TestPlc:
     def nodes_check_boot_state(self, target_boot_state, timeout_minutes,
                                silent_minutes, period_seconds = 15):
         if self.options.dry_run:
-            print 'dry_run'
+            print('dry_run')
             return True
 
         class CompleterTaskBootState(CompleterTask):
@@ -1078,8 +1078,8 @@ class TestPlc:
             def message(self):
                 return "CompleterTaskBootState with node {}".format(self.hostname)
             def failure_epilogue(self):
-                print "node {} in state {} - expected {}"\
-                    .format(self.hostname, self.last_boot_state, target_boot_state)
+                print("node {} in state {} - expected {}"\
+                    .format(self.hostname, self.last_boot_state, target_boot_state))
                 
         timeout = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
@@ -1108,7 +1108,7 @@ class TestPlc:
                 command="ping -c 1 -w 1 {} >& /dev/null".format(self.hostname)
                 return utils.system(command, silent=silent) == 0
             def failure_epilogue(self):
-                print "Cannot ping node with name {}".format(self.hostname)
+                print("Cannot ping node with name {}".format(self.hostname))
         timeout = timedelta(seconds = timeout_seconds)
         graceout = timeout
         period = timedelta(seconds = period_seconds)
@@ -1134,7 +1134,7 @@ class TestPlc:
         else: 
             message = "boot"
             completer_message = 'ssh_node_boot'
-	    local_key = "keys/key_admin.rsa"
+            local_key = "keys/key_admin.rsa"
         utils.header("checking ssh access to nodes (expected in {} mode)".format(message))
         node_infos = self.all_node_infos()
         tasks = [ CompleterTaskNodeSsh(nodename, qemuname, local_key,
@@ -1196,17 +1196,17 @@ class TestPlc:
             def message(self):
                 return "initscript checker for {}".format(self.test_sliver.name())
             def failure_epilogue(self):
-                print "initscript stamp {} not found in sliver {}"\
-                    .format(self.stamp, self.test_sliver.name())
+                print("initscript stamp {} not found in sliver {}"\
+                    .format(self.stamp, self.test_sliver.name()))
             
         tasks = []
         for slice_spec in self.plc_spec['slices']:
-            if not slice_spec.has_key('initscriptstamp'):
+            if 'initscriptstamp' not in slice_spec:
                 continue
             stamp = slice_spec['initscriptstamp']
             slicename = slice_spec['slice_fields']['name']
             for nodename in slice_spec['nodenames']:
-                print 'nodename', nodename, 'slicename', slicename, 'stamp', stamp
+                print('nodename', nodename, 'slicename', slicename, 'stamp', stamp)
                 site,node = self.locate_node(nodename)
                 # xxx - passing the wrong site - probably harmless
                 test_site = TestSite(self, site)
@@ -1216,7 +1216,7 @@ class TestPlc:
                 tasks.append(CompleterTaskInitscript(test_sliver, stamp))
         return Completer(tasks, message='check_initscripts').\
             run (timedelta(minutes=5), timedelta(minutes=4), timedelta(seconds=10))
-	    
+            
     def check_initscripts(self):
         "check that the initscripts have triggered"
         return self.do_check_initscripts()
@@ -1232,12 +1232,12 @@ class TestPlc:
         "delete initscripts with PLCAPI"
         for initscript in self.plc_spec['initscripts']:
             initscript_name = initscript['initscript_fields']['name']
-            print('Attempting to delete {} in plc {}'.format(initscript_name, self.plc_spec['name']))
+            print(('Attempting to delete {} in plc {}'.format(initscript_name, self.plc_spec['name'])))
             try:
                 self.apiserver.DeleteInitScript(self.auth_root(), initscript_name)
-                print initscript_name, 'deleted'
+                print(initscript_name, 'deleted')
             except:
-                print 'deletion went wrong - probably did not exist'
+                print('deletion went wrong - probably did not exist')
         return True
 
     ### manage slices
@@ -1344,7 +1344,7 @@ class TestPlc:
                 return plc.locate_sliver_obj(nodename, slicename)
             except:
                 pass
-        raise Exception, "Cannot locate sliver {}@{} among all PLCs".format(nodename, slicename)
+        raise Exception("Cannot locate sliver {}@{} among all PLCs".format(nodename, slicename))
 
     # implement this one as a cross step so that we can take advantage of different nodes
     # in multi-plcs mode
@@ -1365,7 +1365,7 @@ class TestPlc:
             def message(self):
                 return "network ready checker for {}".format(self.test_sliver.name())
             def failure_epilogue(self):
-                print "could not bind port from sliver {}".format(self.test_sliver.name())
+                print("could not bind port from sliver {}".format(self.test_sliver.name()))
 
         sliver_specs = {}
         tasks = []
@@ -1436,7 +1436,7 @@ class TestPlc:
             def message(self): 
                 return "System slice {} @ {}".format(slicename, self.test_node.name())
             def failure_epilogue(self): 
-                print "COULD not find system slice {} @ {}".format(slicename, self.test_node.name())
+                print("COULD not find system slice {} @ {}".format(slicename, self.test_node.name()))
         timeout = timedelta(minutes=timeout_minutes)
         silent  = timedelta(0)
         period  = timedelta(seconds=period_seconds)
@@ -1530,7 +1530,7 @@ class TestPlc:
             try:
                 self.apiserver.DeleteSite(self.auth_root(),login_base)
             except:
-                print "Site {} already absent from PLC db".format(login_base)
+                print("Site {} already absent from PLC db".format(login_base))
 
             for spec_name in ['pi_spec','user_spec']:
                 user_spec = auth_sfa_spec[spec_name]
@@ -1542,7 +1542,7 @@ class TestPlc:
                     #print "User {} already absent from PLC db".format(username)
                     pass
 
-        print "REMEMBER TO RUN sfa_import AGAIN"
+        print("REMEMBER TO RUN sfa_import AGAIN")
         return True
 
     def sfa_uninstall(self):
@@ -1580,7 +1580,7 @@ class TestPlc:
         if not os.path.isdir(dirname):
             utils.system("mkdir -p {}".format(dirname))
         if not os.path.isdir(dirname):
-            raise Exception,"Cannot create config dir for plc {}".format(self.name())
+            raise Exception("Cannot create config dir for plc {}".format(self.name()))
         return dirname
 
     def conffile(self, filename):
@@ -1604,7 +1604,7 @@ class TestPlc:
         "run sfa-config-tty"
         tmpname = self.conffile("sfa-config-tty")
         with open(tmpname,'w') as fileconf:
-            for (var,value) in self.plc_spec['sfa']['settings'].iteritems():
+            for (var,value) in self.plc_spec['sfa']['settings'].items():
                 fileconf.write('e {}\n{}\n'.format(var, value))
             fileconf.write('w\n')
             fileconf.write('R\n')
@@ -1784,26 +1784,26 @@ class TestPlc:
         # (3) get the nodes /var/log and store is as logs/node.var-log.<node>/*
         # (4) as far as possible get the slice's /var/log as logs/sliver.var-log.<sliver>/*
         # (1.a)
-        print "-------------------- TestPlc.gather_logs : PLC's /var/log"
+        print("-------------------- TestPlc.gather_logs : PLC's /var/log")
         self.gather_var_logs()
         # (1.b)
-        print "-------------------- TestPlc.gather_logs : PLC's /var/lib/psql/data/pg_log/"
+        print("-------------------- TestPlc.gather_logs : PLC's /var/lib/psql/data/pg_log/")
         self.gather_pgsql_logs()
         # (1.c)
-        print "-------------------- TestPlc.gather_logs : PLC's /root/sfi/"
+        print("-------------------- TestPlc.gather_logs : PLC's /root/sfi/")
         self.gather_root_sfi()
         # (2) 
-        print "-------------------- TestPlc.gather_logs : nodes's QEMU logs"
+        print("-------------------- TestPlc.gather_logs : nodes's QEMU logs")
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite(self,site_spec)
             for node_spec in site_spec['nodes']:
                 test_node = TestNode(self, test_site, node_spec)
                 test_node.gather_qemu_logs()
         # (3)
-        print "-------------------- TestPlc.gather_logs : nodes's /var/log"
+        print("-------------------- TestPlc.gather_logs : nodes's /var/log")
         self.gather_nodes_var_logs()
         # (4)
-        print "-------------------- TestPlc.gather_logs : sample sliver's /var/log"
+        print("-------------------- TestPlc.gather_logs : sample sliver's /var/log")
         self.gather_slivers_var_logs()
         return True
 
@@ -1852,7 +1852,7 @@ class TestPlc:
         # uses options.dbname if it is found
         try:
             name = self.options.dbname
-            if not isinstance(name, StringTypes):
+            if not isinstance(name, str):
                 raise Exception
         except:
             t = datetime.now()

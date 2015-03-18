@@ -25,21 +25,21 @@ alias probe_all="probe_qemus ; probe_plcs"
 ########## cleanup: stop plc or kill qemus
 function cleanup_qemus () {
     for box in $qemuboxes ; do 
-	echo killing qemu instances in $box
-	ssh root@$box pkill qemu
+        echo killing qemu instances in $box
+        ssh root@$box pkill qemu
     done
     if [ -f ~/tracker-qemus ] ; then 
-	echo ~/cleaning tracker-qemus ; rm ~/tracker-qemus 
+        echo ~/cleaning tracker-qemus ; rm ~/tracker-qemus 
     fi
 }
 function cleanup_plcs () { 
     for box in $plcboxes ; do 
-	echo stopping vserver instances in $box 
-	ssh root@$box 'cd /vservers ; for vsname in *; do echo -n "stop $vsname y/[n] ? "; read answer ; case $answer in nN) echo skipping $vsname ;; *) vserver $vsname stop ;; esac; done'
+        echo stopping vserver instances in $box 
+        ssh root@$box 'cd /vservers ; for vsname in *; do echo -n "stop $vsname y/[n] ? "; read answer ; case $answer in nN) echo skipping $vsname ;; *) vserver $vsname stop ;; esac; done'
     done
     if [ -f ~/tracker-plcs ] ; then 
-	echo ~/cleaning tracker-plcs
-	rm ~/tracker-plcs
+        echo ~/cleaning tracker-plcs
+        rm ~/tracker-plcs
     fi
 }
 alias cleanup_all="cleanup_qemus ; cleanup_plcs"

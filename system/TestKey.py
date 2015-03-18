@@ -8,8 +8,8 @@ from TestSsh import TestSsh
 class TestKey:
 
     def __init__ (self, test_plc, key_spec):
-	self.test_plc = test_plc
-	self.key_spec = key_spec
+        self.test_plc = test_plc
+        self.key_spec = key_spec
         self.test_ssh = TestSsh(self.test_plc.test_ssh)
         
     def name(self):
@@ -31,6 +31,6 @@ class TestKey:
             f.write(self.key_spec['key_fields']['key'])
         with open(priv,"w") as f:
             f.write(self.key_spec['private'])
-        os.chmod(priv,0400)
-        os.chmod(pub,0444)
+        os.chmod(priv,0o400)
+        os.chmod(pub,0o444)
             

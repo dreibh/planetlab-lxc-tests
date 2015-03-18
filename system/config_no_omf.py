@@ -10,7 +10,7 @@
 def remove_omf (plc_spec):
     for slice in plc_spec['slices']:
         if 'omf-friendly' in slice:
-            print 'Turning off omf-friendly in slice',slice['slice_fields']['name']
+            print('Turning off omf-friendly in slice',slice['slice_fields']['name'])
             del slice['omf-friendly']
     return plc_spec
 

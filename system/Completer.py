@@ -45,15 +45,15 @@ class Completer:
             if not tasks:
                 if self.verbose:
                     duration = datetime.now() - begin
-                    print "total completer {} {}s".format(self.message,
-                                                          int(duration.total_seconds()))
+                    print("total completer {} {}s".format(self.message,
+                                                          int(duration.total_seconds())))
                 return True
             if datetime.now() > timeout:
                 for task in tasks: 
                     task.failure_epilogue()
                 return False
             if self.verbose:
-                print '{}s..'.format(period_seconds),
+                print('{}s..'.format(period_seconds), end=' ')
             time.sleep(period_seconds)
         # in case we're empty 
         return True
@@ -76,17 +76,17 @@ class CompleterTask:
     def run (self, silent):
         result = self.actual_run()
         if silent:
-            print '+' if result else '.',
+            print('+' if result else '.', end=' ')
             sys.stdout.flush()
         else:
-            print self.message(), "->", "OK" if result else "KO"
+            print(self.message(), "->", "OK" if result else "KO")
         return result
 
     def message (self):
         return "you-need-to-redefine-message"
 
     def failure_epilogue (self):
-        print "you-need-to-redefine-failure_epilogue"
+        print("you-need-to-redefine-failure_epilogue")
 
 # random result
 class TaskTest (CompleterTask):
@@ -103,19 +103,19 @@ class TaskTest (CompleterTask):
         return "Task {} - delay was {}s".format(self.counter, self.delay)
 
     def failure_epilogue (self):
-        print "BOTTOM LINE: FAILURE with task ({})".format(self.counter)
+        print("BOTTOM LINE: FAILURE with task ({})".format(self.counter))
 
 def main ():
     import sys
     if len(sys.argv) != 6:
-        print "Usage: <command> number_tasks max_random timeout_s silent_s period_s"
+        print("Usage: <command> number_tasks max_random timeout_s silent_s period_s")
         sys.exit(1)
     [number, max, timeout, silent, period] = [ int(x) for x in sys.argv[1:]]
     tasks = [ TaskTest(max) for i in range(number)]
     success = Completer(tasks,verbose=True).run(timedelta(seconds=timeout),
                                                 timedelta(seconds=silent),
                                                 timedelta(seconds=period))
-    print "OVERALL",success
+    print("OVERALL",success)
 
 if __name__ == '__main__':
     main()

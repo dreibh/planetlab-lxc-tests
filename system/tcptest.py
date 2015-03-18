@@ -7,13 +7,13 @@ import sys
 import time
 import subprocess
 import socket
-import SocketServer
+import socketserver
 import threading
 from optparse import OptionParser    
 
 def myprint(message, id='client'):
     now = time.strftime("%H:%M:%S", time.localtime())
-    print "* {now} ({id}) -- {message}".format(**locals())
+    print("* {now} ({id}) -- {message}".format(**locals()))
     sys.stdout.flush()
 
 def show_network_status(id):
@@ -22,12 +22,12 @@ def show_network_status(id):
     myprint("ip route show", id=id)
     subprocess.call(['ip', 'route', 'show'])
 
-class EchoRequestHandler(SocketServer.StreamRequestHandler):
+class EchoRequestHandler(socketserver.StreamRequestHandler):
     def handle(self):
         line = self.rfile.readline()
         self.wfile.write(line)
 
-class UppercaseRequestHandler(SocketServer.StreamRequestHandler):
+class UppercaseRequestHandler(socketserver.StreamRequestHandler):
     def handle(self):
         line = self.rfile.readline()
         self.wfile.write(line.upper())
@@ -52,7 +52,7 @@ class Server:
 
         myprint("==================== tcptest.py server", id='server')
         show_network_status(id='server')
-        server = SocketServer.TCPServer((options.address, options.port),
+        server = socketserver.TCPServer((options.address, options.port),
                                         UppercaseRequestHandler)
         try:
             if options.timeout:
@@ -64,7 +64,7 @@ class Server:
             else:
                 server.serve_forever()        
         except KeyboardInterrupt as e:
-            print 'Bailing out on keyboard interrupt'
+            print('Bailing out on keyboard interrupt')
             sys.exit(1)
             
 class Ready:
@@ -90,7 +90,7 @@ class Ready:
                 s.bind((options.address, options.port))
                 return True
             except Exception as e:
-                print e
+                print(e)
                 return False
 
         def eth0_has_ipv4():
@@ -158,5 +158,5 @@ if __name__ == '__main__':
         elif arg.find("ready") >= 0:
             sys.argv.remove(arg)
             Ready().main()
-    print 'you must specify either --client or --server'
+    print('you must specify either --client or --server')
     sys.exit(1)

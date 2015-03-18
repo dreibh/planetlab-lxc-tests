@@ -34,17 +34,17 @@ class CompleterTaskSliceSsh (CompleterTask):
 
     def failure_epilogue (self):
         if self.expected:
-            print "Could not ssh into sliver {}@{}".format(self.slicename, self.hostname)
+            print("Could not ssh into sliver {}@{}".format(self.slicename, self.hostname))
         else:
-            print "Could still ssh into sliver{}@{} (that was expected to be down)"\
-                .format(self.slicename, self.hostname)
+            print("Could still ssh into sliver{}@{} (that was expected to be down)"\
+                .format(self.slicename, self.hostname))
 
 class TestSlice:
 
     def __init__ (self, test_plc, test_site, slice_spec):
-	self.test_plc = test_plc
+        self.test_plc = test_plc
         self.test_site = test_site
-	self.slice_spec = slice_spec
+        self.slice_spec = slice_spec
         self.test_ssh = TestSsh(self.test_plc.test_ssh)
         
     def name(self):
@@ -74,12 +74,12 @@ class TestSlice:
                 test_user = TestUser(self,self.test_site,user_spec)
                 self.test_plc.apiserver.AddPersonToSlice(auth, test_user.name(), slice_name)
         # add initscript code or name as appropriate
-        if self.slice_spec.has_key('initscriptcode'):
+        if 'initscriptcode' in self.slice_spec:
             iscode = self.slice_spec['initscriptcode']
             utils.header("Adding initscript code {} in {}".format(iscode, slice_name))
             self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,
                                                 'initscript_code', iscode)
-        elif self.slice_spec.has_key('initscriptname'):
+        elif 'initscriptname' in self.slice_spec:
             isname = self.slice_spec['initscriptname']
             utils.header("Adding initscript name {} in {}".format(isname, slice_name))
             self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,
@@ -106,9 +106,9 @@ class TestSlice:
         expected = self.test_plc.plc_spec['expected_vsys_tags']
         result = set(values) == set(expected)
         if not result:
-            print 'Check vsys defaults with slice {}'.format(slice_name)
-            print 'Expected {}'.format(expected)
-            print 'Got {}'.format(values)
+            print('Check vsys defaults with slice {}'.format(slice_name))
+            print('Expected {}'.format(expected))
+            print('Got {}'.format(values))
         return result
 
     # just add the nodes and handle tags
@@ -134,7 +134,7 @@ class TestSlice:
     def delete_nodes (self):
         auth = self.owner_auth()
         slice_name = self.slice_name()
-        print 'retrieving slice {}'.format(slice_name)
+        print('retrieving slice {}'.format(slice_name))
         slice=self.test_plc.apiserver.GetSlices(auth,slice_name)[0]
         node_ids=slice['node_ids']
         utils.header ("Deleting {} nodes from slice {}"\
@@ -252,9 +252,9 @@ class TestSlice:
                                               command="ls -d {}".format(rootfs))
             def failure_epilogue (self):
                 if expected:
-                    print "Could not stat {} - was expected to be present".format(rootfs)
+                    print("Could not stat {} - was expected to be present".format(rootfs))
                 else:
-                    print "Sliver rootfs {} still present - this is unexpected".format(rootfs)
+                    print("Sliver rootfs {} still present - this is unexpected".format(rootfs))
                     utils.system(self.test_ssh.actual_command("ls -l {rootfs}; du -hs {rootfs}".format(**locals()),
                                                               dry_run=self.dry_run))
         return [ CompleterTaskRootfs (nodename, qemuname) for (nodename,qemuname) in node_infos ]

@@ -6,7 +6,7 @@
 # using a hostname or an IP
 
 import socket
-import xmlrpclib
+import xmlrpc.client
 import traceback
 
 class PlcapiUrlScanner:
@@ -15,7 +15,7 @@ class PlcapiUrlScanner:
     def __init__ (self, auth, hostname=None, ip=None, verbose=False):
         self.auth = auth
         if not hostname and not ip:
-            raise Exception, "PlcapiUrlScanner needs _some_ input"
+            raise Exception("PlcapiUrlScanner needs _some_ input")
         if hostname:
             if not ip: 
                 try:
@@ -31,14 +31,14 @@ class PlcapiUrlScanner:
         
     def try_url (self, url):
         try:
-            xmlrpclib.ServerProxy (url, verbose=self.verbose, allow_none=True).GetNodes(self.auth)
-            print 'YES', url
+            xmlrpc.client.ServerProxy (url, verbose=self.verbose, allow_none=True).GetNodes(self.auth)
+            print('YES', url)
             return True
-        except xmlrpclib.ProtocolError as e:
-            print '... (http error {})'.format(e.errcode), url
+        except xmlrpc.client.ProtocolError as e:
+            print('... (http error {})'.format(e.errcode), url)
             return False
         except Exception as e:
-            print '---', type(e).__name__, url, e
+            print('---', type(e).__name__, url, e)
             if self.verbose:
                 traceback.print_exc()
             return False

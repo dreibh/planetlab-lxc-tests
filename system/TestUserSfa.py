@@ -2,7 +2,7 @@
 # Copyright (C) 2010 INRIA 
 #
 import os, sys, time
-import xmlrpclib
+import xmlrpc.client
 
 import utils
 
@@ -36,7 +36,7 @@ class TestUserSfa:
         # handle key separately because of embedded whitespace
         # hack - the user's pubkey is avail from his hrn
         command += " -k {}/{}.pub".format(self.sfi_path(), user_hrn)
-	return self.test_plc.run_in_guest(self.sfi_pi(command)) == 0
+        return self.test_plc.run_in_guest(self.sfi_pi(command)) == 0
 
     def sfa_update_user (self,options):
         "update a user record using sfi update"
@@ -45,10 +45,10 @@ class TestUserSfa:
         command += " --type user"
         command += " --xrn {}".format(user_hrn)
         command += " " + " ".join(self.user_spec['update_options'])
-	return self.test_plc.run_in_guest(self.sfi_pi(command)) == 0
+        return self.test_plc.run_in_guest(self.sfi_pi(command)) == 0
 
     def sfa_delete_user(self,options):
-	"run sfi delete on user record"
+        "run sfi delete on user record"
         user_hrn = self.hrn()
         command = "remove -t user {}".format(user_hrn)
-	return self.test_plc.run_in_guest(self.sfi_pi(command)) == 0
+        return self.test_plc.run_in_guest(self.sfi_pi(command)) == 0

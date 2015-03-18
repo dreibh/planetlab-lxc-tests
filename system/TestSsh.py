@@ -120,7 +120,7 @@ class TestSsh:
     def header(self, message):
         if not message:
             return
-        print "===============",message
+        print("===============",message)
         sys.stdout.flush()
 
     def run(self, command, message=None, background=False, dry_run=False):

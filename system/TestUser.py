@@ -2,16 +2,16 @@
 # Copyright (C) 2010 INRIA 
 #
 import os, sys, time
-import xmlrpclib
+import xmlrpc.client
 
 import utils
 
 class TestUser:
 
     def __init__ (self, test_plc, test_site, user_spec):
-	self.test_plc = test_plc
-	self.test_site = test_site
-	self.user_spec = user_spec
+        self.test_plc = test_plc
+        self.test_site = test_site
+        self.user_spec = user_spec
 
     def name(self):
         return self.user_spec['user_fields']['email']

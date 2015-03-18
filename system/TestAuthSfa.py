@@ -39,8 +39,8 @@ def user_sfa_mapper (method):
 class TestAuthSfa:
 
     def __init__ (self, test_plc, auth_sfa_spec):
-	self.test_plc = test_plc
-	self.auth_sfa_spec = auth_sfa_spec
+        self.test_plc = test_plc
+        self.auth_sfa_spec = auth_sfa_spec
         self.test_ssh = TestSsh(self.test_plc.test_ssh)
 #        # shortcuts
         self.login_base = self.auth_sfa_spec['login_base']
@@ -91,21 +91,21 @@ class TestAuthSfa:
                 fileconf.close()
                 utils.header ("(Over)wrote {}".format(file_name))
         #
-	file_name=dir_name + os.sep + 'sfi_config'
+        file_name=dir_name + os.sep + 'sfi_config'
         fileconf=open(file_name,'w')
-	SFI_AUTH=self.auth_hrn()
+        SFI_AUTH=self.auth_hrn()
         fileconf.write ("SFI_AUTH='{}'".format(SFI_AUTH))
-	fileconf.write('\n')
+        fileconf.write('\n')
         # default is to run as a PI
-	SFI_USER=self.obj_hrn(self.auth_sfa_spec['pi_spec']['name'])
+        SFI_USER=self.obj_hrn(self.auth_sfa_spec['pi_spec']['name'])
         fileconf.write("SFI_USER='{}'".format(SFI_USER))
-	fileconf.write('\n')
-	SFI_REGISTRY='http://{}:{}/'.format(sfa_spec['settings']['SFA_REGISTRY_HOST'], 12345)
+        fileconf.write('\n')
+        SFI_REGISTRY='http://{}:{}/'.format(sfa_spec['settings']['SFA_REGISTRY_HOST'], 12345)
         fileconf.write("SFI_REGISTRY='{}'".format(SFI_REGISTRY))
-	fileconf.write('\n')
-	SFI_SM='http://{}:{}/'.format(sfa_spec['settings']['SFA_SM_HOST'], sfa_spec['sfi-connects-to-port'])
+        fileconf.write('\n')
+        SFI_SM='http://{}:{}/'.format(sfa_spec['settings']['SFA_SM_HOST'], sfa_spec['sfi-connects-to-port'])
         fileconf.write("SFI_SM='{}'".format(SFI_SM))
-	fileconf.write('\n')
+        fileconf.write('\n')
         fileconf.close()
         utils.header ("(Over)wrote {}".format(file_name))
 
@@ -158,13 +158,13 @@ class TestAuthSfa:
 
     def sfi_list (self, options):
         "run (as regular user) sfi list (on Registry)"
-	return \
+        return \
             self.test_plc.run_in_guest(self.sfi_user("list -r {}".format(self.root_hrn()))) == 0 and \
             self.test_plc.run_in_guest(self.sfi_user("list {}".format(self.auth_hrn()))) == 0
 
     def sfi_show_site (self, options):
         "run (as regular user) sfi show (on Registry)"
-	return \
+        return \
             self.test_plc.run_in_guest(self.sfi_user("show {}".format(self.auth_hrn()))) == 0
 
 
