@@ -3,6 +3,9 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
+
+from __future__ import print_function
+
 import sys
 import time
 import subprocess
@@ -10,8 +13,6 @@ import socket
 import SocketServer
 import threading
 from optparse import OptionParser    
-
-from __future__ import print_function
 
 def myprint(message, id='client'):
     now = time.strftime("%H:%M:%S", time.localtime())
