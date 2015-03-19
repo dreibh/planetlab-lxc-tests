@@ -15,7 +15,7 @@ from Completer import CompleterTask
 
 class CompleterTaskSliceSsh (CompleterTask):
 
-    def __init__ (self, test_plc, hostname, slicename, private_key,command, expected, dry_run):
+    def __init__ (self, test_plc, hostname, slicename, private_key, command, expected, dry_run):
         self.test_plc = test_plc
         self.hostname = hostname
         self.slicename = slicename
@@ -25,13 +25,13 @@ class CompleterTaskSliceSsh (CompleterTask):
         self.expected = expected
 
     def run (self, silent): 
-        (site_spec,node_spec) = self.test_plc.locate_hostname(self.hostname)
-        test_ssh = TestSsh (self.hostname,key=self.private_key,username=self.slicename)
+        site_spec, node_spec = self.test_plc.locate_hostname(self.hostname)
+        test_ssh = TestSsh (self.hostname, key=self.private_key, username=self.slicename)
         full_command = test_ssh.actual_command(self.command)
         retcod = utils.system (full_command, silent=silent)
-        if self.dry_run: return True
-        if self.expected:       return retcod==0
-        else:                   return retcod!=0
+        if self.dry_run:        return True
+        if self.expected:       return retcod == 0
+        else:                   return retcod != 0
 
     def failure_epilogue (self):
         if self.expected:
@@ -72,7 +72,7 @@ class TestSlice:
         self.test_plc.apiserver.AddSlice(auth, slice_fields)
         for username in self.slice_spec['usernames']:
                 user_spec = self.test_site.locate_user(username)
-                test_user = TestUser(self,self.test_site,user_spec)
+                test_user = TestUser(self, self.test_site, user_spec)
                 self.test_plc.apiserver.AddPersonToSlice(auth, test_user.name(), slice_name)
         # add initscript code or name as appropriate
         if 'initscriptcode' in self.slice_spec:
@@ -119,7 +119,7 @@ class TestSlice:
         hostnames=[]
         for nodename in self.slice_spec['nodenames']:
             node_spec=self.test_site.locate_node(nodename)
-            test_node=TestNode(self.test_plc,self.test_site,node_spec)
+            test_node=TestNode(self.test_plc, self.test_site, node_spec)
             hostnames += [test_node.name()]
         utils.header("Adding {} in {}".format(hostnames, slice_name))
         self.test_plc.apiserver.AddSliceToNodes(auth, slice_name, hostnames)
@@ -129,18 +129,18 @@ class TestSlice:
         auth = self.owner_auth()
         slice_name = self.slice_name()
         utils.header("Deleting slice {}".format(slice_name))
-        self.test_plc.apiserver.DeleteSlice(auth,slice_name)
+        self.test_plc.apiserver.DeleteSlice(auth, slice_name)
 
     # keep the slice alive and just delete nodes
     def delete_nodes (self):
         auth = self.owner_auth()
         slice_name = self.slice_name()
         print('retrieving slice {}'.format(slice_name))
-        slice=self.test_plc.apiserver.GetSlices(auth,slice_name)[0]
+        slice=self.test_plc.apiserver.GetSlices(auth, slice_name)[0]
         node_ids=slice['node_ids']
         utils.header ("Deleting {} nodes from slice {}"\
                       .format(len(node_ids), slice_name))
-        self.test_plc.apiserver.DeleteSliceFromNodes (auth,slice_name, node_ids)
+        self.test_plc.apiserver.DeleteSliceFromNodes (auth, slice_name, node_ids)
 
     def locate_private_key(self):
         key_names=[]
@@ -163,7 +163,7 @@ class TestSlice:
         return self.ssh_tasks(options, expected=False, *args, **kwds)
 
     def ssh_tasks(self,options, expected=True, command=None):
-#                     timeout_minutes=20,silent_minutes=10,period_seconds=15):
+#                     timeout_minutes=20, silent_minutes=10, period_seconds=15):
 #        timeout  = timedelta(minutes=timeout_minutes)
 #        graceout = timedelta(minutes=silent_minutes)
 #        period   = timedelta(seconds=period_seconds)
@@ -182,25 +182,25 @@ class TestSlice:
 
         tasks=[]
         slicename=self.name()
-        dry_run = getattr(options,'dry_run',False)
+        dry_run = getattr(options, 'dry_run', False)
         for nodename in self.slice_spec['nodenames']:
-            (site_spec,node_spec) = self.test_plc.locate_node(nodename)
-            tasks.append( CompleterTaskSliceSsh(self.test_plc,node_spec['node_fields']['hostname'],
-                                                slicename,private_key,command,expected,dry_run))
+            site_spec, node_spec = self.test_plc.locate_node(nodename)
+            tasks.append( CompleterTaskSliceSsh(self.test_plc, node_spec['node_fields']['hostname'],
+                                                slicename, private_key, command, expected, dry_run))
         return tasks
 
     def ssh_slice_basics (self, options, *args, **kwds):
         "the slice is expected to be UP and we just check a few simple sanity commands, including 'ps' to check for /proc"
-        overall=True
-        if not self.do_ssh_slice_once(options,expected=True,  command='true'): overall=False
-        if not self.do_ssh_slice_once(options,expected=False, command='false'): overall=False
-        if not self.do_ssh_slice_once(options,expected=False, command='someimprobablecommandname'): overall=False
-        if not self.do_ssh_slice_once(options,expected=True,  command='ps'): overall=False
-        if not self.do_ssh_slice_once(options,expected=False, command='ls /vservers'): overall=False
+        overall = True
+        if not self.do_ssh_slice_once(options, expected=True,  command='true'): overall=False
+        if not self.do_ssh_slice_once(options, expected=False, command='false'): overall=False
+        if not self.do_ssh_slice_once(options, expected=False, command='someimprobablecommandname'): overall=False
+        if not self.do_ssh_slice_once(options, expected=True,  command='ps'): overall=False
+        if not self.do_ssh_slice_once(options, expected=False, command='ls /vservers'): overall=False
         return overall
 
     # pick just one nodename and runs the ssh command once
-    def do_ssh_slice_once(self,options,command,expected):
+    def do_ssh_slice_once(self, options, command, expected):
         # locate a key
         private_key=self.locate_private_key()
         if not private_key :
@@ -210,7 +210,7 @@ class TestSlice:
         # convert nodenames to real hostnames
         slice_spec = self.slice_spec
         nodename=slice_spec['nodenames'][0]
-        (site_spec,node_spec) = self.test_plc.locate_node(nodename)
+        site_spec, node_spec = self.test_plc.locate_node(nodename)
         hostname=node_spec['node_fields']['hostname']
 
         if expected:
@@ -219,11 +219,11 @@ class TestSlice:
             msg="{} to return FALSE from ssh".format(command)
             
         utils.header("checking {} -- slice {} on node {}".format(msg, self.name(), hostname))
-        (site_spec,node_spec) = self.test_plc.locate_hostname(hostname)
-        test_ssh = TestSsh (hostname,key=private_key,username=self.name())
+        site_spec, node_spec = self.test_plc.locate_hostname(hostname)
+        test_ssh = TestSsh (hostname, key=private_key, username=self.name())
         full_command = test_ssh.actual_command(command)
-        retcod = utils.system (full_command,silent=True)
-        if getattr(options,'dry_run',None):
+        retcod = utils.system (full_command, silent=True)
+        if getattr(options, 'dry_run', None):
             return True
         if expected:
             success = retcod==0
@@ -237,10 +237,10 @@ class TestSlice:
     # check that /vservers/<> is present/deleted
     def slice_fs_present__tasks (self, options): 
         "checks that /vservers/<slicename> exists on the filesystem"
-        return self.check_rootfs_tasks(options,expected=True)
+        return self.check_rootfs_tasks(options, expected=True)
     def slice_fs_deleted__tasks (self, options): 
         "checks that /vservers/<slicename> has been properly wiped off"
-        return self.check_rootfs_tasks (options,expected=False)
+        return self.check_rootfs_tasks (options, expected=False)
 
     def check_rootfs_tasks (self, options, expected):
         # use constant admin key
@@ -249,7 +249,7 @@ class TestSlice:
         rootfs="/vservers/{}".format(self.name())
         class CompleterTaskRootfs (CompleterTaskNodeSsh):
             def __init__ (self, nodename, qemuname):
-                CompleterTaskNodeSsh.__init__(self,nodename, qemuname, local_key, expected=expected,
+                CompleterTaskNodeSsh.__init__(self, nodename, qemuname, local_key, expected=expected,
                                               command="ls -d {}".format(rootfs))
             def failure_epilogue (self):
                 if expected:
