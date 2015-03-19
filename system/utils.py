@@ -27,8 +27,9 @@ def pprint(message, spec, depth=2):
     PrettyPrinter(indent=8, depth=depth).pprint(spec)
 
 
-
-def system(command, background=False, silent=False, dry_run=None):
+# set a default timeout to 15 minutes - this should be plenty even for installations
+# call with timeout=None if the intention really is to wait until full completion
+def system(command, background=False, silent=False, dry_run=None, timeout=15*60):
     dry_run = dry_run if dry_run is not None else getattr(options, 'dry_run', False)
     if dry_run:
         print('dry_run:', command)
@@ -50,7 +51,11 @@ def system(command, background=False, silent=False, dry_run=None):
         sys.stdout.flush()
     if not silent:
         command = "set -x; " + command
-    return os.system(command)
+    try:
+        return subprocess.call(command, shell=True, timeout=timeout)
+    except subprocess.TimeoutExpired as e:
+        header("TIMEOUT when running command {}- {}".format(command, e))
+        return -1
 
 ### WARNING : this ALWAYS does its job, even in dry_run mode
 def output_of (command):

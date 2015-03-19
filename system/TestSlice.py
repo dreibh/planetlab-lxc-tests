@@ -28,7 +28,7 @@ class CompleterTaskSliceSsh (CompleterTask):
         site_spec, node_spec = self.test_plc.locate_hostname(self.hostname)
         test_ssh = TestSsh (self.hostname, key=self.private_key, username=self.slicename)
         full_command = test_ssh.actual_command(self.command)
-        retcod = utils.system (full_command, silent=silent)
+        retcod = utils.system (full_command, silent=silent, timeout=10)
         if self.dry_run:        return True
         if self.expected:       return retcod == 0
         else:                   return retcod != 0
@@ -222,7 +222,7 @@ class TestSlice:
         site_spec, node_spec = self.test_plc.locate_hostname(hostname)
         test_ssh = TestSsh (hostname, key=private_key, username=self.name())
         full_command = test_ssh.actual_command(command)
-        retcod = utils.system (full_command, silent=True)
+        retcod = utils.system (full_command, silent=True, timeout=10)
         if getattr(options, 'dry_run', None):
             return True
         if expected:
@@ -257,5 +257,5 @@ class TestSlice:
                 else:
                     print("Sliver rootfs {} still present - this is unexpected".format(rootfs))
                     utils.system(self.test_ssh.actual_command("ls -l {rootfs}; du -hs {rootfs}".format(**locals()),
-                                                              dry_run=self.dry_run))
+                                                              dry_run=self.dry_run, timeout=20))
         return [ CompleterTaskRootfs (nodename, qemuname) for (nodename,qemuname) in node_infos ]
