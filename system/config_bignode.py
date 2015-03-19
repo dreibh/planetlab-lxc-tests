@@ -1,5 +1,6 @@
+# -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2012 INRIA 
+# Copyright (C) 2015 INRIA 
 #
 # allow one hour for the node to install
 

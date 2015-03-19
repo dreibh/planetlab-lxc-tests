@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- python3 -*-
+# Thierry Parmentelat <thierry.parmentelat@inria.fr>
+# Copyright (C) 2015 INRIA 
+
 import sys, time
 from datetime import datetime, timedelta
 

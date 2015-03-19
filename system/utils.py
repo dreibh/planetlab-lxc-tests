@@ -1,7 +1,13 @@
+# -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2015 INRIA 
 #
-import time, os, re, glob, sys
+import sys
+import time
+import os
+import re
+import glob
+import subprocess
 from pprint import PrettyPrinter
 
 options={}

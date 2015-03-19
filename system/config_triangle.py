@@ -1,5 +1,6 @@
+# -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2015 INRIA 
 #
 # re-use the default config with 3 myplc's and 
 # 3 SFA's for checking antiloop on some decent scale

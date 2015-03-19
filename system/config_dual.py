@@ -1,5 +1,6 @@
+# -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2015 INRIA 
 #
 # just overwrite options.size to be 2 and re-use the default config
 import config_default

@@ -1,6 +1,7 @@
 #!/usr/bin/python3 -u
+# -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2015 INRIA 
 #
 # this is only an example file
 # the actual file is installed in your testmaster box as /root/LocalTestResources.py

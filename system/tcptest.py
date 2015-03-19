@@ -4,6 +4,11 @@
 # Copyright (C) 2010 INRIA 
 #
 
+# this is a small and simple standalone utility
+# designed to run in slice-space
+# we keep this in python2 for now until python3
+# can be taken for granted in sliceimage
+
 from __future__ import print_function
 
 import sys
