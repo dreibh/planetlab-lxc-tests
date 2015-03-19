@@ -963,7 +963,7 @@ class TestBox(Box):
             header ("No {} on {}".format(msg, self.line()))
         else:
             header ("{} on {}".format(msg, self.line()))
-            instances.sort(sort=timestamp_sort)
+            instances.sort(key=timestamp_key)
             for i in instances:
                 print(i.line())
         # show 'starting' regardless of verbose
