@@ -308,7 +308,7 @@ class TestPlc:
     def host_to_guest(self, command):
         vservername = self.vservername
         personality = self.options.personality
-        raw = "{personality} virsh -c lxc:/// lxc-enter-namespace {vservername}".format(**locals())
+        raw = "{personality} virsh -c lxc:/// lxc-enter-namespace --noseclabel {vservername}".format(**locals())
         # f14 still needs some extra help
         if self.options.fcdistro == 'f14':
             raw +=" -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin {command}".format(**locals())
