@@ -29,7 +29,7 @@ class OnelabSubstrate (Substrate):
       return [ 
 # gotan looks in bad shape and I can't use its drac from the US
 #         ('gotan', 20),         # how many plcs max in this box 
-         ('deathvegas', 12),    
+         ('buzzcocks', 12),    
          ]  
 
    # vplc01 to 40
