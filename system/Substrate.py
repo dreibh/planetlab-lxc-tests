@@ -581,7 +581,10 @@ class PlcLxcBox (PlcBox):
         command = ['/root/lxc-driver.sh', '-c', 'sense_all']
         lxc_stat = self.backquote_ssh (command)
         for lxc_line in lxc_stat.split("\n"):
-            if not lxc_line: continue
+            if not lxc_line:
+                continue
+            if 'vplc' not in lxc_line:
+                continue
             lxcname = lxc_line.split(";")[0]
             pid = lxc_line.split(";")[1]
             timestamp = lxc_line.split(";")[2]
