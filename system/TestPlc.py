@@ -897,7 +897,7 @@ class TestPlc:
     @staticmethod
     def translate_timestamp(start, grain, timestamp):
         if timestamp < TestPlc.YEAR:
-            return start+timestamp*grain
+            return start + timestamp*grain
         else:
             return timestamp
 
@@ -927,7 +927,7 @@ class TestPlc:
             lease_spec['t_from']  = TestPlc.translate_timestamp(start, grain, lease_spec['t_from'])
             lease_spec['t_until'] = TestPlc.translate_timestamp(start, grain, lease_spec['t_until'])
             lease_addition = self.apiserver.AddLeases(self.auth_root(), nodes, lease_spec['slice'],
-                                                      lease_spec['t_from'],lease_spec['t_until'])
+                                                      lease_spec['t_from'], lease_spec['t_until'])
             if lease_addition['errors']:
                 utils.header("Cannot create leases, {}".format(lease_addition['errors']))
                 ok = False

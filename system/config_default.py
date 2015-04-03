@@ -12,46 +12,46 @@
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
 # so that sfa users get different mails whether they are based on pl or pg
-pldomain="onelab.eu"
-pgdomain="emulab.eu"
+pldomain = "onelab.eu"
+pgdomain = "emulab.eu"
 
 ### for the sfa dual setup
 def login_base (index): 
-    if index==1: return 'inri'
-    elif index==2: return 'princ'
+    if index == 1: return 'inri'
+    elif index == 2: return 'princ'
     # index=3=>'sitea'  4=>'siteb' 
-    else: return 'site%s'%chr(index+94)
+    else: return 'site{}'.format(chr(index+94))
 
 def sfa_login_base (index, rspec_style):
-    return "sfa%s"%(rspec_style)
+    return "sfa{}".format(rspec_style)
 
 def sfa_root (index):
     # use plt (planetlab test) instead of pl
     # otherwise a triangular test ends up with 'plc'
     # plta, pltb, ...
-    return 'plt%s'%chr(index+96)
+    return 'plt{}'.format(chr(index+96))
 
-def nodes(options,index):
-    return [{'name':'node%d'%index,
-             'node_fields':             {'hostname': 'deferred-nodename%d'%index,
-                                         'model':'qemu/minhw', } ,
-             'host_box': 'deferred-node-hostbox-%d'%index,
+def nodes(options, index):
+    return [{'name' : 'node{}'.format(index),
+             'node_fields':  { 'hostname' : 'deferred-nodename{}'.format(index),
+                               'model' : 'qemu/minhw', } ,
+             'host_box' : 'deferred-node-hostbox-{}'.format(index),
              'owner' : 'pi',
              'nodegroups' : 'mynodegroup',
-             'interface_fields':        { 'method':'static',
-                                          'type':'ipv4',
-                                          'ip':'xxx-deferred-xxx',
-                                          'gateway':'xxx-deferred-xxx',
-                                          'network':'xxx-deferred-xxx',
-                                          'broadcast':'xxx-deferred-xxx',
-                                          'netmask':'xxx-deferred-xxx',
-                                          'dns1': 'xxx-deferred-xxx',
-                                          'dns2': 'xxx-deferred-xxx',
+             'interface_fields':        { 'method' : 'static',
+                                          'type' : 'ipv4',
+                                          'ip' : 'xxx-deferred-xxx',
+                                          'gateway' : 'xxx-deferred-xxx',
+                                          'network' : 'xxx-deferred-xxx',
+                                          'broadcast' : 'xxx-deferred-xxx',
+                                          'netmask' : 'xxx-deferred-xxx',
+                                          'dns1' : 'xxx-deferred-xxx',
+                                          'dns2' : 'xxx-deferred-xxx',
                                           },
              ######## how to deal with the new plcapi way of modeling interfaces
              # this pertains to the node as per the new interface - using UpdateNode
              # after node_fields above is used to create the Node
-             'node_fields_nint' :       { 'dns':'xxx-deferred-xxx',
+             'node_fields_nint' :       { 'dns' : 'xxx-deferred-xxx',
                                           },
              # used in replacement of interface_fields above
              'interface_fields_nint' :  { 'is_primary' : True,
@@ -71,53 +71,53 @@ def nodes(options,index):
              # options set for GetBootMedium in TestNode.py
              }]
 
-def all_nodenames (options,index):
-    return [ node['name'] for node in nodes(options,index)]
+def all_nodenames (options, index):
+    return [ node['name'] for node in nodes(options, index)]
 
 def users (options) :
     return [ 
-        {'name':'admin', 'key_names' : [ 'key_admin' ],
-         'user_fields' : {'first_name':'Admin',
-                          'last_name':'Admin',
-                          'enabled':'true',
-                          'email':'admin@%s'%pldomain,
-                          'password':'testuseradmin'},
+        {'name' : 'admin', 'key_names' : [ 'key_admin' ],
+         'user_fields' : {'first_name' : 'Admin',
+                          'last_name' : 'Admin',
+                          'enabled' : 'true',
+                          'email' : 'admin@{}'.format(pldomain),
+                          'password' : 'testuseradmin'},
          'roles':['admin']},
 
         {'name' : 'pi', 'key_names' : [ 'key_pi' ],
-         'user_fields' : {'first_name':'PI', 'last_name':'PI',
-                          'enabled':'True',
-                          'email':'fake-pi1@%s'%pldomain,
-                          'password':'testpi'},
+         'user_fields' : {'first_name' : 'PI', 'last_name' : 'PI',
+                          'enabled' : 'True',
+                          'email' : 'fake-pi1@{}'.format(pldomain),
+                          'password' : 'testpi'},
          'roles':['pi']},
 
-        {'name':'pitech', 'key_names' : [ 'key_pi' ],
-         'user_fields' : {'first_name':'PiTech',
-                          'last_name':'PiTech',
-                          'enabled':'true',
-                          'email':'fake-pi2@%s'%pldomain,
-                          'password':'testusertech'},
+        {'name' : 'pitech', 'key_names' : [ 'key_pi' ],
+         'user_fields' : {'first_name' : 'PiTech',
+                          'last_name' : 'PiTech',
+                          'enabled' : 'true',
+                          'email' : 'fake-pi2@{}'.format(pldomain),
+                          'password' : 'testusertech'},
          'roles':['pi','tech']},
 
         {'name' : 'tech', 'key_names' : [ 'key_user' ],
-         'user_fields' : {'first_name':'Tech', 'last_name':'Tech',
-                          'enabled':'true',
-                          'email':'fake-tech1@%s'%pldomain,
-                          'password':'testtech'},
+         'user_fields' : {'first_name' : 'Tech', 'last_name' : 'Tech',
+                          'enabled' : 'true',
+                          'email' : 'fake-tech1@{}'.format(pldomain),
+                          'password' : 'testtech'},
          'roles':['tech']},
 
-        {'name':'user', 'key_names' : [ 'key_user' ],
-         'user_fields' : {'first_name':'User', 'last_name':'User',
-                          'enabled':'true',
-                          'email':'fake-user1@%s'%pldomain,
-                          'password':'testuser'},
+        {'name' : 'user', 'key_names' : [ 'key_user' ],
+         'user_fields' : {'first_name' : 'User', 'last_name' : 'User',
+                          'enabled' : 'true',
+                          'email' : 'fake-user1@{}'.format(pldomain),
+                          'password' : 'testuser'},
          'roles':['user']},
 
-        {'name':'techuser', 'key_names' : [ 'key_user' ],
-         'user_fields' : {'first_name':'UserTech', 'last_name':'UserTech',
-                          'enabled':'true',
-                          'email':'fake-tech2@%s'%pldomain,
-                          'password':'testusertech'},
+        {'name' : 'techuser', 'key_names' : [ 'key_user' ],
+         'user_fields' : {'first_name' : 'UserTech', 'last_name' : 'UserTech',
+                          'enabled' : 'true',
+                          'email' : 'fake-tech2@{}'.format(pldomain),
+                          'password' : 'testusertech'},
          'roles':['tech','user']},
 
         ]
@@ -125,25 +125,25 @@ def users (options) :
 def all_usernames (options):
     return [ user['name'] for user in users(options)]
 
-def sites (options,index):
-    latitude= -90 + (index*10)
-    longitude= -180 + (index*20)
-    return [ {'site_fields' : {'name':'main site for plc number %d'%index,
+def sites (options, index):
+    latitude  = -90 + (index*10)
+    longitude = -180 + (index*20)
+    return [ {'site_fields' : {'name' : 'main site for plc number {}'.format(index),
                                'login_base':login_base(index),
-                               'abbreviated_name':'PlanetTest%d'%index,
+                               'abbreviated_name' : 'PlanetTest{}'.format(index),
                                'max_slices':100,
-                               'url':'http://test.%s'%pldomain,
+                               'url' : 'http://test.{}'.format(pldomain),
                                'latitude':float(latitude),
                                'longitude':float(longitude),
                                },
-              'address_fields' : {'line1':'route des lucioles',
-                                  'city':'sophia',
-                                  'state':'fr',
-                                  'postalcode':'06600',
-                                  'country':'France',
+              'address_fields' : {'line1' : 'route des lucioles',
+                                  'city' : 'sophia',
+                                  'state' : 'fr',
+                                  'postalcode' : '06600',
+                                  'country' : 'France',
                                   },
               'users' : users(options),
-              'nodes': nodes(options,index),
+              'nodes': nodes(options, index),
             }]
 
 ##########
@@ -152,10 +152,10 @@ def sites (options,index):
 # key2 -> planetlab user
 # key3 -> sfa PI
 # key4 -> sfa user
-public_key0="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3okOugCBs2j/uur/lBdNUqWG0VdLdrELy85MR6mGOER5ijdbZekEG6KD4zzG2fwXOzdGF99HTQAOXvty02V5/sBN/GbT1Rehwh3cUvZ8i3aJIdN4ku+zbWK6CBsQ8XGXMpCImALDxcvcaoToWJbephDpkgKtcBwmowmOQswO4GTzIdT217J13Z860Jz/QJPIjloS7HpuLmKVlZ/sWCYcuKmR4X7evCXrvbHh+iamSrOHV9sQ6Sf0Wu+VJRaUN92BrxVi9zuJNWZWtWWWjLecyaooOVS0UMBZKUNbnuGXSJ8IFHfQ9wpGGsG+KohvGH4Axh3utaDOlUG641iM5GVBX planetlab-admin@test.onelab.eu
+public_key0 = """ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3okOugCBs2j/uur/lBdNUqWG0VdLdrELy85MR6mGOER5ijdbZekEG6KD4zzG2fwXOzdGF99HTQAOXvty02V5/sBN/GbT1Rehwh3cUvZ8i3aJIdN4ku+zbWK6CBsQ8XGXMpCImALDxcvcaoToWJbephDpkgKtcBwmowmOQswO4GTzIdT217J13Z860Jz/QJPIjloS7HpuLmKVlZ/sWCYcuKmR4X7evCXrvbHh+iamSrOHV9sQ6Sf0Wu+VJRaUN92BrxVi9zuJNWZWtWWWjLecyaooOVS0UMBZKUNbnuGXSJ8IFHfQ9wpGGsG+KohvGH4Axh3utaDOlUG641iM5GVBX planetlab-admin@test.onelab.eu
 """
 
-private_key0="""-----BEGIN RSA PRIVATE KEY-----
+private_key0 = """-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEAt6JDroAgbNo/7rq/5QXTVKlhtFXS3axC8vOTEephjhEeYo3W
 2XpBBuig+M8xtn8Fzs3RhffR00ADl77ctNlef7ATfxm09UXocId3FL2fIt2iSHTe
 JLvs21iuggbEPFxlzKQiJgCw8XL3GqE6FiW3qYQ6ZICrXAcJqMJjkLMDuBk8yHU9
@@ -184,9 +184,9 @@ UToHxiKAuREDgRP9waHmk16833hNe8tDvX5P9vKWxx1AtZRuJoFozw==
 -----END RSA PRIVATE KEY-----
 """
 
-public_key1="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== planetlab-pi@test.onelab.eu
+public_key1 = """ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFUYyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXeWYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp9RB4UHbeA8c28yoa/cgAYHqCqlvm9uvpGMjgm/Qa4M+ZeO7NdjowfaF/wF4BQIzVFN9YRhvQ/d8WDz84B5Pr0J7pWpaX7EyC4bvdskxl6kmdNIwIRcIe4OcuIiX5Z9oO+7h/chsEVJWF4vqNIYlL9Zvyhnr0hLLhhuk2bw== planetlab-pi@test.onelab.eu
 """
-private_key1="""-----BEGIN RSA PRIVATE KEY-----
+private_key1 = """-----BEGIN RSA PRIVATE KEY-----
 MIIEogIBAAKCAQEA4jNj8yT9ieEc6nSJz/ESu4fui9WrJ2y/MCfqIZ5WcdVKhBFU
 YyIenmUaeTduMcSqvoYRQ4QnFR1BFdLG8XR9D6FWZ5zTKUgpkew22EVNeqai4IXe
 WYKyt1Qf3ehaz9E3o1PG/bmQNIM6aQay6TD1Y4lqXI+eTVXVQev4K2fixySjFQpp
@@ -216,10 +216,10 @@ BO+VyPNWF+kDNI8mSUwi7jLW6liMdhNOmDaSX0+0X8CHtK898xM=
 """
 
 ### another keypair for the SFA user
-public_key2="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQLvh5LkrjyLIr9UJznTJHMnqjdqzRdc9ekVmI9bx/5X4flnGtPBsr6bK/CPXmWjS2Vw0QOxi1NM45qkQJZXxroS0aehCCrvJRHgp/LOZykWCyNKqVopq9w0kH4jw1KFGIuwWROpOcMq2d/kAwyr6RV/W66KNVqu2XDiNOPJLcuZCuKrH++q3fPyP2zHSJ/irew7vwqIXbDSnVvvyRXYgc9KlR57L4BWthXcUofHlje8wKq7nWBQIUslYtJDryJg5tBvJIFfCFGmWZy0WJlGJd+yppI5jRvt9c6n9HyJKN22lUBTaTaDFvo+Xu5GEazLKG/v8h/o5WpxrrE6Y3TKeX planetlab-user@test.onelab.eu
+public_key2 = """ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQLvh5LkrjyLIr9UJznTJHMnqjdqzRdc9ekVmI9bx/5X4flnGtPBsr6bK/CPXmWjS2Vw0QOxi1NM45qkQJZXxroS0aehCCrvJRHgp/LOZykWCyNKqVopq9w0kH4jw1KFGIuwWROpOcMq2d/kAwyr6RV/W66KNVqu2XDiNOPJLcuZCuKrH++q3fPyP2zHSJ/irew7vwqIXbDSnVvvyRXYgc9KlR57L4BWthXcUofHlje8wKq7nWBQIUslYtJDryJg5tBvJIFfCFGmWZy0WJlGJd+yppI5jRvt9c6n9HyJKN22lUBTaTaDFvo+Xu5GEazLKG/v8h/o5WpxrrE6Y3TKeX planetlab-user@test.onelab.eu
 """
 
-private_key2="""
+private_key2 = """
 -----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA0C74eS5K48iyK/VCc50yRzJ6o3as0XXPXpFZiPW8f+V+H5Zx
 rTwbK+myvwj15lo0tlcNEDsYtTTOOapECWV8a6EtGnoQgq7yUR4KfyzmcpFgsjSq
@@ -250,10 +250,10 @@ rUck4dxa0t30wUFK0XVQjNEArXqvU23EB8Z7bQQMRx0yhd4pF5k29Q==
 """
 
 ### for a PI
-public_key3="""ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA9LrXvUvGZK092R+0+xNZAOUrywDmfdtOL2XqtO26PCjns2GmxLmphJkvBBtXCt4d8s9jdPILHKnTC0/8/WfrwhZ68AWHay1qnCnWjgMUFEg2J4+MsT0UpirQ7wQbA3KeuAVobRaMIdfgPwlgnmBu2VyPiS4eD4KDz2CgL2DIWzq+DzrakOSqS6eb5MMNS7rIDlxH0WV9bTueweoeWi77zpEtA4sA4EFRKZ21uNyceQ/ob8mKC1yAz2XGIKoLgaxRvd+d8Mmq52OLzbCPtDCnCAtWW2PJt8hEjR+RKwYhf0NcpMXhA5GsYAXUFmHUI0j0f/8qodWuIorE/5zr4EVVkQ== sfa-pi@test.onelab.eu
+public_key3 = """ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA9LrXvUvGZK092R+0+xNZAOUrywDmfdtOL2XqtO26PCjns2GmxLmphJkvBBtXCt4d8s9jdPILHKnTC0/8/WfrwhZ68AWHay1qnCnWjgMUFEg2J4+MsT0UpirQ7wQbA3KeuAVobRaMIdfgPwlgnmBu2VyPiS4eD4KDz2CgL2DIWzq+DzrakOSqS6eb5MMNS7rIDlxH0WV9bTueweoeWi77zpEtA4sA4EFRKZ21uNyceQ/ob8mKC1yAz2XGIKoLgaxRvd+d8Mmq52OLzbCPtDCnCAtWW2PJt8hEjR+RKwYhf0NcpMXhA5GsYAXUFmHUI0j0f/8qodWuIorE/5zr4EVVkQ== sfa-pi@test.onelab.eu
 """
 
-private_key3="""
+private_key3 = """
 -----BEGIN RSA PRIVATE KEY-----
 MIIEoQIBAAKCAQEA9LrXvUvGZK092R+0+xNZAOUrywDmfdtOL2XqtO26PCjns2Gm
 xLmphJkvBBtXCt4d8s9jdPILHKnTC0/8/WfrwhZ68AWHay1qnCnWjgMUFEg2J4+M
@@ -279,14 +279,14 @@ QfzAAZLU2BabjwIfmWetj55ZKiFXRQLkYkz1GPXr2m3FopZb+6apq9M7tTERq1J9
 ORxipg3+uy/eYngUAmNmzOnK/9zklEPjNm9Nw3xHnZO+SyQLNI421KkdHOja/GGd
 awKBgQCLtk0+RpswH451PWyAJ6F+U4YDVaHR0s6pwp4TJAkDVlFBiRO28jEb5y0N
 bI1R7vrRdq07SgI3USLXqDokQ/pXJhC03w2r7W7niAkNaUll3YtJ2DZVSvuQguR9
-xwRNsuo0x60e7bivU+kNZtLn5FqWuGoBONZnbhgP6y7jPsNrig==
+xwRNsuo0x60e7bivU+kNZtLn5FqWuGoBONZnbhgP6y7jPsNrig == 
 -----END RSA PRIVATE KEY-----
 """
 
-public_key4="""ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIim+K+tfwI7KcfbtX/FB1DQCWU1RY8eH4b18KywxI3DDuHa4jGvPjeU5WPwfOsUFpWcWMXCmA26TSOmeT2HiiSJNLUKB0keu/PtHAGnn6rFv5YjCF2fa65wZVkEy6eb8buBny+2L5jhFPW0KE4JNTCiueAEbWZInTWmdA1WB8QeTV3USi33NTtYE05I2/x4G2BtFmmzWzCuyRVjkWZQPJY6wIyM1+qGixpbacScxYYDBGA0I9N9VSN9OS2BN3GY8xFJjFSD2+GxsUhDUmUw2bO8ppn2OSl8NUW/U4EQzUTP8VhebI6UqjfIGAv5qHPpe0Yrcrd/QlbWvj2zpqvVtX sfa-user@test.onelab.eu
+public_key4 = """ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIim+K+tfwI7KcfbtX/FB1DQCWU1RY8eH4b18KywxI3DDuHa4jGvPjeU5WPwfOsUFpWcWMXCmA26TSOmeT2HiiSJNLUKB0keu/PtHAGnn6rFv5YjCF2fa65wZVkEy6eb8buBny+2L5jhFPW0KE4JNTCiueAEbWZInTWmdA1WB8QeTV3USi33NTtYE05I2/x4G2BtFmmzWzCuyRVjkWZQPJY6wIyM1+qGixpbacScxYYDBGA0I9N9VSN9OS2BN3GY8xFJjFSD2+GxsUhDUmUw2bO8ppn2OSl8NUW/U4EQzUTP8VhebI6UqjfIGAv5qHPpe0Yrcrd/QlbWvj2zpqvVtX sfa-user@test.onelab.eu
 """
 
-private_key4="""
+private_key4 = """
 -----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEAyIpvivrX8COynH27V/xQdQ0AllNUWPHh+G9fCssMSNww7h2u
 Ixrz43lOVj8HzrFBaVnFjFwpgNuk0jpnk9h4okiTS1CgdJHrvz7RwBp5+qxb+WIw
@@ -328,22 +328,22 @@ plc_key_names = [ 'key_admin', 'key_pi', 'key_tech' ]
 
 # expose a list of key_specs
 #  { 'key_name':<>, 'private':<>, 'public':<>, 'in_plc':<bool>, key_fields: <for AddKey>, }
-def keys (options,index):
+def keys (options, index):
     result = []
     for (key_name, priv_pub) in master_key_index.items():
-        private=priv_pub['private']
-        public=priv_pub['public']
+        private = priv_pub['private']
+        public = priv_pub['public']
         result.append( { 'key_name': key_name,
                          'private':private,
                          'public':public,
                          'in_plc': key_name in plc_key_names,
-                         'key_fields' : {'key_type':'ssh',
+                         'key_fields' : {'key_type' : 'ssh',
                                          'key': public},
                          } )
     return result
 
 ############################## initscripts
-initscript_by_name="""#!/bin/bash
+initscript_by_name = """#!/bin/bash
 command=$1; shift
 slicename=$1; shift
 stamp="initscript_by_name"
@@ -373,12 +373,12 @@ restart) restart ;;
 esac
 """
 
-initscript_by_code=initscript_by_name.replace("initscript_by_name","initscript_by_code")
+initscript_by_code = initscript_by_name.replace("initscript_by_name","initscript_by_code")
 
 # one single initscript in the InitScripts table
-def initscripts(options,index): 
+def initscripts(options, index): 
     return [ { 'initscript_fields' : { 'enabled' : True,
-                                       'name':'initscript_by_name',
+                                       'name' : 'initscript_by_name',
                                        'script' : initscript_by_name,
                                        }},
              ]
@@ -387,27 +387,27 @@ def initscripts(options,index):
 # 1 has an initscript code
 # 2 has an initscript name
 # 3 is an omf-friendly slice
-def slices (options,index):
+def slices (options, index):
     def theslice (i):
-        slice_spec = { 'slice_fields': {'name':'%s_sl%d'%(login_base(index),i),
-                                        'instantiation':'plc-instantiated',
-                                        'url':'http://foo%d.com'%index,
-                                        'description':'testslice number %d'%i,
+        slice_spec = { 'slice_fields': {'name' : '{}_sl{}'.format(login_base(index),i),
+                                        'instantiation' : 'plc-instantiated',
+                                        'url' : 'http://foo{}.com'.format(index),
+                                        'description' : 'testslice number {}'.format(i),
                                         'max_nodes':2,
                                         },
                        'usernames' : [ 'pi','user','techuser' ],
-                       'nodenames' : all_nodenames(options,index),
+                       'nodenames' : all_nodenames(options, index),
                        'sitename' : login_base(index),
                        'owner' : 'pi',
                        }
         # 1st one has an initscript by code
-        if i%3==1:
-            slice_spec['initscriptcode']=initscript_by_code
-            slice_spec['initscriptstamp']='initscript_by_code'
+        if i%3 == 1:
+            slice_spec['initscriptcode'] = initscript_by_code
+            slice_spec['initscriptstamp'] = 'initscript_by_code'
         # 2nd one has an initscript by name
-        elif i%3==2:
-            slice_spec['initscriptname']='initscript_by_name'
-            slice_spec['initscriptstamp']='initscript_by_name'
+        elif i%3 == 2:
+            slice_spec['initscriptname'] = 'initscript_by_name'
+            slice_spec['initscriptstamp'] = 'initscript_by_name'
         # 3rd one is omf-friendly
         else:
             # potentially turned off with config_no_omf
@@ -419,43 +419,43 @@ def slices (options,index):
     # 3 * (index-1) + 1 = 3*index-2  .. same+3 = 3*index+1
     return [ theslice(i) for i in range (3*index-2,3*index+1) ]
 
-def all_slicenames (options,index):
-    return [ slice['slice_fields']['name'] for slice in slices(options,index)]
+def all_slicenames (options, index):
+    return [ slice['slice_fields']['name'] for slice in slices(options, index)]
 
 # the logic here is to try:
 # . client and server on the same slice/node
 # . client and server on the same node but 2 different slices
 # if at least 2 plcs, we have 2 nodes, so again on diff. nodes
-def tcp_specs (options,index):
+def tcp_specs (options, index):
     # only run the test on the first plc
     if index != 1: return None
     # 
-    slice1='%s_sl1'%login_base(1)
-    slice2='%s_sl2'%login_base(1)
+    slice1 = '{}_sl1'.format(login_base(1))
+    slice2 = '{}_sl2'.format(login_base(1))
     # with the addition of omf-friendly slices..
-    slice3='%s_sl4'%login_base(2)
-    slice4='%s_sl5'%login_base(2)
+    slice3 = '{}_sl4'.format(login_base(2))
+    slice4 = '{}_sl5'.format(login_base(2))
 
 # NOTE: port 9999 is hard-wired in the code to be used for checking network readiness
 # so it is not to be used here
 # bind on 0.0.0.0 and try to reach this on localhost
 # not expected to work
-    same_node_same_slice_lo =   { 'server_node': 'node1', 'server_slice': slice1,
-                                  'client_node': 'node1', 'client_slice': slice1,
+    same_node_same_slice_lo =   { 'server_node' : 'node1', 'server_slice': slice1,
+                                  'client_node' : 'node1', 'client_slice': slice1,
                                   'client_connect' : 'localhost',
                                   'port': 10000}
-    same_node_same_slice =      { 'server_node': 'node1', 'server_slice': slice1,
-                                  'client_node': 'node1', 'client_slice': slice1,
+    same_node_same_slice =      { 'server_node' : 'node1', 'server_slice': slice1,
+                                  'client_node' : 'node1', 'client_slice': slice1,
                                   'port': 10001}
 # this does not work on vs-nodes....
-    same_node_2_slices =        { 'server_node': 'node1', 'server_slice': slice1,
-                                  'client_node': 'node1', 'client_slice': slice2,
+    same_node_2_slices =        { 'server_node' : 'node1', 'server_slice': slice1,
+                                  'client_node' : 'node1', 'client_slice': slice2,
                                   'port': 10002}
-    two_nodes_same_slice =      { 'server_node': 'node1', 'server_slice': slice1,
-                                  'client_node': 'node2', 'client_slice': slice3,
+    two_nodes_same_slice =      { 'server_node' : 'node1', 'server_slice': slice1,
+                                  'client_node' : 'node2', 'client_slice': slice3,
                                   'port': 10003}
-    two_nodes_2_slices =        { 'server_node': 'node1', 'server_slice': slice1,
-                                  'client_node': 'node2', 'client_slice': slice4,
+    two_nodes_2_slices =        { 'server_node' : 'node1', 'server_slice': slice1,
+                                  'client_node' : 'node2', 'client_slice': slice4,
                                   'port': 10004}
     specs = []
 #    specs += [ same_node_same_slice_lo ]
@@ -470,25 +470,25 @@ def tcp_specs (options,index):
 # if they are smaller than one year, they are relative to the current time, expressed in grains
 # otherwise they are absolute
 def leases (options, index):
-    leases=[]
-    counter=0
-    slices=all_slicenames(options,index)
+    leases = []
+    counter = 0
+    slices = all_slicenames(options, index)
     slice_sequence = slices[:1] + slices + [None,]
     for iterator in range(12):
         for slice in slice_sequence:
-            leases.append ( {'slice' : slice, 't_from':counter,'t_until':counter+1} )
+            leases.append ( {'slice' : slice, 't_from' : counter, 't_until' : counter + 1 } )
             counter += 1
     return leases
 
-def plc (options,index) :
+def plc (options, index) :
     return { 
         'index' : index,
-        'name' : 'plctest%d'%index,
+        'name' : 'plctest{}'.format(index),
         # as of yet, not sure we can handle foreign hosts, but this is required though
-        'host_box' : 'deferred-myplc-hostbox-%d'%index,
+        'host_box' : 'deferred-myplc-hostbox-{}'.format(index),
         # set these two items to run within a vserver
-        'vservername': 'deferred-vservername',
-        'vserverip': 'deferred-vserverip',
+        'vservername' : 'deferred-vservername',
+        'vserverip' : 'deferred-vserverip',
         'role' : 'root',
         # these go to plc-config-tty
         'settings': {
@@ -498,7 +498,7 @@ def plc (options,index) :
             'PLC_SLICE_PREFIX' : 'auto',
             'PLC_HRN_ROOT': sfa_root(index),
             'PLC_SHORTNAME' : 'Rlab',
-            'PLC_MAIL_ENABLED':'false',
+            'PLC_MAIL_ENABLED' : 'false',
             'PLC_MAIL_SUPPORT_ADDRESS' : 'thierry.parmentelat@inria.fr',
             'PLC_DB_HOST' : 'deferred-myplc-hostname',
 #            'PLC_DB_PASSWORD' : 'mnbvcxzlkjhgfdsapoiuytrewq',
@@ -508,25 +508,25 @@ def plc (options,index) :
             'PLC_NET_DNS1' : 'deferred-dns-1',
             'PLC_NET_DNS2' : 'deferred-dns-2',
             'PLC_RESERVATION_GRANULARITY':1800,
-            'PLC_VSYS_DEFAULTS':' , vif_up, vif_down, fd_tuntap, promisc, ',
+            'PLC_VSYS_DEFAULTS' : ' , vif_up, vif_down, fd_tuntap, promisc, ',
             'PLC_OMF_ENABLED' : 'true',
-            'PLC_OMF_XMPP_SERVER': 'deferred-myplc-hostname',
+            'PLC_OMF_XMPP_SERVER' : 'deferred-myplc-hostname',
         },
         'expected_vsys_tags': [ 'vif_up', 'vif_down', 'fd_tuntap', 'promisc', ],
         # minimal config so the omf plugins actually trigger
-        'sites' : sites(options,index),
-        'keys' : keys(options,index),
-        'initscripts': initscripts(options,index),
-        'slices' : slices(options,index),
-        'tcp_specs' : tcp_specs(options,index),
-        'sfa' : sfa(options,index),
+        'sites' : sites(options, index),
+        'keys' : keys(options, index),
+        'initscripts': initscripts(options, index),
+        'slices' : slices(options, index),
+        'tcp_specs' : tcp_specs(options, index),
+        'sfa' : sfa(options, index),
         'leases' : leases (options, index),
         # big distros need more time to install nodes
         'ssh_node_boot_timers': (40,38),
         'ssh_node_debug_timers': (10,8),
     }
 
-def sfa (options,index) :
+def sfa (options, index) :
     return { 
         # the port used to generate the various aggregates.xml
         # stack config_sfamesh to point to SMs instead
@@ -539,8 +539,8 @@ def sfa (options,index) :
             'SFA_REGISTRY_ROOT_AUTH' : sfa_root(index),
             'SFA_INTERFACE_HRN' : sfa_root(index),
             'SFA_REGISTRY_HOST' : 'deferred-myplc-hostname',
-            'SFA_AGGREGATE_HOST': 'deferred-myplc-hostname',
-            'SFA_SM_HOST': 'deferred-myplc-hostname',
+            'SFA_AGGREGATE_HOST' : 'deferred-myplc-hostname',
+            'SFA_SM_HOST' : 'deferred-myplc-hostname',
 # turning off SM and using only AM; be explicit on this as the default has changed in the code
             'SFA_SM_ENABLED' : 'false',
             'SFA_PLC_URL' : 'deferred-myplc-api-url',
@@ -553,18 +553,18 @@ def sfa (options,index) :
             'SFA_AGGREGATE_ENABLED' : 'true',
         },
         # details of the slices to create
-        'auth_sfa_specs' : [ test_auth_sfa_spec(options,index,rspec_style) 
+        'auth_sfa_specs' : [ test_auth_sfa_spec(options, index,rspec_style) 
                              for rspec_style in options.rspec_styles ]
     }
 
 # rspec_style is 'pl' for sfav1 or 'pg' for pgv2
-def test_auth_sfa_spec (options,index,rspec_style):
-    domain=pldomain if rspec_style=='pl' else pgdomain
+def test_auth_sfa_spec (options, index, rspec_style):
+    domain = pldomain if rspec_style == 'pl' else pgdomain
     # the auth/site part per se
-    login_base=sfa_login_base(index,rspec_style)
-    hrn_prefix='%s.%s'%(sfa_root(index),login_base)
-    def full_hrn(x):  return "%s.%s"%(hrn_prefix,x)
-    def full_mail(x): return "%s@test.%s"%(x,domain)
+    login_base = sfa_login_base(index,rspec_style)
+    hrn_prefix = '{}.{}'.format(sfa_root(index),login_base)
+    def full_hrn(x):  return "{}.{}".format(hrn_prefix,x)
+    def full_mail(x): return "{}@test.{}".format(x,domain)
 
     # 2 users; we use dashes on purpose, as it might show up in email addresses
     pi_alias = 'pi-user'
@@ -582,7 +582,7 @@ def test_auth_sfa_spec (options,index,rspec_style):
         'email':        full_mail (user_alias),
         'key_name':     'key_sfauser',
         'register_options':  [ '--extra',"first_name=Fake",
-                          '--extra',"last_name=SFA-style-%s"%rspec_style,
+                          '--extra',"last_name=SFA-style-{}".format(rspec_style),
                           ],
         'update_options': [ '--extra',"enabled=true",
                              ],
@@ -592,12 +592,12 @@ def test_auth_sfa_spec (options,index,rspec_style):
         'name':          'sl',
         'register_options':  [ '--researchers', full_hrn (user_alias),
                           # xxx
-                          '--extra', "description=SFA-testing-%s"%rspec_style,
-                          '--extra', "url=http://slice%d.test.onelab.eu/"%index,
+                          '--extra', "description=SFA-testing-{}".format(rspec_style),
+                          '--extra', "url=http://slice{}.test.onelab.eu/".format(index),
                           '--extra', "max_nodes=2",
                           ],
         'key_name':    'key_sfauser',
-        'nodenames':    all_nodenames(options,index),
+        'nodenames':    all_nodenames(options, index),
         }
         
     # we're already in a dedicated site/authority so no need to encumber with odd names
@@ -633,5 +633,4 @@ if __name__ == '__main__':
     s = sample_test_plc_spec()
     print('Sample plc_spec has the following keys')
     for k in sorted(s.keys()):
-        print(k)    
-
+        print(k)
