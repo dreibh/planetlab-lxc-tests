@@ -910,7 +910,7 @@ class TestPlc:
         now = int(time.time())
         grain = self.apiserver.GetLeaseGranularity(self.auth_root())
         print('API answered grain=', grain)
-        start = (now/grain)*grain
+        start = (now//grain)*grain
         start += grain
         # find out all nodes that are reservable
         nodes = self.all_reservable_nodenames()
