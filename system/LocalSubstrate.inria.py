@@ -21,46 +21,23 @@ class OnelabSubstrate (Substrate):
 
    # the experimental lxc-based build box
    def build_lxc_boxes_spec (self):
-# liquid only used for the last f18 build      
-      return [ 'buzzcocks', 'liquid' ]
+      return [ 'buzzcocks' ]
 
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
-      return [ 
-# gotan looks in bad shape and I can't use its drac from the US
-#         ('gotan', 20),         # how many plcs max in this box 
-         ('buzzcocks', 12),    
-         ]  
+      # we now use the same box as for builds
+      return [ ('buzzcocks', 12), ]  
 
+   def qemu_boxes_spec (self):
+      # ditto, a single big box now is enough
+      return [ ('boxtops', 64), ]
+
+   
    # vplc01 to 40
    def vplc_ips (self):
       return [  ( 'vplc{:02d}'.format(i),       # DNS name
                   'unused')                     # MAC address 
                 for i in range(1,41) ] 
-
-   def qemu_boxes_spec (self):
-      return [ # (hostname, how many qemus max in this box)
-         ('boxtops', 64),
-         ]
-
-# these boxes are going on a well deserved retirement
-# as of jan 2014 this is renumbered so that 1 is preferred
-# speedball (1) - old school but robust and a big disk
-#         ('speedball', 2), # 4 cores, 4Gb, 840 Gb
-# used to have kruder too, but it is broken/dead
-# dorfmeister (2)
-#         ('dorfmeister', 2), # 4 cores, 4Gb
-# enfoui - L119 as it won't work well under the KVM in L102A
-# use F10 to enter BIOS setup
-# nodes spawned in this box won't get network connectivity
-#         ('enfoui', 4), # 4 cores, 8Gb
-# estran (4) - big mem but small disk
-# take it out because it takes much of the load and then gets full..
-#         ('estran', 2), # 4 cores, 8Gb
-# lodos (5) - rather old/small
-#         ('lodos', 1), # 2 cores, 4Gb
-# cyblok (6)        
-#         ('cyblok', 1), # 2 cores, 4Gb
 
    # the nodes pool has a MAC address as user-data (3rd elt in tuple)
    def vnode_ips (self):
@@ -84,7 +61,7 @@ class OnelabSubstrate (Substrate):
                'ipaddress_fields:netmask':      '255.255.248.0',
                }
 
-# the hostname for the testmaster - in case we'd like to run this remotely
+# the hostname for the testmaster that orchestrates the whole business
    def testmaster (self): 
       return 'testmaster'
 

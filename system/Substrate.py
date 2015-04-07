@@ -1,6 +1,6 @@
 #
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2010-2015 INRIA 
 #
 # #################### history
 #
@@ -84,6 +84,9 @@ class Starting:
     def __init__ (self):
         self.tuples=[]
 
+    def __repr__(self):
+        return '<Starting>'
+
     def load (self):
         try:
             with open(Starting.location) as starting:
@@ -134,6 +137,9 @@ class PoolItem:
         self.status = None
         self.ip = None
 
+    def __repr__(self):
+        return "<PoolItem {} {}>".format(self.hostname, self.userdata)
+
     def line(self):
         return "Pooled {} ({}) -> {}".format(self.hostname, self.userdata, self.status)
 
@@ -158,6 +164,9 @@ class Pool:
         # where to send notifications upon load_starting
         self.substrate = substrate
 
+    def __repr__(self):
+        return "<Pool {} {}>".format(self.message, self.tuples)
+
     def list (self, verbose=False):
         for i in self.pool_items: print(i.line())
 
@@ -169,7 +178,7 @@ class Pool:
     def _item (self, hostname):
         for i in self.pool_items: 
             if i.hostname == hostname: return i
-        raise Exception ("Could not locate hostname %s in pool %s"%(hostname,self.message))
+        raise Exception ("Could not locate hostname {} in pool {}".format(hostname, self.message))
 
     def retrieve_userdata (self, hostname): 
         return self._item(hostname).userdata
@@ -184,7 +193,7 @@ class Pool:
         try:
             self._item(hostname).status='mine'
         except:
-            print('WARNING: host %s not found in IP pool %s'%(hostname,self.message))
+            print('WARNING: host {} not found in IP pool {}'.format(hostname, self.message))
 
     def next_free (self):
         for i in self.pool_items:
@@ -237,6 +246,7 @@ class Pool:
     
     def sense (self):
         print('Sensing IP pool', self.message, end=' ')
+        sys.stdout.flush()
         self._sense()
         print('Done')
         for (vname,bname) in self.load_starting():
@@ -265,6 +275,8 @@ class Box:
     def __init__ (self, hostname):
         self.hostname = hostname
         self._probed = None
+    def __repr__(self):
+        return "<Box {}>".format(self.hostname)
     def shortname (self):
         return short_hostname(self.hostname)
     def test_ssh (self):
@@ -399,6 +411,8 @@ class BuildInstance:
         self.buildname = buildname
         self.buildbox = buildbox
         self.pids = [pid]
+    def __repr__(self):
+        return "<BuildInstance {} in {}>".format(self.buildname, self.buildbox)
 
     def add_pid(self,pid):
         self.pids.append(pid)
@@ -410,6 +424,8 @@ class BuildBox (Box):
     def __init__ (self, hostname):
         Box.__init__(self, hostname)
         self.build_instances = []
+    def __repr__(self):
+        return "<BuildBox {}>".format(self.hostname)
 
     def add_build(self, buildname, pid):
         for build in self.build_instances:
@@ -443,6 +459,7 @@ class BuildLxcBox (BuildBox):
     # inspect box and find currently running builds
     def sense(self, options):
         print('xb', end=' ')
+        sys.stdout.flush()
         pids = self.backquote_ssh(['pgrep','lbuild'], trash_err=True)
         if not pids: return
         command = ['ps', '-o', 'pid,command'] + [ pid for pid in pids.split("\n") if pid]
@@ -469,6 +486,8 @@ class PlcInstance:
         self.plc_box = plcbox
         # unknown yet
         self.timestamp = 0
+    def __repr__(self):
+        return "<PlcInstance {}>".format(self.plc_box)
         
     def set_timestamp (self,timestamp):
         self.timestamp = timestamp
@@ -483,6 +502,8 @@ class PlcLxcInstance (PlcInstance):
         PlcInstance.__init__(self, plcbox)
         self.lxcname = lxcname
         self.pid = pid
+    def __repr__(self):
+        return "<PlcLxcInstance {}>".format(self.lxcname)
 
     def vplcname (self):
         return self.lxcname.split('-')[-1]
@@ -511,6 +532,8 @@ class PlcBox (Box):
         Box.__init__(self, hostname)
         self.plc_instances = []
         self.max_plcs = max_plcs
+    def __repr__(self):
+        return "<PlcBox {}>".format(self.hostname)
 
     def free_slots (self):
         return self.max_plcs - len(self.plc_instances)
@@ -576,6 +599,7 @@ class PlcLxcBox (PlcBox):
     # to describe the currently running VM's
     def sense(self, options):
         print("xp", end=' ')
+        sys.stdout.flush()
         command = "rsync lxc-driver.sh  {}:/root".format(self.hostname)
         subprocess.getstatusoutput(command)
         command = ['/root/lxc-driver.sh', '-c', 'sense_all']
@@ -583,6 +607,7 @@ class PlcLxcBox (PlcBox):
         for lxc_line in lxc_stat.split("\n"):
             if not lxc_line:
                 continue
+            # we mix build and plc VMs
             if 'vplc' not in lxc_line:
                 continue
             lxcname = lxc_line.split(";")[0]
@@ -607,6 +632,8 @@ class QemuInstance:
         # not known yet
         self.buildname = None
         self.timestamp = 0
+    def __repr__(self):
+        return "<QemuInstance {}>".format(self.nodename)
         
     def set_buildname (self, buildname):
         self.buildname = buildname
@@ -640,6 +667,8 @@ class QemuBox (Box):
         Box.__init__(self, hostname)
         self.qemu_instances = []
         self.max_qemus = max_qemus
+    def __repr__(self):
+        return "<QemuBox {}>".format(self.hostname)
 
     def add_node(self, nodename, pid):
         for qemu in self.qemu_instances:
@@ -707,6 +736,7 @@ class QemuBox (Box):
 
     def sense(self, options):
         print('qn', end=' ')
+        sys.stdout.flush()
         modules = self.backquote_ssh(['lsmod']).split('\n')
         self._driver = '*NO kqemu/kvm_intel MODULE LOADED*'
         for module in modules:
@@ -790,6 +820,8 @@ class TestInstance:
         # has a KO test
         self.broken_steps = []
         self.timestamp = 0
+    def __repr__(self):
+        return "<TestInstance {}>".format(self.buildname)
 
     def set_timestamp(self, timestamp):
         self.timestamp = timestamp
@@ -843,6 +875,8 @@ class TestBox(Box):
         Box.__init__(self, hostname)
         self.starting_ips = []
         self.test_instances = []
+    def __repr__(self):
+        return "<TestBox {}>".format(self.hostname)
 
     def reboot(self, options):
         # can't reboot a vserver VM
@@ -888,7 +922,7 @@ class TestBox(Box):
 
     def sense(self, options):
         print('tm', end=' ')
-        self.starting_ips = [x for x in self.backquote_ssh(['cat',Starting.location], trash_err=True).strip().split('\n') if x]
+        self.starting_ips = [ x for x in self.backquote_ssh( ['cat', Starting.location], trash_err=True).strip().split('\n') if x ]
 
         # scan timestamps on all tests
         # this is likely to not invoke ssh so we need to be a bit smarter to get * expanded
@@ -1002,6 +1036,8 @@ class Substrate:
         self.plc_boxes = self.plc_lxc_boxes
         self.default_boxes = self.plc_boxes + self.qemu_boxes
         self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
+    def __repr__(self):
+        return "<Substrate>".format()
 
     def summary_line (self):
         msg  = "["
@@ -1020,6 +1056,7 @@ class Substrate:
         if self._sensed and not force:
             return False
         print('Sensing local substrate...', end=' ')
+        sys.stdout.flush()
         for b in self.default_boxes:
             b.sense(self.options)
         print('Done')
@@ -1293,6 +1330,7 @@ class Substrate:
                              
     def list_boxes(self):
         print('Sensing', end=' ')
+        sys.stdout.flush()
         for box in self.focus_all:
             box.sense(self.options)
         print('Done')
