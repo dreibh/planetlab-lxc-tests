@@ -259,6 +259,7 @@ class TestPlc:
         self.test_ssh = TestSsh(self.plc_spec['host_box'], self.options.buildname)
         self.vserverip = plc_spec['vserverip']
         self.vservername = plc_spec['vservername']
+        self.vplchostname = self.vservername.split('-')[-1]
         self.url = "https://{}:443/PLCAPI/".format(plc_spec['vserverip'])
         self.apiserver = TestApiserver(self.url, options.dry_run)
         (self.ssh_node_boot_timeout, self.ssh_node_boot_silent) = plc_spec['ssh_node_boot_timers']
@@ -306,15 +307,8 @@ class TestPlc:
     # see e.g. plc_start esp. the version for f14
     #command gets run in the plc's vm
     def host_to_guest(self, command):
-        vservername = self.vservername
-        personality = self.options.personality
-        raw = "{personality} virsh -c lxc:/// lxc-enter-namespace --noseclabel {vservername}".format(**locals())
-        # f14 still needs some extra help
-        if self.options.fcdistro == 'f14':
-            raw +=" -- /usr/bin/env PATH=/bin:/sbin:/usr/bin:/usr/sbin {command}".format(**locals())
-        else:
-            raw +=" -- /usr/bin/env {command}".format(**locals())
-        return raw
+        ssh_leg = TestSsh(self.vplchostname)
+        return ssh_leg.actual_command(command)
     
     # this /vservers thing is legacy...
     def vm_root_in_host(self):
@@ -528,9 +522,8 @@ class TestPlc:
         fqdn   = "{}.{}".format(self.plc_spec['host_box'], domain)
         print("export BUILD={}".format(self.options.buildname))
         print("export PLCHOSTLXC={}".format(fqdn))
-        print("export GUESTNAME={}".format(self.plc_spec['vservername']))
-        vplcname = self.plc_spec['vservername'].split('-')[-1]
-        print("export GUESTHOSTNAME={}.{}".format(vplcname, domain))
+        print("export GUESTNAME={}".format(self.vservername))
+        print("export GUESTHOSTNAME={}.{}".format(self.vplchostname, domain))
         # find hostname of first node
         hostname, qemubox = self.all_node_infos()[0]
         print("export KVMHOST={}.{}".format(qemubox, domain))
