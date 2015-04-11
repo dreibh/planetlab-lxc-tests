@@ -308,7 +308,7 @@ class TestPlc:
     #command gets run in the plc's vm
     def host_to_guest(self, command):
         ssh_leg = TestSsh(self.vplchostname)
-        return ssh_leg.actual_command(command)
+        return ssh_leg.actual_command(command, keep_stdin=True)
     
     # this /vservers thing is legacy...
     def vm_root_in_host(self):
