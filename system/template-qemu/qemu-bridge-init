@@ -117,13 +117,15 @@ function start () {
     sleep 2
     echo "Setting bridge address=$address broadcast=$broadcast"
     # static
-    ip address add $address broadcast $broadcast dev $INTERFACE_BRIDGE 
+    ip address add $address broadcast $broadcast dev $INTERFACE_BRIDGE
+    # turn on bridge interface
+    ip link set dev $INTERFACE_BRIDGE up
     ip address del $address dev $INTERFACE_LAN 
     sleep 1
-	
+
     #Reconfigure the routing table
     echo "Adding default route via gateway=$gateway on dev $INTERFACE_LAN"
-    ip route add default via $gateway dev $INTERFACE_BRIDGE
+    ip route add 0.0.0.0/0 via $gateway dev $INTERFACE_BRIDGE
 
     echo "========== $COMMAND: exiting start - beg"
     ip address show
