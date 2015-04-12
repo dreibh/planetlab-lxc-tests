@@ -136,7 +136,7 @@ gpgcheck=0
 
         test_ssh = TestSsh (self.test_plc.vserverip)
         
-        command1 = "yum -y update"
+        command1 = "yum -y update --exclude drupal"
         if test_ssh.run (command1, dry_run = self.options.dry_run) != 0:
             return False
 
