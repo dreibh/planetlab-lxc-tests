@@ -26,20 +26,22 @@ class OnelabSubstrate (Substrate):
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
       # we now use the same box as for builds
-      return [ ('buzzcocks', 12), ]  
+      return [ ('buzzcocks', 20), ]  
 
    def qemu_boxes_spec (self):
       # ditto, a single big box now is enough
       return [ ('boxtops', 64), ]
 
    
-   # vplc01 to 40
+   # may use vplc01 to 25 - out of the existing 30
+   # keep 5 upper addresses for more persistent instances
    def vplc_ips (self):
       return [  ( 'vplc{:02d}'.format(i),       # DNS name
                   'unused')                     # MAC address 
-                for i in range(1,41) ] 
+                for i in range(1,26) ] 
 
-   # the nodes pool has a MAC address as user-data (3rd elt in tuple)
+   # vnode01 to 20
+   # the nodes IP pool has a MAC address as user-data (3rd elt in tuple)
    def vnode_ips (self):
       return [ ( 'vnode{:02d}'.format(i),            # DNS name               
                  '02:34:56:00:00:{:02d}'.format(i))  # MAC address
