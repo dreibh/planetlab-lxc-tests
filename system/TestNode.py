@@ -103,6 +103,10 @@ class TestNode:
         # create as reinstall to avoid user confirmation
         server.UpdateNode(userauth, self.name(), {'boot_state':'reinstall'})
 
+        # you are supposed to make sure the tags exist
+        for tagname, tagvalue in self.node_spec['tags'].items():
+            server.AddNodeTag(userauth, node_id, tagname, tagvalue)
+            
         if not self.test_plc.has_addresses_api():
 #            print 'USING OLD INTERFACE'
             # populate network interfaces - primary
@@ -161,13 +165,9 @@ class TestNode:
         "all nodes: invoke GetBootMedium and store result locally"
         utils.header("Calling GetBootMedium for {}".format(self.name()))
         # this would clearly belong in the config but, well ..
-        options = []
-        if self.is_qemu():
-            options.append('serial')
-            options.append('no-hangcheck')
-            options.append('systemd-debug')
-        encoded = self.test_plc.apiserver.GetBootMedium(self.test_plc.auth_root(), 
-                                                        self.name(), 'node-iso', '', options)
+        options = self.node_spec['bootmedium_options'] if 'bootmedium_options' in self.node_spec else []
+        encoded = self.test_plc.apiserver.GetBootMedium(
+            self.test_plc.auth_root(), self.name(), 'node-iso', '', options)
         if encoded == '':
             raise Exception('GetBootmedium failed')
 

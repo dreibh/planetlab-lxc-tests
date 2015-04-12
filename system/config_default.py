@@ -66,6 +66,9 @@ def nodes(options, index):
              'route_fields' :           { 'subnet' : '0.0.0.0/0',
                                           'next_hop' : 'xxx-deferred-xxx',
                                           },
+             'bootmedium_options' :     [ 'serial', 'no-hangcheck', 'systemd-debug' ],
+             # provision for bonding
+             'tags'               :     {},
              # boot cd settings
              # we should have tags here instead of the hard-wired
              # options set for GetBootMedium in TestNode.py
