@@ -110,7 +110,7 @@ class TestNode:
         if not self.test_plc.has_addresses_api():
 #            print 'USING OLD INTERFACE'
             # populate network interfaces - primary
-            server.AddInterface(userauth,self.name(),
+            server.AddInterface(userauth, self.name(),
                                 self.node_spec['interface_fields'])
         else:
 #            print 'USING NEW INTERFACE with separate ip addresses'
@@ -125,31 +125,32 @@ class TestNode:
         # populate network interfaces - others
         if 'extra_interfaces' in self.node_spec:
             for interface in self.node_spec['extra_interfaces']:
-                server.AddInterface(userauth,self.name(), interface['interface_fields'])
+                server.AddInterface(userauth, self.name(), interface['interface_fields'])
                 if 'settings' in interface:
                     for attribute, value in interface['settings'].items():
                         # locate node network
-                        interface = server.GetInterfaces(userauth,{'ip':interface['interface_fields']['ip']})[0]
+                        interface = server.GetInterfaces( userauth,
+                                                          {'ip' : interface['interface_fields']['ip']})[0]
                         interface_id = interface['interface_id']
                         # locate or create node network attribute type
                         try:
-                            interface_tagtype = server.GetTagTypes(userauth,{'name':attribute})[0]
+                            interface_tagtype = server.GetTagTypes(userauth, {'name' : attribute})[0]
                         except:
-                            interface_tagtype = server.AddTagType(rootauth,{'category':'test',
-                                                                            'tagname':attribute})
+                            interface_tagtype = server.AddTagType(rootauth,{'category' : 'test',
+                                                                            'tagname' : attribute})
                         # attach value
-                        server.AddInterfaceTag(userauth,interface_id,attribute,value)
+                        server.AddInterfaceTag(userauth, interface_id, attribute, value)
 
     def delete_node(self):
         # uses the right auth as far as poss.
         try:
             ownername = self.node_spec['owner']
             user_spec = self.test_site.locate_user(ownername)
-            test_user = TestUser(self.test_plc,self.test_site,user_spec)
+            test_user = TestUser(self.test_plc, self.test_site, user_spec)
             auth = test_user.auth()
         except:
             auth = self.test_plc.auth_root()
-        self.test_plc.apiserver.DeleteNode(auth,self.name())
+        self.test_plc.apiserver.DeleteNode(auth, self.name())
 
     # Do most of the stuff locally - will be pushed on host_box - *not* the plc - later if needed
     def qemu_local_init(self):
