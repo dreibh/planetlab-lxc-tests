@@ -116,8 +116,8 @@ class TestMain:
             self.steps_message += 20*'x' + " Macro steps are\n" + \
                                   " ".join(Step.list_macros())
         else:
-            self.steps_message += 20*'x' + " Default steps with bonding are\n" + \
-                                  TestPlc.printable_steps(TestPlc.bonding_steps)
+            self.steps_message += 20*'x' + " Default steps with bonding build are\n" + \
+                                  TestPlc.printable_steps(TestPlc.default_bonding_steps)
 
     def list_steps(self):
         if not self.options.verbose:
@@ -294,7 +294,7 @@ run with -l to see a list of available steps
         if not self.options.steps:
             # defaults, depends on using bonding or not
             if self.options.bonding:
-                self.options.steps = TestPlc.bonding_steps
+                self.options.steps = TestPlc.default_bonding_steps
             else:
                 self.options.steps = TestPlc.default_steps
 
@@ -387,6 +387,7 @@ run with -l to see a list of available steps
             for spec, test_plc in all_plcs:
                 test_plc.test_bonding = TestBonding (test_plc,
                                                      onelab_bonding_spec(self.options.bonding),
+                                                     LocalSubstrate.local_substrate,
                                                      self.options)
         
         overall_result = 'SUCCESS'

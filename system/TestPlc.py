@@ -206,7 +206,7 @@ class TestPlc:
         'debug_nodemanager', 'slice_fs_present', SEP,
         'standby_1_through_20','yes','no',SEP,
         ]
-    bonding_steps = [
+    default_bonding_steps = [
         'bonding_init_partial',
         'bonding_add_yum',
         'bonding_install_rpms', SEP,

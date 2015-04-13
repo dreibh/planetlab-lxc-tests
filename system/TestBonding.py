@@ -27,6 +27,7 @@ def onelab_bonding_spec (buildname):
     # essentially generic ..
     buildname      = buildname
     
+    # visit the other build's test directory to figure its characteristics
     with open ("../{}/arg-fcdistro".format(buildname)) as input:
         fcdistro   = input.read().strip()
     with open ("../{}/arg-pldistro".format(buildname)) as input:
@@ -62,18 +63,18 @@ class TestBonding(object):
     options is a TestMain options
     """
     
-    def __init__(self, test_plc, bonding_spec, options):
+    def __init__(self, test_plc, bonding_spec, substrate, options):
         """
         test_plc is one local TestPlc instance
         bonding_spec is a dictionary that gives details on
         the build we want to be bonding with
         """
-        self.test_plc = test_plc
-        self.bonding_spec = bonding_spec
-        self.options = options
         # the local build & plc is described in options
         # the bonding build is described in bonding_spec
-
+        self.test_plc = test_plc
+        self.bonding_spec = bonding_spec
+        self.substrate = substrate
+        self.options = options
     def nodefamily(self):
         return "{pldistro}-{fcdistro}-{arch}".format(**self.bonding_spec)
         

@@ -1037,12 +1037,12 @@ class Substrate:
         self.default_boxes = self.plc_boxes + self.qemu_boxes
         self.all_boxes = self.build_boxes + [ self.test_box ] + self.plc_boxes + self.qemu_boxes
     def __repr__(self):
-        return "<Substrate>".format()
+        return "<Substrate {}>".format(self.summary_line())
 
     def summary_line (self):
         msg  = "["
         msg += " {} xp".format(len(self.plc_lxc_boxes))
-        msg += " {} tried plc boxes".format(len(self.plc_boxes))
+        msg += " {} xq".format(len(self.qemu_boxes))
         msg += "]"
         return msg
 
