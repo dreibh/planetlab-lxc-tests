@@ -274,6 +274,17 @@ class TestNode:
         return test_box.run_in_buildname("echo {:d} > {}/timestamp"\
                                          .format(now, self.nodedir()), dry_run=self.dry_run()) == 0
 
+    def qemu_nodeflavour(self):
+        auth = self.test_plc.auth_root()
+        hostname = self.node_spec['node_fields']['hostname']
+        nodeflavour = self.test_plc.apiserver.GetNodeFlavour(auth, hostname)
+        if self.dry_run():
+            return True
+        nodedir = self.nodedir()
+        nodefamily = nodeflavour['nodefamily']
+        self.test_box().run_in_buildname("echo {nodefamily} > {nodedir}/nodefamily".format(**locals()))
+        return True
+
     def start_qemu(self):
         test_box = self.test_box()
         utils.header("Starting qemu node {} on {}".format(self.name(), test_box.hostname()))

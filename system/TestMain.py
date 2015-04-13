@@ -108,7 +108,7 @@ class TestMain:
 
     def init_steps(self):
         self.steps_message  = ""
-        if not self.options.bonding:
+        if not self.options.bonding_build:
             self.steps_message += 20*'x' + " Defaut steps are\n" + \
                                   TestPlc.printable_steps(TestPlc.default_steps)
             self.steps_message += 20*'x' + " Other useful steps are\n" + \
@@ -208,10 +208,28 @@ run with -l to see a list of available steps
                             help="Show environment and exits")
         parser.add_argument("-t", "--trace", action="store", dest="trace_file", default=None,
                             help="Trace file location")
-        parser.add_argument("-g", "--bonding", action='store', dest='bonding', default=None,
+        parser.add_argument("-g", "--bonding", action='store', dest='bonding_build', default=None,
                             help="specify build to bond with")
+        # if we call symlink 'rung' instead of just run this is equivalent to run -G
+        bonding_default = 'rung' in sys.argv[0]
+        parser.add_argument("-G", "--bonding-env", action='store_true', dest='bonding_env', default=bonding_default,
+                            help="get bonding build from env. variable $bonding")
         parser.add_argument("steps", nargs='*')
         self.options = parser.parse_args()
+
+        # handle -G/-g options
+        if self.options.bonding_env:
+            if 'bonding' not in os.environ:
+                print("env. variable $bonding must be set with --bonding-env")
+                sys.exit(1)
+            self.options.bonding_build = os.environ['bonding']
+
+        if self.options.bonding_build:
+            ## allow to pass -g ../2015.03.15--f18 so we can use bash completion
+            self.options.bonding_build = os.path.basename(self.options.bonding_build)
+            if not os.path.isdir("../{}".format(self.options.bonding_build)):
+                print("could not find test dir for bonding build {}".format(self.options.bonding_build))
+                sys.exit(1)
 
         # allow things like "run -c 'c1 c2' -c c3"
         def flatten (x):
@@ -293,7 +311,7 @@ run with -l to see a list of available steps
         # initialize steps
         if not self.options.steps:
             # defaults, depends on using bonding or not
-            if self.options.bonding:
+            if self.options.bonding_build:
                 self.options.steps = TestPlc.default_bonding_steps
             else:
                 self.options.steps = TestPlc.default_steps
@@ -380,13 +398,11 @@ run with -l to see a list of available steps
 
         # populate TestBonding objects
         # need to wait until here as we need all_plcs
-        if self.options.bonding:
-            ## allow to pass -g ../2015.03.15--f18 so we can use bash completion
-            self.options.bonding = os.path.basename(self.options.bonding)
-            # this will fail if ../{bonding} has not the right arg- files
+        if self.options.bonding_build:
+            # this will fail if ../{bonding_build} has not the right arg- files
             for spec, test_plc in all_plcs:
                 test_plc.test_bonding = TestBonding (test_plc,
-                                                     onelab_bonding_spec(self.options.bonding),
+                                                     onelab_bonding_spec(self.options.bonding_build),
                                                      LocalSubstrate.local_substrate,
                                                      self.options)
         

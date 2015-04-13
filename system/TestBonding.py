@@ -107,7 +107,7 @@ class TestBonding(object):
         if self.persistent_load():
             print("Re-using bonding nodes attributes from {}".format(self.persistent_name()))
         else:
-            print("Could not load bonding nodes attributes from {}".format(self.persistent_name()))
+            print("Sensing for an avail. IP (Could not load from {})".format(self.persistent_name()))
             vnode_pool = self.substrate.vnode_pool
             vnode_pool.sense()
             try:
@@ -118,6 +118,8 @@ class TestBonding(object):
                 self.persistent_store()
             except:
                 raise Exception("Cannot provision bonding node")
+
+        print("Bonding on node {} - {}".format(self.vnode_hostname, self.vnode_ip))
 
         # implement the node on another IP
         node_spec['node_fields']['hostname'] = self.vnode_hostname

@@ -52,6 +52,7 @@ server_methods = [ ('GetNodes' ,  []),
                    ('GetConfFiles',[]),
                    ('AddConfFile','True'),
                    ('GetSliceTags',[]),
+                   ('GetNodeFlavour','dry-run-nodeflavour'),
                    ('system.listMethods',[]),
                    ]
 

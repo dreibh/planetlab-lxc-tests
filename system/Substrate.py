@@ -151,10 +151,10 @@ class PoolItem:
         elif self.status == 'starting': return 'S'
 
     def get_ip(self):
-        if self.ip: return self.ip
-        ip=socket.gethostbyname(self.hostname)
-        self.ip=ip
-        return ip
+        if self.ip:
+            return self.ip
+        self.ip = socket.gethostbyname(self.hostname)
+        return self.ip
 
 class Pool:
 
@@ -165,9 +165,10 @@ class Pool:
         self.substrate = substrate
 
     def __repr__(self):
-        return "<Pool {} {}>".format(self.message, self.tuples)
+        return "<Pool {} : {} .. {}>".format(self.message, self.pool_items[0], self.pool_items[-1])
 
     def list (self, verbose=False):
+        print(self)
         for i in self.pool_items: print(i.line())
 
     def line (self):
@@ -198,7 +199,7 @@ class Pool:
     def next_free (self):
         for i in self.pool_items:
             if i.status == 'free':
-                i.status='mine'
+                i.status = 'mine'
                 return (i.hostname, i.userdata)
         return None
 
@@ -243,13 +244,14 @@ class Pool:
             else:
                 item.status = 'free'
                 print('.', end=' ')
+            sys.stdout.flush()
     
     def sense (self):
         print('Sensing IP pool', self.message, end=' ')
         sys.stdout.flush()
         self._sense()
         print('Done')
-        for (vname,bname) in self.load_starting():
+        for vname, bname in self.load_starting():
             self.substrate.add_starting_dummy(bname, vname)
         print("After having loaded 'starting': IP pool")
         print(self.line())
@@ -257,6 +259,8 @@ class Pool:
     ping_timeout_option = None
     # returns True when a given hostname/ip responds to ping
     def check_ping (self, hostname):
+        if '.' not in hostname:
+            hostname = self.substrate.fqdn(hostname)
         if not Pool.ping_timeout_option:
             (status, osname) = subprocess.getstatusoutput("uname -s")
             if status != 0:
@@ -266,7 +270,7 @@ class Pool:
             elif osname == "Darwin":
                 Pool.ping_timeout_option = "-t"
 
-        command="ping -c 1 {} 1 {}".format(Pool.ping_timeout_option, hostname)
+        command = "ping -c 1 {} 1 {}".format(Pool.ping_timeout_option, hostname)
         (status, output) = subprocess.getstatusoutput(command)
         return status == 0
 

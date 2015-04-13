@@ -162,7 +162,7 @@ class TestPlc:
         'check_vsys_defaults_ignore', SEP,
 # run this first off so it's easier to re-run on another qemu box        
         'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
-        'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', SEP,
+        'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 'qemu_nodeflavour', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
         'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
@@ -204,6 +204,7 @@ class TestPlc:
         'check_netflow','check_drl', SEP,
         'debug_nodemanager', 'slice_fs_present', SEP,
         'standby_1_through_20','yes','no',SEP,
+        'install_syslinux6', 'installed_bonds', SEP,
         ]
     default_bonding_steps = [
         'bonding_init_partial',
@@ -726,6 +727,28 @@ class TestPlc:
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install(pkgs_list)
 
+    def install_syslinux6(self):
+        """
+        install syslinux6 from the fedora21 release
+        """
+        key = 'http://mirror.onelab.eu/keys/RPM-GPG-KEY-fedora-21-primary'
+
+        rpms = [ 
+            'http://mirror.onelab.eu/fedora/releases/21/Everything/x86_64/os/Packages/s/syslinux-6.03-1.fc21.x86_64.rpm',
+            'http://mirror.onelab.eu/fedora/releases/21/Everything/x86_64/os/Packages/s/syslinux-nonlinux-6.03-1.fc21.noarch.rpm',
+            'http://mirror.onelab.eu/fedora/releases/21/Everything/x86_64/os/Packages/s/syslinux-perl-6.03-1.fc21.x86_64.rpm',
+        ]
+        # this can be done several times
+        self.run_in_guest("rpm --import {key}".format(**locals()))
+        return self.run_in_guest("yum -y localinstall {}".format(" ".join(rpms))) == 0
+
+    def installed_bonds(self):
+        """
+        list /etc/yum.repos.d on the myplc side
+        """
+        self.run_in_guest("ls /etc/yum.repos.d/*partial.repo")
+        return True
+        
     ###
     def mod_python(self):
         """yum install mod_python, useful on f18 and above so as to avoid broken wsgi"""
@@ -1329,6 +1352,9 @@ class TestPlc:
 
     @node_mapper
     def qemu_timestamp(self) : pass
+
+    @node_mapper
+    def qemu_nodeflavour(self): pass
 
     # when a spec refers to a node possibly on another plc
     def locate_sliver_obj_cross(self, nodename, slicename, other_plcs):
