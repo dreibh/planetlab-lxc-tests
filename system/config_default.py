@@ -68,7 +68,10 @@ def nodes(options, index):
                                           },
              'bootmedium_options' :     [ 'serial', 'no-hangcheck', 'systemd-debug' ],
              # provision for bonding
-             'tags'               :     {},
+             'tags'               :     {
+                 # not needed anymore
+                 # 'plain-bootstrapfs' : 'YES'
+             },
              # boot cd settings
              # we should have tags here instead of the hard-wired
              # options set for GetBootMedium in TestNode.py

@@ -61,6 +61,10 @@ class TestBonding(object):
     so we can configure the local myplc (test_plc)
     for multi-flavour nodes and slices
     options is a TestMain options
+
+    details for a bonding node (like hostname and IP) are
+    computed from the underlying Substrate object and 
+    stored in arg-bonding-{buildname}
     """
     
     def __init__(self, test_plc, bonding_spec, substrate, options):
@@ -75,9 +79,54 @@ class TestBonding(object):
         self.bonding_spec = bonding_spec
         self.substrate = substrate
         self.options = options
+        # a little hacky : minimal provisioning and modify plc_spec on the fly
+        self.provision()
+    
     def nodefamily(self):
         return "{pldistro}-{fcdistro}-{arch}".format(**self.bonding_spec)
         
+    #################### provisioning
+    def persistent_name(self):
+        return "arg-bonding-{}".format(self.bonding_spec['buildname'])
+    def persistent_store(self):
+        with open(self.persistent_name(),'w') as f:
+            f.write("{} {}\n".format(self.vnode_hostname, self.vnode_ip))
+    def persistent_load(self):
+        try:
+            with open(self.persistent_name()) as f:
+                self.vnode_hostname, self.vnode_ip = f.read().strip().split()
+            return True
+        except:
+            return False
+
+    def provision(self):
+        # locate the first node in our own spec
+        site_spec = self.test_plc.plc_spec['sites'][0]
+        node_spec = site_spec['nodes'][0]
+        # find a free IP for node
+        if self.persistent_load():
+            print("Re-using bonding nodes attributes from {}".format(self.persistent_name()))
+        else:
+            print("Could not load bonding nodes attributes from {}".format(self.persistent_name()))
+            vnode_pool = self.substrate.vnode_pool
+            vnode_pool.sense()
+            try:
+                hostname, mac = vnode_pool.next_free()
+                self.vnode_hostname = self.substrate.fqdn(hostname)
+                self.vnode_ip = vnode_pool.get_ip(hostname)
+                self.vnode_mac = mac
+                self.persistent_store()
+            except:
+                raise Exception("Cannot provision bonding node")
+
+        # implement the node on another IP
+        node_spec['node_fields']['hostname'] = self.vnode_hostname
+        node_spec['interface_fields']['ip'] = self.vnode_ip
+        # with the node flavour that goes with bonding plc
+        for tag in ['arch', 'fcdistro', 'pldistro']:
+            node_spec['tags'][tag] = self.bonding_spec[tag]
+
+    #################### steps
     def init_partial(self):
         """
         runs partial-repo.sh for the bonding build

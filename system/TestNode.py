@@ -97,11 +97,8 @@ class TestNode:
         node_id = server.AddNode(userauth,
                                  self.test_site.site_spec['site_fields']['login_base'],
                                  self.node_spec['node_fields'])
-        server.SetNodePlainBootstrapfs(userauth,
-                                       self.node_spec['node_fields']['hostname'],
-                                       'YES')
         # create as reinstall to avoid user confirmation
-        server.UpdateNode(userauth, self.name(), {'boot_state':'reinstall'})
+        server.UpdateNode(userauth, self.name(), { 'boot_state' : 'reinstall' })
 
         # you are supposed to make sure the tags exist
         for tagname, tagvalue in self.node_spec['tags'].items():

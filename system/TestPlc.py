@@ -161,8 +161,7 @@ class TestPlc:
 # keep this our of the way for now
         'check_vsys_defaults_ignore', SEP,
 # run this first off so it's easier to re-run on another qemu box        
-        'qemu_kill_mine', SEP,
-        'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
+        'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
@@ -706,11 +705,10 @@ class TestPlc:
 
     ### install_rpm 
     def plc_install(self):
-        "yum install myplc, noderepo, and the plain bootstrapfs"
-
-        # workaround for getting pgsql8.2 on centos5
-        if self.options.fcdistro == "centos5":
-            self.run_in_guest("rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm")
+        """
+        yum install myplc, noderepo
+        plain bootstrapfs is not installed anymore
+        """
 
         # compute nodefamily
         if self.options.personality == "linux32":
@@ -725,7 +723,6 @@ class TestPlc:
         pkgs_list.append("slicerepo-{}".format(nodefamily))
         pkgs_list.append("myplc")
         pkgs_list.append("noderepo-{}".format(nodefamily))
-        pkgs_list.append("nodeimage-{}-plain".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install(pkgs_list)
 
@@ -1288,6 +1285,9 @@ class TestPlc:
     def keys_clear_known_hosts(self): pass
     
     def plcapi_urls(self):
+        """
+        attempts to reach the PLCAPI with various forms for the URL
+        """
         return PlcapiUrlScanner(self.auth_root(), ip=self.vserverip).scan()
 
     def speed_up_slices(self):
