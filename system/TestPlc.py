@@ -724,6 +724,7 @@ class TestPlc:
         pkgs_list.append("slicerepo-{}".format(nodefamily))
         pkgs_list.append("myplc")
         pkgs_list.append("noderepo-{}".format(nodefamily))
+        pkgs_list.append("nodeimage-{}-plain".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install(pkgs_list)
 
