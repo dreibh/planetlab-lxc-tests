@@ -178,3 +178,16 @@ sequences['slice_up_down']=[
     'slice_down',
 ]
     
+## dealing with nodes
+# useful also. for bonding
+# alias nodes to node since we mostly have one node
+sequences['node'] = [ 'nodes' ]
+
+sequences['restart_node'] = sequences['start_node'] = """
+qemu_kill_mine nodestate_reinstall qemu_local_init bootcd qemu_local_config 
+qemu_clean_mine qemu_export qemu_start qemu_timestamp
+""".split()
+
+sequences['bonding_node'] = 'node start-node'.split()
+
+sequences['wait_node'] = 'ping_node ssh_node_debug ssh_node_boot'.split()
