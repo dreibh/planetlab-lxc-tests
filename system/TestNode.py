@@ -274,7 +274,7 @@ class TestNode:
         return test_box.run_in_buildname("echo {:d} > {}/timestamp"\
                                          .format(now, self.nodedir()), dry_run=self.dry_run()) == 0
 
-    def qemu_nodeflavour(self):
+    def qemu_nodefamily(self):
         auth = self.test_plc.auth_root()
         hostname = self.node_spec['node_fields']['hostname']
         nodeflavour = self.test_plc.apiserver.GetNodeFlavour(auth, hostname)
