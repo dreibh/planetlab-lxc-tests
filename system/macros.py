@@ -182,6 +182,7 @@ sequences['slice_up_down']=[
 # useful also. for bonding
 # alias nodes to node since we mostly have one node
 sequences['node'] = [ 'nodes' ]
+sequences['delete_node'] = [ 'delete_nodes' ]
 
 sequences['restart_node'] = sequences['start_node'] = """
 qemu_kill_mine nodestate_reinstall qemu_local_init bootcd qemu_local_config 
