@@ -49,6 +49,7 @@ def onelab_bonding_spec (buildname):
 
 ####################
 import os, os.path
+import socket
 
 import utils
 from TestSsh import TestSsh
@@ -86,15 +87,17 @@ class TestBonding(object):
         return "{pldistro}-{fcdistro}-{arch}".format(**self.bonding_spec)
         
     #################### provisioning
+    # store only hostname so it's either to set this manually
     def persistent_name(self):
         return "arg-bonding-{}".format(self.bonding_spec['buildname'])
     def persistent_store(self):
         with open(self.persistent_name(),'w') as f:
-            f.write("{} {}\n".format(self.vnode_hostname, self.vnode_ip))
+            f.write("{}\n".format(self.vnode_hostname))
     def persistent_load(self):
         try:
             with open(self.persistent_name()) as f:
-                self.vnode_hostname, self.vnode_ip = f.read().strip().split()
+                self.vnode_hostname = f.read().strip().split()[0]
+                self.vnode_ip = socket.gethostbyname(self.vnode_hostname)
             return True
         except:
             return False
