@@ -145,8 +145,8 @@ class PoolItem:
 
     def char (self):
         if   self.status == None:       return '?'
-        elif self.status == 'busy':     return '+'
-        elif self.status == 'free':     return '-'
+        elif self.status == 'busy':     return '*'
+        elif self.status == 'free':     return '.'
         elif self.status == 'mine':     return 'M'
         elif self.status == 'starting': return 'S'
 
