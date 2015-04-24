@@ -272,6 +272,13 @@ class Pool:
 
         command = "ping -c 1 {} 1 {}".format(Pool.ping_timeout_option, hostname)
         (status, output) = subprocess.getstatusoutput(command)
+        print ("""
+----------        
+Ping command <{command}> has returned {status}
+--
+{output}
+----------
+        """.format(**locals()))
         return status == 0
 
 ####################

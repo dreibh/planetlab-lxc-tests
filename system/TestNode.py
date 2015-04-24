@@ -193,6 +193,12 @@ class TestNode:
                                            self.name(),{'boot_state':'reinstall'})
         return True
     
+    def nodestate_upgrade(self):
+        "all nodes: mark PLCAPI boot_state as upgrade"
+        self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),
+                                           self.name(),{'boot_state':'upgrade'})
+        return True
+    
     def nodestate_safeboot(self):
         "all nodes: mark PLCAPI boot_state as safeboot"
         self.test_plc.apiserver.UpdateNode(self.test_plc.auth_root(),

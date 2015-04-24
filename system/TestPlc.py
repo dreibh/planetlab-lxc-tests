@@ -195,7 +195,7 @@ class TestPlc:
         'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
-        'nodestate_show','nodestate_safeboot','nodestate_boot', SEP,
+        'nodestate_show','nodestate_safeboot','nodestate_boot', 'nodestate_upgrade', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
         'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
@@ -1191,6 +1191,8 @@ class TestPlc:
     def qemu_local_config(self): pass
     @node_mapper
     def nodestate_reinstall(self): pass
+    @node_mapper
+    def nodestate_upgrade(self): pass
     @node_mapper
     def nodestate_safeboot(self): pass
     @node_mapper
