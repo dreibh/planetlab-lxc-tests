@@ -63,3 +63,32 @@ as a matter of fact when doing `run -g $bonding` one can invoke most of the usua
 	<<visual check>>
 	rung bonding-node
 
+
+# upgrading nodes
+
+targets like `nodefcdistro-f20` can be used to change a node's fcdistro
+
+----
+
+usual sequence for testing a node upgrade; we start from a f20 myplc and upgrade the node to f21
+
+ would be - e.g. from f20 to f21
+
+
+    f20
+    bond ../$(t)*f21
+    rung
+    run nodefcdistro-f21 nodestate-upgrade
+    run qemu-kill-mine qemu-start wait-node
+
+-----
+Or, the other way around, using a f21 myplc, and a f20 bonding node, that we upgrade
+
+    f21
+    bond ../$(t)*f20
+    rung
+    rung node qemu-start wait-node
+    rung nodefcdistro-f21 nodestate-upgrade
+    rung qemu-kill-mine qemu-start wait-node
+    
+	
