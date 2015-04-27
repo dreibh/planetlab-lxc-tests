@@ -9,6 +9,7 @@ import xmlrpc.client
 server_methods = [ ('GetNodes' ,  []),
                    ('AddNode' , True),
                    ('SetNodePlainBootstrapfs', True),
+                   ('SetNodeFcdistro', True),
                    ('DeleteNode' , True),
                    ('UpdateNode' , True),
                    ('AddInterface' , True),

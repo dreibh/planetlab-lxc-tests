@@ -217,9 +217,33 @@ class TestNode:
             print("Dry_run: skipped getting current node state")
             return True
         state = self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(), self.name(), ['boot_state'])[0]['boot_state']
-        print(self.name(),':',state)
+        print("boot_state for {} : {}".format(self.name(), state))
         return True
     
+    def nodefcdistro_f14(self):
+        return self.nodefcdistro_set('f14')
+    def nodefcdistro_f18(self):
+        return self.nodefcdistro_set('f18')
+    def nodefcdistro_f20(self):
+        return self.nodefcdistro_set('f20')
+    def nodefcdistro_f21(self):
+        return self.nodefcdistro_set('f21')
+    def nodefcdistro_set(self, distro):
+        "set the fcdistro tag to distro, passed in arg"
+        self.test_plc.apiserver.SetNodeFcdistro(self.test_plc.auth_root(),
+                                               self.name(), distro)
+        return True
+
+    def nodefcdistro_show(self):
+        "display the fcdistro tag - or flavour actually - of node"
+        if self.dry_run():
+            print("Dry_run: would fetch node flavour")
+            return True
+        flavour = self.test_plc.apiserver.GetNodeFlavour(self.test_plc.auth_root(),
+                                                         self.name())
+        print("Flavour for {} : {}".format(self.name(), flavour))
+        return True
+
     def qemu_local_config(self):
         "all nodes: compute qemu config qemu.conf and store it locally"
         if not self.is_qemu():

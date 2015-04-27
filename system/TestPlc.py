@@ -196,6 +196,7 @@ class TestPlc:
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', 'nodestate_upgrade', SEP,
+        'nodefcdistro_show','nodefcdistro_f14','nodefcdistro_f18', 'nodefcdistro_f20', 'nodefcdistro_f21', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
         'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
@@ -1190,6 +1191,8 @@ class TestPlc:
     @node_mapper
     def qemu_local_config(self): pass
     @node_mapper
+    def qemu_export(self): pass
+    @node_mapper
     def nodestate_reinstall(self): pass
     @node_mapper
     def nodestate_upgrade(self): pass
@@ -1200,7 +1203,15 @@ class TestPlc:
     @node_mapper
     def nodestate_show(self): pass
     @node_mapper
-    def qemu_export(self): pass
+    def nodefcdistro_f14(self): pass
+    @node_mapper
+    def nodefcdistro_f18(self): pass
+    @node_mapper
+    def nodefcdistro_f20(self): pass
+    @node_mapper
+    def nodefcdistro_f21(self): pass
+    @node_mapper
+    def nodefcdistro_show(self): pass
         
     ### check hooks : invoke scripts from hooks/{node,slice}
     def check_hooks_node(self): 
