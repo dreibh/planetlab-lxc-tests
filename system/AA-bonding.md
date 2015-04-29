@@ -78,7 +78,7 @@ usual sequence for testing a node upgrade; we start from a f20 myplc and upgrade
     f20
     bond ../$(t)*f21
     rung
-    run nodefcdistro-f21 nodestate-upgrade
+    run nodeplain-off nodefcdistro-f21 nodestate-upgrade
     run qemu-kill-mine qemu-start wait-node
 
 -----

@@ -196,7 +196,8 @@ class TestPlc:
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', 'nodestate_upgrade', SEP,
-        'nodefcdistro_show','nodefcdistro_f14','nodefcdistro_f18', 'nodefcdistro_f20', 'nodefcdistro_f21', SEP,
+        'nodeflavour_show','nodedistro_f14','nodedistro_f18', 'nodedistro_f20', 'nodedistro_f21', SEP,
+        'nodeplain_on','nodeplain_off','nodeplain_show', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
         'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
@@ -708,8 +709,7 @@ class TestPlc:
     ### install_rpm 
     def plc_install(self):
         """
-        yum install myplc, noderepo
-        plain bootstrapfs is not installed anymore
+        yum install myplc, noderepo + plain bootstrapfs as well
         """
 
         # compute nodefamily
@@ -1203,15 +1203,21 @@ class TestPlc:
     @node_mapper
     def nodestate_show(self): pass
     @node_mapper
-    def nodefcdistro_f14(self): pass
+    def nodedistro_f14(self): pass
     @node_mapper
-    def nodefcdistro_f18(self): pass
+    def nodedistro_f18(self): pass
     @node_mapper
-    def nodefcdistro_f20(self): pass
+    def nodedistro_f20(self): pass
     @node_mapper
-    def nodefcdistro_f21(self): pass
+    def nodedistro_f21(self): pass
     @node_mapper
-    def nodefcdistro_show(self): pass
+    def nodeflavour_show(self): pass
+    @node_mapper
+    def nodeplain_on(self): pass
+    @node_mapper
+    def nodeplain_off(self): pass
+    @node_mapper
+    def nodeplain_show(self): pass
         
     ### check hooks : invoke scripts from hooks/{node,slice}
     def check_hooks_node(self): 

@@ -6,8 +6,8 @@
 import xmlrpc.client
 
 # the default value is for the dry run mode
-server_methods = [ ('GetNodes' ,  []),
-                   ('AddNode' , True),
+server_methods = [ ('GetNodes', []),
+                   ('AddNode', True),
                    ('SetNodePlainBootstrapfs', True),
                    ('SetNodeFcdistro', True),
                    ('DeleteNode' , True),

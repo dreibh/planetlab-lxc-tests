@@ -220,21 +220,20 @@ class TestNode:
         print("boot_state for {} : {}".format(self.name(), state))
         return True
     
-    def nodefcdistro_f14(self):
-        return self.nodefcdistro_set('f14')
-    def nodefcdistro_f18(self):
-        return self.nodefcdistro_set('f18')
-    def nodefcdistro_f20(self):
-        return self.nodefcdistro_set('f20')
-    def nodefcdistro_f21(self):
-        return self.nodefcdistro_set('f21')
-    def nodefcdistro_set(self, distro):
+    def nodedistro_f14(self):
+        return self.nodedistro_set('f14')
+    def nodedistro_f18(self):
+        return self.nodedistro_set('f18')
+    def nodedistro_f20(self):
+        return self.nodedistro_set('f20')
+    def nodedistro_f21(self):
+        return self.nodedistro_set('f21')
+    def nodedistro_set(self, distro):
         "set the fcdistro tag to distro, passed in arg"
         self.test_plc.apiserver.SetNodeFcdistro(self.test_plc.auth_root(),
-                                               self.name(), distro)
+                                                self.name(), distro)
         return True
-
-    def nodefcdistro_show(self):
+    def nodeflavour_show(self):
         "display the fcdistro tag - or flavour actually - of node"
         if self.dry_run():
             print("Dry_run: would fetch node flavour")
@@ -242,6 +241,25 @@ class TestNode:
         flavour = self.test_plc.apiserver.GetNodeFlavour(self.test_plc.auth_root(),
                                                          self.name())
         print("Flavour for {} : {}".format(self.name(), flavour))
+        return True
+
+    def nodeplain_set(self, plain):
+        " set bootstrapfs-plain tag on nodes"
+        self.test_plc.apiserver.SetNodePlainBootstrapfs(self.test_plc.auth_root(),
+                                                        self.name(), plain)
+        return True
+    def nodeplain_on(self):
+        return self.nodeplain_set("True")
+    def nodeplain_off(self):
+        return self.nodeplain_set("")
+    def nodeplain_show(self):
+        "display bootstrapfs-plain tag"
+        if self.dry_run():
+            print("Dry_run: would fetch node plain-bootstrapfs tag")
+            return True
+        plain = self.test_plc.apiserver.GetNodePlainBootstrapfs(self.test_plc.auth_root(),
+                                                                  self.name())
+        print("Plain bootstrapfs for {} is {}".format(self.name(), plain))
         return True
 
     def qemu_local_config(self):
