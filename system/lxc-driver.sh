@@ -2,11 +2,15 @@
 
 path=/vservers
 
+#################### work on all containers - only deal with the ones that have a timestamp
 function sense_all () {
     virsh -c lxc:/// list 2> /dev/null | grep running | while read line; do
         pid=$(echo $line | cut -d' ' -f1)
         lxc_name=$(echo $line | cut -d' ' -f2)
-        timestamp=$(cat $path/$lxc_name/$lxc_name.timestamp 2> /dev/null)
+	# ignore regular vservers like testmaster and the like
+        timestamp_file=$path/$lxc_name/$lxc_name.timestamp
+	[ -f $timestamp_file ] || continue
+        timestamp=$(cat $timestamp_file 2> /dev/null)
         echo "$lxc_name;$pid;$timestamp" 
     done  
 }
@@ -14,6 +18,9 @@ function sense_all () {
 function start_all () {
     virsh -c lxc:/// list --inactive | grep " - "| while read line; do
         lxc_name=$(echo $line | cut -d' ' -f2)
+	# ignore regular vservers like testmaster and the like
+        timestamp_file=$path/$lxc_name/$lxc_name.timestamp
+	[ -f $timestamp_file ] || continue
         virsh -c lxc:/// start $lxc_name
     done    
 }
@@ -21,16 +28,40 @@ function start_all () {
 function stop_all () {
     virsh -c lxc:/// list | grep running | while read line; do
         lxc_name=$(echo $line | cut -d' ' -f2)
+	# ignore regular vservers like testmaster and the like
+        timestamp_file=$path/$lxc_name/$lxc_name.timestamp
+	[ -f $timestamp_file ] || continue
         virsh -c lxc:/// destroy $lxc_name
     done   
 }
 
+function destroy_all () {
+    
+    stop_all
+    virsh -c lxc:/// list --all | while read line; do
+        lxc_name=$(echo $line | cut -d' ' -f2)
+	# ignore regular vservers like testmaster and the like
+        timestamp_file=$path/$lxc_name/$lxc_name.timestamp
+	[ -f $timestamp_file ] || continue
+        virsh -c lxc:/// undefine $lxc_name
+        rm -fr $path/$lxc_name 
+    done
+}
+
+function restart_all () {
+
+    stop_all 
+    start_all
+}
+
+#################### deal with one user-specified container
 function sense_lxc () {
 
     lxc_name=$1; shift
     if [ "$(virsh -c lxc:/// dominfo $lxc_name | grep State| cut -d' ' -f11)" == "running" ] ; then
        pid=$(virsh -c lxc:/// dominfo $lxc_name| grep Id | cut -d' ' -f14)
-       timestamp=$(cat $path/$lxc_name/$lxc_name.timestamp)
+        timestamp_file=$path/$lxc_name/$lxc_name.timestamp
+       timestamp=$(cat $timestamp_file)
        echo "$lxc_name;$pid;$timestamp"
     fi
 }
@@ -51,27 +82,11 @@ function stop_lxc () {
     fi
 }
 
-function restart_all () {
-
-    stop_all 
-    start_all
-}
-
 function restart_lxc () {
 
     lxc_name=$1; shift
     stop_lxc $lxc_name
     start_lxc $lxc_name
-}
-
-function destroy_all () {
-    
-    stop_all
-    virsh -c lxc:/// list --all | while read line; do
-        lxc_name=$(echo $line | cut -d' ' -f2)
-        virsh -c lxc:/// undefine $lxc_name
-        rm -fr $path/$lxc_name 
-    done
 }
 
 function destroy_lxc () {
@@ -82,6 +97,7 @@ function destroy_lxc () {
     rm -fr $path/$lxc_name
 }
 
+####################
 function usage () {
     echo "Usage: lxc-driver.sh [options]"
     echo "Description:"
@@ -106,17 +122,8 @@ function main () {
 
     
     case $command in
-  	sense_all) sense_all ;;
-      	start_all) start_all ;;
-	 stop_all) stop_all ;;
-      restart_all) restart_all ;;
-      destroy_all) destroy_all ;;
-	sense_lxc) sense_lxc $lxc;;
-        start_lxc) start_lxc $lxc;;
-         stop_lxc) stop_lxc $lxc;;
-      restart_lxc) restart_lxc $lxc;;
-      destroy_lxc) destroy_lxc $lxc;;
-		*) usage
+  	sense_all|start_all|stop_all|restart_all|destroy_all|sense_lxc|start_lxc|stop_lxc|restart_lxc|destroy_lxc) $command ;;
+	*) usage
     esac
 
 
