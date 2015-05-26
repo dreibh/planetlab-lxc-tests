@@ -98,13 +98,15 @@ function destroy_lxc () {
 }
 
 ####################
+commands="sense_all|start_all|stop_all|restart_all|destroy_all|sense_lxc|start_lxc|stop_lxc|restart_lxc|destroy_lxc"
+
 function usage () {
     echo "Usage: lxc-driver.sh [options]"
     echo "Description:"
     echo "   This command is used to manage and retreive information on existing lxc containers "
     echo "lxc-driver.sh -c <COMMAND>_all"
     echo "lxc-driver.sh -c <COMMAND>_lxc -n <LXCNAME>"
-    echo "<COMMAND> in {sense,start,stop,restart,destroy}"
+    echo "<COMMAND> in {$commands}"
 
 }
 
