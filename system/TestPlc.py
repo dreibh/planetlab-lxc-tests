@@ -1126,7 +1126,7 @@ class TestPlc:
         return True
 
     # probing nodes
-    def check_nodes_ping(self, timeout_seconds=30, period_seconds=10):
+    def check_nodes_ping(self, timeout_seconds=300, period_seconds=10):
         class CompleterTaskPingNode(CompleterTask):
             def __init__(self, hostname):
                 self.hostname = hostname
