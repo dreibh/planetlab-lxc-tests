@@ -1,6 +1,6 @@
 #!/bin/bash
 cd $(dirname $0)
-python -c "import time; print int(time.time())" > timestamp
+python3 -c "import time; print(int(time.time()))" > timestamp
 mkdir -p logs
 time=$(date +%H-%M)
 runfile=run-${time}.txt
@@ -12,7 +12,7 @@ tracelast=trace
 rm -f logs/success
 rm -f logs/$runlast; (cd logs; ln -s $runfile $runlast)
 rm -f logs/$tracelast; (cd logs; ln -s $tracefile $tracelast)
-python -u TestMain.py -t logs/$tracefile "$@" &> logs/$runfile ; retcod=$?
+python3 -u TestMain.py -t logs/$tracefile "$@" &> logs/$runfile ; retcod=$?
 cat logs/$runfile
 case "$retcod" in 
     0) touch logs/success ;;

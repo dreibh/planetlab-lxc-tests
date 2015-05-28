@@ -1,6 +1,7 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
+# -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2015 INRIA 
 #
 # this is only an example file
 # the actual file is installed in your testmaster box as /root/LocalTestResources.py
@@ -20,47 +21,30 @@ class OnelabSubstrate (Substrate):
 
    # the experimental lxc-based build box
    def build_lxc_boxes_spec (self):
-      return [ 'liquid', 'reed', 'velvet' ]
+      return [ 'buzzcocks' ]
 
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
-      return [ 
-         ('gotan', 20),         # how many plcs max in this box 
-# deathvegas is used at least temporarily for 'real' VMs
-#         ('deathvegas', 10),    
-         ]  
+      # we now use the same box as for builds
+      return [ ('buzzcocks', 20), ]  
 
-   # vplc01 to 40
-   def vplc_ips (self):
-      return [  ( 'vplc%02d'%i,                 # DNS name
-                  'unused')                     # MAC address 
-                for i in range(1,41) ] 
-
-# as of jan 2014 this is renumbered so that 1 is preferred
    def qemu_boxes_spec (self):
-      return [ # (hostname, how many qemus max in this box)
-# speedball - old school but robust and a big disk
-         ('kvm64-1', 3), # 4 cores, 4Gb, 840 Gb
-# used to have kruder too, but it is broken/dead
-# dorfmeister
-         ('kvm64-2', 3), # 4 cores, 4Gb
-# enfoui - this HP box behaves weird at boot-time
-# we don't get to see much of the boot process
-# use F10 to enter BIOS setup
-# nodes spawned in this box won't get network connectivity
-#         ('kvm64-3', 4), # 4 cores, 8Gb
-# estran - big mem but small disk
-         ('kvm64-4', 2), # 4 cores, 8Gb
-# lodos - rather old/small
-         ('kvm64-5', 1), # 2 cores, 4Gb
-# cyblok         
-         ('kvm64-6', 1), # 2 cores, 4Gb
-         ]
+      # ditto, a single big box now is enough
+      return [ ('boxtops', 64), ]
 
-   # the nodes pool has a MAC address as user-data (3rd elt in tuple)
+   
+   # may use vplc01 to 25 - out of the existing 30
+   # keep 5 upper addresses for more persistent instances
+   def vplc_ips (self):
+      return [  ( 'vplc{:02d}'.format(i),       # DNS name
+                  'unused')                     # MAC address 
+                for i in range(1,26) ] 
+
+   # vnode01 to 20
+   # the nodes IP pool has a MAC address as user-data (3rd elt in tuple)
    def vnode_ips (self):
-      return [ ( 'vnode%02d'%i,                 # DNS name               
-                 '02:34:56:00:00:%02d'%i)       # MAC address
+      return [ ( 'vnode{:02d}'.format(i),            # DNS name               
+                 '02:34:56:00:00:{:02d}'.format(i))  # MAC address
                for i in range(1,21) ] 
    
    # local network settings
@@ -79,7 +63,7 @@ class OnelabSubstrate (Substrate):
                'ipaddress_fields:netmask':      '255.255.248.0',
                }
 
-# the hostname for the testmaster - in case we'd like to run this remotely
+# the hostname for the testmaster that orchestrates the whole business
    def testmaster (self): 
       return 'testmaster'
 

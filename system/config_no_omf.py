@@ -1,5 +1,6 @@
+# -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2015 INRIA 
 #
 # remove slice_spec['omf-friendly'] 
 #
@@ -10,7 +11,7 @@
 def remove_omf (plc_spec):
     for slice in plc_spec['slices']:
         if 'omf-friendly' in slice:
-            print 'Turning off omf-friendly in slice',slice['slice_fields']['name']
+            print('Turning off omf-friendly in slice',slice['slice_fields']['name'])
             del slice['omf-friendly']
     return plc_spec
 

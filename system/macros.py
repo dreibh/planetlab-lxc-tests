@@ -18,24 +18,42 @@ sequences['sfa_restart'] = [
     'sfi_configure',
     ]
 
+sequences ['sfa_create_slice'] = [
+    'sfa_rspec',
+    'sfa_allocate',
+    'sfa_provision',
+]
+
 "re-run a complete sfa cycle from a nightly test"
-sequences['sfa'] = [ 
-    'sfa_restart',
-    'sfa_add_site',
-    'sfa_add_pi',
-    'sfa_add_user', 
-    'sfa_add_slice',
+sequences['sfa_populate'] = [ 
+    'sfa_register_site',
+    'sfa_register_pi',
+    'sfa_register_user', 
+    'sfa_update_user', 
+    'sfa_register_slice',
     'sfa_renew_slice',
     'sfa_discover', 
     'sfa_create_slice', 
     'sfa_check_slice_plc', 
     'sfa_update_user',
     'sfa_update_slice', 
+# xxx this behaves weird in this context, needs more care apparently
+# looks like at that point the PI is not allowed, while the regular is allowed to
+# remove himself (!) and to add himself back in (!!)
+#    'sfa_user_slice',
     'sfi_view_all', 
     'sfa_utest', 
+    ]
+
+sequences['sfa_delete'] = [
     'sfa_delete_slice', 
     'sfa_delete_user',
-    ]
+]
+
+sequences['sfa'] = [
+    'sfa_restart',
+    'sfa_populate',
+]
 
 sequences['sfa_create'] = [
     'sfa_plcclean', 
@@ -46,15 +64,22 @@ sequences['sfa_create'] = [
     'sfa_import', 
     'sfi_clean',
     'sfi_configure', 
-    'sfa_add_site',
-    'sfa_add_pi',
-    'sfa_add_user', 
-    'sfa_add_slice',
+    'sfa_register_site',
+    'sfa_register_pi',
+    'sfa_register_user', 
+    'sfa_register_slice',
+]
+
+sequences['sfa_user_slice'] = [
+    'sfa_remove_user_from_slice',
+    'sfi_show_slice_researchers', 
+    'sfa_insert_user_in_slice',
+    'sfi_show_slice_researchers', 
 ]
 
 sequences['sfa_provision'] = [ 
-    'sfa-discover',
-    'sfa-create_slice',
+    'sfa_discover',
+    'sfa_create_slice',
     'sfa_check_slice_plc',
     'sfi_view_all',
 ]
@@ -69,14 +94,15 @@ sequences['sfa_scratch'] = [
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
     'qemu_export', 'qemu_kill_mine', 'qemu_start', 'qemu_timestamp', 
     'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', 
-    'sfi_configure', 'sfa_add_user', 'sfa_add_slice', 'sfa_discover', 
+    'sfi_configure', 'sfa_register_user', 'sfa_register_slice', 'sfa_discover', 
     'sfa_create_slice', 'sfa_check_slice_plc', 
     'sfa_update_user', 'sfa_update_slice', 'sfi_view_all', 'sfa_utest',
 ]
 
 sequences['sfi_view_all'] = [
     'sfi_list',
-    'sfi_show',
+    'sfi_show_site',
+    'sfi_show_slice',
 ]
 
 # macro to exercice the registry only
@@ -97,16 +123,18 @@ sequences['sfa_standalone'] = [
     'sfa_start',
     'sfa_import',
     'sfi_configure',
-    'sfa_add_site',
-    'sfa_add_pi',
-    'sfa_add_user',
-    'sfa_add_slice',
+    'sfa_register_site',
+    'sfa_register_pi',
+    'sfa_register_user',
+    'sfa_register_slice',
     'sfi_list',
-    'sfi_show',
+    'sfi_show_site',
+    'sfi_show_slice',
     'sfa_delete_slice',
     'sfa_delete_user',
     'sfi_list',
-    'sfi_show',
+    'sfi_show_site',
+#    'sfi_show_slice',
 ]
 
 # re-run a qemu node when things go wrong
@@ -118,11 +146,11 @@ sequences['sfa_standalone'] = [
 # run qemu-again2
 
 sequences['qemu_again1'] = [
-    'qemu-kill-mine',
+    'qemu_kill_mine',
 ]
 
 sequences['qemu_again2']=[
-    'qemu-clean-mine',
+    'qemu_clean_mine',
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
     'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 
     'ping_node', 'ssh_node_debug',
@@ -131,9 +159,36 @@ sequences['qemu_again2']=[
 
 # same but only up to ping 
 sequences['qemu_again2_ping']=[
-    'qemu-clean-mine',
+    'qemu_clean_mine',
     'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', 
     'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 
     'ping_node',
 ]
     
+sequences['slice_up']=[
+    'fill_slices',
+    'ssh_slice',
+]
+sequences['slice_down']=[
+    'empty_slices',
+    'ssh_slice_off',
+]
+sequences['slice_up_down']=[
+    'slice_up',
+    'slice_down',
+]
+    
+## dealing with nodes
+# useful also. for bonding
+# alias nodes to node since we mostly have one node
+sequences['node'] = [ 'nodes' ]
+sequences['delete_node'] = [ 'delete_nodes' ]
+
+sequences['restart_node'] = sequences['start_node'] = """
+qemu_kill_mine nodestate_reinstall qemu_local_init bootcd qemu_local_config 
+qemu_clean_mine qemu_export qemu_start qemu_timestamp qemu_nodefamily
+""".split()
+
+sequences['bonding_node'] = 'node start-node'.split()
+
+sequences['wait_node'] = 'ping_node ssh_node_debug ssh_node_boot'.split()

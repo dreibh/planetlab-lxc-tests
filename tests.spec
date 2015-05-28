@@ -1,3 +1,3 @@
 # for use by module-tools only
-%define version 5.3
+%define version 6.0
 %define taglevel 1

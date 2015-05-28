@@ -3,15 +3,32 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
 #
+
+# this is a small and simple standalone utility
+# designed to run in slice-space
+# we keep this in python2 for now until python3
+# can be taken for granted in sliceimage
+
+from __future__ import print_function
+
 import sys
 import time
-from optparse import OptionParser    
+import subprocess
 import socket
 import SocketServer
+import threading
+from optparse import OptionParser    
 
-def myprint(message):
-    now=time.strftime("%H:%M:%S", time.localtime())
-    print "*",now,'--',message
+def myprint(message, id='client'):
+    now = time.strftime("%H:%M:%S", time.localtime())
+    print("* {now} ({id}) -- {message}".format(**locals()))
+    sys.stdout.flush()
+
+def show_network_status(id):
+    myprint("ip address show", id=id)
+    subprocess.call(['ip', 'address', 'show'])
+    myprint("ip route show", id=id)
+    subprocess.call(['ip', 'route', 'show'])
 
 class EchoRequestHandler(SocketServer.StreamRequestHandler):
     def handle(self):
@@ -24,26 +41,27 @@ class UppercaseRequestHandler(SocketServer.StreamRequestHandler):
         self.wfile.write(line.upper())
 
 class Server:
-
+    """
+    A TCP server, running for some finite amount of time
+    """
     def main(self):
-        import threading
-
-        parser=OptionParser()
-        parser.add_option("-p","--port", action="store", dest="port", type="int",
+        parser = OptionParser()
+        parser.add_option("-p", "--port", action="store", dest="port", type="int",
                           default=10000, help="port number")
-        parser.add_option("-a","--address", action="store", dest="address", 
+        parser.add_option("-a", "--address", action="store", dest="address", 
                           default=socket.gethostname(), help="address")
-        parser.add_option("-t","--timeout", action="store", dest="timeout", type="int",
+        parser.add_option("-t", "--timeout", action="store", dest="timeout", type="int",
                           default="0")
-        
         (options, args) = parser.parse_args()
+
         if len(args) != 0:
             parser.print_help()
             sys.exit(1)
 
+        myprint("==================== tcptest.py server", id='server')
+        show_network_status(id='server')
         server = SocketServer.TCPServer((options.address, options.port),
                                         UppercaseRequestHandler)
-
         try:
             if options.timeout:
                 t = threading.Thread(target=server.serve_forever)
@@ -53,15 +71,48 @@ class Server:
                 sys.exit(0)
             else:
                 server.serve_forever()        
-        except KeyboardInterrupt:
-            print 'Bailing out'
+        except KeyboardInterrupt as e:
+            print('Bailing out on keyboard interrupt')
             sys.exit(1)
-
-class Client:
+            
+class Ready:
+    """
+    A utility that does exit(0) iff network as perceived
+    from the sliver is ready. Designed to be run before Server,
+    so one can wait for the right conditions.
+    """
     def main(self):
-        from optparse import OptionParser    
+        parser = OptionParser()
+        # by default use another port so we don't run into
+        # the SO_LINGER kind of trouble
+        parser.add_option("-p", "--port", action="store", dest="port", type="int",
+                          default=9999, help="port number")
+        parser.add_option("-a", "--address", action="store", dest="address", 
+                          default=socket.gethostname(), help="address")
+        (options, args) = parser.parse_args()
 
-        parser=OptionParser()
+        myprint("==================== tcptest.py ready", id='ready')
+        def can_bind ():
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                s.bind((options.address, options.port))
+                return True
+            except Exception as e:
+                print(e)
+                return False
+
+        def eth0_has_ipv4():
+            command = "ip address show eth0 | grep -q ' inet '"
+            return subprocess.check_call(command, shell=True) == 0
+
+        sys.exit(0 if can_bind() and eth0_has_ipv4() else 1)
+        
+class Client:
+    """
+    Runs a client against a Server instance
+    """
+    def main(self):
+        parser = OptionParser()
         parser.add_option("-p","--port", action="store", dest="port", type="int",
                           default=10000, help="port number")
         parser.add_option("-a","--address", action="store", dest="address", 
@@ -76,22 +127,23 @@ class Client:
             parser.print_help()
             sys.exit(1)
 
+        myprint("==================== tcptest.py client", id='client')
         result=True
         for i in range(1,options.loops+1):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((options.address , options.port))
+            s.connect((options.address, options.port))
             mout=i*'ping ' + '\n'
             min=mout.upper()
             if s.send(mout) != len(mout):
-                myprint("cannot send %s"%mout.strip())
+                myprint("cannot send {}".format(mout.strip()))
                 result=False
                 break
             line=s.recv(len(min))
             if line is not line:
-                myprint("unexpected reception\ngot:%s\nexpected: %s",line,min)
-                result=False
+                myprint("unexpected reception\ngot:{}\nexpected: {}".format(line, min))
+                result = False
             else:
-                myprint("OK:%s"%mout.strip())
+                myprint("OK:{}".format(mout.strip()))
             # leave the connection open, but the last one (so 1 iter returns fast)
             if i != options.loops:
                 time.sleep(options.sleep)
@@ -99,16 +151,20 @@ class Client:
             s.close()
         myprint("Done")
         exit_return=0
-        if not result: exit_return=1
+        if not result:
+            exit_return=1
         sys.exit(exit_return)
 
 if __name__ == '__main__':
-    for argv in sys.argv[1:]:
-        if argv.find("client") >= 0:
-            sys.argv.remove(argv)
+    for arg in sys.argv[1:]:
+        if arg.find("client") >= 0:
+            sys.argv.remove(arg)
             Client().main()
-        elif argv.find("server") >= 0:
-            sys.argv.remove(argv)
+        elif arg.find("server") >= 0:
+            sys.argv.remove(arg)
             Server().main()
-    print 'you must specify either --client or --server'
+        elif arg.find("ready") >= 0:
+            sys.argv.remove(arg)
+            Ready().main()
+    print('you must specify either --client or --server')
     sys.exit(1)

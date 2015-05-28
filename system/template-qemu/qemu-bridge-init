@@ -49,8 +49,8 @@ function start () {
     echo "========== $COMMAND: entering start - beg"
     hostname
     uname -a
-    ifconfig
-    netstat -rn
+    ip address show
+    ip route show
     echo "========== $COMMAND: entering start - end"
 
     # disable netfilter calls for bridge interface (they cause panick on 2.6.35 anyway)
@@ -68,34 +68,34 @@ function start () {
     type -p brctl &> /dev/null || { echo "brctl not found, please install bridge-utils" ; exit 1 ; }
 
     #if we have already configured the same host_box no need to do it again
-    /sbin/ifconfig $INTERFACE_BRIDGE &> /dev/null && {
+    ip address show $INTERFACE_BRIDGE &> /dev/null && {
 	echo "Bridge interface $INTERFACE_BRIDGE already set up - $COMMAND start exiting"
 	exit 0
     }
-    /sbin/ifconfig $INTERFACE_LAN &>/dev/null || {
+    ip address show $INTERFACE_LAN &> /dev/null || {
 	echo "Cannot use interface $INTERFACE_LAN - exiting"
 	exit 1
     }
 
     #Getting host IP/masklen
-    address=$(/sbin/ip addr show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $2;}')
+    address=$(/sbin/ip address show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $2;}')
     [ -z "$address" ] && { echo "ERROR: Could not determine IP address for $INTERFACE_LAN" ; exit 1 ; }
     
-    broadcast=$(/sbin/ip addr show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $4;}')
+    broadcast=$(/sbin/ip address show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $4;}')
     [ -z "$broadcast" ] && echo "WARNING: Could not determine broadcast address for $INTERFACE_LAN"
 
-    gateway=$(netstat -rn | grep '^0.0.0.0' | awk '{print $2;}')
+    gateway=$(ip route show | grep default | awk '{print $3;}')
     [ -z "$gateway" ] && echo "WARNING: Could not determine gateway IP"
 
     ### do it
     #Restarting udev
-    echo "Starting udev ..."
-    /sbin/udevd restart
-    if modprobe kqemu &> /dev/null ; then
-	echo "(bridge-init) kqemu loaded"
-    else
-	echo "(bridge-init) WARNING : Could not modprobe kqemu"
-    fi
+    #echo "Starting udev ..."
+    #/sbin/udevd restart
+    #if modprobe kqemu &> /dev/null ; then
+    #    echo "(bridge-init) kqemu loaded"
+    #else
+    #	echo "(bridge-init) WARNING : Could not modprobe kqemu"
+    #fi
     #Loading the tun/tap model
     if modprobe tun ; then
 	echo "tun loaded"
@@ -113,20 +113,23 @@ function start () {
     #brctl stp $INTERFACE_BRIDGE yes
     brctl addif $INTERFACE_BRIDGE $INTERFACE_LAN
     echo "Activating promiscuous mode INTERFACE_LAN=$INTERFACE_LAN"
-    /sbin/ifconfig $INTERFACE_LAN 0.0.0.0 promisc up
+    ip link set dev $INTERFACE_LAN promisc on
     sleep 2
     echo "Setting bridge address=$address broadcast=$broadcast"
     # static
-    /sbin/ifconfig $INTERFACE_BRIDGE $address broadcast $broadcast up
+    ip address add $address broadcast $broadcast dev $INTERFACE_BRIDGE
+    # turn on bridge interface
+    ip link set dev $INTERFACE_BRIDGE up
+    ip address del $address dev $INTERFACE_LAN 
     sleep 1
-	
+
     #Reconfigure the routing table
-    echo "Configuring gateway=$gateway"
-    route add default gw $gateway
+    echo "Adding default route via gateway=$gateway on dev $INTERFACE_LAN"
+    ip route add 0.0.0.0/0 via $gateway dev $INTERFACE_BRIDGE
 
     echo "========== $COMMAND: exiting start - beg"
-    ifconfig
-    netstat -rn
+    ip address show
+    ip route show
     echo "========== $COMMAND: exiting start - end"
 }
 
@@ -137,8 +140,8 @@ function add () {
     INTERFACE_LAN=$1; shift
 
     echo "========== $COMMAND: entering add - beg"
-    ifconfig
-    netstat -rn
+    ip address show
+    ip route show
     echo "========== $COMMAND: entering add - end"
 
     echo "Activating link for $INTERFACE_LAN..."
@@ -162,8 +165,8 @@ function add () {
 
     echo "========== $COMMAND: exiting add - beg"
 
-    ifconfig
-    netstat -rn
+    ip address show
+    ip route show
 
     echo "Installed iptables"
     iptables-save
@@ -179,12 +182,13 @@ function stop () {
     ### Checking
     type -p brctl &> /dev/null || { echo "brctl not found, please install bridge-utils" ; exit 1 ; }
 
-    /sbin/ifconfig $INTERFACE_BRIDGE &> /dev/null || {
+    ip address show $INTERFACE_BRIDGE &> /dev/null || {
 	echo "Bridge interface $INTERFACE_BRIDGE does not exist - $COMMAND stop exiting"
 	exit 0
     }
+    address=$(/sbin/ip address show $INTERFACE_BRIDGE | grep -v inet6 | grep inet | head --lines=1 | awk '{print $2;}')
     brctl delif $INTERFACE_BRIDGE $INTERFACE_LAN
-    /sbin/ifconfig $INTERFACE_BRIDGE down
+    ip address del $address dev $INTERFACE_BRIDGE
     brctl delbr $INTERFACE_BRIDGE
     /sbin/service network restart
     /sbin/service iptables restart
