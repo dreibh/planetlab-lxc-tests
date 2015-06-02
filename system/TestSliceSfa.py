@@ -30,16 +30,15 @@ class TestSliceSfa:
         return self.test_auth_sfa.sfi_path()
 
     # send back up to the TestAuthSfa
-    def sfi_path (self): return self.test_auth_sfa.sfi_path()
-    def rspec_style (self): return self.test_auth_sfa.rspec_style()
-    def sfi_pi(self, *args, **kwds): return self.test_auth_sfa.sfi_pi(*args, **kwds)
-    def sfi_user(self, *args, **kwds): return self.test_auth_sfa.sfi_user(*args, **kwds)
+    def sfi_path (self):
+        return self.test_auth_sfa.sfi_path()
+    def sfi_pi(self, *args, **kwds):
+        return self.test_auth_sfa.sfi_pi(*args, **kwds)
+    def sfi_user(self, *args, **kwds):
+        return self.test_auth_sfa.sfi_user(*args, **kwds)
 
     def discover_option(self):
-        if self.rspec_style() == 'pg':
-            return "-r GENI"
-        else:
-            return "-r sfa"
+        return "-r GENI"
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
 

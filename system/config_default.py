@@ -11,9 +11,7 @@
 
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
-# so that sfa users get different mails whether they are based on pl or pg
 pldomain = "onelab.eu"
-pgdomain = "emulab.eu"
 
 ### for the sfa dual setup
 def login_base (index): 
@@ -22,14 +20,15 @@ def login_base (index):
     # index=3=>'sitea'  4=>'siteb' 
     else: return 'site{}'.format(chr(index+94))
 
-def sfa_login_base (index, rspec_style):
-    return "sfa{}".format(rspec_style)
+# only one rspec style
+def sfa_login_base (index):
+    return "sfa"
 
 def sfa_root (index):
     # use plt (planetlab test) instead of pl
     # otherwise a triangular test ends up with 'plc'
     # plta, pltb, ...
-    return 'plt{}'.format(chr(index+96))
+    return '{}'.format(chr(index+96))
 
 def nodes(options, index):
     return [{'name' : 'node{}'.format(index),
@@ -558,15 +557,14 @@ def sfa (options, index) :
             'SFA_AGGREGATE_ENABLED' : 'true',
         },
         # details of the slices to create
-        'auth_sfa_specs' : [ test_auth_sfa_spec(options, index,rspec_style) 
-                             for rspec_style in options.rspec_styles ]
+        'auth_sfa_specs' : [ test_auth_sfa_spec(options, index) ]
     }
 
-# rspec_style is 'pl' for sfav1 or 'pg' for pgv2
-def test_auth_sfa_spec (options, index, rspec_style):
-    domain = pldomain if rspec_style == 'pl' else pgdomain
+# rspec_style used to be 'pl' for sfav1 or 'pg' for pgv2 - OBSOLETE
+def test_auth_sfa_spec (options, index):
+    domain = pldomain
     # the auth/site part per se
-    login_base = sfa_login_base(index,rspec_style)
+    login_base = sfa_login_base(index)
     hrn_prefix = '{}.{}'.format(sfa_root(index),login_base)
     def full_hrn(x):  return "{}.{}".format(hrn_prefix,x)
     def full_mail(x): return "{}@test.{}".format(x,domain)
@@ -587,7 +585,7 @@ def test_auth_sfa_spec (options, index, rspec_style):
         'email':        full_mail (user_alias),
         'key_name':     'key_sfauser',
         'register_options':  [ '--extra',"first_name=Fake",
-                          '--extra',"last_name=SFA-style-{}".format(rspec_style),
+                               '--extra',"last_name=SFA",
                           ],
         'update_options': [ '--extra',"enabled=true",
                              ],
@@ -596,10 +594,9 @@ def test_auth_sfa_spec (options, index, rspec_style):
     slice_spec = {
         'name':          'sl',
         'register_options':  [ '--researchers', full_hrn (user_alias),
-                          # xxx
-                          '--extra', "description=SFA-testing-{}".format(rspec_style),
-                          '--extra', "url=http://slice{}.test.onelab.eu/".format(index),
-                          '--extra', "max_nodes=2",
+                               '--extra', "description=SFA-testing",
+                               '--extra', "url=http://slice{}.test.onelab.eu/".format(index),
+                               '--extra', "max_nodes=2",
                           ],
         'key_name':    'key_sfauser',
         'nodenames':    all_nodenames(options, index),
@@ -607,13 +604,12 @@ def test_auth_sfa_spec (options, index, rspec_style):
         
     # we're already in a dedicated site/authority so no need to encumber with odd names
 
-    return { #'hrn_prefix': hrn_prefix,
+    return { 
              'login_base' : login_base,
-             'domain':domain,
-             'rspec_style':rspec_style,
-             'pi_spec': pi_spec,
-             'user_spec': user_spec,
-             'slice_spec': slice_spec,
+             'domain'     : domain,
+             'pi_spec'    : pi_spec,
+             'user_spec'  : user_spec,
+             'slice_spec' : slice_spec,
              } 
 
 
@@ -630,7 +626,6 @@ def sample_test_plc_spec ():
 
     options = Void()
     options.size = 1
-    options.rspec_styles = ['pg']
 
     return config([], options)[0]
 

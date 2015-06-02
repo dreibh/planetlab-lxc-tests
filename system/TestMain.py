@@ -92,8 +92,6 @@ class Step:
 class TestMain:
 
     default_config = [ 'default' ] 
-#    default_rspec_styles = [ 'pl', 'pg' ]
-    default_rspec_styles = [ 'pg' ]
 
     default_build_url = "git://git.onelab.eu/tests"
 
@@ -195,7 +193,7 @@ run with -l to see a list of available steps
                             type=int, 
                             help="run steps only on plc numbered <qualifier>, starting at 1")
         parser.add_argument("-y", "--rspec-style", action="append", dest="rspec_styles", default=[],
-                            help="pl is for planetlab rspecs, pg is for protogeni")
+                            help="OBSOLETE - for compat only")
         parser.add_argument("-k", "--keep-going", action="store", dest="keep_going", default=False,
                             help="proceeds even if some steps are failing")
         parser.add_argument("-D", "--dbname", action="store", dest="dbname", default=None,
@@ -245,8 +243,8 @@ run with -l to see a list of available steps
             setattr(self.options, optname,
                     flatten([arg.split() for arg in getattr(self.options, optname)]))
 
-        if not self.options.rspec_styles:
-            self.options.rspec_styles = TestMain.default_rspec_styles
+        if self.options.rspec_styles:
+            print("WARNING: -y option is obsolete")
 
         # handle defaults and option persistence
         for recname, filename, default, need_reverse in (
