@@ -198,6 +198,8 @@ class TestAuthSfa:
     @slice_sfa_mapper
     def sfa_provision_empty (self, *args, **kwds): pass
     @slice_sfa_mapper
+    def sfa_describe (self, *args, **kwds): pass
+    @slice_sfa_mapper
     def sfa_check_slice_plc (self, *args, **kwds): pass
     @slice_sfa_mapper
     def sfa_check_slice_plc_empty (self, *args, **kwds): pass
