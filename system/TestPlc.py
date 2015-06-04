@@ -168,7 +168,8 @@ class TestPlc:
         'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
         'sfa_remove_user_from_slice@1','sfi_show_slice_researchers@1', 
         'sfa_insert_user_in_slice@1','sfi_show_slice_researchers@1', SEPSFA,
-        'sfa_discover@1', 'sfa_rspec@1', 'sfa_allocate@1', 'sfa_provision@1', SEPSFA,
+        'sfa_discover@1', 'sfa_rspec@1', SEPSFA,
+        'sfa_allocate@1', 'sfa_provision@1', 'sfa_describe@1', SEPSFA,
         'sfa_check_slice_plc@1', 'sfa_update_slice@1', SEPSFA,
         'sfi_list@1', 'sfi_show_site@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
@@ -1769,6 +1770,8 @@ class TestPlc:
     def sfa_provision(self): pass
     @auth_sfa_mapper
     def sfa_provision_empty(self): pass
+    @auth_sfa_mapper
+    def sfa_describe(self): pass
     @auth_sfa_mapper
     def sfa_check_slice_plc(self): pass
     @auth_sfa_mapper

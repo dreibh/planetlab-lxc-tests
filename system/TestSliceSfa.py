@@ -30,16 +30,15 @@ class TestSliceSfa:
         return self.test_auth_sfa.sfi_path()
 
     # send back up to the TestAuthSfa
-    def sfi_path (self): return self.test_auth_sfa.sfi_path()
-    def rspec_style (self): return self.test_auth_sfa.rspec_style()
-    def sfi_pi(self, *args, **kwds): return self.test_auth_sfa.sfi_pi(*args, **kwds)
-    def sfi_user(self, *args, **kwds): return self.test_auth_sfa.sfi_user(*args, **kwds)
+    def sfi_path (self):
+        return self.test_auth_sfa.sfi_path()
+    def sfi_pi(self, *args, **kwds):
+        return self.test_auth_sfa.sfi_pi(*args, **kwds)
+    def sfi_user(self, *args, **kwds):
+        return self.test_auth_sfa.sfi_user(*args, **kwds)
 
     def discover_option(self):
-        if self.rspec_style() == 'pg':
-            return "-r GENI"
-        else:
-            return "-r sfa"
+        return "-r GENI"
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
 
@@ -106,11 +105,18 @@ class TestSliceSfa:
     def reqfile (self): return self._resname("req", "rspec")
     def empty_reqfile (self): return "empty-rspec.xml"
     def nodefile (self): return self._resname("nodes", "txt")
+    def describfile (self): return self._resname("describ", "rspec")
     
+    def sfa_describe(self, options):
+        "run sfi describe into described.rspec"
+        return self.test_plc.run_in_guest(self.sfi_user(
+            "describe {} -o {}/{}"
+            .format(self.hrn(), self.sfi_path(), self.describfile()))) == 0
+
     # run as user
     def sfa_discover(self, options):
-        "discover resources into resouces_in.rspec"
-        return self.test_plc.run_in_guest(self.sfi_user(\
+        "discover resources into ad.rspec"
+        return self.test_plc.run_in_guest(self.sfi_user(
                 "resources {} -o {}/{}"\
                     .format(self.discover_option(),self.sfi_path(),self.adfile()))) == 0
 
@@ -196,12 +202,12 @@ class TestSliceSfa:
         # locate a key
         private_key=self.locate_private_key()
         if not private_key :
-            utils.header("WARNING: Cannot find a valid key for slice {}".format(self.name()))
+            utils.header("WARNING: Cannot find a valid key for slice {}".format(self.hrn()))
             return False
         command="echo hostname ; hostname; echo id; id; echo uname -a ; uname -a"
         
-        tasks=[]
-        slicename=self.plc_name()
+        tasks = []
+        slicename = self.plc_name()
         dry_run = getattr(options,'dry_run',False)
         for nodename in self.slice_spec['nodenames']:
             (site_spec,node_spec) = self.test_plc.locate_node(nodename)

@@ -47,10 +47,8 @@ class TestAuthSfa:
 #        self.piuser = self.auth_sfa_spec['piuser']
 #        self.regularuser = self.auth_sfa_spec['regularuser']
     
-    def rspec_style (self): return self.auth_sfa_spec['rspec_style']
-
     def sfi_path (self):
-        return "/root/sfi/{}".format(self.rspec_style())
+        return "/root/sfi"
 
     # the hrn for the root authority
     def root_hrn (self):
@@ -199,6 +197,8 @@ class TestAuthSfa:
     def sfa_provision (self, *args, **kwds): pass
     @slice_sfa_mapper
     def sfa_provision_empty (self, *args, **kwds): pass
+    @slice_sfa_mapper
+    def sfa_describe (self, *args, **kwds): pass
     @slice_sfa_mapper
     def sfa_check_slice_plc (self, *args, **kwds): pass
     @slice_sfa_mapper
