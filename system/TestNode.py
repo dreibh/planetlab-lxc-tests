@@ -323,6 +323,7 @@ class TestNode:
                                          .format(now, self.nodedir()), dry_run=self.dry_run()) == 0
 
     def qemu_nodefamily(self):
+        "write nodefamily stamp in qemu working dir"
         auth = self.test_plc.auth_root()
         hostname = self.node_spec['node_fields']['hostname']
         nodeflavour = self.test_plc.apiserver.GetNodeFlavour(auth, hostname)
