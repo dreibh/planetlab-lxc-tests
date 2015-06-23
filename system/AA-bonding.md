@@ -11,7 +11,7 @@ general idea is to use this command
 	
 or in an equivalent manner
 
-	export bonding= 2015.04.13--f18
+	export bonding=bond212015.04.13--f18
 	run -G
 	
 # requirements

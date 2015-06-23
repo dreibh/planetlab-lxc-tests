@@ -189,6 +189,8 @@ qemu_kill_mine nodestate_reinstall qemu_local_init bootcd qemu_local_config
 qemu_clean_mine qemu_export qemu_start qemu_timestamp qemu_nodefamily
 """.split()
 
+sequence['reset_node'] = "qemu-kill-mine qemu-start"
+
 sequences['bonding_node'] = 'node start-node'.split()
 
 sequences['wait_node'] = 'ping_node ssh_node_debug ssh_node_boot'.split()
