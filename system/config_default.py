@@ -66,10 +66,12 @@ def nodes(options, index):
                                           'next_hop' : 'xxx-deferred-xxx',
                                           },
              'bootmedium_options' :     [ 'serial', 'no-hangcheck', 'systemd-debug' ],
-             # provision for bonding
-             'tags'               :     {
-                 'plain-bootstrapfs' : 'YES',
-             },
+             # do not use plain bootstrapfs anymore as
+             # it tends to make bonding awkward (it's complicated enough already)
+             # plus, benefits are not clear any more, and it's closer to real life
+             #'tags'               :     {
+             #    'plain-bootstrapfs' : 'YES',
+             #},
              # boot cd settings
              # we should have tags here instead of the hard-wired
              # options set for GetBootMedium in TestNode.py
