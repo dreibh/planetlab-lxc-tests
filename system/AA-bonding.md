@@ -66,29 +66,44 @@ as a matter of fact when doing `run -g $bonding` one can invoke most of the usua
 
 # upgrading nodes
 
-targets like `nodefcdistro-f20` can be used to change a node's fcdistro
-
-----
-
-usual sequence for testing a node upgrade; we start from a f20 myplc and upgrade the node to f21
-
- would be - e.g. from f20 to f21
+targets like `nodedistro-f22` can be used to change a node's fcdistro
 
 
-    f20
-    bond ../$(t)*f21
-    rung
-    run nodeplain-off nodefcdistro-f21 nodestate-upgrade
-    run qemu-kill-mine qemu-start wait-node
+## testing upgrade (one node)
 
------
-Or, the other way around, using a f21 myplc, and a f20 bonding node, that we upgrade
+testing a node upgrade; we start from a f21 myplc and upgrade the node to f22
+
+### Init
 
     f21
-    bond ../$(t)*f20
+    bond22
     rung
-    rung node qemu-start wait-node
-    rung nodefcdistro-f21 nodestate-upgrade
-    rung qemu-kill-mine qemu-start wait-node
+    run nodeplain-off
+
+### Upgrade the node (make sure nodeplain is off)
+    
+    run nodedistro-f22 nodestate-upgrade
+    run reset-node wait-node
+    
+### Reinstall - back to square 1
+
+	run nodedistro-f21 nodestate-reinstall
+	run reset-node wait-node
+    
+### Run bootmanager interactively during upgrade
+To deploy experimental bootmanager code:
+
+* Insert breakpoints in the bootmanager code
+* turn on `BREAKPOINT_MODE = True` in `utils.py`
+* `make sync` 
+
+Then 
+
+    run nodedistro-f22 nodestate-safeboot 
+    run reset-node ssh-node-debug
+    testnodedbg
+    
+    cd /tmp/source
+    ./BootManager.py upgrade
     
 	
