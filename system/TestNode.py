@@ -221,19 +221,21 @@ class TestNode:
         return True
     
     def nodedistro_f14(self):
-        return self.nodedistro_set('f14')
+        return self.nodedistro_set('f14', 'onelab')
     def nodedistro_f18(self):
-        return self.nodedistro_set('f18')
+        return self.nodedistro_set('f18', 'lxc')
     def nodedistro_f20(self):
-        return self.nodedistro_set('f20')
+        return self.nodedistro_set('f20', 'lxc')
     def nodedistro_f21(self):
-        return self.nodedistro_set('f21')
+        return self.nodedistro_set('f21', 'lxc')
     def nodedistro_f22(self):
-        return self.nodedistro_set('f22')
-    def nodedistro_set(self, distro):
+        return self.nodedistro_set('f22', 'lxc')
+    def nodedistro_set(self, fcdistro, pldistro):
         "set the fcdistro tag to distro, passed in arg"
         self.test_plc.apiserver.SetNodeFcdistro(self.test_plc.auth_root(),
-                                                self.name(), distro)
+                                                self.name(), fcdistro)
+        self.test_plc.apiserver.SetNodePldistro(self.test_plc.auth_root(),
+                                                self.name(), pldistro)
         return True
     def nodeflavour_show(self):
         "display the fcdistro tag - or flavour actually - of node"
