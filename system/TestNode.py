@@ -307,6 +307,13 @@ class TestNode:
                      .format(self.name(), self.host_box()))
         return self.test_box().copy(self.nodedir(), recursive=True, dry_run=dry_run) == 0
             
+    def qemu_cleanlog(self):
+        "rename log.txt into log.txt.bak in the qemu dir"
+        test_box = self.test_box()
+        test_box.run_in_buildname("cd {}; mv -f log.txt log.txt.bak".
+                                  format(self.nodedir()), dry_run=self.dry_run())
+        return True
+
     def qemu_start(self):
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         model = self.node_spec['node_fields']['model']

@@ -162,7 +162,8 @@ class TestPlc:
         'check_vsys_defaults_ignore', SEP,
 # run this first off so it's easier to re-run on another qemu box        
         'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
-        'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
+        'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
+        'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
         'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
@@ -1194,6 +1195,8 @@ class TestPlc:
     def qemu_local_config(self): pass
     @node_mapper
     def qemu_export(self): pass
+    @node_mapper
+    def qemu_cleanlog(self): pass
     @node_mapper
     def nodestate_reinstall(self): pass
     @node_mapper
