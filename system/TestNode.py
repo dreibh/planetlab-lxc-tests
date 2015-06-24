@@ -228,6 +228,8 @@ class TestNode:
         return self.nodedistro_set('f20')
     def nodedistro_f21(self):
         return self.nodedistro_set('f21')
+    def nodedistro_f22(self):
+        return self.nodedistro_set('f22')
     def nodedistro_set(self, distro):
         "set the fcdistro tag to distro, passed in arg"
         self.test_plc.apiserver.SetNodeFcdistro(self.test_plc.auth_root(),

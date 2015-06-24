@@ -1213,6 +1213,8 @@ class TestPlc:
     @node_mapper
     def nodedistro_f21(self): pass
     @node_mapper
+    def nodedistro_f22(self): pass
+    @node_mapper
     def nodeflavour_show(self): pass
     @node_mapper
     def nodeplain_on(self): pass
