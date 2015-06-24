@@ -69,9 +69,9 @@ def nodes(options, index):
              # do not use plain bootstrapfs anymore as
              # it tends to make bonding awkward (it's complicated enough already)
              # plus, benefits are not clear any more, and it's closer to real life
-             #'tags'               :     {
-             #    'plain-bootstrapfs' : 'YES',
-             #},
+             'tags'               :     {
+#                 'plain-bootstrapfs' : 'YES',
+             },
              # boot cd settings
              # we should have tags here instead of the hard-wired
              # options set for GetBootMedium in TestNode.py
