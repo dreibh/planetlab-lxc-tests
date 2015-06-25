@@ -237,7 +237,7 @@ class TestNode:
         self.test_plc.apiserver.SetNodePldistro(self.test_plc.auth_root(),
                                                 self.name(), pldistro)
         return True
-    def nodeflavour_show(self):
+    def nodedistro_show(self):
         "display the fcdistro tag - or flavour actually - of node"
         if self.dry_run():
             print("Dry_run: would fetch node flavour")

@@ -198,7 +198,7 @@ class TestPlc:
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', 'nodestate_upgrade', SEP,
-        'nodeflavour_show','nodedistro_f14','nodedistro_f18', SEP,
+        'nodedistro_show','nodedistro_f14','nodedistro_f18', SEP,
         'nodedistro_f20', 'nodedistro_f21','nodedistro_f22', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
         'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
@@ -1216,7 +1216,7 @@ class TestPlc:
     @node_mapper
     def nodedistro_f22(self): pass
     @node_mapper
-    def nodeflavour_show(self): pass
+    def nodedistro_show(self): pass
         
     ### check hooks : invoke scripts from hooks/{node,slice}
     def check_hooks_node(self): 
