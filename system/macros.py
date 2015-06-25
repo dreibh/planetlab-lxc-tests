@@ -189,8 +189,17 @@ qemu_kill_mine nodestate_reinstall qemu_local_init bootcd qemu_local_config
 qemu_clean_mine qemu_export qemu_start qemu_timestamp qemu_nodefamily
 """.split()
 
+# turn node off and back on 
 sequences['reset_node'] = "qemu-cleanlog qemu-kill-mine qemu-start".split()
+# wait for the node to come back up all the way to boot mode
+sequences['wait_node'] = 'ping_node ssh_node_debug ssh_node_boot'.split()
+# set boot_state, reset and wait for the right state
+sequences['debug_mode'] = "nodestate-safeboot reset-node ssh-node-debug".split()
+sequences['boot_mode'] = "nodestate-boot reset-node wait-node".split()
+sequences['reinstall'] = "nodestate-reinstall reset-node wait-node".split()
+sequences['upgrade'] = "nodestate-upgrade reset-node wait-node".split()
 
+
+# maybe not too clear..
 sequences['bonding_node'] = 'node start-node'.split()
 
-sequences['wait_node'] = 'ping_node ssh_node_debug ssh_node_boot'.split()
