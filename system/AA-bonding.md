@@ -63,6 +63,8 @@ as a matter of fact when doing `run -g $bonding` one can invoke most of the usua
 	<<visual check>>
 	rung bonding-node
 
+-------
+-------
 
 # upgrading nodes
 
@@ -71,23 +73,21 @@ targets like `nodedistro-f22` can be used to change a node's fcdistro
 
 ## testing upgrade (one node)
 
-testing a node upgrade; we start from a f21 myplc and upgrade the node to f22
+testing a node upgrade; we start from a f14 myplc and upgrade the node to f22
 
 ### Init
 
-    f21
+    f14
     bond22
     rung
 
 ### Upgrade the node
     
-    run nodedistro-f22 nodestate-upgrade
-    run reset-node wait-node
+    run nodedistro-f22 	upgrade
     
 ### Reinstall - back to square 1
 
-	run nodedistro-f21 nodestate-reinstall
-	run reset-node wait-node
+	run nodedistro-f14 reinstall
     
 ### Run bootmanager interactively during upgrade
 To deploy experimental bootmanager code:
@@ -98,11 +98,10 @@ To deploy experimental bootmanager code:
 
 Then 
 
-    run nodedistro-f22 nodestate-safeboot 
-    run reset-node ssh-node-debug
+    run nodedistro-f22 debug-mode
     testnodedbg
     
     cd /tmp/source
     ./BootManager.py upgrade
     
-	
+Beware that when running installation in debug mode, some stuff like iirc `vgcreate` wait for 'y' for confirmation
