@@ -78,9 +78,8 @@ testing a node upgrade; we start from a f21 myplc and upgrade the node to f22
     f21
     bond22
     rung
-    run nodeplain-off
 
-### Upgrade the node (make sure nodeplain is off)
+### Upgrade the node
     
     run nodedistro-f22 nodestate-upgrade
     run reset-node wait-node

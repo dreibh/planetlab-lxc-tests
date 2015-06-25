@@ -66,11 +66,8 @@ def nodes(options, index):
                                           'next_hop' : 'xxx-deferred-xxx',
                                           },
              'bootmedium_options' :     [ 'serial', 'no-hangcheck', 'systemd-debug' ],
-             # do not use plain bootstrapfs anymore as
-             # it tends to make bonding awkward (it's complicated enough already)
-             # plus, benefits are not clear any more, and it's closer to real life
              'tags'               :     {
-#                 'plain-bootstrapfs' : 'YES',
+                 # no tags anymore
              },
              # boot cd settings
              # we should have tags here instead of the hard-wired

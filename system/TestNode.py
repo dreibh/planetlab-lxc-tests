@@ -247,25 +247,6 @@ class TestNode:
         print("Flavour for {} : {}".format(self.name(), flavour))
         return True
 
-    def nodeplain_set(self, plain):
-        " set bootstrapfs-plain tag on nodes"
-        self.test_plc.apiserver.SetNodePlainBootstrapfs(self.test_plc.auth_root(),
-                                                        self.name(), plain)
-        return True
-    def nodeplain_on(self):
-        return self.nodeplain_set("True")
-    def nodeplain_off(self):
-        return self.nodeplain_set("")
-    def nodeplain_show(self):
-        "display bootstrapfs-plain tag"
-        if self.dry_run():
-            print("Dry_run: would fetch node plain-bootstrapfs tag")
-            return True
-        plain = self.test_plc.apiserver.GetNodePlainBootstrapfs(self.test_plc.auth_root(),
-                                                                  self.name())
-        print("Plain bootstrapfs for {} is {}".format(self.name(), plain))
-        return True
-
     def qemu_local_config(self):
         "all nodes: compute qemu config qemu.conf and store it locally"
         if not self.is_qemu():

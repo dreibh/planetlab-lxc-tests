@@ -200,7 +200,6 @@ class TestPlc:
         'nodestate_show','nodestate_safeboot','nodestate_boot', 'nodestate_upgrade', SEP,
         'nodeflavour_show','nodedistro_f14','nodedistro_f18', SEP,
         'nodedistro_f20', 'nodedistro_f21','nodedistro_f22', SEP,
-        'nodeplain_on','nodeplain_off','nodeplain_show', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
         'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
@@ -712,7 +711,7 @@ class TestPlc:
     ### install_rpm 
     def plc_install(self):
         """
-        yum install myplc, noderepo + plain bootstrapfs as well
+        yum install myplc, noderepo
         """
 
         # compute nodefamily
@@ -728,7 +727,6 @@ class TestPlc:
         pkgs_list.append("slicerepo-{}".format(nodefamily))
         pkgs_list.append("myplc")
         pkgs_list.append("noderepo-{}".format(nodefamily))
-        pkgs_list.append("nodeimage-{}-plain".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install(pkgs_list)
 
@@ -1219,12 +1217,6 @@ class TestPlc:
     def nodedistro_f22(self): pass
     @node_mapper
     def nodeflavour_show(self): pass
-    @node_mapper
-    def nodeplain_on(self): pass
-    @node_mapper
-    def nodeplain_off(self): pass
-    @node_mapper
-    def nodeplain_show(self): pass
         
     ### check hooks : invoke scripts from hooks/{node,slice}
     def check_hooks_node(self): 

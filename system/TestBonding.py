@@ -130,8 +130,6 @@ class TestBonding(object):
         # with the node flavour that goes with bonding plc
         for tag in ['arch', 'fcdistro', 'pldistro']:
             node_spec['tags'][tag] = self.bonding_spec[tag]
-        # do not use plain bootstrapfs
-        del node_spec['tags']['plain-bootstrapfs']
 
     #################### steps
     def init_partial(self):
