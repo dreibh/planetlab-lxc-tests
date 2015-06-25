@@ -198,7 +198,7 @@ sequences['debug_mode'] = "nodestate-safeboot reset-node ssh-node-debug".split()
 sequences['boot_mode'] = "nodestate-boot reset-node wait-node".split()
 sequences['reinstall'] = "nodestate-reinstall reset-node wait-node".split()
 sequences['upgrade'] = "nodestate-upgrade reset-node wait-node".split()
-
+sequences['reboot'] = "nodestate-boot reset-node wait-node".split()
 
 # maybe not too clear..
 sequences['bonding_node'] = 'node start-node'.split()

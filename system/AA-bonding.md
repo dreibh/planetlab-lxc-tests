@@ -73,11 +73,11 @@ targets like `nodedistro-f22` can be used to change a node's fcdistro
 
 ## testing upgrade (one node)
 
-testing a node upgrade; we start from a f14 myplc and upgrade the node to f22
+testing a node upgrade; we start from a f20 myplc and upgrade the node to f22
 
 ### Init
 
-    f14
+    f20
     bond22
     rung
 
@@ -87,8 +87,24 @@ testing a node upgrade; we start from a f14 myplc and upgrade the node to f22
     
 ### Reinstall - back to square 1
 
-	run nodedistro-f14 reinstall
+	run nodedistro-f20 reinstall
     
+### Complete test sequence (containers)
+
+A fairly decent test suite in this context is to run this
+
+**Subject build is f>=18**
+
+    run nodedistro-f20 reinstall reboot nodedistro-f22 upgrade reboot reinstall reboot
+
+The only thing missing with this is to test bootmanager in the context of a f14 bootCD
+
+### Complete test sequence (mixed vservers+containers)
+
+If on the contrary the build under test is a f14, then run instead this; upgrading a f14 node to f>=18 is not supported due to /vservers being an ext3 filesystem
+
+    run nodedistro-f14 reinstall reboot nodedistro-f22 reinstall reboot upgrade reboot
+
 ### Run bootmanager interactively during upgrade
 To deploy experimental bootmanager code:
 
