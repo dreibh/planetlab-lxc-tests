@@ -221,19 +221,23 @@ class TestNode:
         return True
     
     def nodedistro_f14(self):
-        return self.nodedistro_set('f14')
+        return self.nodedistro_set('f14', 'onelab')
     def nodedistro_f18(self):
-        return self.nodedistro_set('f18')
+        return self.nodedistro_set('f18', 'lxc')
     def nodedistro_f20(self):
-        return self.nodedistro_set('f20')
+        return self.nodedistro_set('f20', 'lxc')
     def nodedistro_f21(self):
-        return self.nodedistro_set('f21')
-    def nodedistro_set(self, distro):
+        return self.nodedistro_set('f21', 'lxc')
+    def nodedistro_f22(self):
+        return self.nodedistro_set('f22', 'lxc')
+    def nodedistro_set(self, fcdistro, pldistro):
         "set the fcdistro tag to distro, passed in arg"
         self.test_plc.apiserver.SetNodeFcdistro(self.test_plc.auth_root(),
-                                                self.name(), distro)
+                                                self.name(), fcdistro)
+        self.test_plc.apiserver.SetNodePldistro(self.test_plc.auth_root(),
+                                                self.name(), pldistro)
         return True
-    def nodeflavour_show(self):
+    def nodedistro_show(self):
         "display the fcdistro tag - or flavour actually - of node"
         if self.dry_run():
             print("Dry_run: would fetch node flavour")
@@ -241,25 +245,6 @@ class TestNode:
         flavour = self.test_plc.apiserver.GetNodeFlavour(self.test_plc.auth_root(),
                                                          self.name())
         print("Flavour for {} : {}".format(self.name(), flavour))
-        return True
-
-    def nodeplain_set(self, plain):
-        " set bootstrapfs-plain tag on nodes"
-        self.test_plc.apiserver.SetNodePlainBootstrapfs(self.test_plc.auth_root(),
-                                                        self.name(), plain)
-        return True
-    def nodeplain_on(self):
-        return self.nodeplain_set("True")
-    def nodeplain_off(self):
-        return self.nodeplain_set("")
-    def nodeplain_show(self):
-        "display bootstrapfs-plain tag"
-        if self.dry_run():
-            print("Dry_run: would fetch node plain-bootstrapfs tag")
-            return True
-        plain = self.test_plc.apiserver.GetNodePlainBootstrapfs(self.test_plc.auth_root(),
-                                                                  self.name())
-        print("Plain bootstrapfs for {} is {}".format(self.name(), plain))
         return True
 
     def qemu_local_config(self):
@@ -303,6 +288,13 @@ class TestNode:
                      .format(self.name(), self.host_box()))
         return self.test_box().copy(self.nodedir(), recursive=True, dry_run=dry_run) == 0
             
+    def qemu_cleanlog(self):
+        "rename log.txt into log.txt.bak in the qemu dir"
+        test_box = self.test_box()
+        test_box.run_in_buildname("cd {}; mv -f log.txt log.txt.bak".
+                                  format(self.nodedir()), dry_run=self.dry_run())
+        return True
+
     def qemu_start(self):
         "all nodes: start the qemu instance (also runs qemu-bridge-init start)"
         model = self.node_spec['node_fields']['model']
@@ -323,6 +315,7 @@ class TestNode:
                                          .format(now, self.nodedir()), dry_run=self.dry_run()) == 0
 
     def qemu_nodefamily(self):
+        "write nodefamily stamp in qemu working dir"
         auth = self.test_plc.auth_root()
         hostname = self.node_spec['node_fields']['hostname']
         nodeflavour = self.test_plc.apiserver.GetNodeFlavour(auth, hostname)

@@ -11,7 +11,7 @@ general idea is to use this command
 	
 or in an equivalent manner
 
-	export bonding= 2015.04.13--f18
+	export bonding=bond212015.04.13--f18
 	run -G
 	
 # requirements
@@ -63,32 +63,61 @@ as a matter of fact when doing `run -g $bonding` one can invoke most of the usua
 	<<visual check>>
 	rung bonding-node
 
+-------
+-------
 
 # upgrading nodes
 
-targets like `nodefcdistro-f20` can be used to change a node's fcdistro
+targets like `nodedistro-f22` can be used to change a node's fcdistro
 
-----
 
-usual sequence for testing a node upgrade; we start from a f20 myplc and upgrade the node to f21
+## testing upgrade (one node)
 
- would be - e.g. from f20 to f21
+testing a node upgrade; we start from a f20 myplc and upgrade the node to f22
 
+### Init
 
     f20
-    bond ../$(t)*f21
+    bond22
     rung
-    run nodeplain-off nodefcdistro-f21 nodestate-upgrade
-    run qemu-kill-mine qemu-start wait-node
 
------
-Or, the other way around, using a f21 myplc, and a f20 bonding node, that we upgrade
-
-    f21
-    bond ../$(t)*f20
-    rung
-    rung node qemu-start wait-node
-    rung nodefcdistro-f21 nodestate-upgrade
-    rung qemu-kill-mine qemu-start wait-node
+### Upgrade the node
     
-	
+    run nodedistro-f22 	upgrade
+    
+### Reinstall - back to square 1
+
+	run nodedistro-f20 reinstall
+    
+### Complete test sequence (containers)
+
+A fairly decent test suite in this context is to run this
+
+**Subject build is f>=18**
+
+    run nodedistro-f20 reinstall reboot nodedistro-f22 upgrade reboot reinstall reboot
+
+The only thing missing with this is to test bootmanager in the context of a f14 bootCD
+
+### Complete test sequence (mixed vservers+containers)
+
+If on the contrary the build under test is a f14, then run instead this; upgrading a f14 node to f>=18 is not supported due to /vservers being an ext3 filesystem
+
+    run nodedistro-f14 reinstall reboot nodedistro-f22 reinstall reboot upgrade reboot
+
+### Run bootmanager interactively during upgrade
+To deploy experimental bootmanager code:
+
+* Insert breakpoints in the bootmanager code
+* turn on `BREAKPOINT_MODE = True` in `utils.py`
+* `make sync` 
+
+Then 
+
+    run nodedistro-f22 debug-mode
+    testnodedbg
+    
+    cd /tmp/source
+    ./BootManager.py upgrade
+    
+Beware that when running installation in debug mode, some stuff like iirc `vgcreate` wait for 'y' for confirmation

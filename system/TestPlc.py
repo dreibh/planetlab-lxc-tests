@@ -162,7 +162,8 @@ class TestPlc:
         'check_vsys_defaults_ignore', SEP,
 # run this first off so it's easier to re-run on another qemu box        
         'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
-        'qemu_clean_mine', 'qemu_export', 'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
+        'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
+        'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
         'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
@@ -197,8 +198,8 @@ class TestPlc:
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
         'nodestate_show','nodestate_safeboot','nodestate_boot', 'nodestate_upgrade', SEP,
-        'nodeflavour_show','nodedistro_f14','nodedistro_f18', 'nodedistro_f20', 'nodedistro_f21', SEP,
-        'nodeplain_on','nodeplain_off','nodeplain_show', SEP,
+        'nodedistro_show','nodedistro_f14','nodedistro_f18', SEP,
+        'nodedistro_f20', 'nodedistro_f21','nodedistro_f22', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
         'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
         'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
@@ -710,7 +711,7 @@ class TestPlc:
     ### install_rpm 
     def plc_install(self):
         """
-        yum install myplc, noderepo + plain bootstrapfs as well
+        yum install myplc, noderepo
         """
 
         # compute nodefamily
@@ -726,7 +727,6 @@ class TestPlc:
         pkgs_list.append("slicerepo-{}".format(nodefamily))
         pkgs_list.append("myplc")
         pkgs_list.append("noderepo-{}".format(nodefamily))
-        pkgs_list.append("nodeimage-{}-plain".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
         return self.yum_install(pkgs_list)
 
@@ -1194,6 +1194,8 @@ class TestPlc:
     @node_mapper
     def qemu_export(self): pass
     @node_mapper
+    def qemu_cleanlog(self): pass
+    @node_mapper
     def nodestate_reinstall(self): pass
     @node_mapper
     def nodestate_upgrade(self): pass
@@ -1212,13 +1214,9 @@ class TestPlc:
     @node_mapper
     def nodedistro_f21(self): pass
     @node_mapper
-    def nodeflavour_show(self): pass
+    def nodedistro_f22(self): pass
     @node_mapper
-    def nodeplain_on(self): pass
-    @node_mapper
-    def nodeplain_off(self): pass
-    @node_mapper
-    def nodeplain_show(self): pass
+    def nodedistro_show(self): pass
         
     ### check hooks : invoke scripts from hooks/{node,slice}
     def check_hooks_node(self): 
