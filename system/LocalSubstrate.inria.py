@@ -36,16 +36,17 @@ class OnelabSubstrate (Substrate):
    # may use vplc01 to 25 - out of the existing 30
    # keep 5 upper addresses for more persistent instances
    def vplc_ips (self):
-      return [  ( 'vplc{:02d}'.format(i),       # DNS name
+      return [  ( 'vplc{:02d}.pl.sophia.inria.fr'
+                      .format(i),               # DNS name
                   'unused')                     # MAC address 
-                for i in range(1,26) ] 
+                for i in range(1, 26) ] 
 
    # vnode01 to 20
    # the nodes IP pool has a MAC address as user-data (3rd elt in tuple)
    def vnode_ips (self):
       return [ ( 'vnode{:02d}'.format(i),            # DNS name               
                  '02:34:56:00:00:{:02d}'.format(i))  # MAC address
-               for i in range(1,21) ] 
+               for i in range(1, 21) ] 
    
    # local network settings
    def domain (self):
