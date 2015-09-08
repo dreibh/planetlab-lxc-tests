@@ -1,6 +1,6 @@
 # -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2015 INRIA 
+# Copyright (C) 2015 INRIA
 #
 # a configuration module is expected:
 # (*) to define a config method
@@ -14,10 +14,10 @@
 pldomain = "onelab.eu"
 
 ### for the sfa dual setup
-def login_base (index): 
+def login_base (index):
     if index == 1: return 'inri'
     elif index == 2: return 'princ'
-    # index=3=>'sitea'  4=>'siteb' 
+    # index=3=>'sitea'  4=>'siteb'
     else: return 'site{}'.format(chr(index+94))
 
 # only one rspec style
@@ -78,7 +78,7 @@ def all_nodenames (options, index):
     return [ node['name'] for node in nodes(options, index)]
 
 def users (options) :
-    return [ 
+    return [
         {'name' : 'admin', 'key_names' : [ 'key_admin' ],
          'user_fields' : {'first_name' : 'Admin',
                           'last_name' : 'Admin',
@@ -282,7 +282,7 @@ QfzAAZLU2BabjwIfmWetj55ZKiFXRQLkYkz1GPXr2m3FopZb+6apq9M7tTERq1J9
 ORxipg3+uy/eYngUAmNmzOnK/9zklEPjNm9Nw3xHnZO+SyQLNI421KkdHOja/GGd
 awKBgQCLtk0+RpswH451PWyAJ6F+U4YDVaHR0s6pwp4TJAkDVlFBiRO28jEb5y0N
 bI1R7vrRdq07SgI3USLXqDokQ/pXJhC03w2r7W7niAkNaUll3YtJ2DZVSvuQguR9
-xwRNsuo0x60e7bivU+kNZtLn5FqWuGoBONZnbhgP6y7jPsNrig == 
+xwRNsuo0x60e7bivU+kNZtLn5FqWuGoBONZnbhgP6y7jPsNrig ==
 -----END RSA PRIVATE KEY-----
 """
 
@@ -368,7 +368,7 @@ function restart () {
   stop
   start
 }
-case $command in 
+case $command in
 start) start ;;
 stop) stop ;;
 restart) restart ;;
@@ -379,7 +379,7 @@ esac
 initscript_by_code = initscript_by_name.replace("initscript_by_name","initscript_by_code")
 
 # one single initscript in the InitScripts table
-def initscripts(options, index): 
+def initscripts(options, index):
     return [ { 'initscript_fields' : { 'enabled' : True,
                                        'name' : 'initscript_by_name',
                                        'script' : initscript_by_name,
@@ -432,7 +432,7 @@ def all_slicenames (options, index):
 def tcp_specs (options, index):
     # only run the test on the first plc
     if index != 1: return None
-    # 
+    #
     slice1 = '{}_sl1'.format(login_base(1))
     slice2 = '{}_sl2'.format(login_base(1))
     # with the addition of omf-friendly slices..
@@ -484,7 +484,7 @@ def leases (options, index):
     return leases
 
 def plc (options, index) :
-    return { 
+    return {
         'index' : index,
         'name' : 'plctest{}'.format(index),
         # as of yet, not sure we can handle foreign hosts, but this is required though
@@ -526,11 +526,11 @@ def plc (options, index) :
         'leases' : leases (options, index),
         # big distros need more time to install nodes
         'ssh_node_boot_timers': (40,38),
-        'ssh_node_debug_timers': (10,8),
+        'ssh_node_debug_timers': (20,18),
     }
 
 def sfa (options, index) :
-    return { 
+    return {
         # the port used to generate the various aggregates.xml
         # stack config_sfamesh to point to SMs instead
         'neighbours-port':12346,
@@ -573,7 +573,7 @@ def test_auth_sfa_spec (options, index):
     user_alias = 'regular-user'
 #    pi_alias = 'pi'
 #    user_alias = 'user'
-    # 
+    #
     pi_spec = {
         'name':         pi_alias,
         'email':        full_mail (pi_alias),
@@ -600,21 +600,21 @@ def test_auth_sfa_spec (options, index):
         'key_name':    'key_sfauser',
         'nodenames':    all_nodenames(options, index),
         }
-        
+
     # we're already in a dedicated site/authority so no need to encumber with odd names
 
-    return { 
+    return {
              'login_base' : login_base,
              'domain'     : domain,
              'pi_spec'    : pi_spec,
              'user_spec'  : user_spec,
              'slice_spec' : slice_spec,
-             } 
+             }
 
 
 def config (plc_specs, options):
     result = plc_specs
-    # plc 'index' starts with 1 
+    # plc 'index' starts with 1
     for i in range(options.size):
         result.append(plc(options, i+1))
     return result
