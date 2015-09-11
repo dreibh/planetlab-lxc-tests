@@ -19,7 +19,7 @@
 # \=========================================================================/
 #
 # this is only an example file
-# the actual file is installed in your testmaster box as /root/LocalSubstrate.py
+# the actual file is installed in your testmaster box as /root/LocalTestResources.py
 #
 
 if __name__ == '__main__':
@@ -40,7 +40,7 @@ class OnelabSubstrate (Substrate):
 
    # the lxc-capable box for PLCs
    def plc_lxc_boxes_spec (self):
-      return [ ('wakatipu', 10) ]
+      return [ ('wakatipu', 4) ]
 
    # vplc01 to vplc10
    def vplc_ips (self):
