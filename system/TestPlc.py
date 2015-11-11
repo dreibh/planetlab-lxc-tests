@@ -207,7 +207,7 @@ class TestPlc:
         'sfa_get_expires', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
         'check_netflow','check_drl', SEP,
-        'debug_nodemanager', 'slice_fs_present', SEP,
+        'slice_fs_present', SEP,
         'standby_1_through_20','yes','no',SEP,
         'install_syslinux6', 'bonding_builds', 'bonding_nodes', SEP,
         ]
