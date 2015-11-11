@@ -185,6 +185,7 @@ class TestPlc:
         # for inspecting the slice while it runs the first time
         #'fail',
         # check slices are turned off properly
+        'debug_nodemanager',
         'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
         # check they are properly re-created with the same name
         'fill_slices', 'ssh_slice_again', SEP,
