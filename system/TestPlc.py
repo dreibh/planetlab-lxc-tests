@@ -185,6 +185,7 @@ class TestPlc:
         # for inspecting the slice while it runs the first time
         #'fail',
         # check slices are turned off properly
+        'debug_nodemanager',
         'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
         # check they are properly re-created with the same name
         'fill_slices', 'ssh_slice_again', SEP,
@@ -206,7 +207,7 @@ class TestPlc:
         'sfa_get_expires', SEPSFA,
         'plc_db_dump' , 'plc_db_restore', SEP,
         'check_netflow','check_drl', SEP,
-        'debug_nodemanager', 'slice_fs_present', SEP,
+        'slice_fs_present', SEP,
         'standby_1_through_20','yes','no',SEP,
         'install_syslinux6', 'bonding_builds', 'bonding_nodes', SEP,
         ]
