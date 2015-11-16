@@ -1129,7 +1129,7 @@ class TestPlc:
 
     # probing nodes
     # TD 21.10.2015: Increased timeout, since it was too small for NorNet!
-    def check_nodes_ping(self, timeout_seconds=900, period_seconds=10):
+    def check_nodes_ping(self, timeout_seconds=7200, period_seconds=10):
         class CompleterTaskPingNode(CompleterTask):
             def __init__(self, hostname):
                 self.hostname = hostname
