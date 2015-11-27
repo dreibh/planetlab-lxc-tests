@@ -1,6 +1,6 @@
 # -*- python3 -*-
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2015 INRIA 
+# Copyright (C) 2015 INRIA
 #
 import sys
 import time
@@ -29,13 +29,14 @@ def pprint(message, spec, depth=2):
 
 # set a default timeout to 15 minutes - this should be plenty even for installations
 # call with timeout=None if the intention really is to wait until full completion
-def system(command, background=False, silent=False, dry_run=None, timeout=15*60):
+# !!! NorNet: timeout set to 90 minutes! !!!
+def system(command, background=False, silent=False, dry_run=None, timeout=90*60):
     dry_run = dry_run if dry_run is not None else getattr(options, 'dry_run', False)
     if dry_run:
         print('dry_run:', command)
         return 0
-    
-    if silent :    
+
+    if silent :
         if command.find(';') >= 0:
             command = "({}) 2> /dev/null".format(command)
         else: command += " 2> /dev/null"
@@ -71,7 +72,7 @@ def match (string, pattern):
     pattern = pattern.replace("*",".*")
     pattern = pattern.replace("?",".")
     return re.compile(pattern).match(string)
-    
+
 def locate_hooks_scripts (message, path, extensions):
     print(message, 'searching', path, 'for extensions', extensions)
     scripts = []
@@ -79,7 +80,7 @@ def locate_hooks_scripts (message, path, extensions):
         # skip helper programs
         scripts += glob.glob (path+'/[a-zA-Z]*.' + ext)
     return scripts
-    
+
 # quick & dirty - should probably use the parseroption object instead
 # and move to TestMain as well
 exclude_options_keys = [ 'ensure_value' , 'read_file', 'read_module' ]
