@@ -29,8 +29,8 @@ def pprint(message, spec, depth=2):
 
 # set a default timeout to 15 minutes - this should be plenty even for installations
 # call with timeout=None if the intention really is to wait until full completion
-# !!! NorNet: timeout set to 90 minutes! !!!
-def system(command, background=False, silent=False, dry_run=None, timeout=90*60):
+# !!! NorNet: timeout set to 300 minutes! !!!
+def system(command, background=False, silent=False, dry_run=None, timeout=300*60):
     dry_run = dry_run if dry_run is not None else getattr(options, 'dry_run', False)
     if dry_run:
         print('dry_run:', command)
