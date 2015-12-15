@@ -8,6 +8,7 @@
 import socket
 import xmlrpc.client
 import traceback
+import ssl
 
 class PlcapiUrlScanner:
 
@@ -31,7 +32,9 @@ class PlcapiUrlScanner:
         
     def try_url (self, url):
         try:
-            xmlrpc.client.ServerProxy (url, verbose=self.verbose, allow_none=True).GetNodes(self.auth)
+            proxy = xmlrpc.client.ServerProxy(url, verbose=self.verbose, allow_none=True,
+                                              context=ssl._create_unverified_context())
+            nodes = proxy.GetNodes(self.auth)
             print('YES', url)
             return True
         except xmlrpc.client.ProtocolError as e:
