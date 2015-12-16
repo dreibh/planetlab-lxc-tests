@@ -4,6 +4,7 @@
 # wrapper to xmlrpc server, that support dry-run commands
 # we dont want to have to depend on PLCAPI, so:
 import xmlrpc.client
+import ssl
 
 # the default value is for the dry run mode
 server_methods = [ ('GetNodes', []),
@@ -79,7 +80,8 @@ class TestApiserver:
 
     def __init__(self, url, dry_run=False):
         self.apiserver = xmlrpc.client.ServerProxy(url, allow_none=True,
-                                                   use_builtin_types=True)
+                                                   use_builtin_types=True,
+                                                   context=ssl._create_unverified_context())
         self.dry_run = dry_run
         for method, defaults in server_methods:
             setattr(self, method, TestApiserver.Callable(self.apiserver, dry_run, method, defaults))
