@@ -2,7 +2,6 @@
 # Copyright (C) 2010 INRIA 
 #
 import os, sys, time
-import xmlrpc.client
 
 import utils
 
