@@ -343,7 +343,9 @@ class TestPlc:
     def yum_install(self, rpms):
         if isinstance(rpms, list): 
             rpms=" ".join(rpms)
-        self.run_in_guest("yum -y install {}".format(rpms))
+        yum_mode = self.run_in_guest("yum -y install {}".format(rpms))
+        if yum_mode != 0:
+            self.run_in_guest("dnf -y install --allowerasing {}".format(rpms))
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
         self.run_in_guest("yum-complete-transaction -y")
         return self.yum_check_installed(rpms)
@@ -774,7 +776,7 @@ class TestPlc:
         "run plc-config-tty"
         tmpname = '{}.plc-config-tty'.format(self.name())
         with open(tmpname,'w') as fileconf:
-            for (var,value) in self.plc_spec['settings'].items():
+            for var, value in self.plc_spec['settings'].items():
                 fileconf.write('e {}\n{}\n'.format(var, value))
             fileconf.write('w\n')
             fileconf.write('q\n')
@@ -1654,7 +1656,7 @@ class TestPlc:
         "run sfa-config-tty"
         tmpname = self.conffile("sfa-config-tty")
         with open(tmpname,'w') as fileconf:
-            for (var,value) in self.plc_spec['sfa']['settings'].items():
+            for var, value in self.plc_spec['sfa']['settings'].items():
                 fileconf.write('e {}\n{}\n'.format(var, value))
             fileconf.write('w\n')
             fileconf.write('R\n')
