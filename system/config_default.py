@@ -11,7 +11,7 @@
 
 # values like 'hostname', 'ip' and the like are rewritten later with a TestPool object
 
-pldomain = "onelab.eu"
+pldomain = "simula.nornet"
 
 ### for the sfa dual setup
 def login_base (index):
