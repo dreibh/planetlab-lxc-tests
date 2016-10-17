@@ -1,4 +1,4 @@
-#!/usr/bin/python34 -u
+#!/usr/bin/python3 -u
 
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
 # Copyright (C) 2010 INRIA 
