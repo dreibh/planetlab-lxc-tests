@@ -345,6 +345,9 @@ class TestPlc:
             rpms=" ".join(rpms)
         yum_mode = self.run_in_guest("yum -y install {}".format(rpms))
         if yum_mode != 0:
+            self.run_in_guest("dnf clean metadata")
+            self.run_in_guest("ls -l /etc/yum.repos.d/")
+            self.run_in_guest("cat /etc/yum.repos.d/*.repo")
             self.run_in_guest("dnf -y install --allowerasing {}".format(rpms))
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
         self.run_in_guest("yum-complete-transaction -y")
