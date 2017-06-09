@@ -348,8 +348,8 @@ class TestPlc:
             self.run_in_guest("dnf clean all")
             self.run_in_guest("date")
             self.run_in_guest("ls -l /etc/yum.repos.d/")
-            self.run_in_guest("find /etc/yum.repos.d/ -name '*.repo' | xargs cat")
-            self.run_in_guest("curl https://benlomond.nntb.no/testing/nornet/")
+            self.run_in_guest("curl https://benlomond.nntb.no/testing/lxc/")
+            self.run_in_guest("dnf search {}".format(rpms))
             self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
         self.run_in_guest("yum-complete-transaction -y")
