@@ -343,11 +343,12 @@ class TestPlc:
     def yum_install(self, rpms):
         if isinstance(rpms, list): 
             rpms=" ".join(rpms)
-        yum_mode = self.run_in_guest("yum -y install {}".format(rpms))
+        yum_mode = self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
         if yum_mode != 0:
             self.run_in_guest("dnf clean all")
             self.run_in_guest("date")
             self.run_in_guest("ls -l /etc/yum.repos.d/")
+            self.run_in_guest("cat /etc/yum.repos.d/myplc.repo /etc/yum.repos.d/building.repo")
             self.run_in_guest("curl https://benlomond.nntb.no/testing/lxc/")
             self.run_in_guest("dnf search {}".format(rpms))
             self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
