@@ -345,19 +345,17 @@ class TestPlc:
             rpms=" ".join(rpms)
         yum_mode = self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
         if yum_mode != 0:
-            self.run_in_guest("dnf clean all")
-            self.run_in_guest("date")
-            self.run_in_guest("ls -l /etc/yum.repos.d/")
-            self.run_in_guest("cat /etc/yum.repos.d/myplc.repo /etc/yum.repos.d/building.repo")
-            self.run_in_guest("curl https://benlomond.nntb.no/testing/lxc/")
-            self.run_in_guest("curl https://benlomond.nntb.no/testing/lxc/TEST0001.data")
-            self.run_in_guest("curl \"https://benlomond.nntb.no/testing/lxc/`date`.data\"")
-            self.run_in_guest("sleep 900")
-            self.run_in_guest("curl \"https://benlomond.nntb.no/testing/lxc/`date`.data\"")
-            self.run_in_guest("dnf search {}".format(rpms))
-            self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
+            for i in range(1,9):
+               self.run_in_guest("echo \"TRIAL #" + str(i) + "\"")
+               self.run_in_guest("date")
+               self.run_in_guest("cat /etc/yum.repos.d/myplc.repo /etc/yum.repos.d/building.repo")
+               self.run_in_guest("sleep 900")
+               self.run_in_guest("date")
+               self.run_in_guest("dnf clean all")
+               self.run_in_guest("dnf search {}".format(rpms))
+               self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
-        self.run_in_guest("yum-complete-transaction -y")
+        # self.run_in_guest("yum-complete-transaction -y")
         return self.yum_check_installed(rpms)
 
     def auth_root(self):
