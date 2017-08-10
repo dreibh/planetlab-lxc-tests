@@ -343,19 +343,11 @@ class TestPlc:
     def yum_install(self, rpms):
         if isinstance(rpms, list): 
             rpms=" ".join(rpms)
-        yum_mode = self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
+        yum_mode = self.run_in_guest("yum -y install {}".format(rpms))
         if yum_mode != 0:
-            for i in range(1,9):
-               self.run_in_guest("echo \"TRIAL #" + str(i) + "\"")
-               self.run_in_guest("date")
-               self.run_in_guest("cat /etc/yum.repos.d/myplc.repo /etc/yum.repos.d/building.repo")
-               self.run_in_guest("sleep 900")
-               self.run_in_guest("date")
-               self.run_in_guest("dnf clean all")
-               self.run_in_guest("dnf search {}".format(rpms))
-               self.run_in_guest("dnf -y install --verbose --allowerasing {}".format(rpms))
+            self.run_in_guest("dnf -y install --allowerasing {}".format(rpms))
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
-        # self.run_in_guest("yum-complete-transaction -y")
+        self.run_in_guest("yum-complete-transaction -y")
         return self.yum_check_installed(rpms)
 
     def auth_root(self):
@@ -1139,7 +1131,7 @@ class TestPlc:
 
     # probing nodes
     # TD 21.10.2015: Increased timeout, since it was too small for NorNet!
-    def check_nodes_ping(self, timeout_seconds=900, period_seconds=60):
+    def check_nodes_ping(self, timeout_seconds=900, period_seconds=10):
         class CompleterTaskPingNode(CompleterTask):
             def __init__(self, hostname):
                 self.hostname = hostname
@@ -1326,11 +1318,11 @@ class TestPlc:
             else:
                 test_slice.create_slice()
         return True
-        
+
     # TD 22.12.2015: Increased timeouts for NorNet!
     @slice_mapper__tasks(90, 30, 15)
     def ssh_slice(self): pass
-    @slice_mapper__tasks(90, 29, 15)
+    @slice_mapper__tasks(30, 29, 15)
     def ssh_slice_off(self): pass
     @slice_mapper__tasks(1, 1, 15)
     def slice_fs_present(self): pass
