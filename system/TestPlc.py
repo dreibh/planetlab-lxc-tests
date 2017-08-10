@@ -1320,9 +1320,9 @@ class TestPlc:
         return True
 
     # TD 22.12.2015: Increased timeouts for NorNet!
-    @slice_mapper__tasks(90, 30, 15)
+    @slice_mapper__tasks(60, 10, 15)
     def ssh_slice(self): pass
-    @slice_mapper__tasks(30, 29, 15)
+    @slice_mapper__tasks(30, 19, 15)
     def ssh_slice_off(self): pass
     @slice_mapper__tasks(1, 1, 15)
     def slice_fs_present(self): pass
