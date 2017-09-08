@@ -53,12 +53,12 @@ class OnelabSubstrate (Substrate):
    def qemu_boxes_spec (self):
       return [ ('bjordammen', 8) ]
 
-   # vnode01 to 20
+   # vnode01 to 12
    # the nodes IP pool has a MAC address as user-data (3rd elt in tuple)
    def vnode_ips (self):
       return [ ( 'vnode{:02d}'.format(i),            # DNS name
                  '02:34:56:00:00:{:02d}'.format(i))  # MAC address
-               for i in range(1, 17) ]
+               for i in range(1, 13) ]
 
    # local network settings
    def domain (self):
@@ -71,8 +71,8 @@ class OnelabSubstrate (Substrate):
                'interface_fields:broadcast':    '10.1.1.255',
                'interface_fields:netmask':      '255.255.255.0',
                'interface_fields:dns1':         '10.1.1.1',
-               'interface_fields:dns2':         '10.1.1.1',
-               'node_fields_nint:dns':          '10.1.1.1,10.1.1.1',
+               'interface_fields:dns2':         '10.1.2.1',
+               'node_fields_nint:dns':          '10.1.1.1,10.1.2.1',
                'ipaddress_fields:netmask':      '255.255.255.0',
                }
 
