@@ -389,7 +389,7 @@ def initscripts(options, index):
 # returns 3 slices
 # 1 has an initscript code
 # 2 has an initscript name
-# 3 is an omf-friendly slice
+# 3 used to be an omf-friendly slice but this is now deprecated
 def slices (options, index):
     def theslice (i):
         slice_spec = { 'slice_fields': {'name' : '{}_sl{}'.format(login_base(index),i),
@@ -411,10 +411,11 @@ def slices (options, index):
         elif i%3 == 2:
             slice_spec['initscriptname'] = 'initscript_by_name'
             slice_spec['initscriptstamp'] = 'initscript_by_name'
-        # 3rd one is omf-friendly
+        # 3rd one - not omf-friendly any longer
         else:
-            # potentially turned off with config_no_omf
-            slice_spec ['omf-friendly'] = True
+            # omf-friendly slices is a deprecated feature
+            # slice_spec ['omf-friendly'] = True
+            pass
         return slice_spec
     # usual index is 1, additional plc's then get 2...
     # so index=1 -> 1 - 2 - 3
@@ -512,8 +513,10 @@ def plc (options, index) :
             'PLC_NET_DNS2' : 'deferred-dns-2',
             'PLC_RESERVATION_GRANULARITY':1800,
             'PLC_VSYS_DEFAULTS' : ' , vif_up, vif_down, fd_tuntap, promisc, ',
-            'PLC_OMF_ENABLED' : 'true',
-            'PLC_OMF_XMPP_SERVER' : 'deferred-myplc-hostname',
+# omf-friendly slices is a deprecated feature
+#            'PLC_OMF_ENABLED' : 'true',
+#            'PLC_OMF_XMPP_SERVER' : 'deferred-myplc-hostname',
+            'PLC_OMF_ENABLED' : 'false',
         },
         'expected_vsys_tags': [ 'vif_up', 'vif_down', 'fd_tuntap', 'promisc', ],
         # minimal config so the omf plugins actually trigger

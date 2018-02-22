@@ -85,10 +85,12 @@ class TestSlice:
             utils.header("Adding initscript name {} in {}".format(isname, slice_name))
             self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name,
                                                 'initscript', isname)
-        if 'omf-friendly' in self.slice_spec:
-            utils.header("Making slice {} OMF-friendly".format(slice_name))
-            self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name, 'vref', 'omf')
-            self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name, 'omf_control', 'yes')
+# omf-friendly slices is a deprecated feature
+#        if 'omf-friendly' in self.slice_spec:
+#            utils.header("Making slice {} OMF-friendly".format(slice_name))
+#            self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name, 'vref', 'omf')
+#            self.test_plc.apiserver.AddSliceTag(self.test_plc.auth_root(), slice_name, 'omf_control', 'yes')
+#
 # setting vref directly like this was useful for multi-arch tests long ago - see wifilab
 # however this should rather use other tags by now, so we drop this for now
 #        if self.slice_spec.has_key ('vref'):
