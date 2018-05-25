@@ -49,7 +49,7 @@ class Server:
         parser.add_option("-p", "--port", action="store", dest="port", type="int",
                           default=10000, help="port number")
         parser.add_option("-a", "--address", action="store", dest="address", 
-                          default=socket.gethostname(), help="address")
+                          default='', help="address")
         parser.add_option("-t", "--timeout", action="store", dest="timeout", type="int",
                           default="0")
         (options, args) = parser.parse_args()
@@ -88,7 +88,7 @@ class Ready:
         parser.add_option("-p", "--port", action="store", dest="port", type="int",
                           default=9999, help="port number")
         parser.add_option("-a", "--address", action="store", dest="address", 
-                          default=socket.gethostname(), help="address")
+                          default='', help="address")
         (options, args) = parser.parse_args()
 
         myprint("==================== tcptest.py ready", id='ready')
