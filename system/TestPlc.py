@@ -1,5 +1,5 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2010 INRIA
 #
 import sys
 import time
@@ -160,14 +160,14 @@ class TestPlc:
 # slices created under plcsh interactively seem to be fine but these ones don't have the tags
 # keep this our of the way for now
         'check_vsys_defaults_ignore', SEP,
-# run this first off so it's easier to re-run on another qemu box        
+# run this first off so it's easier to re-run on another qemu box
         'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
         'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
         'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
         'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
-        'sfa_remove_user_from_slice@1','sfi_show_slice_researchers@1', 
+        'sfa_remove_user_from_slice@1','sfi_show_slice_researchers@1',
         'sfa_insert_user_in_slice@1','sfi_show_slice_researchers@1', SEPSFA,
         'sfa_discover@1', 'sfa_rspec@1', SEPSFA,
         'sfa_allocate@1', 'sfa_provision@1', 'sfa_describe@1', SEPSFA,
@@ -178,7 +178,7 @@ class TestPlc:
         'probe_kvm_iptables',
         'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', 'check_initscripts', SEP,
-        'ssh_slice_sfa@1', SEPSFA, 
+        'ssh_slice_sfa@1', SEPSFA,
         'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1','sfa_check_slice_plc_empty@1', SEPSFA,
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'cross_check_tcp@1', 'check_system_slice', SEP,
@@ -191,7 +191,7 @@ class TestPlc:
         'fill_slices', 'ssh_slice_again', SEP,
         'gather_logs_force', SEP,
         ]
-    other_steps = [ 
+    other_steps = [
         'export', 'show_boxes', 'super_speed_up_slices', SEP,
         'check_hooks', 'plc_stop', 'plcvm_start', 'plcvm_stop', SEP,
         'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
@@ -243,7 +243,7 @@ class TestPlc:
         with open(has_sfa_cache_filename,'w') as cache:
             cache.write(encoded)
         return retcod
-        
+
     @staticmethod
     def check_whether_build_has_sfa(rpms_url):
         has_sfa = TestPlc._has_sfa_cached(rpms_url)
@@ -269,7 +269,7 @@ class TestPlc:
         self.apiserver = TestApiserver(self.url, options.dry_run)
         (self.ssh_node_boot_timeout, self.ssh_node_boot_silent) = plc_spec['ssh_node_boot_timers']
         (self.ssh_node_debug_timeout, self.ssh_node_debug_silent) = plc_spec['ssh_node_debug_timers']
-        
+
     def has_addresses_api(self):
         return self.apiserver.has_method('AddIpAddress')
 
@@ -292,19 +292,19 @@ class TestPlc:
         raw1 = self.host_to_guest(command)
         raw2 = self.test_ssh.actual_command(raw1, dry_run=self.options.dry_run, backslash=backslash)
         return raw2
-    
+
     def start_guest(self):
       return utils.system(self.test_ssh.actual_command(self.start_guest_in_host(),
                                                        dry_run=self.options.dry_run))
-    
+
     def stop_guest(self):
       return utils.system(self.test_ssh.actual_command(self.stop_guest_in_host(),
                                                        dry_run=self.options.dry_run))
-    
+
     def run_in_guest(self, command, backslash=False):
         raw = self.actual_command_in_guest(command, backslash)
         return utils.system(raw)
-    
+
     def run_in_host(self,command):
         return self.test_ssh.run_in_buildname(command, dry_run=self.options.dry_run)
 
@@ -314,7 +314,7 @@ class TestPlc:
     def host_to_guest(self, command):
         ssh_leg = TestSsh(self.vplchostname)
         return ssh_leg.actual_command(command, keep_stdin=True)
-    
+
     # this /vservers thing is legacy...
     def vm_root_in_host(self):
         return "/vservers/{}/".format(self.vservername)
@@ -325,23 +325,23 @@ class TestPlc:
     #start/stop the vserver
     def start_guest_in_host(self):
         return "virsh -c lxc:/// start {}".format(self.vservername)
-    
+
     def stop_guest_in_host(self):
         return "virsh -c lxc:/// destroy {}".format(self.vservername)
-    
+
     # xxx quick n dirty
     def run_in_guest_piped(self,local,remote):
         return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote),
                                                                      keep_stdin = True))
 
     def yum_check_installed(self, rpms):
-        if isinstance(rpms, list): 
+        if isinstance(rpms, list):
             rpms=" ".join(rpms)
         return self.run_in_guest("rpm -q {}".format(rpms)) == 0
-        
+
     # does a yum install in the vs, ignore yum retcod, check with rpm
     def yum_install(self, rpms):
-        if isinstance(rpms, list): 
+        if isinstance(rpms, list):
             rpms=" ".join(rpms)
         yum_mode = self.run_in_guest("yum -y install {}".format(rpms))
         if yum_mode != 0:
@@ -356,7 +356,7 @@ class TestPlc:
                 'AuthString' : self.plc_spec['settings']['PLC_ROOT_PASSWORD'],
                 'Role'       : self.plc_spec['role'],
                 }
-    
+
     def locate_site(self,sitename):
         for site in self.plc_spec['sites']:
             if site['site_fields']['name'] == sitename:
@@ -364,21 +364,21 @@ class TestPlc:
             if site['site_fields']['login_base'] == sitename:
                 return site
         raise Exception("Cannot locate site {}".format(sitename))
-        
+
     def locate_node(self, nodename):
         for site in self.plc_spec['sites']:
             for node in site['nodes']:
                 if node['name'] == nodename:
                     return site, node
         raise Exception("Cannot locate node {}".format(nodename))
-        
+
     def locate_hostname(self, hostname):
         for site in self.plc_spec['sites']:
             for node in site['nodes']:
                 if node['node_fields']['hostname'] == hostname:
                     return(site, node)
         raise Exception("Cannot locate hostname {}".format(hostname))
-        
+
     def locate_key(self, key_name):
         for key in self.plc_spec['keys']:
             if key['key_name'] == key_name:
@@ -455,7 +455,7 @@ class TestPlc:
             else:
                 result[box].append(node)
         return result
-                    
+
     # a step for checking this stuff
     def show_boxes(self):
         'print summary of nodes location'
@@ -515,13 +515,13 @@ class TestPlc:
         self.show_pass(2)
         return True
 
-    # uggly hack to make sure 'run export' only reports about the 1st plc 
+    # uggly hack to make sure 'run export' only reports about the 1st plc
     # to avoid confusion - also we use 'inri_slice1' in various aliases..
     exported_id = 1
     def export(self):
         "print cut'n paste-able stuff to export env variables to your shell"
         # guess local domain from hostname
-        if TestPlc.exported_id > 1: 
+        if TestPlc.exported_id > 1:
             print("export GUESTHOSTNAME{:d}={}".format(TestPlc.exported_id, self.plc_spec['vservername']))
             return True
         TestPlc.exported_id += 1
@@ -568,15 +568,15 @@ class TestPlc:
             if not self.options.verbose and k not in TestPlc.always_display_keys:
                 continue
             if k == 'nodes':
-                if v: 
+                if v:
                     print('+       ','nodes : ', end=' ')
-                    for node in v:  
+                    for node in v:
                         print(node['node_fields']['hostname'],'', end=' ')
                     print('')
             elif k == 'users':
-                if v: 
+                if v:
                     print('+       users : ', end=' ')
-                    for user in v:  
+                    for user in v:
                         print(user['name'],'', end=' ')
                     print('')
             elif k == 'site_fields':
@@ -586,7 +586,7 @@ class TestPlc:
             else:
                 print('+       ', end=' ')
                 utils.pprint(k, v)
-        
+
     def display_initscript_spec(self, initscript):
         print('+ ======== initscript', initscript['initscript_fields']['name'])
 
@@ -597,15 +597,15 @@ class TestPlc:
         print('+ ======== slice', slice['slice_fields']['name'])
         for k,v in slice.items():
             if k == 'nodenames':
-                if v: 
+                if v:
                     print('+       nodes : ', end=' ')
-                    for nodename in v:  
+                    for nodename in v:
                         print(nodename,'', end=' ')
                     print('')
             elif k == 'usernames':
-                if v: 
+                if v:
                     print('+       users : ', end=' ')
-                    for username in v:  
+                    for username in v:
                         print(username,'', end=' ')
                     print('')
             elif k == 'slice_fields':
@@ -654,8 +654,8 @@ class TestPlc:
         stamp_dir = os.path.dirname(stamp_path)
         utils.system(self.test_ssh.actual_command("mkdir -p {}".format(stamp_dir)))
         return utils.system(self.test_ssh.actual_command("echo {:d} > {}".format(now, stamp_path))) == 0
-        
-    # this is called inconditionnally at the beginning of the test sequence 
+
+    # this is called inconditionnally at the beginning of the test sequence
     # just in case this is a rerun, so if the vm is not running it's fine
     def plcvm_delete(self):
         "vserver delete the test myplc"
@@ -672,7 +672,7 @@ class TestPlc:
     # so that the tests do not have to worry about extracting the build (svn, git, or whatever)
     def plcvm_create(self):
         "vserver creation (no install done)"
-        # push the local build/ dir to the testplc box 
+        # push the local build/ dir to the testplc box
         if self.is_local():
             # a full path for the local calls
             build_dir = os.path.dirname(sys.argv[0])
@@ -686,7 +686,7 @@ class TestPlc:
             # remove for safety; do *not* mkdir first, otherwise we end up with build/build/
             self.test_ssh.rmdir(build_dir)
             self.test_ssh.copy(build_dir, recursive=True)
-        # the repo url is taken from arch-rpms-url 
+        # the repo url is taken from arch-rpms-url
         # with the last step (i386) removed
         repo_url = self.options.arch_rpms_url
         for level in [ 'arch' ]:
@@ -711,7 +711,7 @@ class TestPlc:
         create_vserver="{build_dir}/{script} {script_options} {vserver_name}".format(**locals())
         return self.run_in_host(create_vserver) == 0
 
-    ### install_rpm 
+    ### install_rpm
     def plc_install(self):
         """
         yum install myplc, noderepo
@@ -739,7 +739,7 @@ class TestPlc:
         """
         key = 'http://mirror.onelab.eu/keys/RPM-GPG-KEY-fedora-21-primary'
 
-        rpms = [ 
+        rpms = [
             'http://mirror.onelab.eu/fedora/releases/21/Everything/x86_64/os/Packages/s/syslinux-6.03-1.fc21.x86_64.rpm',
             'http://mirror.onelab.eu/fedora/releases/21/Everything/x86_64/os/Packages/s/syslinux-nonlinux-6.03-1.fc21.noarch.rpm',
             'http://mirror.onelab.eu/fedora/releases/21/Everything/x86_64/os/Packages/s/syslinux-perl-6.03-1.fc21.x86_64.rpm',
@@ -764,14 +764,14 @@ class TestPlc:
             print("{} -> {}".format(node['hostname'],
                                     self.apiserver.GetNodeFlavour(self.auth_root(),node['hostname'])['nodefamily']))
         print("---------------------------------------- nodes")
-            
-    
+
+
     ###
     def mod_python(self):
         """yum install mod_python, useful on f18 and above so as to avoid broken wsgi"""
         return self.yum_install( ['mod_python'] )
 
-    ### 
+    ###
     def plc_configure(self):
         "run plc-config-tty"
         tmpname = '{}.plc-config-tty'.format(self.name())
@@ -798,13 +798,18 @@ class TestPlc:
         return self.start_stop_service(service, 'stop')
 
     def start_stop_service(self, service, start_or_stop):
-        "utility to start/stop a service with the special trick for f14"
-        if self.options.fcdistro != 'f14':
+        "utility to start/stop a service with the special trick starting with f14"
+        has_systemctl = False
+        if self.options.fcdistro[0] == 'f':
+            number = int(self.options.fcdistro[1:])
+            if number >= 14:
+                has_systemctl = True
+        if not has_systemctl:
             return self.run_in_guest("service {} {}".format(service, start_or_stop)) == 0
         else:
             # patch /sbin/service so it does not reset environment
             self.run_in_guest('sed -i -e \\"s,env -i,env,\\" /sbin/service')
-            # this is because our own scripts in turn call service 
+            # this is because our own scripts in turn call service
             return self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true service {} {}"\
                                      .format(service, start_or_stop)) == 0
 
@@ -859,11 +864,11 @@ class TestPlc:
     def sites(self):
         "create sites with PLCAPI"
         return self.do_sites()
-    
+
     def delete_sites(self):
         "delete sites with PLCAPI"
         return self.do_sites(action="delete")
-    
+
     def do_sites(self, action="add"):
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite(self,site_spec)
@@ -944,7 +949,7 @@ class TestPlc:
         start += grain
         # find out all nodes that are reservable
         nodes = self.all_reservable_nodenames()
-        if not nodes: 
+        if not nodes:
             utils.header("No reservable node found - proceeding without leases")
             return True
         ok = True
@@ -966,7 +971,7 @@ class TestPlc:
                              .format(nodes, lease_spec['slice'],
                                      lease_spec['t_from'],  TestPlc.timestamp_printable(lease_spec['t_from']),
                                      lease_spec['t_until'], TestPlc.timestamp_printable(lease_spec['t_until'])))
-                
+
         return ok
 
     def delete_leases(self):
@@ -985,7 +990,7 @@ class TestPlc:
             if self.options.verbose or current:
                 utils.header("{} {} from {} until {}"\
                              .format(l['hostname'], l['name'],
-                                     TestPlc.timestamp_printable(l['t_from']), 
+                                     TestPlc.timestamp_printable(l['t_from']),
                                      TestPlc.timestamp_printable(l['t_until'])))
         return True
 
@@ -1072,10 +1077,10 @@ class TestPlc:
             node_infos += [ (node_spec['node_fields']['hostname'], node_spec['host_box']) \
                                 for node_spec in site_spec['nodes'] ]
         return node_infos
-    
+
     def all_nodenames(self):
         return [ x[0] for x in self.all_node_infos() ]
-    def all_reservable_nodenames(self): 
+    def all_reservable_nodenames(self):
         res = []
         for site_spec in self.plc_spec['sites']:
             for node_spec in site_spec['nodes']:
@@ -1101,7 +1106,7 @@ class TestPlc:
                     node = self.test_plc.apiserver.GetNodes(self.test_plc.auth_root(),
                                                             [ self.hostname ],
                                                             ['boot_state'])[0]
-                    self.last_boot_state = node['boot_state'] 
+                    self.last_boot_state = node['boot_state']
                     return self.last_boot_state == target_boot_state
                 except:
                     return False
@@ -1110,7 +1115,7 @@ class TestPlc:
             def failure_epilogue(self):
                 print("node {} in state {} - expected {}"\
                     .format(self.hostname, self.last_boot_state, target_boot_state))
-                
+
         timeout = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
         period   = timedelta(seconds=period_seconds)
@@ -1153,16 +1158,16 @@ class TestPlc:
         return self.check_nodes_ping()
 
     def check_nodes_ssh(self, debug, timeout_minutes, silent_minutes, period_seconds=15):
-        # various delays 
+        # various delays
         timeout  = timedelta(minutes=timeout_minutes)
         graceout = timedelta(minutes=silent_minutes)
         period   = timedelta(seconds=period_seconds)
         vservername = self.vservername
-        if debug: 
+        if debug:
             message = "debug"
             completer_message = 'ssh_node_debug'
             local_key = "keys/{vservername}-debug.rsa".format(**locals())
-        else: 
+        else:
             message = "boot"
             completer_message = 'ssh_node_boot'
             local_key = "keys/key_admin.rsa"
@@ -1172,13 +1177,13 @@ class TestPlc:
                                         boot_state=message, dry_run=self.options.dry_run) \
                       for (nodename, qemuname) in node_infos ]
         return Completer(tasks, message=completer_message).run(timeout, graceout, period)
-        
+
     def ssh_node_debug(self):
         "Tries to ssh into nodes in debug mode with the debug ssh key"
         return self.check_nodes_ssh(debug = True,
                                     timeout_minutes = self.ssh_node_debug_timeout,
                                     silent_minutes = self.ssh_node_debug_silent)
-    
+
     def ssh_node_boot(self):
         "Tries to ssh into nodes in production mode with the root ssh key"
         return self.check_nodes_ssh(debug = False,
@@ -1188,7 +1193,7 @@ class TestPlc:
     def node_bmlogs(self):
         "Checks that there's a non-empty dir. /var/log/bm/raw"
         return utils.system(self.actual_command_in_guest("ls /var/log/bm/raw")) == 0
-    
+
     @node_mapper
     def qemu_local_init(self): pass
     @node_mapper
@@ -1221,13 +1226,13 @@ class TestPlc:
     def nodedistro_f22(self): pass
     @node_mapper
     def nodedistro_show(self): pass
-        
+
     ### check hooks : invoke scripts from hooks/{node,slice}
-    def check_hooks_node(self): 
+    def check_hooks_node(self):
         return self.locate_first_node().check_hooks()
-    def check_hooks_sliver(self) : 
+    def check_hooks_sliver(self) :
         return self.locate_first_sliver().check_hooks()
-    
+
     def check_hooks(self):
         "runs unit tests in the node and slice contexts - see hooks/{node,slice}"
         return self.check_hooks_node() and self.check_hooks_sliver()
@@ -1245,7 +1250,7 @@ class TestPlc:
             def failure_epilogue(self):
                 print("initscript stamp {} not found in sliver {}"\
                     .format(self.stamp, self.test_sliver.name()))
-            
+
         tasks = []
         for slice_spec in self.plc_spec['slices']:
             if 'initscriptstamp' not in slice_spec:
@@ -1263,11 +1268,11 @@ class TestPlc:
                 tasks.append(CompleterTaskInitscript(test_sliver, stamp))
         return Completer(tasks, message='check_initscripts').\
             run (timedelta(minutes=5), timedelta(minutes=4), timedelta(seconds=10))
-            
+
     def check_initscripts(self):
         "check that the initscripts have triggered"
         return self.do_check_initscripts()
-    
+
     def initscripts(self):
         "create initscripts with PLCAPI"
         for initscript in self.plc_spec['initscripts']:
@@ -1320,7 +1325,7 @@ class TestPlc:
         return True
 
     # TD 22.12.2015: Increased timeouts for NorNet!
-    @slice_mapper__tasks(60, 10, 15)
+    @slice_mapper__tasks(60, 15, 20)
     def ssh_slice(self): pass
     @slice_mapper__tasks(30, 19, 15)
     def ssh_slice_off(self): pass
@@ -1341,7 +1346,7 @@ class TestPlc:
 
     @node_mapper
     def keys_clear_known_hosts(self): pass
-    
+
     def plcapi_urls(self):
         """
         attempts to reach the PLCAPI with various forms for the URL
@@ -1356,7 +1361,7 @@ class TestPlc:
         return self._speed_up_slices(5, 1)
 
     def _speed_up_slices(self, p, r):
-        # create the template on the server-side 
+        # create the template on the server-side
         template = "{}.nodemanager".format(self.name())
         with open(template,"w") as template_file:
             template_file.write('OPTIONS="-p {} -r {} -d"\n'.format(p, r))
@@ -1404,7 +1409,7 @@ class TestPlc:
     # in multi-plcs mode
     def cross_check_tcp(self, other_plcs):
         "check TCP connectivity between 2 slices (or in loopback if only one is defined)"
-        if 'tcp_specs' not in self.plc_spec or not self.plc_spec['tcp_specs']: 
+        if 'tcp_specs' not in self.plc_spec or not self.plc_spec['tcp_specs']:
             utils.header("check_tcp: no/empty config found")
             return True
         specs = self.plc_spec['tcp_specs']
@@ -1445,7 +1450,7 @@ class TestPlc:
         if not Completer(tasks, message='check for network readiness in slivers').\
            run(timedelta(seconds=30), timedelta(seconds=24), period=timedelta(seconds=5)):
             return False
-            
+
         # run server and client
         for spec in specs:
             port = spec['port']
@@ -1468,13 +1473,13 @@ class TestPlc:
         return overall
 
     # painfully enough, we need to allow for some time as netflow might show up last
-    def check_system_slice(self): 
+    def check_system_slice(self):
         "all nodes: check that a system slice is alive"
         # netflow currently not working in the lxc distro
         # drl not built at all in the wtx distro
         # if we find either of them we're happy
         return self.check_netflow() or self.check_drl()
-    
+
     # expose these
     def check_netflow(self): return self._check_system_slice('netflow')
     def check_drl(self): return self._check_system_slice('drl')
@@ -1482,14 +1487,14 @@ class TestPlc:
     # we have the slices up already here, so it should not take too long
     def _check_system_slice(self, slicename, timeout_minutes=5, period_seconds=15):
         class CompleterTaskSystemSlice(CompleterTask):
-            def __init__(self, test_node, dry_run): 
+            def __init__(self, test_node, dry_run):
                 self.test_node = test_node
                 self.dry_run = dry_run
-            def actual_run(self): 
+            def actual_run(self):
                 return self.test_node._check_system_slice(slicename, dry_run=self.dry_run)
-            def message(self): 
+            def message(self):
                 return "System slice {} @ {}".format(slicename, self.test_node.name())
-            def failure_epilogue(self): 
+            def failure_epilogue(self):
                 print("COULD not find system slice {} @ {}".format(slicename, self.test_node.name()))
         timeout = timedelta(minutes=timeout_minutes)
         silent  = timedelta(0)
@@ -1521,11 +1526,11 @@ class TestPlc:
     def sfa_install_core(self):
         "yum install sfa"
         return self.yum_install("sfa")
-        
+
     def sfa_install_plc(self):
         "yum install sfa-plc"
         return self.yum_install("sfa-plc")
-        
+
     def sfa_install_sfatables(self):
         "yum install sfa-sfatables"
         return self.yum_install("sfa-sfatables")
@@ -1543,7 +1548,7 @@ class TestPlc:
     # installing package sfa-client-2.1-7.onelab.2012.05.23.i686 needs 68KB on the / filesystem
     # [('installing package sfa-client-2.1-7.onelab.2012.05.23.i686 needs 68KB on the / filesystem', (9, '/', 69632L))]
     # even though in the same context I have
-    # [2012.05.23--f14-32-sfastd1-1-vplc07] / # df -h 
+    # [2012.05.23--f14-32-sfastd1-1-vplc07] / # df -h
     # Filesystem            Size  Used Avail Use% Mounted on
     # /dev/hdv1             806G  264G  501G  35% /
     # none                   16M   36K   16M   1% /tmp
@@ -1558,7 +1563,7 @@ class TestPlc:
         code, cached_rpm_path = \
                 utils.output_of(self.actual_command_in_guest('find /var/cache/yum -name sfa-client\*.rpm'))
         utils.header("rpm_path=<<{}>>".format(rpm_path))
-        # just for checking 
+        # just for checking
         self.run_in_guest("rpm -i {}".format(cached_rpm_path))
         return self.yum_check_installed("sfa-client")
 
@@ -1567,7 +1572,7 @@ class TestPlc:
         return self.run_in_guest("sfaadmin reg nuke") == 0 or \
             self.run_in_guest("sfa-nuke.py") == 0 or \
             self.run_in_guest("sfa-nuke-plc.py") == 0 or \
-            self.run_in_guest("sfaadmin registry nuke") == 0             
+            self.run_in_guest("sfaadmin registry nuke") == 0
 
     def sfa_fsclean(self):
         "cleanup /etc/sfa/trusted_roots and /var/lib/sfa"
@@ -1576,7 +1581,7 @@ class TestPlc:
 
     def sfa_plcclean(self):
         "cleans the PLC entries that were created as a side effect of running the script"
-        # ignore result 
+        # ignore result
         sfa_spec = self.plc_spec['sfa']
 
         for auth_sfa_spec in sfa_spec['auth_sfa_specs']:
@@ -1591,7 +1596,7 @@ class TestPlc:
                 username = user_spec['email']
                 try:
                     self.apiserver.DeletePerson(self.auth_root(),username)
-                except: 
+                except:
                     # this in fact is expected as sites delete their members
                     #print "User {} already absent from PLC db".format(username)
                     pass
@@ -1605,7 +1610,7 @@ class TestPlc:
         self.run_in_guest("rm -rf /var/lib/sfa")
         self.run_in_guest("rm -rf /etc/sfa")
         self.run_in_guest("rm -rf /var/log/sfa_access.log /var/log/sfa_import_plc.log /var/log/sfa.daemon")
-        # xxx tmp 
+        # xxx tmp
         self.run_in_guest("rpm -e --noscripts sfa-plc")
         return True
 
@@ -1623,7 +1628,7 @@ class TestPlc:
         "yum install sfa-tests and run SFA unittests"
         self.run_in_guest("yum -y install sfa-tests")
         # failed to install - forget it
-        if self.run_in_guest("rpm -q sfa-tests") != 0: 
+        if self.run_in_guest("rpm -q sfa-tests") != 0:
             utils.header("WARNING: SFA unit tests failed to install, ignoring")
             return True
         return self.run_in_guest("/usr/share/sfa/tests/testAll.py") == 0
@@ -1643,16 +1648,16 @@ class TestPlc:
         subdirname = "{}/{}".format(self.confdir(), dirname)
         if clean:
             utils.system("rm -rf {}".format(subdirname))
-        if not os.path.isdir(subdirname): 
+        if not os.path.isdir(subdirname):
             utils.system("mkdir -p {}".format(subdirname))
         if not dry_run and not os.path.isdir(subdirname):
             raise "Cannot create config subdir {} for plc {}".format(dirname, self.name())
         return subdirname
-        
+
     def conffile_clean(self, filename):
         filename=self.conffile(filename)
         return utils.system("rm -rf {}".format(filename))==0
-    
+
     ###
     def sfa_configure(self):
         "run sfa-config-tty"
@@ -1701,7 +1706,7 @@ class TestPlc:
     def sfa_import(self):
         "use sfaadmin to import from plc"
         auth = self.plc_spec['sfa']['settings']['SFA_REGISTRY_ROOT_AUTH']
-        return self.run_in_guest('sfaadmin reg import_registry') == 0 
+        return self.run_in_guest('sfaadmin reg import_registry') == 0
 
     def sfa_start(self):
         "service sfa start"
@@ -1710,7 +1715,7 @@ class TestPlc:
 
     def sfi_configure(self):
         "Create /root/sfi on the plc side for sfi client configuration"
-        if self.options.dry_run: 
+        if self.options.dry_run:
             utils.header("DRY RUN - skipping step")
             return True
         sfa_spec = self.plc_spec['sfa']
@@ -1848,7 +1853,7 @@ class TestPlc:
         # (1.c)
         print("-------------------- TestPlc.gather_logs : PLC's /root/sfi/")
         self.gather_root_sfi()
-        # (2) 
+        # (2)
         print("-------------------- TestPlc.gather_logs : nodes's QEMU logs")
         for site_spec in self.plc_spec['sites']:
             test_site = TestSite(self,site_spec)
@@ -1873,7 +1878,7 @@ class TestPlc:
 
     def gather_var_logs(self):
         utils.system("mkdir -p logs/myplc.var-log.{}".format(self.name()))
-        to_plc = self.actual_command_in_guest("tar -C /var/log/ -cf - .")        
+        to_plc = self.actual_command_in_guest("tar -C /var/log/ -cf - .")
         command = to_plc + "| tar -C logs/myplc.var-log.{} -xf -".format(self.name())
         utils.system(command)
         command = "chmod a+r,a+x logs/myplc.var-log.{}/httpd".format(self.name())
@@ -1881,13 +1886,13 @@ class TestPlc:
 
     def gather_pgsql_logs(self):
         utils.system("mkdir -p logs/myplc.pgsql-log.{}".format(self.name()))
-        to_plc = self.actual_command_in_guest("tar -C /var/lib/pgsql/data/pg_log/ -cf - .")        
+        to_plc = self.actual_command_in_guest("tar -C /var/lib/pgsql/data/pg_log/ -cf - .")
         command = to_plc + "| tar -C logs/myplc.pgsql-log.{} -xf -".format(self.name())
         utils.system(command)
 
     def gather_root_sfi(self):
         utils.system("mkdir -p logs/sfi.{}".format(self.name()))
-        to_plc = self.actual_command_in_guest("tar -C /root/sfi/ -cf - .")        
+        to_plc = self.actual_command_in_guest("tar -C /root/sfi/ -cf - .")
         command = to_plc + "| tar -C logs/sfi.{} -xf -".format(self.name())
         utils.system(command)
 
@@ -1954,54 +1959,54 @@ class TestPlc:
             wrapped = ignore_result(method)
 #            wrapped.__doc__ = method.__doc__ + " (run in ignore-result mode)"
             setattr(TestPlc, name, wrapped)
-            
+
 #    @ignore_result
 #    def ssh_slice_again_ignore (self): pass
 #    @ignore_result
 #    def check_initscripts_ignore (self): pass
-    
+
     def standby_1_through_20(self):
         """convenience function to wait for a specified number of minutes"""
         pass
-    @standby_generic 
+    @standby_generic
     def standby_1(): pass
-    @standby_generic 
+    @standby_generic
     def standby_2(): pass
-    @standby_generic 
+    @standby_generic
     def standby_3(): pass
-    @standby_generic 
+    @standby_generic
     def standby_4(): pass
-    @standby_generic 
+    @standby_generic
     def standby_5(): pass
-    @standby_generic 
+    @standby_generic
     def standby_6(): pass
-    @standby_generic 
+    @standby_generic
     def standby_7(): pass
-    @standby_generic 
+    @standby_generic
     def standby_8(): pass
-    @standby_generic 
+    @standby_generic
     def standby_9(): pass
-    @standby_generic 
+    @standby_generic
     def standby_10(): pass
-    @standby_generic 
+    @standby_generic
     def standby_11(): pass
-    @standby_generic 
+    @standby_generic
     def standby_12(): pass
-    @standby_generic 
+    @standby_generic
     def standby_13(): pass
-    @standby_generic 
+    @standby_generic
     def standby_14(): pass
-    @standby_generic 
+    @standby_generic
     def standby_15(): pass
-    @standby_generic 
+    @standby_generic
     def standby_16(): pass
-    @standby_generic 
+    @standby_generic
     def standby_17(): pass
-    @standby_generic 
+    @standby_generic
     def standby_18(): pass
-    @standby_generic 
+    @standby_generic
     def standby_19(): pass
-    @standby_generic 
+    @standby_generic
     def standby_20(): pass
 
     # convenience for debugging the test logic
