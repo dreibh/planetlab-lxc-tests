@@ -798,8 +798,13 @@ class TestPlc:
         return self.start_stop_service(service, 'stop')
 
     def start_stop_service(self, service, start_or_stop):
-        "utility to start/stop a service with the special trick for f14"
-        if self.options.fcdistro != 'f14':
+        "utility to start/stop a service with the special trick starting with f14"
+        has_systemctl = False
+        if self.options.fcdistro[0] == 'f':
+            number = int(self.options.fcdistro[1:])
+            if number >= 14:
+                has_systemctl = True
+        if not has_systemctl:
             return self.run_in_guest("service {} {}".format(service, start_or_stop)) == 0
         else:
             # patch /sbin/service so it does not reset environment
