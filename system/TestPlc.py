@@ -785,41 +785,22 @@ class TestPlc:
         utils.system('rm {}'.format(tmpname))
         return True
 
-# f14 is a bit odd in this respect, although this worked fine in guests up to f18
-# however using a vplc guest under f20 requires this trick
-# the symptom is this: service plc start
-# Starting plc (via systemctl):  Failed to get D-Bus connection: \
-#    Failed to connect to socket /org/freedesktop/systemd1/private: Connection refused
-# weird thing is the doc says f14 uses upstart by default and not systemd
-# so this sounds kind of harmless
-    def start_service(self, service):
-        return self.start_stop_service(service, 'start')
-    def stop_service(self, service):
-        return self.start_stop_service(service, 'stop')
-
+    # care only about f>=25
     def start_stop_service(self, service, start_or_stop):
-        "utility to start/stop a service with the special trick starting with f14"
-        has_systemctl = False
-        if self.options.fcdistro[0] == 'f':
-            number = int(self.options.fcdistro[1:])
-            if number >= 14:
-                has_systemctl = True
-        if not has_systemctl:
-            return self.run_in_guest("service {} {}".format(service, start_or_stop)) == 0
-        else:
-            # patch /sbin/service so it does not reset environment
-            self.run_in_guest('sed -i -e \\"s,env -i,env,\\" /sbin/service')
-            # this is because our own scripts in turn call service
-            return self.run_in_guest("SYSTEMCTL_SKIP_REDIRECT=true service {} {}"\
-                                     .format(service, start_or_stop)) == 0
+        "utility to start/stop an old-fashioned service (plc)"
+        return self.run_in_guest("service {} {}".format(service, start_or_stop)) == 0
+
+    def start_stop_systemd(self, service, start_or_stop):
+        "utility to start/stop a systemd-defined service (sfa)"
+        return self.run_in_guest("systemctl {} {}".format(start_or_stop, service)) == 0
 
     def plc_start(self):
         "service plc start"
-        return self.start_service('plc')
+        return self.start_stop_service('plc', 'start')
 
     def plc_stop(self):
         "service plc stop"
-        return self.stop_service('plc')
+        return self.start_stop_service('plc', 'stop')
 
     def plcvm_start(self):
         "start the PLC vserver"
@@ -1521,7 +1502,9 @@ class TestPlc:
 
     def sfa_install_all(self):
         "yum install sfa sfa-plc sfa-sfatables sfa-client"
-        return self.yum_install("sfa sfa-plc sfa-sfatables sfa-client")
+        return (self.yum_install("sfa sfa-plc sfa-sfatables sfa-client") and
+                self.run_in_guest("systemctl enable sfa-registry")==0 and
+                self.run_in_guest("systemctl enable sfa-aggregate")==0)
 
     def sfa_install_core(self):
         "yum install sfa"
@@ -1710,7 +1693,8 @@ class TestPlc:
 
     def sfa_start(self):
         "service sfa start"
-        return self.start_service('sfa')
+        return (self.start_stop_systemd('sfa-registry', 'start') and
+                self.start_stop_systemd('sfa-aggregate', 'start'))
 
 
     def sfi_configure(self):
@@ -1807,7 +1791,8 @@ class TestPlc:
 
     def sfa_stop(self):
         "service sfa stop"
-        return self.stop_service('sfa')
+        return (self.start_stop_systemd('sfa-aggregate', 'stop') and
+                self.start_stop_systemd('sfa-registry', 'stop'))
 
     def populate(self):
         "creates random entries in the PLCAPI"
