@@ -1,26 +1,26 @@
 #
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010-2015 INRIA 
+# Copyright (C) 2010-2015 INRIA
 #
 # #################### history
 #
 # see also Substrate.readme
 #
 # This is a complete rewrite of TestResources/Tracker/Pool
-# we don't use trackers anymore and just probe/sense the running 
+# we don't use trackers anymore and just probe/sense the running
 # boxes to figure out where we are
 # in order to implement some fairness in the round-robin allocation scheme
-# we need an indication of the 'age' of each running entity, 
+# we need an indication of the 'age' of each running entity,
 # hence the 'timestamp-*' steps in TestPlc
-# 
+#
 # this should be much more flexible:
-# * supports several plc boxes 
+# * supports several plc boxes
 # * supports several qemu guests per host
 # * no need to worry about tracker being in sync or not
 #
 # #################### howto use
 #
-# each site is to write its own LocalSubstrate.py, 
+# each site is to write its own LocalSubstrate.py,
 # (see e.g. LocalSubstrate.inria.py)
 # LocalSubstrate.py is expected to be in /root on the testmaster box
 # and needs to define
@@ -32,18 +32,18 @@
 # . the kvm-qemu capable boxes to host qemu instances
 # .  and their admissible load (max # of myplcs)
 # . the pool of DNS-names and IP-addresses available for nodes
-# 
+#
 # #################### implem. note
-# 
-# this model relies on 'sensing' the substrate, 
+#
+# this model relies on 'sensing' the substrate,
 # i.e. probing all the boxes for their running instances of vservers and qemu
-# this is how we get rid of tracker inconsistencies 
-# however there is a 'black hole' between the time where a given address is 
+# this is how we get rid of tracker inconsistencies
+# however there is a 'black hole' between the time where a given address is
 # allocated and when it actually gets used/pingable
 # this is why we still need a shared knowledge among running tests
 # in a file named /root/starting
-# this is connected to the Pool class 
-# 
+# this is connected to the Pool class
+#
 # ####################
 
 import os.path, sys
@@ -80,7 +80,7 @@ def short_hostname (hostname):
 class Starting:
 
     location = '/root/starting'
-    
+
     def __init__ (self):
         self.tuples=[]
 
@@ -94,7 +94,7 @@ class Starting:
         except:
             self.tuples = []
 
-    def vnames (self) : 
+    def vnames (self) :
         self.load()
         return [ x for (x, _) in self.tuples ]
 
@@ -102,24 +102,24 @@ class Starting:
         if not vname in self.vnames():
             with open(Starting.location, 'a') as out:
                 out.write("{}@{}\n".format(vname, bname))
-            
+
     def delete_vname (self, vname):
         self.load()
         if vname in self.vnames():
             with open(Starting.location, 'w') as f:
-                for (v, b) in self.tuples: 
+                for (v, b) in self.tuples:
                     if v != vname:
                         f.write("{}@{}\n".format(v, b))
-    
+
 ####################
 # pool class
 # allows to pick an available IP among a pool
 # input is expressed as a list of tuples (hostname,ip,user_data)
 # that can be searched iteratively for a free slot
 # e.g.
-# pool = [ (hostname1,user_data1),  
-#          (hostname2,user_data2),  
-#          (hostname3,user_data2),  
+# pool = [ (hostname1,user_data1),
+#          (hostname2,user_data2),
+#          (hostname3,user_data2),
 #          (hostname4,user_data4) ]
 # assuming that ip1 and ip3 are taken (pingable), then we'd get
 # pool=Pool(pool)
@@ -159,7 +159,7 @@ class PoolItem:
 class Pool:
 
     def __init__ (self, tuples, message, substrate):
-        self.pool_items = [ PoolItem (hostname, userdata) for (hostname, userdata) in tuples ] 
+        self.pool_items = [ PoolItem (hostname, userdata) for (hostname, userdata) in tuples ]
         self.message = message
         # where to send notifications upon load_starting
         self.substrate = substrate
@@ -177,11 +177,11 @@ class Pool:
         return line
 
     def _item (self, hostname):
-        for i in self.pool_items: 
+        for i in self.pool_items:
             if i.hostname == hostname: return i
         raise Exception ("Could not locate hostname {} in pool {}".format(hostname, self.message))
 
-    def retrieve_userdata (self, hostname): 
+    def retrieve_userdata (self, hostname):
         return self._item(hostname).userdata
 
     def get_ip (self, hostname):
@@ -189,7 +189,7 @@ class Pool:
             return self._item(hostname).get_ip()
         except:
             return socket.gethostbyname(hostname)
-        
+
     def set_mine (self, hostname):
         try:
             self._item(hostname).status='mine'
@@ -235,17 +235,17 @@ class Pool:
     ##########
     def _sense (self):
         for item in self.pool_items:
-            if item.status is not None: 
+            if item.status is not None:
                 print(item.char(), end=' ')
                 continue
-            if self.check_ping (item.hostname): 
+            if self.check_ping (item.hostname):
                 item.status = 'busy'
                 print('*', end=' ')
             else:
                 item.status = 'free'
                 print('.', end=' ')
             sys.stdout.flush()
-    
+
     def sense (self):
         print('Sensing IP pool', self.message, end=' ')
         sys.stdout.flush()
@@ -273,7 +273,7 @@ class Pool:
         command = "ping -c 1 {} 1 {}".format(Pool.ping_timeout_option, hostname)
         (status, output) = subprocess.getstatusoutput(command)
 #        print ("""
-#----------        
+#----------
 #Ping command <{command}> has returned {status}
 #--
 #{output}
@@ -337,7 +337,7 @@ class Box:
             probe_argv = self.test_ssh().actual_argv(composite_command)
         composite = self.backquote ( probe_argv, trash_err=True )
         self._hostname = self._uptime = self._uname = self._fedora = self._memory = "** Unknown **"
-        if not composite: 
+        if not composite:
             print("root@{} unreachable".format(self.hostname))
             self._probed = ''
         else:
@@ -390,7 +390,7 @@ class Box:
             else:
                 with open('/dev/null', 'w') as null:
                     return subprocess.call(argv, stderr=null)
-                
+
     def run_ssh (self, argv, message, trash_err=False, dry_run=False):
         ssh_argv = self.test_ssh().actual_argv(argv)
         result = self.run (ssh_argv, message, trash_err, dry_run=dry_run)
@@ -440,17 +440,17 @@ class BuildBox (Box):
 
     def add_build(self, buildname, pid):
         for build in self.build_instances:
-            if build.buildname == buildname: 
+            if build.buildname == buildname:
                 build.add_pid(pid)
                 return
         self.build_instances.append(BuildInstance(buildname, pid, self))
 
     def list(self, verbose=False):
-        if not self.build_instances: 
+        if not self.build_instances:
             header ('No build process on {} ({})'.format(self.hostname_fedora(), self.uptime()))
         else:
             header ("Builds on {} ({})".format(self.hostname_fedora(), self.uptime()))
-            for b in self.build_instances: 
+            for b in self.build_instances:
                 header (b.line(), banner=False)
 
     def reboot (self, options):
@@ -478,19 +478,19 @@ class BuildLxcBox (BuildBox):
         for line in ps_lines:
             if not line.strip() or line.find('PID') >= 0: continue
             m = build_matcher.match(line)
-            if m: 
+            if m:
                 date = time.strftime('%Y-%m-%d', time.localtime(time.time()))
                 buildname = m.group('buildname').replace('@DATE@', date)
                 self.add_build(buildname, m.group('pid'))
                 continue
             m = build_matcher_initvm.match(line)
-            if m: 
+            if m:
                 # buildname is expansed here
                 self.add_build(buildname, m.group('pid'))
                 continue
             header('BuildLxcBox.sense: command {} returned line that failed to match'.format(command))
             header(">>{}<<".format(line))
-    
+
 ############################################################
 class PlcInstance:
     def __init__ (self, plcbox):
@@ -499,7 +499,7 @@ class PlcInstance:
         self.timestamp = 0
     def __repr__(self):
         return "<PlcInstance {}>".format(self.plc_box)
-        
+
     def set_timestamp (self,timestamp):
         self.timestamp = timestamp
     def set_now (self):
@@ -565,12 +565,12 @@ class PlcBox (Box):
             self.soft_reboot (options)
 
     def list(self, verbose=False):
-        if not self.plc_instances: 
+        if not self.plc_instances:
             header ('No plc running on {}'.format(self.line()))
         else:
             header ("Active plc VMs on {}".format(self.line()))
             self.plc_instances.sort(key=timestamp_key)
-            for p in self.plc_instances: 
+            for p in self.plc_instances:
                 header (p.line(), banner=False)
 
 ## we do not this at INRIA any more
@@ -582,21 +582,21 @@ class PlcLxcBox (PlcBox):
                 header("WARNING, duplicate myplc {} running on {}"\
                        .format(lxcname, self.hostname), banner=False)
                 return
-        self.plc_instances.append(PlcLxcInstance(self, lxcname, pid))    
+        self.plc_instances.append(PlcLxcInstance(self, lxcname, pid))
 
 
     # a line describing the box
-    def line(self): 
-        return "{} [max={},free={}] ({})".format(self.hostname_fedora(virt="lxc"), 
+    def line(self):
+        return "{} [max={},free={}] ({})".format(self.hostname_fedora(virt="lxc"),
                                                  self.max_plcs, self.free_slots(),
                                                  self.uptime())
-    
+
     def plc_instance_by_lxcname(self, lxcname):
         for p in self.plc_instances:
             if p.lxcname == lxcname:
                 return p
         return None
-    
+
     # essentially shutdown all running containers
     def soft_reboot(self, options):
         command="rsync lxc-driver.sh  {}:/root".format(self.hostname)
@@ -606,7 +606,7 @@ class PlcLxcBox (PlcBox):
                       dry_run=options.dry_run)
 
 
-    # sense is expected to fill self.plc_instances with PlcLxcInstance's 
+    # sense is expected to fill self.plc_instances with PlcLxcInstance's
     # to describe the currently running VM's
     def sense(self, options):
         print("xp", end=' ')
@@ -635,7 +635,7 @@ class PlcLxcBox (PlcBox):
             p.set_timestamp(timestamp)
 
 ############################################################
-class QemuInstance: 
+class QemuInstance:
     def __init__(self, nodename, pid, qemubox):
         self.nodename = nodename
         self.pid = pid
@@ -645,7 +645,7 @@ class QemuInstance:
         self.timestamp = 0
     def __repr__(self):
         return "<QemuInstance {}>".format(self.nodename)
-        
+
     def set_buildname (self, buildname):
         self.buildname = buildname
     def set_timestamp (self, timestamp):
@@ -654,7 +654,7 @@ class QemuInstance:
         self.timestamp = int(time.time())
     def pretty_timestamp (self):
         return time.strftime("%Y-%m-%d:%H-%M", time.localtime(self.timestamp))
-    
+
     def line (self):
         msg = "== {} ==".format(short_hostname(self.nodename))
         msg += " [={}]".format(self.buildname)
@@ -663,9 +663,9 @@ class QemuInstance:
         if self.timestamp: msg += " @ {}".format(self.pretty_timestamp())
         else:              msg += " *unknown timestamp*"
         return msg
-    
+
     def kill(self):
-        if self.pid == 0: 
+        if self.pid == 0:
             print("cannot kill qemu {} with pid==0".format(self.nodename))
             return
         msg = "Killing qemu {} with pid={} on box {}".format(self.nodename, self.pid, self.qemu_box.hostname)
@@ -683,7 +683,7 @@ class QemuBox (Box):
 
     def add_node(self, nodename, pid):
         for qemu in self.qemu_instances:
-            if qemu.nodename == nodename: 
+            if qemu.nodename == nodename:
                 header("WARNING, duplicate qemu {} running on {}"\
                        .format(nodename,self.hostname), banner=False)
                 return
@@ -708,12 +708,12 @@ class QemuBox (Box):
                     self.uptime(), self.driver())
 
     def list(self, verbose=False):
-        if not self.qemu_instances: 
+        if not self.qemu_instances:
             header ('No qemu on {}'.format(self.line()))
         else:
             header ("Qemus on {}".format(self.line()))
             self.qemu_instances.sort(key=timestamp_key)
-            for q in self.qemu_instances: 
+            for q in self.qemu_instances:
                 header (q.line(), banner=False)
 
     def free_slots (self):
@@ -766,7 +766,7 @@ class QemuBox (Box):
             if not line.strip() or line.find('PID') >=0 :
                 continue
             m = QemuBox.matcher.match(line)
-            if m: 
+            if m:
                 self.add_node(m.group('nodename'), m.group('pid'))
                 continue
             header('QemuBox.sense: command {} returned line that failed to match'.format(command))
@@ -806,8 +806,8 @@ class QemuBox (Box):
                 (_, timestamp) = tail.split(':')
                 timestamp = int(timestamp)
                 q = self.qemu_instance_by_nodename_buildname(nodename, buildname)
-                if not q: 
-                    # this warning corresponds to qemu instances that were not killed properly 
+                if not q:
+                    # this warning corresponds to qemu instances that were not killed properly
                     # and that have a dangling qemu.pid - and not even all of them as they need
                     # to be attached to a build that has a node running...
                     # it is more confusing than helpful, so let's just trash it
@@ -844,7 +844,7 @@ class TestInstance:
         return len(self.pids) != 0
     def add_pid(self, pid):
         self.pids.append(pid)
-    def set_broken(self, plcindex, step): 
+    def set_broken(self, plcindex, step):
         self.broken_steps.append( (plcindex, step,) )
 
     def second_letter(self):
@@ -904,9 +904,9 @@ class TestBox(Box):
     # we scan ALL remaining test results, even the ones not running
     def add_timestamp(self, buildname, timestamp):
         i = self.get_test(buildname)
-        if i:   
+        if i:
             i.set_timestamp(timestamp)
-        else:   
+        else:
             i = TestInstance(buildname, 0)
             i.set_timestamp(timestamp)
             self.test_instances.append(i)
@@ -968,7 +968,7 @@ class TestBox(Box):
                 self.add_broken(buildname, '', 'NO STEP DONE')
                 continue
             m = TestBox.matcher_grep.match(line)
-            if m: 
+            if m:
                 buildname = m.group('buildname')
                 plcindex = m.group('plcindex')
                 step = m.group('step')
@@ -986,15 +986,15 @@ class TestBox(Box):
             if not line.strip():
                 continue
             m = TestBox.matcher_proc.match(line)
-            if m: 
+            if m:
                 pid = m.group('pid')
                 buildname = m.group('buildname')
                 self.add_running_test(pid, buildname)
                 continue
             header("TestBox.sense: command {} returned line that failed to match\n{}".format(command, line))
             header(">>{}<<".format(line))
-        
-        
+
+
     def line (self):
         return self.hostname_fedora()
 
@@ -1042,7 +1042,7 @@ class Substrate:
 
         self.vplc_pool = Pool(self.vplc_ips(), "for vplcs", self)
         self.vnode_pool = Pool(self.vnode_ips(), "for vnodes", self)
-        
+
         self.build_boxes = self.build_lxc_boxes
         self.plc_boxes = self.plc_lxc_boxes
         self.default_boxes = self.plc_boxes + self.qemu_boxes
@@ -1092,7 +1092,7 @@ class Substrate:
     def add_starting_dummy(self, bname, vname):
         return self.add_dummy_plc(bname, vname) or self.add_dummy_qemu(bname, vname)
 
-    ########## 
+    ##########
     def provision(self, plcs, options):
         try:
             # attach each plc to a plc box and an IP address
@@ -1108,7 +1108,7 @@ class Substrate:
             traceback.print_exc()
             sys.exit(1)
 
-    # it is expected that a couple of options like ips_bplc and ips_vplc 
+    # it is expected that a couple of options like ips_bplc and ips_vplc
     # are set or unset together
     @staticmethod
     def check_options(x, y):
@@ -1119,14 +1119,14 @@ class Substrate:
     # find an available plc box (or make space)
     # and a free IP address (using options if present)
     def provision_plc(self, plc, options):
-        
+
         assert Substrate.check_options(options.ips_bplc, options.ips_vplc)
 
         #### let's find an IP address for that plc
-        # look in options 
+        # look in options
         if options.ips_vplc:
             # this is a rerun
-            # we don't check anything here, 
+            # we don't check anything here,
             # it is the caller's responsability to cleanup and make sure this makes sense
             plc_boxname = options.ips_bplc.pop()
             vplc_hostname = options.ips_vplc.pop()
@@ -1135,7 +1135,7 @@ class Substrate:
                 self.list()
             plc_boxname = None
             vplc_hostname = None
-            # try to find an available IP 
+            # try to find an available IP
             self.vplc_pool.sense()
             couple = self.vplc_pool.next_free()
             if couple:
@@ -1152,7 +1152,7 @@ class Substrate:
             # make space by killing the oldest running instance
             if not plc_boxname or not vplc_hostname:
                 # find the oldest of all our instances
-                all_plc_instances = reduce(lambda x, y: x+y, 
+                all_plc_instances = reduce(lambda x, y: x+y,
                                            [ pb.plc_instances for pb in self.plc_boxes ],
                                            [])
                 all_plc_instances.sort(key=timestamp_key)
@@ -1180,7 +1180,7 @@ class Substrate:
                     # record in pool as mine
                     self.vplc_pool.set_mine(vplc_hostname)
 
-        # 
+        #
         self.add_dummy_plc(plc_boxname, plc['name'])
         vplc_ip = self.vplc_pool.get_ip(vplc_hostname)
         self.vplc_pool.add_starting(vplc_hostname, plc_boxname)
@@ -1233,7 +1233,7 @@ class Substrate:
                     self.list()
                 qemu_boxname = None
                 vnode_hostname = None
-                # try to find an available IP 
+                # try to find an available IP
                 self.vnode_pool.sense()
                 couple = self.vnode_pool.next_free()
                 if couple:
@@ -1249,7 +1249,7 @@ class Substrate:
                 # if we miss the box or the IP, kill the oldest instance
                 if not qemu_boxname or not vnode_hostname:
                 # find the oldest of all our instances
-                    all_qemu_instances = reduce(lambda x, y: x+y, 
+                    all_qemu_instances = reduce(lambda x, y: x+y,
                                                 [ qb.qemu_instances for qb in self.qemu_boxes ],
                                                 [])
                     all_qemu_instances.sort(key=timestamp_key)
@@ -1260,7 +1260,7 @@ class Substrate:
                         if not qemu_boxname:
                             msg += " QEMU boxes are full"
                         if not vnode_hostname:
-                            msg += " vnode IP pool exhausted" 
+                            msg += " vnode IP pool exhausted"
                         msg += " {}".format(self.summary_line())
                         raise Exception("Cannot make space for a QEMU instance:"+msg)
                     freed_qemu_boxname = qemu_instance_to_kill.qemu_box.hostname
@@ -1284,8 +1284,8 @@ class Substrate:
             vnode_fqdn = self.fqdn(vnode_hostname)
             nodemap = {'host_box' : qemu_boxname,
                        'node_fields:hostname' : vnode_fqdn,
-                       'interface_fields:ip' : ip, 
-                       'ipaddress_fields:ip_addr' : ip, 
+                       'interface_fields:ip' : ip,
+                       'ipaddress_fields:ip_addr' : ip,
                        'interface_fields:mac' : mac,
                    }
             nodemap.update(self.network_settings())
@@ -1297,7 +1297,7 @@ class Substrate:
         return test_mapper.map({'node':maps})[0]
 
     def localize_sfa_rspec(self, plc, options):
-       
+
         plc['sfa']['settings']['SFA_REGISTRY_HOST'] = plc['settings']['PLC_DB_HOST']
         plc['sfa']['settings']['SFA_AGGREGATE_HOST'] = plc['settings']['PLC_DB_HOST']
         plc['sfa']['settings']['SFA_DB_HOST'] = plc['settings']['PLC_DB_HOST']
@@ -1323,21 +1323,21 @@ class Substrate:
         print("Could not find box {}".format(boxname))
         return None
 
-    # deal with the mix of boxes and names and stores the current focus 
+    # deal with the mix of boxes and names and stores the current focus
     # as a list of Box instances in self.focus_all
     def normalize(self, box_or_names):
         self.focus_all = []
         for box in box_or_names:
             if not isinstance(box, Box):
                 box = self.get_box(box)
-            if not box: 
+            if not box:
                 print('Warning - could not handle box',box)
             self.focus_all.append(box)
         # elaborate by type
         self.focus_build = [ x for x in self.focus_all if isinstance(x, BuildBox) ]
         self.focus_plc = [ x for x in self.focus_all if isinstance(x, PlcBox) ]
         self.focus_qemu = [ x for x in self.focus_all if isinstance(x, QemuBox) ]
-                             
+
     def list_boxes(self):
         print('Sensing', end=' ')
         sys.stdout.flush()
@@ -1371,7 +1371,7 @@ class Substrate:
         for (node,count) in list(hash.items()):
             if count!=1:
                 print('WARNING - duplicate node', node)
-        
+
 
     ####################
     # can be run as a utility to probe/display/manage the local infrastructure
@@ -1382,13 +1382,13 @@ class Substrate:
         parser.add_option('-s', "--soft", action='store_true', dest='soft', default=False,
                           help='soft mode for reboot (terminates processes)')
         parser.add_option('-t', "--testbox", action='store_true', dest='testbox', default=False,
-                          help='add test box') 
+                          help='add test box')
         parser.add_option('-b', "--build", action='store_true', dest='builds', default=False,
                           help='add build boxes')
         parser.add_option('-p', "--plc", action='store_true', dest='plcs', default=False,
                           help='add plc boxes')
         parser.add_option('-q', "--qemu", action='store_true', dest='qemus', default=False,
-                          help='add qemu boxes') 
+                          help='add qemu boxes')
         parser.add_option('-a', "--all", action='store_true', dest='all', default=False,
                           help='address all known  boxes, like -b -t -p -q')
         parser.add_option('-v', "--verbose", action='store_true', dest='verbose', default=False,
@@ -1403,7 +1403,7 @@ class Substrate:
         if self.options.plcs: boxes += self.plc_boxes
         if self.options.qemus: boxes += self.qemu_boxes
         if self.options.all: boxes += self.all_boxes
-        
+
         global verbose
         verbose = self.options.verbose
         # default scope is -b -p -q -t
