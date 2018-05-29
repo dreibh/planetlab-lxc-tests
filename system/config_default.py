@@ -546,9 +546,6 @@ def sfa (options, index) :
             'SFA_INTERFACE_HRN' : sfa_root(index),
             'SFA_REGISTRY_HOST' : 'deferred-myplc-hostname',
             'SFA_AGGREGATE_HOST' : 'deferred-myplc-hostname',
-            'SFA_SM_HOST' : 'deferred-myplc-hostname',
-# turning off SM and using only AM; be explicit on this as the default has changed in the code
-            'SFA_SM_ENABLED' : 'false',
             'SFA_PLC_URL' : 'deferred-myplc-api-url',
             'SFA_PLC_USER' : 'root@test.onelab.eu',
             'SFA_PLC_PASSWORD' : 'test++',

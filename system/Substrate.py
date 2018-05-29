@@ -1300,7 +1300,6 @@ class Substrate:
        
         plc['sfa']['settings']['SFA_REGISTRY_HOST'] = plc['settings']['PLC_DB_HOST']
         plc['sfa']['settings']['SFA_AGGREGATE_HOST'] = plc['settings']['PLC_DB_HOST']
-        plc['sfa']['settings']['SFA_SM_HOST'] = plc['settings']['PLC_DB_HOST']
         plc['sfa']['settings']['SFA_DB_HOST'] = plc['settings']['PLC_DB_HOST']
         plc['sfa']['settings']['SFA_PLC_URL'] = 'https://{}:443/PLCAPI/'.format(plc['settings']['PLC_API_HOST'])
         return plc
