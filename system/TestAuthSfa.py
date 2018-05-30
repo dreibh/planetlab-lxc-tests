@@ -1,5 +1,5 @@
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2010 INRIA
 #
 import os, os.path
 
@@ -46,7 +46,7 @@ class TestAuthSfa:
         self.login_base = self.auth_sfa_spec['login_base']
 #        self.piuser = self.auth_sfa_spec['piuser']
 #        self.regularuser = self.auth_sfa_spec['regularuser']
-    
+
     def sfi_path (self):
         return "/root/sfi"
 
@@ -101,7 +101,7 @@ class TestAuthSfa:
         SFI_REGISTRY='http://{}:{}/'.format(sfa_spec['settings']['SFA_REGISTRY_HOST'], 12345)
         fileconf.write("SFI_REGISTRY='{}'".format(SFI_REGISTRY))
         fileconf.write('\n')
-        SFI_SM='http://{}:{}/'.format(sfa_spec['settings']['SFA_SM_HOST'], sfa_spec['sfi-connects-to-port'])
+        SFI_SM='http://{}:{}/'.format(sfa_spec['settings']['SFA_AGGREGATE_HOST'], sfa_spec['sfi-connects-to-port'])
         fileconf.write("SFI_SM='{}'".format(SFI_SM))
         fileconf.write('\n')
         fileconf.close()
@@ -176,7 +176,7 @@ class TestAuthSfa:
         "run (as PI) sfi show <slice> -k researcher -k reg-researchers (on Registry)"
         return \
             self.test_plc.run_in_guest(self.sfi_pi("show {} -k researcher -k reg-researchers".format(self.slice_hrn()))) == 0
-        
+
 
     # those are step names exposed as methods of TestPlc, hence the _sfa
     @slice_sfa_mapper
@@ -209,4 +209,3 @@ class TestAuthSfa:
     def sfa_delete_slice (self, *args, **kwds): pass
     @slice_sfa_mapper
     def ssh_slice_sfa     (self, *args, **kwds): pass
-
