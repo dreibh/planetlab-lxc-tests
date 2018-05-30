@@ -1,5 +1,10 @@
 #!/usr/bin/env plcsh
 #
+# WARNING: as opposed to the rest of the python code in this repo
+# the current script runs on top of plcsh and so it is for now
+# pinned as python2 code
+#
+#
 # Test script utility class
 #
 # Mark Huang <mlhuang@cs.princeton.edu>
@@ -123,7 +128,7 @@ def random_site(namelengths):
         'latitude': int(randfloat(-90.0, 90.0) * 1000) / 1000.0,
         'longitude': int(randfloat(-180.0, 180.0) * 1000) / 1000.0,
         }
-            
+
 def random_address_type():
     return {
         'name': randstr(20),
@@ -344,7 +349,7 @@ class Test:
         self.verbose = verbose
         self.preserve = preserve
         self.federating = federating
-        
+
         self.site_ids = []
         self.address_type_ids = []
         self.address_ids = []
@@ -363,7 +368,7 @@ class Test:
         self.slice_tag_ids = []
 
     def Cardinals (self):
-        return [len(x) for x in ( 
+        return [len(x) for x in (
                 self.api.GetNodes({},['node_id']),
                 self.api.GetSites({},['site_id']),
                 self.api.GetPersons({},['person_id']),
@@ -425,7 +430,7 @@ class Test:
             self.AddConfFiles(sizes['conf_files'])
             self.AddSlices(sizes['slices_per_site'])
             self.AddSliceTags(sizes['attributes_per_slice'])
-        
+
         else:
             self.RecordStatus()
             self.AddSites(sizes['sites'])
@@ -469,7 +474,7 @@ class Test:
         self.DeleteAddressTypes()
         self.DeleteSites()
 
-    # record current (old) objects 
+    # record current (old) objects
     def RecordStatus (self):
         self.old_site_ids = [ s['site_id'] for s in self.api.GetSites({},['site_id']) ]
         self.old_person_ids = [ s['person_id'] for s in self.api.GetPersons({},['person_id']) ]
@@ -834,7 +839,7 @@ class Test:
             self.api.DeletePerson(person_id)
 
             if self.check:
-                assert not self.api.GetPersons([person_id])                         
+                assert not self.api.GetPersons([person_id])
 
             if self.verbose:
                 print "Deleted user", person_id
@@ -939,7 +944,7 @@ class Test:
             # locate tag type
             tag_type_id = self.nodegroup_type_ids[i]
             tagname=self.api.GetTagTypes([tag_type_id])[0]['tagname']
-            
+
             # Add node group
             groupname = random_nodegroup() ['groupname']
             value = 'yes'
@@ -1005,7 +1010,7 @@ class Test:
         be added to a random node group if AddNodeGroups() was
         previously run.
         """
-        
+
         node_types = self.api.GetNodeTypes()
         if not node_types:
             raise Exception, "No node types"
@@ -1055,7 +1060,7 @@ class Test:
             # Update node
             node_fields = random_node(node_types,boot_states,self.namelengths)
             self.api.UpdateNode(node_id, node_fields)
-            
+
             node = self.api.GetNodes([node_id])[0]
 
             # Add to a random set of node groups
@@ -1133,7 +1138,7 @@ class Test:
         network_methods = self.api.GetNetworkMethods()
         if not network_methods:
             raise Exception, "No network methods"
-        
+
         network_types = self.api.GetNetworkTypes()
         if not network_types:
             raise Exception, "No network types"
@@ -1168,7 +1173,7 @@ class Test:
         network_methods = self.api.GetNetworkMethods()
         if not network_methods:
             raise Exception, "No network methods"
-        
+
         network_types = self.api.GetNetworkTypes()
         if not network_types:
             raise Exception, "No network types"
@@ -1208,7 +1213,7 @@ class Test:
             assert not self.api.GetInterfaces(self.interface_ids)
 
         self.interface_ids = []
-        
+
     def AddIlinks (self, n):
         """
         Add random links between interfaces.
@@ -1442,7 +1447,7 @@ class Test:
 
     def AddTagTypes(self,n_sa,n_ng,n_il):
         """
-        Add as many tag types as there are nodegroups, 
+        Add as many tag types as there are nodegroups,
         will use value=yes for each nodegroup
         """
 
@@ -1459,7 +1464,7 @@ class Test:
                 self.slice_type_ids + \
                 self.nodegroup_type_ids + \
                 self.ilink_type_ids
-            
+
             tt_role_ids=random_roles(role_ids)
             for tt_role_id in tt_role_ids:
                 self.api.AddRoleToTagType(tt_role_id,tag_type_id)
@@ -1665,7 +1670,7 @@ class Test:
                         if node_id is not None:
                             print "to node", node_id,
                         print
-                        
+
     def UpdateSliceTags(self):
         """
         Make random changes to any slice attributes we may have added.
@@ -1715,19 +1720,19 @@ class Test:
 
 def main():
     parser = OptionParser()
-    parser.add_option("-c", "--check", action = "store_true", default = False, 
+    parser.add_option("-c", "--check", action = "store_true", default = False,
                       help = "Check most actions (default: %default)")
-    parser.add_option("-q", "--quiet", action = "store_true", default = False, 
+    parser.add_option("-q", "--quiet", action = "store_true", default = False,
                       help = "Be quiet (default: %default)")
     parser.add_option("-p","--preserve", action="store_true", default =False,
                       help = "Do not delete created objects")
-    parser.add_option("-t", "--tiny", action = "store_true", default = False, 
+    parser.add_option("-t", "--tiny", action = "store_true", default = False,
                       help = "Run a tiny test (default: %default)")
-    parser.add_option("-l", "--large", action = "store_true", default = False, 
+    parser.add_option("-l", "--large", action = "store_true", default = False,
                       help = "Run a large test (default: %default)")
-    parser.add_option("-x", "--xlarge", action = "store_true", default = False, 
+    parser.add_option("-x", "--xlarge", action = "store_true", default = False,
                       help = "Run an XL test (default: %default)")
-    parser.add_option("-s", "--short-names", action="store_true", dest="short_names", default = False, 
+    parser.add_option("-s", "--short-names", action="store_true", dest="short_names", default = False,
                       help = "Generate smaller names for checking UI rendering")
     parser.add_option ("-f", "--foreign", action="store_true", dest="federating", default = False,
                        help = "Create a fake peer and add items in it (no update, no delete)")
