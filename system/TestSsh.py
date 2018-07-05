@@ -183,11 +183,9 @@ class TestSsh:
             self.mkdir(dry_run=dry_run)
             self.buildname_created = True
 
-    def copy(self, local_file, recursive=False, dry_run=False, remote_file=None):
+    def copy(self, local_file, recursive=False, dry_run=False):
         if self.is_local():
             return 0
-        if remote_file == None:
-           remote_file = local_file
         self.create_buildname_once(dry_run)
         scp_command = "scp "
         if not dry_run:
@@ -197,7 +195,7 @@ class TestSsh:
         scp_command += self.key_part()
         scp_command += "{} {}:{}/{}".format(local_file, self.hostname_part(),
                                             self.fullname(self.buildname),
-                                            os.path.basename(remote_file) or ".")
+                                            os.path.basename(local_file) or ".")
         if dry_run:
             utils.header("DRY RUN TestSsh.copy {}".format(scp_command))
             # need to be consistent with the non-dry-run mode

@@ -39,18 +39,18 @@ class TestSliver:
         return self.test_ssh.run("ls -l /var/tmp/{}.stamp".format(stamp)) == 0
     
     def check_tcp_ready (self, port):
-        ready_command = "./tcptest-ready.py ready -p {}".format(port)
-        return self.test_ssh.copy("tcptest.py", remote_file="tcptest-ready.py") == 0 and \
+        ready_command = "./tcptest.py ready -p {}".format(port)
+        return self.test_ssh.copy("tcptest.py") == 0 and \
             self.test_ssh.run(ready_command) == 0
 
     def run_tcp_server (self, port, timeout=10):
-        server_command = "./tcptest-server.py server -p {} -t {}".format(port, timeout)
-        return self.test_ssh.copy("tcptest.py", remote_file="tcptest-server.py") == 0 and \
+        server_command = "./tcptest.py server -p {} -t {}".format(port, timeout)
+        return self.test_ssh.copy("tcptest.py") == 0 and \
             self.test_ssh.run(server_command, background=True) == 0
 
     def run_tcp_client (self, servername, port, retry=5):
-        client_command = "./tcptest-client.py client -a {} -p {}".format(servername, port)
-        if self.test_ssh.copy("tcptest.py", remote_file="tcptest-client.py") != 0:
+        client_command = "./tcptest.py client -a {} -p {}".format(servername, port)
+        if self.test_ssh.copy("tcptest.py") != 0:
             return False
         if self.test_ssh.run(client_command) == 0:
             return True
