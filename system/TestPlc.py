@@ -1437,7 +1437,8 @@ class TestPlc:
             # the issue here is that we have the server run in background
             # and so we have no clue if it took off properly or not
             # looks like in some cases it does not
-            if not spec['s_sliver'].run_tcp_server(port, timeout=20):
+            address = spec['s_sliver'].test_node.name()
+            if not spec['s_sliver'].run_tcp_server(address, port, timeout=20):
                 overall = False
                 break
 

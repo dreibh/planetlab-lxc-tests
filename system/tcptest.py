@@ -65,7 +65,9 @@ class Server:
             parser.print_help()
             sys.exit(1)
 
-        myprint("==================== tcptest.py server", id='server')
+        myprint("==================== tcptest.py server on {}:{}"
+                .format(args.address, args.port),
+                id='server')
         show_network_status(id='server')
         server = socketserver.TCPServer((args.address, args.port),
                                         UppercaseRequestHandler)
@@ -137,7 +139,9 @@ class Client:
             parser.print_help()
             sys.exit(1)
 
-        myprint("==================== tcptest.py client", id='client')
+        myprint("==================== tcptest.py client -> {}:{}"
+                .format(args.address, args.port),
+                id='client')
         result = True
         for i in range(1, args.loops+1):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
