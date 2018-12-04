@@ -153,7 +153,7 @@ class TestPlc:
     default_steps = [
         'show', SEP,
         'plcvm_delete','plcvm_timestamp','plcvm_create', SEP,
-        'plc_install', 'plc_configure', 'plc_start', SEP,
+        'django_install', 'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls','speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
@@ -349,6 +349,9 @@ class TestPlc:
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
         self.run_in_guest("yum-complete-transaction -y")
         return self.yum_check_installed(rpms)
+
+    def pip_install(self, package):
+        return self.run_in_guest("pip install {}".format(package))
 
     def auth_root(self):
         return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
@@ -710,6 +713,15 @@ class TestPlc:
             return False
         create_vserver="{build_dir}/{script} {script_options} {vserver_name}".format(**locals())
         return self.run_in_host(create_vserver) == 0
+
+    ### install django through pip
+    def django_install(self):
+        # plcapi requires Django, that is no longer provided py fedora as an rpm
+        # so we use pip instead
+        """
+        pip install Django
+        """
+        return self.pip_install('Django')
 
     ### install_rpm
     def plc_install(self):
