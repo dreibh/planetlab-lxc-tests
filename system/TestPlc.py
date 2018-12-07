@@ -797,22 +797,18 @@ class TestPlc:
         utils.system('rm {}'.format(tmpname))
         return True
 
-    # care only about f>=25
-    def start_stop_service(self, service, start_or_stop):
-        "utility to start/stop an old-fashioned service (plc)"
-        return self.run_in_guest("service {} {}".format(service, start_or_stop)) == 0
-
+    # care only about f>=27
     def start_stop_systemd(self, service, start_or_stop):
         "utility to start/stop a systemd-defined service (sfa)"
         return self.run_in_guest("systemctl {} {}".format(start_or_stop, service)) == 0
 
     def plc_start(self):
-        "service plc start"
-        return self.start_stop_service('plc', 'start')
+        "start plc through systemclt"
+        return self.start_stop_systemd('plc', 'start')
 
     def plc_stop(self):
-        "service plc stop"
-        return self.start_stop_service('plc', 'stop')
+        "stop plc through systemctl"
+        return self.start_stop_systemd('plc', 'stop')
 
     def plcvm_start(self):
         "start the PLC vserver"
@@ -1703,7 +1699,7 @@ class TestPlc:
         return self.run_in_guest('sfaadmin reg import_registry') == 0
 
     def sfa_start(self):
-        "service sfa start"
+        "start SFA through systemctl"
         return (self.start_stop_systemd('sfa-registry', 'start') and
                 self.start_stop_systemd('sfa-aggregate', 'start'))
 
@@ -1801,7 +1797,7 @@ class TestPlc:
     def sfa_delete_slice(self): pass
 
     def sfa_stop(self):
-        "service sfa stop"
+            "stop sfa through systemclt"
         return (self.start_stop_systemd('sfa-aggregate', 'stop') and
                 self.start_stop_systemd('sfa-registry', 'stop'))
 
@@ -1927,14 +1923,13 @@ class TestPlc:
     def plc_db_restore(self):
         'restore the planetlab5 DB - looks broken, but run -n might help'
         dump = self.dbfile("planetab5")
-        ##stop httpd service
-        self.run_in_guest('service httpd stop')
+        self.run_in_guest('systemctl stop httpd')
         # xxx - need another wrapper
         self.run_in_guest_piped('echo drop database planetlab5', 'psql --user=pgsqluser template1')
         self.run_in_guest('createdb -U postgres --encoding=UNICODE --owner=pgsqluser planetlab5')
         self.run_in_guest('psql -U pgsqluser planetlab5 -f ' + dump)
         ##starting httpd service
-        self.run_in_guest('service httpd start')
+        self.run_in_guest('systemctl start httpd')
 
         utils.header('Database restored from ' + dump)
 

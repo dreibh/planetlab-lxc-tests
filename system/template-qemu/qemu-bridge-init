@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Thierry Parmentelat <thierry.parmentelat@inria.fr>
-# Copyright (C) 2010 INRIA 
+# Copyright (C) 2010 INRIA
 #
 # Establishment of a runtime environment for a
 # virtual  machine  under QEMU, This script allows the host box
@@ -31,7 +31,7 @@ for line in file("/proc/net/dev"):
     print ifname
 EOF
 }
-    
+
 function discover_interface () {
     for ifname in $(gather_interfaces); do
 	ip link show $ifname | grep -qi 'state UP' && { echo $ifname; return; }
@@ -80,7 +80,7 @@ function start () {
     #Getting host IP/masklen
     address=$(/sbin/ip address show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $2;}')
     [ -z "$address" ] && { echo "ERROR: Could not determine IP address for $INTERFACE_LAN" ; exit 1 ; }
-    
+
     broadcast=$(/sbin/ip address show $INTERFACE_LAN | grep -v inet6 | grep inet | head --lines=1 | awk '{print $4;}')
     [ -z "$broadcast" ] && echo "WARNING: Could not determine broadcast address for $INTERFACE_LAN"
 
@@ -120,7 +120,7 @@ function start () {
     ip address add $address broadcast $broadcast dev $INTERFACE_BRIDGE
     # turn on bridge interface
     ip link set dev $INTERFACE_BRIDGE up
-    ip address del $address dev $INTERFACE_LAN 
+    ip address del $address dev $INTERFACE_LAN
     sleep 1
 
     #Reconfigure the routing table
@@ -133,7 +133,7 @@ function start () {
     echo "========== $COMMAND: exiting start - end"
 }
 
-#Adding a new interface to the bridge: this is used by qemu-ifup 
+#Adding a new interface to the bridge: this is used by qemu-ifup
 function add () {
 
     [[ -z "$@" ]] && { echo "Usage: $COMMAND add ifname" ; exit 1 ; }
@@ -170,7 +170,7 @@ function add () {
 
     echo "Installed iptables"
     iptables-save
-    
+
     echo "========== $COMMAND: exiting add - end"
 }
 
@@ -190,8 +190,7 @@ function stop () {
     brctl delif $INTERFACE_BRIDGE $INTERFACE_LAN
     ip address del $address dev $INTERFACE_BRIDGE
     brctl delbr $INTERFACE_BRIDGE
-    /sbin/service network restart
-    /sbin/service iptables restart
+    systemctl NetworkManager restart
 }
 
 function main () {
