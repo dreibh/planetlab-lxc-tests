@@ -1797,7 +1797,7 @@ class TestPlc:
     def sfa_delete_slice(self): pass
 
     def sfa_stop(self):
-            "stop sfa through systemclt"
+        "stop sfa through systemclt"
         return (self.start_stop_systemd('sfa-aggregate', 'stop') and
                 self.start_stop_systemd('sfa-registry', 'stop'))
 
