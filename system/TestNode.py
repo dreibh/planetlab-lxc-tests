@@ -410,7 +410,7 @@ class TestNode:
         test_ssh = self.create_test_ssh()
         if self.has_libvirt():
             utils.header("Checking system slice {} using virsh".format(slicename))
-            return test_ssh.run("virsh --connect lxc:// list | grep -q ' {} '".format(vservername),
+            return test_ssh.run("virsh --connect lxc:/// list | grep -q ' {} '".format(vservername),
                                 dry_run = dry_run) == 0
         else:
             retcod, output = \
