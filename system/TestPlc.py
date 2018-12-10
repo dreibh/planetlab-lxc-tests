@@ -664,8 +664,8 @@ class TestPlc:
         "vserver delete the test myplc"
         stamp_path = self.vm_timestamp_path()
         self.run_in_host("rm -f {}".format(stamp_path))
-        self.run_in_host("virsh -c lxc:// destroy {}".format(self.vservername))
-        self.run_in_host("virsh -c lxc:// undefine {}".format(self.vservername))
+        self.run_in_host("virsh -c lxc:/// destroy {}".format(self.vservername))
+        self.run_in_host("virsh -c lxc:/// undefine {}".format(self.vservername))
         self.run_in_host("rm -fr /vservers/{}".format(self.vservername))
         return True
 
