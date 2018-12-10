@@ -351,7 +351,7 @@ class TestPlc:
         return self.yum_check_installed(rpms)
 
     def pip_install(self, package):
-        return self.run_in_guest("pip install {}".format(package))
+        return self.run_in_guest("pip -y install {}".format(package)) == 0
 
     def auth_root(self):
         return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
