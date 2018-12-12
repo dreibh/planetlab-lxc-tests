@@ -48,7 +48,7 @@ def node_mapper(method):
         node_method = TestNode.__dict__[method.__name__]
         for test_node in self.all_nodes():
             if not node_method(test_node, *args, **kwds):
-                overall=False
+                overall = False
         return overall
     # maintain __name__ for ignore_result
     map_on_nodes.__name__ = method.__name__
@@ -153,7 +153,7 @@ class TestPlc:
     default_steps = [
         'show', SEP,
         'plcvm_delete','plcvm_timestamp','plcvm_create', SEP,
-        'plc_install', 'plc_configure', 'plc_start', SEP,
+        'django_install', 'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls','speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
@@ -334,21 +334,25 @@ class TestPlc:
         return utils.system(local+" | "+self.test_ssh.actual_command(self.host_to_guest(remote),
                                                                      keep_stdin = True))
 
-    def yum_check_installed(self, rpms):
+    def dnf_check_installed(self, rpms):
         if isinstance(rpms, list):
             rpms=" ".join(rpms)
         return self.run_in_guest("rpm -q {}".format(rpms)) == 0
 
     # does a yum install in the vs, ignore yum retcod, check with rpm
-    def yum_install(self, rpms):
+    def dnf_install(self, rpms):
         if isinstance(rpms, list):
             rpms=" ".join(rpms)
-        yum_mode = self.run_in_guest("yum -y install {}".format(rpms))
+        yum_mode = self.run_in_guest("dnf -y install {}".format(rpms))
         if yum_mode != 0:
             self.run_in_guest("dnf -y install --allowerasing {}".format(rpms))
         # yum-complete-transaction comes with yum-utils, that is in vtest.pkgs
-        self.run_in_guest("yum-complete-transaction -y")
-        return self.yum_check_installed(rpms)
+        # nothing similar with dnf, forget about this for now
+        # self.run_in_guest("yum-complete-transaction -y")
+        return self.dnf_check_installed(rpms)
+
+    def pip_install(self, package):
+        return self.run_in_guest("pip install {}".format(package)) == 0
 
     def auth_root(self):
         return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
@@ -661,8 +665,8 @@ class TestPlc:
         "vserver delete the test myplc"
         stamp_path = self.vm_timestamp_path()
         self.run_in_host("rm -f {}".format(stamp_path))
-        self.run_in_host("virsh -c lxc:// destroy {}".format(self.vservername))
-        self.run_in_host("virsh -c lxc:// undefine {}".format(self.vservername))
+        self.run_in_host("virsh -c lxc:/// destroy {}".format(self.vservername))
+        self.run_in_host("virsh -c lxc:/// undefine {}".format(self.vservername))
         self.run_in_host("rm -fr /vservers/{}".format(self.vservername))
         return True
 
@@ -711,6 +715,15 @@ class TestPlc:
         create_vserver="{build_dir}/{script} {script_options} {vserver_name}".format(**locals())
         return self.run_in_host(create_vserver) == 0
 
+    ### install django through pip
+    def django_install(self):
+        # plcapi requires Django, that is no longer provided py fedora as an rpm
+        # so we use pip instead
+        """
+        pip install Django
+        """
+        return self.pip_install('Django')
+
     ### install_rpm
     def plc_install(self):
         """
@@ -726,12 +739,16 @@ class TestPlc:
             raise Exception("Unsupported personality {}".format(self.options.personality))
         nodefamily = "{}-{}-{}".format(self.options.pldistro, self.options.fcdistro, arch)
 
-        pkgs_list=[]
-        pkgs_list.append("slicerepo-{}".format(nodefamily))
+        # check it's possible to install just 'myplc-core' first
+        if not self.dnf_install("myplc-core"):
+            return False
+
+        pkgs_list = []
         pkgs_list.append("myplc")
+        pkgs_list.append("slicerepo-{}".format(nodefamily))
         pkgs_list.append("noderepo-{}".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
-        return self.yum_install(pkgs_list)
+        return self.dnf_install(pkgs_list)
 
     def install_syslinux6(self):
         """
@@ -769,7 +786,7 @@ class TestPlc:
     ###
     def mod_python(self):
         """yum install mod_python, useful on f18 and above so as to avoid broken wsgi"""
-        return self.yum_install( ['mod_python'] )
+        return self.dnf_install( ['mod_python'] )
 
     ###
     def plc_configure(self):
@@ -785,22 +802,18 @@ class TestPlc:
         utils.system('rm {}'.format(tmpname))
         return True
 
-    # care only about f>=25
-    def start_stop_service(self, service, start_or_stop):
-        "utility to start/stop an old-fashioned service (plc)"
-        return self.run_in_guest("service {} {}".format(service, start_or_stop)) == 0
-
+    # care only about f>=27
     def start_stop_systemd(self, service, start_or_stop):
         "utility to start/stop a systemd-defined service (sfa)"
         return self.run_in_guest("systemctl {} {}".format(start_or_stop, service)) == 0
 
     def plc_start(self):
-        "service plc start"
-        return self.start_stop_service('plc', 'start')
+        "start plc through systemclt"
+        return self.start_stop_systemd('plc', 'start')
 
     def plc_stop(self):
-        "service plc stop"
-        return self.start_stop_service('plc', 'stop')
+        "stop plc through systemctl"
+        return self.start_stop_systemd('plc', 'stop')
 
     def plcvm_start(self):
         "start the PLC vserver"
@@ -1439,7 +1452,8 @@ class TestPlc:
             # the issue here is that we have the server run in background
             # and so we have no clue if it took off properly or not
             # looks like in some cases it does not
-            if not spec['s_sliver'].run_tcp_server(port, timeout=20):
+            address = spec['s_sliver'].test_node.name()
+            if not spec['s_sliver'].run_tcp_server(address, port, timeout=20):
                 overall = False
                 break
 
@@ -1502,21 +1516,21 @@ class TestPlc:
 
     def sfa_install_all(self):
         "yum install sfa sfa-plc sfa-sfatables sfa-client"
-        return (self.yum_install("sfa sfa-plc sfa-sfatables sfa-client") and
+        return (self.dnf_install("sfa sfa-plc sfa-sfatables sfa-client") and
                 self.run_in_guest("systemctl enable sfa-registry")==0 and
                 self.run_in_guest("systemctl enable sfa-aggregate")==0)
 
     def sfa_install_core(self):
         "yum install sfa"
-        return self.yum_install("sfa")
+        return self.dnf_install("sfa")
 
     def sfa_install_plc(self):
         "yum install sfa-plc"
-        return self.yum_install("sfa-plc")
+        return self.dnf_install("sfa-plc")
 
     def sfa_install_sfatables(self):
         "yum install sfa-sfatables"
-        return self.yum_install("sfa-sfatables")
+        return self.dnf_install("sfa-sfatables")
 
     # for some very odd reason, this sometimes fails with the following symptom
     # # yum install sfa-client
@@ -1539,7 +1553,7 @@ class TestPlc:
     # so as a workaround, we first try yum install, and then invoke rpm on the cached rpm...
     def sfa_install_client(self):
         "yum install sfa-client"
-        first_try = self.yum_install("sfa-client")
+        first_try = self.dnf_install("sfa-client")
         if first_try:
             return True
         utils.header("********** Regular yum failed - special workaround in place, 2nd chance")
@@ -1548,7 +1562,7 @@ class TestPlc:
         utils.header("rpm_path=<<{}>>".format(rpm_path))
         # just for checking
         self.run_in_guest("rpm -i {}".format(cached_rpm_path))
-        return self.yum_check_installed("sfa-client")
+        return self.dnf_check_installed("sfa-client")
 
     def sfa_dbclean(self):
         "thoroughly wipes off the SFA database"
@@ -1608,8 +1622,8 @@ class TestPlc:
     # if the yum install phase fails, consider the test is successful
     # other combinations will eventually run it hopefully
     def sfa_utest(self):
-        "yum install sfa-tests and run SFA unittests"
-        self.run_in_guest("yum -y install sfa-tests")
+        "dnf install sfa-tests and run SFA unittests"
+        self.run_in_guest("dnf -y install sfa-tests")
         # failed to install - forget it
         if self.run_in_guest("rpm -q sfa-tests") != 0:
             utils.header("WARNING: SFA unit tests failed to install, ignoring")
@@ -1692,7 +1706,7 @@ class TestPlc:
         return self.run_in_guest('sfaadmin reg import_registry') == 0
 
     def sfa_start(self):
-        "service sfa start"
+        "start SFA through systemctl"
         return (self.start_stop_systemd('sfa-registry', 'start') and
                 self.start_stop_systemd('sfa-aggregate', 'start'))
 
@@ -1790,7 +1804,7 @@ class TestPlc:
     def sfa_delete_slice(self): pass
 
     def sfa_stop(self):
-        "service sfa stop"
+        "stop sfa through systemclt"
         return (self.start_stop_systemd('sfa-aggregate', 'stop') and
                 self.start_stop_systemd('sfa-registry', 'stop'))
 
@@ -1916,14 +1930,13 @@ class TestPlc:
     def plc_db_restore(self):
         'restore the planetlab5 DB - looks broken, but run -n might help'
         dump = self.dbfile("planetab5")
-        ##stop httpd service
-        self.run_in_guest('service httpd stop')
+        self.run_in_guest('systemctl stop httpd')
         # xxx - need another wrapper
         self.run_in_guest_piped('echo drop database planetlab5', 'psql --user=pgsqluser template1')
         self.run_in_guest('createdb -U postgres --encoding=UNICODE --owner=pgsqluser planetlab5')
         self.run_in_guest('psql -U pgsqluser planetlab5 -f ' + dump)
         ##starting httpd service
-        self.run_in_guest('service httpd start')
+        self.run_in_guest('systemctl start httpd')
 
         utils.header('Database restored from ' + dump)
 
