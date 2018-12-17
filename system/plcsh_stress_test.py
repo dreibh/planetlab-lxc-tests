@@ -25,7 +25,7 @@ import socket
 import base64
 import struct
 import os
-import xmlrpclib
+import xmlrpc.client
 
 from PLC.Shell import Shell
 
@@ -50,25 +50,25 @@ def randint(min = 0, max = 1):
 # [#x7F-#x84], [#x86-#x9F], [#xFDD0-#xFDDF]
 #
 
-ascii_xml_chars = map(unichr, [0x9, 0xA])
+ascii_xml_chars = list(map(chr, [0x9, 0xA]))
 # xmlrpclib uses xml.parsers.expat, which always converts either '\r'
 # (#xD) or '\n' (#xA) to '\n'. So avoid using '\r', too, if this is
 # still the case.
-if xmlrpclib.loads(xmlrpclib.dumps(('\r',)))[0][0] == '\r':
+if xmlrpc.client.loads(xmlrpc.client.dumps(('\r',)))[0][0] == '\r':
     ascii_xml_chars.append('\r')
-ascii_xml_chars += map(unichr, xrange(0x20, 0x7F - 1))
+ascii_xml_chars += list(map(chr, range(0x20, 0x7F - 1)))
 low_xml_chars = list(ascii_xml_chars)
-low_xml_chars += map(unichr, xrange(0x84 + 1, 0x86 - 1))
-low_xml_chars += map(unichr, xrange(0x9F + 1, 0xFF))
+low_xml_chars += list(map(chr, range(0x84 + 1, 0x86 - 1)))
+low_xml_chars += list(map(chr, range(0x9F + 1, 0xFF)))
 valid_xml_chars = list(low_xml_chars)
-valid_xml_chars += map(unichr, xrange(0xFF + 1, 0xD7FF))
-valid_xml_chars += map(unichr, xrange(0xE000, 0xFDD0 - 1))
-valid_xml_chars += map(unichr, xrange(0xFDDF + 1, 0xFFFD))
+valid_xml_chars += list(map(chr, range(0xFF + 1, 0xD7FF)))
+valid_xml_chars += list(map(chr, range(0xE000, 0xFDD0 - 1)))
+valid_xml_chars += list(map(chr, range(0xFDDF + 1, 0xFFFD)))
 
 def randstr(length, pool = valid_xml_chars, encoding = "utf-8"):
     sample = random.sample(pool, min(length, len(pool)))
     while True:
-        s = u''.join(sample)
+        s = ''.join(sample)
         bytes = len(s.encode(encoding))
         if bytes > length:
             sample.pop()
@@ -94,7 +94,7 @@ def randpath(length):
     parts = []
     for i in range(randint(1, 10)):
         parts.append(randstr(randint(1, 30), ascii_xml_chars))
-    return u'/'.join(parts)[0:length]
+    return '/'.join(parts)[0:length]
 
 def randemail(namelengths):
     return (randstr(namelengths['email'], letters + digits) + "@" + randhostname(namelengths)).lower()
@@ -120,7 +120,7 @@ def random_site(namelengths):
     sitename=randstr(namelengths['sitename'],namelengths['sitename_contents'])
     abbreviated_name=randstr(namelengths['abbreviated_name'],namelengths['abbreviated_name_contents'])
 
-    print 'nl[a] in random_site',namelengths['abbreviated_name'],'actual',len(abbreviated_name)
+    print('nl[a] in random_site',namelengths['abbreviated_name'],'actual',len(abbreviated_name))
     return {
         'name': sitename,
         'abbreviated_name': abbreviated_name,
@@ -174,7 +174,7 @@ def random_nodegroup():
 
 def random_roles(role_ids):
     nb_roles=len(role_ids)
-    return random.sample(role_ids,random.choice(range(1,nb_roles+1)))
+    return random.sample(role_ids,random.choice(list(range(1,nb_roles+1))))
 
 tag_fields=['arch']
 def random_node(node_types,boot_states,namelengths):
@@ -388,22 +388,22 @@ class Test:
         """
 
         cardinals_before=self.Cardinals()
-        print 'Cardinals before test (n,s,p,sl)',cardinals_before
+        print('Cardinals before test (n,s,p,sl)',cardinals_before)
 
         self.Add(**kwds)
         # if federating : we're done
 
         if self.federating or self.preserve:
-            print 'Preserving - update & delete skipped'
+            print('Preserving - update & delete skipped')
         else:
             self.Update()
             self.Delete()
 
             cardinals_after=self.Cardinals()
-            print 'Cardinals after test (n,s,p,sl)',cardinals_after
+            print('Cardinals after test (n,s,p,sl)',cardinals_after)
 
             if cardinals_before != cardinals_after:
-                raise Exception, 'cardinals before and after differ - check deletion mechanisms'
+                raise Exception('cardinals before and after differ - check deletion mechanisms')
 
     def Add(self, **kwds):
         """
@@ -486,7 +486,7 @@ class Test:
         peer_id=self.api.AddPeer (random_peer())
         peer = GetPeers([peer_id])[0]
         if self.verbose:
-            print "Added peer",peer_id
+            print("Added peer",peer_id)
 
         # add new sites (the ones not in self.site_ids) in the peer
         # cheating a bit
@@ -526,7 +526,7 @@ class Test:
                     assert site[field] == site_fields[field]
 
             if self.verbose:
-                print "Added site", site_id
+                print("Added site", site_id)
 
     def UpdateSites(self):
         """
@@ -548,7 +548,7 @@ class Test:
                     assert site[field] == site_fields[field]
 
             if self.verbose:
-                print "Updated site", site_id
+                print("Updated site", site_id)
 
     def DeleteSites(self):
         """
@@ -562,7 +562,7 @@ class Test:
                 assert not self.api.GetSites([site_id])
 
             if self.verbose:
-                print "Deleted site", site_id
+                print("Deleted site", site_id)
 
         if self.check:
             assert not self.api.GetSites(self.site_ids)
@@ -589,7 +589,7 @@ class Test:
                     assert address_type[field] == address_type_fields[field]
 
             if self.verbose:
-                print "Added address type", address_type_id
+                print("Added address type", address_type_id)
 
     def UpdateAddressTypes(self):
         """
@@ -608,7 +608,7 @@ class Test:
                     assert address_type[field] == address_type_fields[field]
 
             if self.verbose:
-                print "Updated address_type", address_type_id
+                print("Updated address_type", address_type_id)
 
     def DeleteAddressTypes(self):
         """
@@ -622,7 +622,7 @@ class Test:
                 assert not self.api.GetAddressTypes([address_type_id])
 
             if self.verbose:
-                print "Deleted address type", address_type_id
+                print("Deleted address type", address_type_id)
 
         if self.check:
             assert not self.api.GetAddressTypes(self.address_type_ids)
@@ -655,7 +655,7 @@ class Test:
                         assert address[field] == address_fields[field]
 
                 if self.verbose:
-                    print "Added address", address_id, "to site", site_id
+                    print("Added address", address_id, "to site", site_id)
 
     def UpdateAddresses(self):
         """
@@ -674,7 +674,7 @@ class Test:
                     assert address[field] == address_fields[field]
 
             if self.verbose:
-                print "Updated address", address_id
+                print("Updated address", address_id)
 
     def DeleteAddresses(self):
         """
@@ -697,7 +697,7 @@ class Test:
                 assert not self.api.GetAddresses([address_id])
 
             if self.verbose:
-                print "Deleted address", address_id
+                print("Deleted address", address_id)
 
         if self.check:
             assert not self.api.GetAddresses(self.address_ids)
@@ -762,7 +762,7 @@ class Test:
                     assert person['site_ids'][0] == site_id
 
                 if self.verbose:
-                    print "Added user", person_id, "to site", site_id
+                    print("Added user", person_id, "to site", site_id)
 
     def UpdatePersons(self):
         """
@@ -784,7 +784,7 @@ class Test:
                         assert person[field] == person_fields[field]
 
             if self.verbose:
-                print "Updated person", person_id
+                print("Updated person", person_id)
 
             person = self.api.GetPersons([person_id])[0]
 
@@ -803,7 +803,7 @@ class Test:
                 assert set(site_ids) == set(person['site_ids'])
 
             if self.verbose:
-                print "Updated person", person_id, "to sites", site_ids
+                print("Updated person", person_id, "to sites", site_ids)
 
     def DeletePersons(self):
         """
@@ -842,7 +842,7 @@ class Test:
                 assert not self.api.GetPersons([person_id])
 
             if self.verbose:
-                print "Deleted user", person_id
+                print("Deleted user", person_id)
 
         if self.check:
             assert not self.api.GetPersons(self.person_ids)
@@ -856,7 +856,7 @@ class Test:
 
         key_types = self.api.GetKeyTypes()
         if not key_types:
-            raise Exception, "No key types"
+            raise Exception("No key types")
 
         for person_id in self.person_ids:
             for i in range(per_person):
@@ -887,11 +887,11 @@ class Test:
                     try:
                         key_id = self.api.AddPersonKey(person_id, key_fields)
                         assert False
-                    except Exception, e:
+                    except Exception as e:
                         pass
 
                 if self.verbose:
-                    print "Added key", key_id, "to user", person_id
+                    print("Added key", key_id, "to user", person_id)
 
     def UpdateKeys(self):
         """
@@ -900,7 +900,7 @@ class Test:
 
         key_types = self.api.GetKeyTypes()
         if not key_types:
-            raise Exception, "No key types"
+            raise Exception("No key types")
 
         for key_id in self.key_ids:
             # Update key
@@ -914,7 +914,7 @@ class Test:
                     assert key[field] == key_fields[field]
 
             if self.verbose:
-                print "Updated key", key_id
+                print("Updated key", key_id)
 
     def DeleteKeys(self):
         """
@@ -928,7 +928,7 @@ class Test:
                 assert not self.api.GetKeys([key_id])
 
             if self.verbose:
-                print "Deleted key", key_id
+                print("Deleted key", key_id)
 
         if self.check:
             assert not self.api.GetKeys(self.key_ids)
@@ -962,7 +962,7 @@ class Test:
                 assert nodegroup['value'] == value
 
             if self.verbose:
-                print "Added node group", nodegroup_id
+                print("Added node group", nodegroup_id)
 
     def UpdateNodeGroups(self):
         """
@@ -983,7 +983,7 @@ class Test:
                     assert nodegroup[field] == nodegroup_fields[field]
 
             if self.verbose:
-                print "Updated node group", nodegroup_id
+                print("Updated node group", nodegroup_id)
 
     def DeleteNodeGroups(self):
         """
@@ -997,7 +997,7 @@ class Test:
                 assert not self.api.GetNodeGroups([nodegroup_id])
 
             if self.verbose:
-                print "Deleted node group", nodegroup_id
+                print("Deleted node group", nodegroup_id)
 
         if self.check:
             assert not self.api.GetNodeGroups(self.nodegroup_ids)
@@ -1013,10 +1013,10 @@ class Test:
 
         node_types = self.api.GetNodeTypes()
         if not node_types:
-            raise Exception, "No node types"
+            raise Exception("No node types")
         boot_states = self.api.GetBootStates()
         if not boot_states:
-            raise Exception, "No boot states"
+            raise Exception("No boot states")
 
         for site_id in self.site_ids:
             for i in range(per_site):
@@ -1042,7 +1042,7 @@ class Test:
                             assert node[field] == node_fields[field]
 
                 if self.verbose:
-                    print "Added node", node_id
+                    print("Added node", node_id)
 
     def UpdateNodes(self):
         """
@@ -1051,10 +1051,10 @@ class Test:
 
         node_types = self.api.GetNodeTypes()
         if not node_types:
-            raise Exception, "No node types"
+            raise Exception("No node types")
         boot_states = self.api.GetBootStates()
         if not boot_states:
-            raise Exception, "No boot states"
+            raise Exception("No boot states")
 
         for node_id in self.node_ids:
             # Update node
@@ -1090,17 +1090,17 @@ class Test:
                 for field in node_fields:
                     if field not in tag_fields:
                         if node[field] != node_fields[field]:
-                            raise Exception, "Unexpected field %s in node after GetNodes()"%field
+                            raise Exception("Unexpected field %s in node after GetNodes()"%field)
                 assert set(nodegroup_ids) == set(node['nodegroup_ids'])
 
                 # again but we are now fetching 'arch' explicitly
-                node2 = self.api.GetNodes([node_id],node_fields.keys())[0]
+                node2 = self.api.GetNodes([node_id],list(node_fields.keys()))[0]
                 for field in node_fields:
                     if node2[field] != node_fields[field]:
-                        raise Exception, "Unexpected field %s in node after GetNodes(tags)"%field
+                        raise Exception("Unexpected field %s in node after GetNodes(tags)"%field)
 
             if self.verbose:
-                print "Updated node", node_id
+                print("Updated node", node_id)
 
     def DeleteNodes(self):
         """
@@ -1123,7 +1123,7 @@ class Test:
                 assert not self.api.GetNodes([node_id])
 
             if self.verbose:
-                print "Deleted node", node_id
+                print("Deleted node", node_id)
 
         if self.check:
             assert not self.api.GetNodes(self.node_ids)
@@ -1137,11 +1137,11 @@ class Test:
 
         network_methods = self.api.GetNetworkMethods()
         if not network_methods:
-            raise Exception, "No network methods"
+            raise Exception("No network methods")
 
         network_types = self.api.GetNetworkTypes()
         if not network_types:
-            raise Exception, "No network types"
+            raise Exception("No network types")
 
         for node_id in self.node_ids:
             for i in range(per_node):
@@ -1163,7 +1163,7 @@ class Test:
                         assert interface[field] == interface_fields[field]
 
                 if self.verbose:
-                    print "Added interface", interface_id, "to node", node_id
+                    print("Added interface", interface_id, "to node", node_id)
 
     def UpdateInterfaces(self):
         """
@@ -1172,11 +1172,11 @@ class Test:
 
         network_methods = self.api.GetNetworkMethods()
         if not network_methods:
-            raise Exception, "No network methods"
+            raise Exception("No network methods")
 
         network_types = self.api.GetNetworkTypes()
         if not network_types:
-            raise Exception, "No network types"
+            raise Exception("No network types")
 
         for interface_id in self.interface_ids:
             method = random.sample(network_methods, 1)[0]
@@ -1193,7 +1193,7 @@ class Test:
                     assert interface[field] == interface_fields[field]
 
             if self.verbose:
-                print "Updated interface", interface_id
+                print("Updated interface", interface_id)
 
     def DeleteInterfaces(self):
         """
@@ -1207,7 +1207,7 @@ class Test:
                 assert not self.api.GetInterfaces([interface_id])
 
             if self.verbose:
-                print "Deleted interface", interface_id
+                print("Deleted interface", interface_id)
 
         if self.check:
             assert not self.api.GetInterfaces(self.interface_ids)
@@ -1230,7 +1230,7 @@ class Test:
             self.ilink_ids.append(ilink_id)
 
             if self.verbose:
-                print 'Added Ilink',ilink_id,' - attached interface',src,'to',dst
+                print('Added Ilink',ilink_id,' - attached interface',src,'to',dst)
 
             if self.check:
                 retrieve=GetIlinks({'src_interface_id':src,'dst_interface_id':dst,
@@ -1249,7 +1249,7 @@ class Test:
                 assert ilink['value'] == new_value
 
             if self.verbose:
-                print 'Updated Ilink',ilink_id
+                print('Updated Ilink',ilink_id)
 
     def DeleteIlinks (self):
         for ilink_id in self.ilink_ids:
@@ -1259,7 +1259,7 @@ class Test:
                 assert not self.api.GetIlinks({'ilink_id':ilink_id})
 
             if self.verbose:
-                print 'Deleted Ilink',ilink_id
+                print('Deleted Ilink',ilink_id)
 
         if self.check:
             assert not self.api.GetIlinks(self.ilink_ids)
@@ -1298,7 +1298,7 @@ class Test:
                         assert pcu[field] == pcu_fields[field]
 
                 if self.verbose:
-                    print "Added PCU", pcu_id, "to site", site_id
+                    print("Added PCU", pcu_id, "to site", site_id)
 
     def UpdatePCUs(self):
         """
@@ -1317,7 +1317,7 @@ class Test:
                     assert pcu[field] == pcu_fields[field]
 
             if self.verbose:
-                print "Updated PCU", pcu_id
+                print("Updated PCU", pcu_id)
 
     def DeletePCUs(self):
         """
@@ -1340,7 +1340,7 @@ class Test:
                 assert not self.api.GetPCUs([pcu_id])
 
             if self.verbose:
-                print "Deleted PCU", pcu_id
+                print("Deleted PCU", pcu_id)
 
         if self.check:
             assert not self.api.GetPCUs(self.pcu_ids)
@@ -1397,12 +1397,12 @@ class Test:
                     assert conf_file[field] == conf_file_fields[field]
 
             if self.verbose:
-                print "Added configuration file", conf_file_id,
+                print("Added configuration file", conf_file_id, end=' ')
                 if nodegroup_id is not None:
-                    print "to node group", nodegroup_id,
+                    print("to node group", nodegroup_id, end=' ')
                 elif node_id is not None:
-                    print "to node", node_id,
-                print
+                    print("to node", node_id, end=' ')
+                print()
 
     def UpdateConfFiles(self):
         """
@@ -1424,7 +1424,7 @@ class Test:
                     assert conf_file[field] == conf_file_fields[field]
 
             if self.verbose:
-                print "Updated configuration file", conf_file_id
+                print("Updated configuration file", conf_file_id)
 
     def DeleteConfFiles(self):
         """
@@ -1438,7 +1438,7 @@ class Test:
                 assert not self.api.GetConfFiles([conf_file_id])
 
             if self.verbose:
-                print "Deleted configuration file", conf_file_id
+                print("Deleted configuration file", conf_file_id)
 
         if self.check:
             assert not self.api.GetConfFiles(self.conf_file_ids)
@@ -1453,7 +1453,7 @@ class Test:
 
         roles = self.api.GetRoles()
         if not roles:
-            raise Exception, "No roles"
+            raise Exception("No roles")
         role_ids = [role['role_id'] for role in roles]
 
         for i in range (n_sa + n_ng + n_il):
@@ -1483,7 +1483,7 @@ class Test:
                 for tt_role_id in tt_role_ids:
                     assert tt_role_id in tag_type['role_ids']
             if self.verbose:
-                print "Created tag type", tag_type_id
+                print("Created tag type", tag_type_id)
 
     def UpdateTagTypes(self):
         """
@@ -1492,7 +1492,7 @@ class Test:
 
         roles = self.api.GetRoles()
         if not roles:
-            raise Exception, "No roles"
+            raise Exception("No roles")
         role_ids = [role['role_id'] for role in roles]
 
         for tag_type_id in self.slice_type_ids + self.nodegroup_type_ids + self.ilink_type_ids:
@@ -1506,7 +1506,7 @@ class Test:
                 for field in tag_type_fields:
                     assert tag_type[field] == tag_type_fields[field]
             if self.verbose:
-                print "Updated tag type", tag_type_id
+                print("Updated tag type", tag_type_id)
 
     def DeleteTagTypes(self):
         """
@@ -1520,7 +1520,7 @@ class Test:
                 assert not self.api.GetTagTypes([tag_type_id])
 
             if self.verbose:
-                print "Deleted tag type", tag_type_id
+                print("Deleted tag type", tag_type_id)
 
         if self.check:
             assert not self.api.GetTagTypes(self.slice_type_ids+self.nodegroup_type_ids+self.ilink_type_ids)
@@ -1563,12 +1563,12 @@ class Test:
                     assert set(person_ids) == set(slice['person_ids'])
 
                 if self.verbose:
-                    print "Added slice", slice_id, "to site", site['site_id'],
+                    print("Added slice", slice_id, "to site", site['site_id'], end=' ')
                     if node_ids:
-                        print "and nodes", node_ids,
-                    print
+                        print("and nodes", node_ids, end=' ')
+                    print()
                     if person_ids:
-                        print "Added users", site['person_ids'], "to slice", slice_id
+                        print("Added users", site['person_ids'], "to slice", slice_id)
 
     def UpdateSlices(self):
         """
@@ -1605,9 +1605,9 @@ class Test:
                 assert set(person_ids) == set(slice['person_ids'])
 
             if self.verbose:
-                print "Updated slice", slice_id
-                print "Added nodes", node_ids, "to slice", slice_id
-                print "Added persons", person_ids, "to slice", slice_id
+                print("Updated slice", slice_id)
+                print("Added nodes", node_ids, "to slice", slice_id)
+                print("Added persons", person_ids, "to slice", slice_id)
 
     def DeleteSlices(self):
         """
@@ -1621,7 +1621,7 @@ class Test:
                 assert not self.api.GetSlices([slice_id])
 
             if self.verbose:
-                print "Deleted slice", slice_id
+                print("Deleted slice", slice_id)
 
         if self.check:
             assert not self.api.GetSlices(self.slice_ids)
@@ -1666,10 +1666,10 @@ class Test:
                             assert slice_tag[field] == locals()[field]
 
                     if self.verbose:
-                        print "Added slice attribute", slice_tag_id, "of type", tag_type_id,
+                        print("Added slice attribute", slice_tag_id, "of type", tag_type_id, end=' ')
                         if node_id is not None:
-                            print "to node", node_id,
-                        print
+                            print("to node", node_id, end=' ')
+                        print()
 
     def UpdateSliceTags(self):
         """
@@ -1686,7 +1686,7 @@ class Test:
             assert slice_tag['value'] == value
 
             if self.verbose:
-                print "Updated slice attribute", slice_tag_id
+                print("Updated slice attribute", slice_tag_id)
 
     def DeleteSliceTags(self):
         """
@@ -1700,7 +1700,7 @@ class Test:
                 assert not self.api.GetSliceTags([slice_tag_id])
 
             if self.verbose:
-                print "Deleted slice attribute", slice_tag_id
+                print("Deleted slice attribute", slice_tag_id)
 
         if self.check:
             assert not self.api.GetSliceTags(self.slice_tag_ids)
@@ -1715,7 +1715,7 @@ class Test:
 #            print 'matching',len(abbrev),'against',self.namelengths['abbreviated_name']
             if len(abbrev)==self.namelengths['abbreviated_name']:
 #            if len(abbrev)==17:
-                print 'wiping site %d (%s)'%(site['site_id'],site['name'])
+                print('wiping site %d (%s)'%(site['site_id'],site['name']))
                 self.api.DeleteSite(site['site_id'])
 
 def main():
