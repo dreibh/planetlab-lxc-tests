@@ -1,4 +1,7 @@
 #!/usr/bin/env plcsh
+
+# pylint: disable=c0111, c0302
+
 #
 # WARNING: as opposed to the rest of the python code in this repo
 # the current script runs on top of plcsh and so it is for now
@@ -17,14 +20,11 @@
 # it needs to remain python2 for now
 #
 
-from pprint import pprint
-from string import letters, digits, punctuation, whitespace
-from traceback import print_exc
+from string import ascii_letters as letters, digits, punctuation, whitespace
 from optparse import OptionParser
 import socket
 import base64
 import struct
-import os
 import xmlrpc.client
 
 from PLC.Shell import Shell
@@ -37,10 +37,12 @@ random = Random()
 # however for a realistic test, involving a web UI, this is not appropriate, so we
 # use smaller identifiers
 
-def randfloat(min = 0.0, max = 1.0):
+
+def randfloat(min=0.0, max=1.0):
     return float(min) + (random.random() * (float(max) - float(min)))
 
-def randint(min = 0, max = 1):
+
+def randint(min=0, max=1):
     return int(randfloat(min, max + 1))
 
 # See "2.2 Characters" in the XML specification:
@@ -49,6 +51,7 @@ def randint(min = 0, max = 1):
 # avoiding
 # [#x7F-#x84], [#x86-#x9F], [#xFDD0-#xFDDF]
 #
+
 
 ascii_xml_chars = list(map(chr, [0x9, 0xA]))
 # xmlrpclib uses xml.parsers.expat, which always converts either '\r'
@@ -65,7 +68,8 @@ valid_xml_chars += list(map(chr, range(0xFF + 1, 0xD7FF)))
 valid_xml_chars += list(map(chr, range(0xE000, 0xFDD0 - 1)))
 valid_xml_chars += list(map(chr, range(0xFDDF + 1, 0xFFFD)))
 
-def randstr(length, pool = valid_xml_chars, encoding = "utf-8"):
+
+def randstr(length, pool=valid_xml_chars, encoding="utf-8"):
     sample = random.sample(pool, min(length, len(pool)))
     while True:
         s = ''.join(sample)
@@ -79,16 +83,23 @@ def randstr(length, pool = valid_xml_chars, encoding = "utf-8"):
             break
     return s
 
+
 def randhostname(namelengths):
     # 1. Each part begins and ends with a letter or number.
     # 2. Each part except the last can contain letters, numbers, or hyphens.
     # 3. Each part is between 1 and 64 characters, including the trailing dot.
     # 4. At least two parts.
     # 5. Last part can only contain between 2 and 6 letters.
-    hostname = 'a' + randstr(namelengths['hostname1'], letters + digits + '-') + '1.' + \
-               'b' + randstr(namelengths['hostname1'], letters + digits + '-') + '2.' + \
-               'c' + randstr(namelengths['hostname2'], letters)
+    all_chars = letters + digits + '-'
+    hostname = (
+        'a' +
+        randstr(namelengths['hostname1'], all_chars) +
+        '1.' + 'b' +
+        randstr(namelengths['hostname1'], all_chars) +
+        '2.' + 'c' +
+        randstr(namelengths['hostname2'], letters))
     return hostname.lower()
+
 
 def randpath(length):
     parts = []
@@ -96,44 +107,54 @@ def randpath(length):
         parts.append(randstr(randint(1, 30), ascii_xml_chars))
     return '/'.join(parts)[0:length]
 
+
 def randemail(namelengths):
     return (randstr(namelengths['email'], letters + digits) + "@" + randhostname(namelengths)).lower()
 
-def randkey(namelengths,bits = 2048):
+
+def randkey(namelengths, bits=2048):
     ssh_key_types = ["ssh-dss", "ssh-rsa"]
     key_type = random.sample(ssh_key_types, 1)[0]
     return ' '.join([key_type,
-                     base64.b64encode(''.join(randstr(bits / 8).encode("utf-8"))),
+                     base64.b64encode(randstr(bits // 8).encode()).decode(),
                      randemail(namelengths)])
+
 
 def random_peer():
     return {
-        'peername': randstr(24,letters + ' ' + digits),
-        'peer_url': "https://" + randhostname ({'hostname1':8,'hostname2':3}) + ":443/PLCAPI/",
-        'key' : randstr(1024,letters+digits),
-        'cacert' : randstr(1024,letters+digits),
-        'shortname' : randstr(1,letters) + 'LAB',
-        'hrn_root' : 'planetlab.' + randstr (3,letters),
-        }
+        'peername': randstr(24, letters + ' ' + digits),
+        'peer_url': "https://" + randhostname({'hostname1': 8,
+                                               'hostname2': 3}) + ":443/PLCAPI/",
+        'key': randstr(1024, letters + digits),
+        'cacert': randstr(1024, letters + digits),
+        'shortname': randstr(1, letters) + 'LAB',
+        'hrn_root': 'planetlab.' + randstr(3, letters),
+    }
+
 
 def random_site(namelengths):
-    sitename=randstr(namelengths['sitename'],namelengths['sitename_contents'])
-    abbreviated_name=randstr(namelengths['abbreviated_name'],namelengths['abbreviated_name_contents'])
+    sitename = randstr(namelengths['sitename'],
+                       namelengths['sitename_contents'])
+    abbreviated_name = randstr(
+        namelengths['abbreviated_name'], namelengths['abbreviated_name_contents'])
 
-    print('nl[a] in random_site',namelengths['abbreviated_name'],'actual',len(abbreviated_name))
+    print('nl[a] in random_site', namelengths['abbreviated_name'],
+          'actual', len(abbreviated_name))
     return {
         'name': sitename,
         'abbreviated_name': abbreviated_name,
         'login_base': randstr(namelengths['login_base'], letters).lower(),
         'latitude': int(randfloat(-90.0, 90.0) * 1000) / 1000.0,
         'longitude': int(randfloat(-180.0, 180.0) * 1000) / 1000.0,
-        }
+    }
+
 
 def random_address_type():
     return {
         'name': randstr(20),
         'description': randstr(254),
-        }
+    }
+
 
 def random_address():
     return {
@@ -144,7 +165,8 @@ def random_address():
         'state': randstr(254),
         'postalcode': randstr(64),
         'country': randstr(128),
-        }
+    }
+
 
 def random_person(namelengths):
     return {
@@ -155,45 +177,53 @@ def random_person(namelengths):
         # Accounts are disabled by default
         'enabled': False,
         'password': randstr(254),
-        }
+    }
 
-def random_key(key_types,namelengths):
+
+def random_key(key_types, namelengths):
     return {
         'key_type': random.sample(key_types, 1)[0],
         'key': randkey(namelengths)
-        }
+    }
 
-def random_tag_type (role_ids):
-    return  {'tagname': randstr(12,letters+digits),
-             'category':randstr(4,letters+digits)+'/'+randstr(6,letters+digits),
-             'description' : randstr(128,letters+digits+whitespace+punctuation),
-             }
+
+def random_tag_type(role_ids):
+    return {'tagname': randstr(12, letters+digits),
+            'category': randstr(4, letters+digits)+'/'+randstr(6, letters+digits),
+            'description': randstr(128, letters+digits+whitespace+punctuation),
+            }
+
 
 def random_nodegroup():
-    return {'groupname' : randstr(30, letters+digits+whitespace) }
+    return {'groupname': randstr(30, letters+digits+whitespace)}
+
 
 def random_roles(role_ids):
-    nb_roles=len(role_ids)
-    return random.sample(role_ids,random.choice(list(range(1,nb_roles+1))))
+    nb_roles = len(role_ids)
+    return random.sample(role_ids, random.choice(list(range(1, nb_roles+1))))
 
-tag_fields=['arch']
-def random_node(node_types,boot_states,namelengths):
+
+tag_fields = ['arch']
+
+
+def random_node(node_types, boot_states, namelengths):
     return {
         'hostname': randhostname(namelengths),
-        'node_type': random.sample(node_types,1)[0],
+        'node_type': random.sample(node_types, 1)[0],
         'boot_state': random.sample(boot_states, 1)[0],
         'model': randstr(namelengths['model']),
         'version': randstr(64),
         # for testing node tags
-        'arch':randstr(10),
-        }
+        'arch': randstr(10),
+    }
 
-def random_interface(method, type,namelengths):
+
+def random_interface(method, type, namelengths):
     interface_fields = {
         'method': method,
         'type': type,
         'bwlimit': randint(500000, 10000000),
-        }
+    }
 
     if method != 'dhcp':
         ip = randint(0, 0xffffffff)
@@ -204,14 +234,17 @@ def random_interface(method, type,namelengths):
         dns1 = randint(0, 0xffffffff)
 
         for field in 'ip', 'netmask', 'network', 'broadcast', 'gateway', 'dns1':
-            interface_fields[field] = socket.inet_ntoa(struct.pack('>L', locals()[field]))
-        if randint(0,1):
-            interface_fields['hostname']=randhostname(namelengths);
+            interface_fields[field] = socket.inet_ntoa(
+                struct.pack('>L', locals()[field]))
+        if randint(0, 1):
+            interface_fields['hostname'] = randhostname(namelengths)
 
     return interface_fields
 
-def random_ilink ():
-    return randstr (12)
+
+def random_ilink():
+    return randstr(12)
+
 
 def random_pcu(namelengths):
     return {
@@ -222,7 +255,8 @@ def random_pcu(namelengths):
         'password': randstr(254),
         'notes': randstr(254),
         'model': randstr(32),
-        }
+    }
+
 
 def random_conf_file():
     return {
@@ -237,14 +271,16 @@ def random_conf_file():
         'error_cmd': randpath(100),
         'ignore_cmd_errors': bool(randint()),
         'always_update': bool(randint()),
-        }
+    }
 
-def random_slice(login_base,namelengths):
+
+def random_slice(login_base, namelengths):
     return {
         'name': login_base + "_" + randstr(11, letters).lower(),
         'url': "http://" + randhostname(namelengths) + "/",
         'description': randstr(2048),
-        }
+    }
+
 
 class Test:
     sizes_tiny = {
@@ -257,12 +293,12 @@ class Test:
         'nodegroups': 1,
         'nodes_per_site': 1,
         'interfaces_per_node': 1,
-        'ilinks':1,
+        'ilinks': 1,
         'pcus_per_site': 1,
         'conf_files': 1,
         'slices_per_site': 1,
         'attributes_per_slice': 1,
-        }
+    }
 
     sizes_default = {
         'sites': 10,
@@ -279,7 +315,7 @@ class Test:
         'conf_files': 10,
         'slices_per_site': 4,
         'attributes_per_slice': 2,
-        }
+    }
 
     sizes_large = {
         'sites': 200,
@@ -291,12 +327,12 @@ class Test:
         'nodegroups': 20,
         'nodes_per_site': 2,
         'interfaces_per_node': 2,
-        'ilinks':100,
+        'ilinks': 100,
         'pcus_per_site': 1,
         'conf_files': 50,
         'slices_per_site': 10,
         'attributes_per_slice': 4,
-        }
+    }
 
     sizes_xlarge = {
         'sites': 1000,
@@ -308,40 +344,40 @@ class Test:
         'nodegroups': 20,
         'nodes_per_site': 2,
         'interfaces_per_node': 2,
-        'ilinks':100,
+        'ilinks': 100,
         'pcus_per_site': 1,
         'conf_files': 50,
         'slices_per_site': 10,
         'attributes_per_slice': 4,
-        }
+    }
 
     namelengths_default = {
         'hostname1': 61,
-        'hostname2':5,
-        'login_base':20,
-        'sitename':254,
-        'sitename_contents':letters+digits,
-        'abbreviated_name':50,
-        'abbreviated_name_contents':letters+digits+whitespace+punctuation,
-        'model':255,
-        'first_name':128,
-        'last_name':128,
-        'email':100,
-        }
+        'hostname2': 5,
+        'login_base': 20,
+        'sitename': 254,
+        'sitename_contents': letters+digits,
+        'abbreviated_name': 50,
+        'abbreviated_name_contents': letters+digits+whitespace+punctuation,
+        'model': 255,
+        'first_name': 128,
+        'last_name': 128,
+        'email': 100,
+    }
 
     namelengths_short = {
         'hostname1': 8,
-        'hostname2':3,
-        'login_base':8,
-        'sitename':64,
-        'sitename_contents':letters+digits,
-        'abbreviated_name':24,
-        'abbreviated_name_contents':letters+digits+whitespace+punctuation,
-        'model':40,
-        'first_name':12,
-        'last_name':20,
-        'email':24,
-        }
+        'hostname2': 3,
+        'login_base': 8,
+        'sitename': 64,
+        'sitename_contents': letters+digits,
+        'abbreviated_name': 24,
+        'abbreviated_name_contents': letters+digits+whitespace+punctuation,
+        'model': 40,
+        'first_name': 12,
+        'last_name': 20,
+        'email': 24,
+    }
 
     def __init__(self, api, check, verbose, preserve, federating):
         self.api = api
@@ -367,13 +403,13 @@ class Test:
         self.slice_ids = []
         self.slice_tag_ids = []
 
-    def Cardinals (self):
+    def Cardinals(self):
         return [len(x) for x in (
-                self.api.GetNodes({},['node_id']),
-                self.api.GetSites({},['site_id']),
-                self.api.GetPersons({},['person_id']),
-                self.api.GetSlices({},['slice_id']),
-            )]
+                self.api.GetNodes({}, ['node_id']),
+                self.api.GetSites({}, ['site_id']),
+                self.api.GetPersons({}, ['person_id']),
+                self.api.GetSlices({}, ['slice_id']),
+                )]
 
     def Run(self, **kwds):
         """
@@ -387,8 +423,8 @@ class Test:
         test.Run(sites = 123, slices_per_site = 4) # Defaults with overrides
         """
 
-        cardinals_before=self.Cardinals()
-        print('Cardinals before test (n,s,p,sl)',cardinals_before)
+        cardinals_before = self.Cardinals()
+        print('Cardinals before test (n,s,p,sl)', cardinals_before)
 
         self.Add(**kwds)
         # if federating : we're done
@@ -399,11 +435,12 @@ class Test:
             self.Update()
             self.Delete()
 
-            cardinals_after=self.Cardinals()
-            print('Cardinals after test (n,s,p,sl)',cardinals_after)
+            cardinals_after = self.Cardinals()
+            print('Cardinals after test (n,s,p,sl)', cardinals_after)
 
             if cardinals_before != cardinals_after:
-                raise Exception('cardinals before and after differ - check deletion mechanisms')
+                raise Exception(
+                    'cardinals before and after differ - check deletion mechanisms')
 
     def Add(self, **kwds):
         """
@@ -421,11 +458,12 @@ class Test:
             self.AddAddresses(sizes['addresses_per_site'])
             self.AddPersons(sizes['persons_per_site'])
             self.AddKeys(sizes['keys_per_person'])
-            self.AddTagTypes(sizes['slice_tags'],sizes['nodegroups'],sizes['ilinks'])
+            self.AddTagTypes(sizes['slice_tags'],
+                             sizes['nodegroups'], sizes['ilinks'])
             self.AddNodeGroups(sizes['nodegroups'])
             self.AddNodes(sizes['nodes_per_site'])
             self.AddInterfaces(sizes['interfaces_per_node'])
-            self.AddIlinks (sizes['ilinks'])
+            self.AddIlinks(sizes['ilinks'])
             self.AddPCUs(sizes['pcus_per_site'])
             self.AddConfFiles(sizes['conf_files'])
             self.AddSlices(sizes['slices_per_site'])
@@ -440,7 +478,6 @@ class Test:
             self.AddSlices(sizes['slices_per_site'])
             # create peer and add newly created entities
             self.AddPeer()
-
 
     def Update(self):
         self.UpdateSites()
@@ -475,33 +512,38 @@ class Test:
         self.DeleteSites()
 
     # record current (old) objects
-    def RecordStatus (self):
-        self.old_site_ids = [ s['site_id'] for s in self.api.GetSites({},['site_id']) ]
-        self.old_person_ids = [ s['person_id'] for s in self.api.GetPersons({},['person_id']) ]
-        self.old_key_ids = [ s['key_id'] for s in self.api.GetKeys({},['key_id']) ]
-        self.old_node_ids = [ s['node_id'] for s in self.api.GetNodes({},['node_id']) ]
-        self.old_slice_ids = [ s['slice_id'] for s in self.api.GetSlices({},['slice_id']) ]
+    def RecordStatus(self):
+        self.old_site_ids = [s['site_id']
+                             for s in self.api.GetSites({}, ['site_id'])]
+        self.old_person_ids = [s['person_id']
+                               for s in self.api.GetPersons({}, ['person_id'])]
+        self.old_key_ids = [s['key_id']
+                            for s in self.api.GetKeys({}, ['key_id'])]
+        self.old_node_ids = [s['node_id']
+                             for s in self.api.GetNodes({}, ['node_id'])]
+        self.old_slice_ids = [s['slice_id']
+                              for s in self.api.GetSlices({}, ['slice_id'])]
 
-    def AddPeer (self):
-        peer_id=self.api.AddPeer (random_peer())
+    def AddPeer(self):
+        peer_id = self.api.AddPeer(random_peer())
         peer = GetPeers([peer_id])[0]
         if self.verbose:
-            print("Added peer",peer_id)
+            print("Added peer", peer_id)
 
         # add new sites (the ones not in self.site_ids) in the peer
         # cheating a bit
-        for site in self.api.GetSites ({'~site_id':self.old_site_ids}):
-            peer.add_site(site,site['site_id'])
-        for person in self.api.GetPersons ({'~person_id':self.old_person_ids}):
-            peer.add_person(person,person['person_id'])
-        for key in self.api.GetKeys ({'~key_id':self.old_key_ids}):
-            peer.add_key(key,key['key_id'])
-        for node in self.api.GetNodes ({'~node_id':self.old_node_ids}):
-            peer.add_node(node,node['node_id'])
-        for slice in self.api.GetSlices ({'~slice_id':self.old_slice_ids}):
-            peer.add_slice(slice,slice['slice_id'])
+        for site in self.api.GetSites({'~site_id': self.old_site_ids}):
+            peer.add_site(site, site['site_id'])
+        for person in self.api.GetPersons({'~person_id': self.old_person_ids}):
+            peer.add_person(person, person['person_id'])
+        for key in self.api.GetKeys({'~key_id': self.old_key_ids}):
+            peer.add_key(key, key['key_id'])
+        for node in self.api.GetNodes({'~node_id': self.old_node_ids}):
+            peer.add_node(node, node['node_id'])
+        for slice in self.api.GetSlices({'~slice_id': self.old_slice_ids}):
+            peer.add_slice(slice, slice['slice_id'])
 
-    def AddSites(self, n = 10):
+    def AddSites(self, n=10):
         """
         Add a number of random sites.
         """
@@ -569,7 +611,7 @@ class Test:
 
         self.site_ids = []
 
-    def AddAddressTypes(self, n = 2):
+    def AddAddressTypes(self, n=2):
         """
         Add a number of random address types.
         """
@@ -629,7 +671,7 @@ class Test:
 
         self.address_type_ids = []
 
-    def AddAddresses(self, per_site = 2):
+    def AddAddresses(self, per_site=2):
         """
         Add a number of random addresses to each site.
         """
@@ -646,7 +688,8 @@ class Test:
                 # Add random address type
                 if self.address_type_ids:
                     for address_type_id in random.sample(self.address_type_ids, 1):
-                        self.api.AddAddressTypeToAddress(address_type_id, address_id)
+                        self.api.AddAddressTypeToAddress(
+                            address_type_id, address_id)
 
                 if self.check:
                     # Check address
@@ -685,7 +728,8 @@ class Test:
             # Remove address types
             address = self.api.GetAddresses([address_id])[0]
             for address_type_id in address['address_type_ids']:
-                self.api.DeleteAddressTypeFromAddress(address_type_id, address_id)
+                self.api.DeleteAddressTypeFromAddress(
+                    address_type_id, address_id)
 
             if self.check:
                 address = self.api.GetAddresses([address_id])[0]
@@ -704,7 +748,7 @@ class Test:
 
         self.address_ids = []
 
-    def AddPersons(self, per_site = 10):
+    def AddPersons(self, per_site=10):
         """
         Add a number of random users to each site.
         """
@@ -789,7 +833,8 @@ class Test:
             person = self.api.GetPersons([person_id])[0]
 
             # Associate user with a random set of sites
-            site_ids = random.sample(self.site_ids, randint(0, len(self.site_ids)))
+            site_ids = random.sample(
+                self.site_ids, randint(0, len(self.site_ids)))
             for site_id in (set(site_ids) - set(person['site_ids'])):
                 self.api.AddPersonToSite(person_id, site_id)
             for site_id in (set(person['site_ids']) - set(site_ids)):
@@ -849,7 +894,7 @@ class Test:
 
         self.person_ids = []
 
-    def AddKeys(self, per_person = 2):
+    def AddKeys(self, per_person=2):
         """
         Add a number of random keys to each user.
         """
@@ -861,7 +906,7 @@ class Test:
         for person_id in self.person_ids:
             for i in range(per_person):
                 # Add key
-                key_fields = random_key(key_types,self.namelengths)
+                key_fields = random_key(key_types, self.namelengths)
                 key_id = self.api.AddPersonKey(person_id, key_fields)
 
                 # Should return a unique key_id
@@ -875,7 +920,7 @@ class Test:
                         assert key[field] == key_fields[field]
 
                     # Add and immediately blacklist a key
-                    key_fields = random_key(key_types,self.namelengths)
+                    key_fields = random_key(key_types, self.namelengths)
                     key_id = self.api.AddPersonKey(person_id, key_fields)
 
                     self.api.BlacklistKey(key_id)
@@ -904,7 +949,7 @@ class Test:
 
         for key_id in self.key_ids:
             # Update key
-            key_fields = random_key(key_types,self.namelengths)
+            key_fields = random_key(key_types, self.namelengths)
             self.api.UpdateKey(key_id, key_fields)
 
             if self.check:
@@ -935,7 +980,7 @@ class Test:
 
         self.key_ids = []
 
-    def AddNodeGroups(self, n = 10):
+    def AddNodeGroups(self, n=10):
         """
         Add a number of random node groups.
         """
@@ -943,10 +988,10 @@ class Test:
         for i in range(n):
             # locate tag type
             tag_type_id = self.nodegroup_type_ids[i]
-            tagname=self.api.GetTagTypes([tag_type_id])[0]['tagname']
+            tagname = self.api.GetTagTypes([tag_type_id])[0]['tagname']
 
             # Add node group
-            groupname = random_nodegroup() ['groupname']
+            groupname = random_nodegroup()['groupname']
             value = 'yes'
             nodegroup_id = self.api.AddNodeGroup(groupname, tagname, value)
 
@@ -973,7 +1018,7 @@ class Test:
             # Update nodegroup
             groupname = random_nodegroup()['groupname']
             # cannot change tagname
-            nodegroup_fields = { 'groupname':groupname }
+            nodegroup_fields = {'groupname': groupname}
             self.api.UpdateNodeGroup(nodegroup_id, nodegroup_fields)
 
             if self.check:
@@ -1004,7 +1049,7 @@ class Test:
 
         self.nodegroup_ids = []
 
-    def AddNodes(self, per_site = 2):
+    def AddNodes(self, per_site=2):
         """
         Add a number of random nodes to each site. Each node will also
         be added to a random node group if AddNodeGroups() was
@@ -1021,7 +1066,8 @@ class Test:
         for site_id in self.site_ids:
             for i in range(per_site):
                 # Add node
-                node_fields = random_node(node_types,boot_states,self.namelengths)
+                node_fields = random_node(
+                    node_types, boot_states, self.namelengths)
                 node_id = self.api.AddNode(site_id, node_fields)
 
                 # Should return a unique node_id
@@ -1029,10 +1075,12 @@ class Test:
                 self.node_ids.append(node_id)
 
                 # Add to a random set of node groups
-                nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
+                nodegroup_ids = random.sample(
+                    self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
                 for nodegroup_id in nodegroup_ids:
-                    tagname = self.api.GetNodeGroups([nodegroup_id])[0]['tagname']
-                    self.api.AddNodeTag( node_id, tagname, 'yes' )
+                    tagname = self.api.GetNodeGroups(
+                        [nodegroup_id])[0]['tagname']
+                    self.api.AddNodeTag(node_id, tagname, 'yes')
 
                 if self.check:
                     # Check node
@@ -1058,31 +1106,35 @@ class Test:
 
         for node_id in self.node_ids:
             # Update node
-            node_fields = random_node(node_types,boot_states,self.namelengths)
+            node_fields = random_node(
+                node_types, boot_states, self.namelengths)
             self.api.UpdateNode(node_id, node_fields)
 
             node = self.api.GetNodes([node_id])[0]
 
             # Add to a random set of node groups
-            nodegroup_ids = random.sample(self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
+            nodegroup_ids = random.sample(
+                self.nodegroup_ids, randint(0, len(self.nodegroup_ids)))
             for nodegroup_id in (set(nodegroup_ids) - set(node['nodegroup_ids'])):
                 nodegroup = self.api.GetNodeGroups([nodegroup_id])[0]
                 tagname = nodegroup['tagname']
-                node_tags = self.api.GetNodeTags({'node_id':node_id,'tagname':tagname})
+                node_tags = self.api.GetNodeTags(
+                    {'node_id': node_id, 'tagname': tagname})
                 if not node_tags:
-                    self.api.AddNodeTag(node_id,tagname,'yes')
+                    self.api.AddNodeTag(node_id, tagname, 'yes')
                 else:
-                    node_tag=node_tags[0]
-                    self.api.UpdateNodeTag(node_tag['node_tag_id'],'yes')
+                    node_tag = node_tags[0]
+                    self.api.UpdateNodeTag(node_tag['node_tag_id'], 'yes')
             for nodegroup_id in (set(node['nodegroup_ids']) - set(nodegroup_ids)):
                 nodegroup = self.api.GetNodeGroups([nodegroup_id])[0]
                 tagname = nodegroup['tagname']
-                node_tags = self.api.GetNodeTags({'node_id':node_id,'tagname':tagname})
+                node_tags = self.api.GetNodeTags(
+                    {'node_id': node_id, 'tagname': tagname})
                 if not node_tags:
-                    self.api.AddNodeTag(node_id,tagname,'no')
+                    self.api.AddNodeTag(node_id, tagname, 'no')
                 else:
-                    node_tag=node_tags[0]
-                    self.api.UpdateNodeTag(node_tag['node_tag_id'],'no')
+                    node_tag = node_tags[0]
+                    self.api.UpdateNodeTag(node_tag['node_tag_id'], 'no')
 
             if self.check:
                 # Check node
@@ -1090,14 +1142,17 @@ class Test:
                 for field in node_fields:
                     if field not in tag_fields:
                         if node[field] != node_fields[field]:
-                            raise Exception("Unexpected field %s in node after GetNodes()"%field)
+                            raise Exception(
+                                "Unexpected field %s in node after GetNodes()" % field)
                 assert set(nodegroup_ids) == set(node['nodegroup_ids'])
 
                 # again but we are now fetching 'arch' explicitly
-                node2 = self.api.GetNodes([node_id],list(node_fields.keys()))[0]
+                node2 = self.api.GetNodes(
+                    [node_id], list(node_fields.keys()))[0]
                 for field in node_fields:
                     if node2[field] != node_fields[field]:
-                        raise Exception("Unexpected field %s in node after GetNodes(tags)"%field)
+                        raise Exception(
+                            "Unexpected field %s in node after GetNodes(tags)" % field)
 
             if self.verbose:
                 print("Updated node", node_id)
@@ -1110,8 +1165,8 @@ class Test:
         for node_id in self.node_ids:
             # Remove from node groups
             node = self.api.GetNodes([node_id])[0]
-            for node_tag in self.api.GetNodeTags ( {'node_id': node_id} ):
-                self.api.UpdateNodeTag(node_tag['node_tag_id'],'')
+            for node_tag in self.api.GetNodeTags({'node_id': node_id}):
+                self.api.UpdateNodeTag(node_tag['node_tag_id'], '')
 
             if self.check:
                 node = self.api.GetNodes([node_id])[0]
@@ -1130,7 +1185,7 @@ class Test:
 
         self.node_ids = []
 
-    def AddInterfaces(self, per_node = 1):
+    def AddInterfaces(self, per_node=1):
         """
         Add a number of random network interfaces to each node.
         """
@@ -1149,7 +1204,8 @@ class Test:
                 type = random.sample(network_types, 1)[0]
 
                 # Add interface
-                interface_fields = random_interface(method, type,self.namelengths)
+                interface_fields = random_interface(
+                    method, type, self.namelengths)
                 interface_id = self.api.AddInterface(node_id, interface_fields)
 
                 # Should return a unique interface_id
@@ -1183,7 +1239,7 @@ class Test:
             type = random.sample(network_types, 1)[0]
 
             # Update interface
-            interface_fields = random_interface(method, type,self.namelengths)
+            interface_fields = random_interface(method, type, self.namelengths)
             self.api.UpdateInterface(interface_id, interface_fields)
 
             if self.check:
@@ -1214,60 +1270,59 @@ class Test:
 
         self.interface_ids = []
 
-    def AddIlinks (self, n):
+    def AddIlinks(self, n):
         """
         Add random links between interfaces.
         """
 
-        for i in range (n):
-            src = random.sample(self.interface_ids,1)[0]
-            dst = random.sample(self.interface_ids,1)[0]
-            ilink_id = self.api.AddIlink (src,dst,
-                                          self.ilink_type_ids[i],
-                                          random_ilink())
+        for i in range(n):
+            src = random.sample(self.interface_ids, 1)[0]
+            dst = random.sample(self.interface_ids, 1)[0]
+            ilink_id = self.api.AddIlink(src, dst,
+                                         self.ilink_type_ids[i],
+                                         random_ilink())
 
             assert ilink_id not in self.ilink_ids
             self.ilink_ids.append(ilink_id)
 
             if self.verbose:
-                print('Added Ilink',ilink_id,' - attached interface',src,'to',dst)
+                print('Added Ilink', ilink_id,
+                      ' - attached interface', src, 'to', dst)
 
             if self.check:
-                retrieve=GetIlinks({'src_interface_id':src,'dst_interface_id':dst,
-                                    'tag_type_id':self.ilink_type_ids[i]})
-                assert ilink_id==retrieve[0]['ilink_id']
+                retrieve = GetIlinks({'src_interface_id': src, 'dst_interface_id': dst,
+                                      'tag_type_id': self.ilink_type_ids[i]})
+                assert ilink_id == retrieve[0]['ilink_id']
 
-
-    def UpdateIlinks (self):
+    def UpdateIlinks(self):
 
         for ilink_id in self.ilink_ids:
-            new_value=random_ilink()
-            self.api.UpdateIlink(ilink_id,new_value)
+            new_value = random_ilink()
+            self.api.UpdateIlink(ilink_id, new_value)
 
             if self.check:
-                ilink=self.api.GetIlinks([ilink_id])[0]
+                ilink = self.api.GetIlinks([ilink_id])[0]
                 assert ilink['value'] == new_value
 
             if self.verbose:
-                print('Updated Ilink',ilink_id)
+                print('Updated Ilink', ilink_id)
 
-    def DeleteIlinks (self):
+    def DeleteIlinks(self):
         for ilink_id in self.ilink_ids:
             self.api.DeleteIlink(ilink_id)
 
             if self.check:
-                assert not self.api.GetIlinks({'ilink_id':ilink_id})
+                assert not self.api.GetIlinks({'ilink_id': ilink_id})
 
             if self.verbose:
-                print('Deleted Ilink',ilink_id)
+                print('Deleted Ilink', ilink_id)
 
         if self.check:
             assert not self.api.GetIlinks(self.ilink_ids)
 
         self.ilink_ids = []
 
-
-    def AddPCUs(self, per_site = 1):
+    def AddPCUs(self, per_site=1):
         """
         Add a number of random PCUs to each site. Each node at the
         site will be added to a port on the PCU if AddNodes() was
@@ -1347,7 +1402,7 @@ class Test:
 
         self.pcu_ids = []
 
-    def AddConfFiles(self, n = 10):
+    def AddConfFiles(self, n=10):
         """
         Add a number of random global configuration files.
         """
@@ -1445,7 +1500,7 @@ class Test:
 
         self.conf_file_ids = []
 
-    def AddTagTypes(self,n_sa,n_ng,n_il):
+    def AddTagTypes(self, n_sa, n_ng, n_il):
         """
         Add as many tag types as there are nodegroups,
         will use value=yes for each nodegroup
@@ -1456,22 +1511,22 @@ class Test:
             raise Exception("No roles")
         role_ids = [role['role_id'] for role in roles]
 
-        for i in range (n_sa + n_ng + n_il):
-            tag_type_fields = random_tag_type (role_ids)
-            tag_type_id = self.api.AddTagType (tag_type_fields)
+        for i in range(n_sa + n_ng + n_il):
+            tag_type_fields = random_tag_type(role_ids)
+            tag_type_id = self.api.AddTagType(tag_type_fields)
 
             assert tag_type_id not in \
                 self.slice_type_ids + \
                 self.nodegroup_type_ids + \
                 self.ilink_type_ids
 
-            tt_role_ids=random_roles(role_ids)
+            tt_role_ids = random_roles(role_ids)
             for tt_role_id in tt_role_ids:
-                self.api.AddRoleToTagType(tt_role_id,tag_type_id)
+                self.api.AddRoleToTagType(tt_role_id, tag_type_id)
 
             if i < n_sa:
                 self.slice_type_ids.append(tag_type_id)
-            elif i < n_sa+n_ng :
+            elif i < n_sa+n_ng:
                 self.nodegroup_type_ids.append(tag_type_id)
             else:
                 self.ilink_type_ids.append(tag_type_id)
@@ -1523,12 +1578,13 @@ class Test:
                 print("Deleted tag type", tag_type_id)
 
         if self.check:
-            assert not self.api.GetTagTypes(self.slice_type_ids+self.nodegroup_type_ids+self.ilink_type_ids)
+            assert not self.api.GetTagTypes(
+                self.slice_type_ids+self.nodegroup_type_ids+self.ilink_type_ids)
 
         self.slice_type_ids = []
         self.nodegroup_type_ids = []
 
-    def AddSlices(self, per_site = 10):
+    def AddSlices(self, per_site=10):
         """
         Add a number of random slices per site.
         """
@@ -1536,7 +1592,8 @@ class Test:
         for site in self.api.GetSites(self.site_ids):
             for i in range(min(per_site, site['max_slices'])):
                 # Add slice
-                slice_fields = random_slice(site['login_base'],self.namelengths)
+                slice_fields = random_slice(
+                    site['login_base'], self.namelengths)
                 slice_id = self.api.AddSlice(slice_fields)
 
                 # Should return a unique slice_id
@@ -1544,12 +1601,14 @@ class Test:
                 self.slice_ids.append(slice_id)
 
                 # Add slice to a random set of nodes
-                node_ids = random.sample(self.node_ids, randint(0, len(self.node_ids)))
+                node_ids = random.sample(
+                    self.node_ids, randint(0, len(self.node_ids)))
                 if node_ids:
                     self.api.AddSliceToNodes(slice_id, node_ids)
 
                 # Add random set of site users to slice
-                person_ids = random.sample(site['person_ids'], randint(0, len(site['person_ids'])))
+                person_ids = random.sample(
+                    site['person_ids'], randint(0, len(site['person_ids'])))
                 for person_id in person_ids:
                     self.api.AddPersonToSlice(person_id, slice_id)
 
@@ -1563,12 +1622,14 @@ class Test:
                     assert set(person_ids) == set(slice['person_ids'])
 
                 if self.verbose:
-                    print("Added slice", slice_id, "to site", site['site_id'], end=' ')
+                    print("Added slice", slice_id, "to site",
+                          site['site_id'], end=' ')
                     if node_ids:
                         print("and nodes", node_ids, end=' ')
                     print()
                     if person_ids:
-                        print("Added users", site['person_ids'], "to slice", slice_id)
+                        print("Added users",
+                              site['person_ids'], "to slice", slice_id)
 
     def UpdateSlices(self):
         """
@@ -1577,7 +1638,7 @@ class Test:
 
         for slice_id in self.slice_ids:
             # Update slice
-            slice_fields = random_slice("unused",self.namelengths)
+            slice_fields = random_slice("unused", self.namelengths)
             # Cannot change slice name
             if 'name' in slice_fields:
                 del slice_fields['name']
@@ -1586,12 +1647,16 @@ class Test:
             slice = self.api.GetSlices([slice_id])[0]
 
             # Add slice to a random set of nodes
-            node_ids = random.sample(self.node_ids, randint(0, len(self.node_ids)))
-            self.api.AddSliceToNodes(slice_id, list(set(node_ids) - set(slice['node_ids'])))
-            self.api.DeleteSliceFromNodes(slice_id, list(set(slice['node_ids']) - set(node_ids)))
+            node_ids = random.sample(
+                self.node_ids, randint(0, len(self.node_ids)))
+            self.api.AddSliceToNodes(slice_id, list(
+                set(node_ids) - set(slice['node_ids'])))
+            self.api.DeleteSliceFromNodes(slice_id, list(
+                set(slice['node_ids']) - set(node_ids)))
 
             # Add random set of users to slice
-            person_ids = random.sample(self.person_ids, randint(0, len(self.person_ids)))
+            person_ids = random.sample(
+                self.person_ids, randint(0, len(self.person_ids)))
             for person_id in (set(person_ids) - set(slice['person_ids'])):
                 self.api.AddPersonToSlice(person_id, slice_id)
             for person_id in (set(slice['person_ids']) - set(person_ids)):
@@ -1628,7 +1693,7 @@ class Test:
 
         self.slice_ids = []
 
-    def AddSliceTags(self, per_slice = 2):
+    def AddSliceTags(self, per_slice=2):
         """
         Add a number of random slices per site.
         """
@@ -1645,15 +1710,18 @@ class Test:
                     value = randstr(16, letters + '_' + digits)
                     # Make it a sliver attribute with 50% probability
                     if slice['node_ids']:
-                        node_id = random.sample(slice['node_ids'] + [None] * len(slice['node_ids']), 1)[0]
+                        node_id = random.sample(
+                            slice['node_ids'] + [None] * len(slice['node_ids']), 1)[0]
                     else:
                         node_id = None
 
                     # Add slice attribute
                     if node_id is None:
-                        slice_tag_id = self.api.AddSliceTag(slice_id, tag_type_id, value)
+                        slice_tag_id = self.api.AddSliceTag(
+                            slice_id, tag_type_id, value)
                     else:
-                        slice_tag_id = self.api.AddSliceTag(slice_id, tag_type_id, value, node_id)
+                        slice_tag_id = self.api.AddSliceTag(
+                            slice_id, tag_type_id, value, node_id)
 
                     # Should return a unique slice_tag_id
                     assert slice_tag_id not in self.slice_tag_ids
@@ -1666,7 +1734,8 @@ class Test:
                             assert slice_tag[field] == locals()[field]
 
                     if self.verbose:
-                        print("Added slice attribute", slice_tag_id, "of type", tag_type_id, end=' ')
+                        print("Added slice attribute", slice_tag_id,
+                              "of type", tag_type_id, end=' ')
                         if node_id is not None:
                             print("to node", node_id, end=' ')
                         print()
@@ -1711,40 +1780,41 @@ class Test:
     # not exactly accurate -- use on test plcs only
     def WipeSitesFromLength(self):
         for site in self.api.GetSites():
-            abbrev=site['abbreviated_name']
+            abbrev = site['abbreviated_name']
 #            print 'matching',len(abbrev),'against',self.namelengths['abbreviated_name']
-            if len(abbrev)==self.namelengths['abbreviated_name']:
-#            if len(abbrev)==17:
-                print('wiping site %d (%s)'%(site['site_id'],site['name']))
+            if len(abbrev) == self.namelengths['abbreviated_name']:
+                #            if len(abbrev)==17:
+                print('wiping site %d (%s)' % (site['site_id'], site['name']))
                 self.api.DeleteSite(site['site_id'])
+
 
 def main():
     parser = OptionParser()
-    parser.add_option("-c", "--check", action = "store_true", default = False,
-                      help = "Check most actions (default: %default)")
-    parser.add_option("-q", "--quiet", action = "store_true", default = False,
-                      help = "Be quiet (default: %default)")
-    parser.add_option("-p","--preserve", action="store_true", default =False,
-                      help = "Do not delete created objects")
-    parser.add_option("-t", "--tiny", action = "store_true", default = False,
-                      help = "Run a tiny test (default: %default)")
-    parser.add_option("-l", "--large", action = "store_true", default = False,
-                      help = "Run a large test (default: %default)")
-    parser.add_option("-x", "--xlarge", action = "store_true", default = False,
-                      help = "Run an XL test (default: %default)")
-    parser.add_option("-s", "--short-names", action="store_true", dest="short_names", default = False,
-                      help = "Generate smaller names for checking UI rendering")
-    parser.add_option ("-f", "--foreign", action="store_true", dest="federating", default = False,
-                       help = "Create a fake peer and add items in it (no update, no delete)")
-    parser.add_option ("-w", "--wipe", action="store_true", dest="wipe", default = False,
-                       help = "Wipe sites whose abbrev matches what the tests created")
+    parser.add_option("-c", "--check", action="store_true", default=False,
+                      help="Check most actions (default: %default)")
+    parser.add_option("-q", "--quiet", action="store_true", default=False,
+                      help="Be quiet (default: %default)")
+    parser.add_option("-p", "--preserve", action="store_true", default=False,
+                      help="Do not delete created objects")
+    parser.add_option("-t", "--tiny", action="store_true", default=False,
+                      help="Run a tiny test (default: %default)")
+    parser.add_option("-l", "--large", action="store_true", default=False,
+                      help="Run a large test (default: %default)")
+    parser.add_option("-x", "--xlarge", action="store_true", default=False,
+                      help="Run an XL test (default: %default)")
+    parser.add_option("-s", "--short-names", action="store_true", dest="short_names", default=False,
+                      help="Generate smaller names for checking UI rendering")
+    parser.add_option("-f", "--foreign", action="store_true", dest="federating", default=False,
+                      help="Create a fake peer and add items in it (no update, no delete)")
+    parser.add_option("-w", "--wipe", action="store_true", dest="wipe", default=False,
+                      help="Wipe sites whose abbrev matches what the tests created")
     (options, args) = parser.parse_args()
 
-    test = Test(api = Shell(),
-                check = options.check,
-                verbose = not options.quiet,
-                preserve = options.preserve,
-                federating = options.federating)
+    test = Test(api=Shell(),
+                check=options.check,
+                verbose=not options.quiet,
+                preserve=options.preserve,
+                federating=options.federating)
 
     if options.short_names:
         test.namelengths = Test.namelengths_short
@@ -1764,6 +1834,7 @@ def main():
     else:
         sizes = Test.sizes_default
     test.Run(**sizes)
+
 
 if __name__ == "__main__":
     main()
