@@ -65,7 +65,7 @@ def nodes(options, index):
              'route_fields' :           { 'subnet' : '0.0.0.0/0',
                                           'next_hop' : 'xxx-deferred-xxx',
                                           },
-             'bootmedium_options' :     [ 'serial', 'no-hangcheck', 'systemd-debug' ],
+             'bootmedium_options' :     [ 'serial', 'no-hangcheck', 'systemd-console' ],
              'tags'               :     {
                  # no tags anymore
              },
