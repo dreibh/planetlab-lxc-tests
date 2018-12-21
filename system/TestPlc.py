@@ -185,7 +185,7 @@ class TestPlc:
         'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1',
         'sfa_check_slice_plc_empty@1', SEPSFA,
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'cross_check_tcp@1', 'check_system_slice', SEP,
+        'check_system_slice', SEP,
         # for inspecting the slice while it runs the first time
         #'fail',
         # check slices are turned off properly
@@ -212,6 +212,8 @@ class TestPlc:
         'sfa_get_expires', SEPSFA,
         'plc_db_dump', 'plc_db_restore', SEP,
         'check_netflow', 'check_drl', SEP,
+        # used to be part of default steps but won't work since f27
+        'cross_check_tcp@1',
         'slice_fs_present', 'check_initscripts', SEP,
         'standby_1_through_20', 'yes', 'no', SEP,
         'install_syslinux6', 'bonding_builds', 'bonding_nodes', SEP,
