@@ -152,23 +152,26 @@ class TestPlc:
 
     default_steps = [
         'show', SEP,
-        'plcvm_delete','plcvm_timestamp','plcvm_create', SEP,
+        'plcvm_delete', 'plcvm_timestamp', 'plcvm_create', SEP,
         'django_install', 'plc_install', 'plc_configure', 'plc_start', SEP,
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
-        'plcapi_urls','speed_up_slices', SEP,
+        'plcapi_urls', 'speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
 # slices created under plcsh interactively seem to be fine but these ones don't have the tags
-# keep this our of the way for now
+# keep this out of the way for now
         'check_vsys_defaults_ignore', SEP,
 # run this first off so it's easier to re-run on another qemu box
-        'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init','bootcd', 'qemu_local_config', SEP,
+        'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init',
+        'bootcd', 'qemu_local_config', SEP,
         'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
         'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
-        'sfa_install_all', 'sfa_configure', 'cross_sfa_configure', 'sfa_start', 'sfa_import', SEPSFA,
-        'sfi_configure@1', 'sfa_register_site@1','sfa_register_pi@1', SEPSFA,
-        'sfa_register_user@1', 'sfa_update_user@1', 'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
-        'sfa_remove_user_from_slice@1','sfi_show_slice_researchers@1',
-        'sfa_insert_user_in_slice@1','sfi_show_slice_researchers@1', SEPSFA,
+        'sfa_install_all', 'sfa_configure', 'cross_sfa_configure',
+        'sfa_start', 'sfa_import', SEPSFA,
+        'sfi_configure@1', 'sfa_register_site@1', 'sfa_register_pi@1', SEPSFA,
+        'sfa_register_user@1', 'sfa_update_user@1',
+        'sfa_register_slice@1', 'sfa_renew_slice@1', SEPSFA,
+        'sfa_remove_user_from_slice@1', 'sfi_show_slice_researchers@1',
+        'sfa_insert_user_in_slice@1', 'sfi_show_slice_researchers@1', SEPSFA,
         'sfa_discover@1', 'sfa_rspec@1', SEPSFA,
         'sfa_allocate@1', 'sfa_provision@1', 'sfa_describe@1', SEPSFA,
         'sfa_check_slice_plc@1', 'sfa_update_slice@1', SEPSFA,
@@ -179,7 +182,8 @@ class TestPlc:
         'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
         'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', SEP,
         'ssh_slice_sfa@1', SEPSFA,
-        'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1','sfa_check_slice_plc_empty@1', SEPSFA,
+        'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1',
+        'sfa_check_slice_plc_empty@1', SEPSFA,
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
         'check_system_slice', SEP,
         # for inspecting the slice while it runs the first time
@@ -194,23 +198,24 @@ class TestPlc:
     other_steps = [
         'export', 'show_boxes', 'super_speed_up_slices', SEP,
         'check_hooks', 'plc_stop', 'plcvm_start', 'plcvm_stop', SEP,
-        'delete_initscripts', 'delete_nodegroups','delete_all_sites', SEP,
+        'delete_initscripts', 'delete_nodegroups', 'delete_all_sites', SEP,
         'delete_sites', 'delete_nodes', 'delete_slices', 'keys_clean', SEP,
         'delete_leases', 'list_leases', SEP,
         'populate', SEP,
-        'nodestate_show','nodestate_safeboot','nodestate_boot', 'nodestate_upgrade', SEP,
-        'nodedistro_show','nodedistro_f14','nodedistro_f18', SEP,
-        'nodedistro_f20', 'nodedistro_f21','nodedistro_f22', SEP,
+        'nodestate_show', 'nodestate_safeboot', 'nodestate_boot', 'nodestate_upgrade', SEP,
+        'nodedistro_show', 'nodedistro_f14', 'nodedistro_f18', SEP,
+        'nodedistro_f20', 'nodedistro_f21', 'nodedistro_f22', SEP,
         'qemu_list_all', 'qemu_list_mine', 'qemu_kill_all', SEP,
-        'sfa_install_core', 'sfa_install_sfatables', 'sfa_install_plc', 'sfa_install_client', SEPSFA,
-        'sfa_plcclean', 'sfa_dbclean', 'sfa_stop','sfa_uninstall', 'sfi_clean', SEPSFA,
+        'sfa_install_core', 'sfa_install_sfatables',
+        'sfa_install_plc', 'sfa_install_client', SEPSFA,
+        'sfa_plcclean', 'sfa_dbclean', 'sfa_stop', 'sfa_uninstall', 'sfi_clean', SEPSFA,
         'sfa_get_expires', SEPSFA,
         'plc_db_dump', 'plc_db_restore', SEP,
         'check_netflow', 'check_drl', SEP,
         # used to be part of default steps but won't work since f27
         'cross_check_tcp@1',
         'slice_fs_present', 'check_initscripts', SEP,
-        'standby_1_through_20','yes','no',SEP,
+        'standby_1_through_20', 'yes', 'no', SEP,
         'install_syslinux6', 'bonding_builds', 'bonding_nodes', SEP,
         ]
     default_bonding_steps = [
@@ -354,7 +359,7 @@ class TestPlc:
         return self.dnf_check_installed(rpms)
 
     def pip_install(self, package):
-        return self.run_in_guest("pip install {}".format(package)) == 0
+        return self.run_in_guest("pip3 install {}".format(package)) == 0
 
     def auth_root(self):
         return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
@@ -575,7 +580,7 @@ class TestPlc:
                 continue
             if k == 'nodes':
                 if v:
-                    print('+       ','nodes : ', end=' ')
+                    print('+       ', 'nodes : ', end=' ')
                     for node in v:
                         print(node['node_fields']['hostname'],'', end=' ')
                     print('')
@@ -615,7 +620,7 @@ class TestPlc:
                         print(username,'', end=' ')
                     print('')
             elif k == 'slice_fields':
-                print('+       fields',':', end=' ')
+                print('+       fields', ':', end=' ')
                 print('max_nodes=',v['max_nodes'], end=' ')
                 print('')
             else:
@@ -883,7 +888,7 @@ class TestPlc:
     def delete_all_sites(self):
         "Delete all sites in PLC, and related objects"
         print('auth_root', self.auth_root())
-        sites = self.apiserver.GetSites(self.auth_root(), {}, ['site_id','login_base'])
+        sites = self.apiserver.GetSites(self.auth_root(), {}, ['site_id', 'login_base'])
         for site in sites:
             # keep automatic site - otherwise we shoot in our own foot, root_auth is not valid anymore
             if site['login_base'] == self.plc_spec['settings']['PLC_SLICE_PREFIX']:
@@ -1588,7 +1593,7 @@ class TestPlc:
             except:
                 print("Site {} already absent from PLC db".format(login_base))
 
-            for spec_name in ['pi_spec','user_spec']:
+            for spec_name in ['pi_spec', 'user_spec']:
                 user_spec = auth_sfa_spec[spec_name]
                 username = user_spec['email']
                 try:
@@ -1947,7 +1952,7 @@ class TestPlc:
             if '@' in step:
                 step, qualifier = step.split('@')
             # or be defined as forced or ignored by default
-            for keyword in ['_ignore','_force']:
+            for keyword in ['_ignore', '_force']:
                 if step.endswith(keyword):
                     step=step.replace(keyword,'')
             if step == SEP or step == SEPSFA :
