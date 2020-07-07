@@ -720,7 +720,11 @@ class TestPlc:
             print("This is considered fatal, as this might pollute the test results")
             return False
         create_vserver="{build_dir}/{script} {script_options} {vserver_name}".format(**locals())
-        return self.run_in_host(create_vserver) == 0
+        if self.run_in_host(create_vserver) != 0:
+           return False
+        # TD 07.07.2020: Make sure the PLC is up and running before continuing.
+        ping_vserver = "ping -c600 -i0.1 {vserver_name}".format(**locals())
+        return self.run_in_host(ping_vserver) == 0
 
     ### install django through pip
     def django_install(self):
