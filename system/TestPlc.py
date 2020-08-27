@@ -723,7 +723,7 @@ class TestPlc:
         if self.run_in_host(create_vserver) != 0:
            return False
         # TD 07.07.2020: Make sure the PLC is up and running before continuing.
-        ping_vserver = "ping -c600 -i0.1 {vserverip}".format(**locals())
+        ping_vserver = "ping -c600 -i0.1 {self.vserverip}".format(**locals())
         return self.run_in_host(ping_vserver) == 0
 
     ### install django through pip
