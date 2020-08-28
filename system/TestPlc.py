@@ -722,8 +722,32 @@ class TestPlc:
         create_vserver="{build_dir}/{script} {script_options} {vserver_name}".format(**locals())
         if self.run_in_host(create_vserver) != 0:
            return False
+
+        # -------------------------------------------------
         # TD 07.07.2020: Make sure the PLC is up and running before continuing.
-        ping_vserver = "ping -c600 -i0.1 {self.vserverip}".format(**locals())
+        ping_vserver = "ping -c60 -i0.1 {self.vserverip}".format(**locals())
+        self.run_in_host(ping_vserver)
+
+        i = 0
+        while i < 10:
+           i = i + 1
+           try:
+              self.run_in_guest("ip addr show")
+              break
+           except:
+              pass
+
+        self.run_in_guest("ip addr show")
+        self.run_in_guest("ip route show")
+        self.run_in_guest("cat /etc/resolv.conf")
+        self.run_in_guest("ping -c60 -i0.1 10.1.1.1")
+        self.run_in_guest("ping -c10 heise.de")
+
+        self.run_in_guest("ip addr show")
+        self.run_in_guest("ip route show")
+        self.run_in_guest("cat /etc/resolv.conf")
+        # -------------------------------------------------
+
         return self.run_in_host(ping_vserver) == 0
 
     ### install django through pip
