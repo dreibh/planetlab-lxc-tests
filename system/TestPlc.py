@@ -740,7 +740,7 @@ class TestPlc:
         self.run_in_guest("ip addr show")
         self.run_in_guest("ip route show")
         self.run_in_guest("cat /etc/resolv.conf")
-        self.run_in_guest("ping -c60 -i0.1 10.1.1.1")
+        self.run_in_guest("ping -c3600 -i0.1 10.1.1.1")
         self.run_in_guest("ping -c10 heise.de")
 
         self.run_in_guest("ip addr show")
