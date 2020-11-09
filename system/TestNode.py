@@ -182,9 +182,9 @@ class TestNode:
             print("Dry_run: skipped writing of iso image")
             return True
         else:
-            # with python3 we need to call decodestring here
+            # with python3 we need to call decodebytes here
             with open(filename,'wb') as storage:
-                storage.write(base64.decodestring(bencoded))
+                storage.write(base64.decodebytes(bencoded))
             return True
 
     def nodestate_reinstall(self):
