@@ -1712,8 +1712,9 @@ class TestPlc:
 
     def sfa_start(self):
         "start SFA through systemctl"
-        return (self.start_stop_systemd('sfa-registry', 'start') and
-                self.start_stop_systemd('sfa-aggregate', 'start'))
+        return ((self.run_in_guest("pip2 install sqlalchemy-migrate") == 0)
+            and self.start_stop_systemd('sfa-registry', 'start')
+            and self.start_stop_systemd('sfa-aggregate', 'start'))
 
 
     def sfi_configure(self):
