@@ -1712,7 +1712,15 @@ class TestPlc:
 
     def sfa_start(self):
         "start SFA through systemctl"
-        return ((self.run_in_guest("pip2 install sqlalchemy-migrate") == 0)
+        sfa_dependencies = [
+            'sqlalchemy-migrate',
+            'lxml',
+            'python-dateutil',
+            'psycopg2-binary',
+        ]
+        deps = all((self.run_in_guest(f"pip2 install {dep}") == 0) 
+                   for dep in sfa_dependencies)
+        return (deps
             and self.start_stop_systemd('sfa-registry', 'start')
             and self.start_stop_systemd('sfa-aggregate', 'start'))
 
