@@ -1711,16 +1711,25 @@ class TestPlc:
         return self.run_in_guest('sfaadmin reg import_registry') == 0
 
     def sfa_start(self):
-        "start SFA through systemctl"
-        sfa_dependencies = [
+        "start SFA through systemctl - also install dependencies"
+
+        # installing this one through pip2 is a pain, it is a source install
+        # and requires a python2 devel environment so let's kep it simple
+        dnf_dependencies = [
+            "m2crypto"
+        ]
+        pip_dependencies = [
             'sqlalchemy-migrate',
             'lxml',
             'python-dateutil',
             'psycopg2-binary',
         ]
-        deps = all((self.run_in_guest(f"pip2 install {dep}") == 0) 
-                   for dep in sfa_dependencies)
-        return (deps
+        dnf_deps = all((self.run_in_guest(f"dnf -y install {dep}") == 0)
+                   for dep in dnf_dependencies)
+        pip_deps = all((self.run_in_guest(f"pip2 install {dep}") == 0)
+                   for dep in pip_dependencies)
+        return (dnf_deps 
+            and pip_deps
             and self.start_stop_systemd('sfa-registry', 'start')
             and self.start_stop_systemd('sfa-aggregate', 'start'))
 
