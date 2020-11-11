@@ -752,8 +752,8 @@ class TestPlc:
 
         pkgs_list = []
         pkgs_list.append("myplc")
-        pkgs_list.append("slicerepo-{}".format(nodefamily))
-        pkgs_list.append("noderepo-{}".format(nodefamily))
+        # pkgs_list.append("slicerepo-{}".format(nodefamily))
+        # pkgs_list.append("noderepo-{}".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
         return self.dnf_install(pkgs_list)
 
