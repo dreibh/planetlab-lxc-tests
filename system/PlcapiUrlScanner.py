@@ -18,10 +18,10 @@ class PlcapiUrlScanner:
         if not hostname and not ip:
             raise Exception("PlcapiUrlScanner needs _some_ input")
         if hostname:
-            if not ip: 
+            if not ip:
                 try:
                     ip = socket.gethostbyname(hostname)
-                except: 
+                except:
                     hostname = "{}.pl.sophia.inria.fr".format(hostname)
                     ip = socket.gethostbyname(hostname)
         else:
@@ -29,7 +29,7 @@ class PlcapiUrlScanner:
         self.hostname = hostname
         self.ip = ip
         self.verbose = verbose
-        
+
     def try_url (self, url):
         try:
             proxy = xmlrpc.client.ServerProxy(url, verbose=self.verbose, allow_none=True,
