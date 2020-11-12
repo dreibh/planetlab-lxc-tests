@@ -157,14 +157,14 @@ class TestPlc:
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls', 'speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
-# slices created under plcsh interactively seem to be fine but these ones don't have the tags
-# keep this out of the way for now
-        'check_vsys_defaults_ignore', SEP,
-# run this first off so it's easier to re-run on another qemu box
-        'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init',
-        'bootcd', 'qemu_local_config', SEP,
-        'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
-        'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
+# ss # slices created under plcsh interactively seem to be fine but these ones don't have the tags
+# ss # keep this out of the way for now
+# ss         'check_vsys_defaults_ignore', SEP,
+# ss # run this first off so it's easier to re-run on another qemu box
+# ss         'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init',
+# ss         'bootcd', 'qemu_local_config', SEP,
+# ss         'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
+# ss         'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure',
         'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_register_site@1', 'sfa_register_pi@1', SEPSFA,
@@ -178,21 +178,21 @@ class TestPlc:
         'sfi_list@1', 'sfi_show_site@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
-        'probe_kvm_iptables',
-        'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
-        'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', SEP,
-        'ssh_slice_sfa@1', SEPSFA,
+# ss        'probe_kvm_iptables',
+# ss        'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
+# ss        'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', SEP,
+# ss        'ssh_slice_sfa@1', SEPSFA,
         'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1',
         'sfa_check_slice_plc_empty@1', SEPSFA,
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'check_system_slice', SEP,
+# ss        'check_system_slice', SEP,
         # for inspecting the slice while it runs the first time
         #'fail',
         # check slices are turned off properly
-        'debug_nodemanager',
-        'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
-        # check they are properly re-created with the same name
-        'fill_slices', 'ssh_slice_again', SEP,
+# ss        'debug_nodemanager',
+# ss        'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
+# ss        # check they are properly re-created with the same name
+# ss        'fill_slices', 'ssh_slice_again', SEP,
         'gather_logs_force', SEP,
         ]
     other_steps = [
