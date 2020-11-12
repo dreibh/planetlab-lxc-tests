@@ -358,7 +358,7 @@ class TestPlc:
         # self.run_in_guest("yum-complete-transaction -y")
         return self.dnf_check_installed(rpms)
 
-    def pip_install(self, package):
+    def pip3_install(self, package):
         return self.run_in_guest("pip3 install {}".format(package)) == 0
 
     def auth_root(self):
@@ -729,7 +729,7 @@ class TestPlc:
         """
         pip install Django
         """
-        return self.pip_install('Django')
+        return self.pip3_install('Django')
 
     ### install_rpm
     def plc_install(self):
@@ -1519,24 +1519,53 @@ class TestPlc:
     # in particular runs with --preserve (dont cleanup) and without --check
     # also it gets run twice, once with the --foreign option for creating fake foreign entries
 
+    def install_m2crypto(self):
+
+        # installing m2crypto for python2 is increasingly difficult
+        # f29 and f31: dnf install python2-m2crypto
+        # f33: no longer available but the f31 repos below do the job just fine
+        # note that using pip2 does not look like a viable option because it does
+        # an install from sources and that's quite awkward
+
+        replacements = [
+            "http://mirror.onelab.eu/fedora/releases/31/Everything/x86_64/os/Packages/p/python2-typing-3.6.2-5.fc31.noarch.rpm",
+            "http://mirror.onelab.eu/fedora/releases/31/Everything/x86_64/os/Packages/p/python2-m2crypto-0.35.2-2.fc31.x86_64.rpm",
+        ]
+
+        attempt = self.run_in_guest("pip2 install python2-m2crypto")
+
+        if not attempt:
+            attempt = self.run_in_guest("dnf localinstall -y " + " ".join(replacements))
+
+        return attempt
+
+        # about pip2:
+        # we can try and use
+        # https://acc.dl.osdn.jp/storage/g/u/un/unitedrpms/32/x86_64/python2-pip-19.1.1-7.fc32.noarch.rpm
+        # that qould then need to be mirrored
+        # so the logic goes like this
+        # check for pip2 command
+        # if not, try dnf install python2-pip
+        # if still not, dnf localinstall the above
+
+
     def sfa_install_all(self):
         "yum install sfa sfa-plc sfa-sfatables sfa-client"
 
-        # python2- rpm/dnf packages ar getting deprecated
-        dnf_dependencies = [
-            "m2crypto"
-        ]
+        # the rpm/dnf packages named in python2-* are getting deprecated
+        # we use pip2 instead
+        # but that's not good for m2crypto
+
         pip_dependencies = [
             'sqlalchemy-migrate',
             'lxml',
             'python-dateutil',
             'psycopg2-binary',
         ]
-        dnf_deps = all((self.run_in_guest(f"dnf -y install {dep}") == 0)
-                   for dep in dnf_dependencies)
-        pip_deps = all((self.run_in_guest(f"pip2 install {dep}") == 0)
-                   for dep in pip_dependencies)
-        return (dnf_deps and pip_deps
+
+        return (self.install_m2crypto()
+                and all((self.run_in_guest(f"pip2 install {dep}") == 0)
+                        for dep in pip_dependencies)
                 and self.dnf_install("sfa sfa-plc sfa-sfatables sfa-client")
                 and self.run_in_guest("systemctl enable sfa-registry")==0
                 and self.run_in_guest("systemctl enable sfa-aggregate")==0)
