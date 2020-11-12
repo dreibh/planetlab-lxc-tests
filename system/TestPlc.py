@@ -1521,9 +1521,25 @@ class TestPlc:
 
     def sfa_install_all(self):
         "yum install sfa sfa-plc sfa-sfatables sfa-client"
-        return (self.dnf_install("sfa sfa-plc sfa-sfatables sfa-client") and
-                self.run_in_guest("systemctl enable sfa-registry")==0 and
-                self.run_in_guest("systemctl enable sfa-aggregate")==0)
+
+        # python2- rpm/dnf packages ar getting deprecated
+        dnf_dependencies = [
+            "m2crypto"
+        ]
+        pip_dependencies = [
+            'sqlalchemy-migrate',
+            'lxml',
+            'python-dateutil',
+            'psycopg2-binary',
+        ]
+        dnf_deps = all((self.run_in_guest(f"dnf -y install {dep}") == 0)
+                   for dep in dnf_dependencies)
+        pip_deps = all((self.run_in_guest(f"pip2 install {dep}") == 0)
+                   for dep in pip_dependencies)
+        return (dnf_deps and pip_deps
+                and self.dnf_install("sfa sfa-plc sfa-sfatables sfa-client")
+                and self.run_in_guest("systemctl enable sfa-registry")==0
+                and self.run_in_guest("systemctl enable sfa-aggregate")==0)
 
     def sfa_install_core(self):
         "yum install sfa"
@@ -1713,24 +1729,7 @@ class TestPlc:
     def sfa_start(self):
         "start SFA through systemctl - also install dependencies"
 
-        # installing this one through pip2 is a pain, it is a source install
-        # and requires a python2 devel environment so let's kep it simple
-        dnf_dependencies = [
-            "m2crypto"
-        ]
-        pip_dependencies = [
-            'sqlalchemy-migrate',
-            'lxml',
-            'python-dateutil',
-            'psycopg2-binary',
-        ]
-        dnf_deps = all((self.run_in_guest(f"dnf -y install {dep}") == 0)
-                   for dep in dnf_dependencies)
-        pip_deps = all((self.run_in_guest(f"pip2 install {dep}") == 0)
-                   for dep in pip_dependencies)
-        return (dnf_deps 
-            and pip_deps
-            and self.start_stop_systemd('sfa-registry', 'start')
+        return (self.start_stop_systemd('sfa-registry', 'start')
             and self.start_stop_systemd('sfa-aggregate', 'start'))
 
 
