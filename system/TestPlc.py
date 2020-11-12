@@ -1519,6 +1519,18 @@ class TestPlc:
     # in particular runs with --preserve (dont cleanup) and without --check
     # also it gets run twice, once with the --foreign option for creating fake foreign entries
 
+    def install_pip2(self):
+
+        replacements = [
+            "https://acc.dl.osdn.jp/storage/g/u/un/unitedrpms/32/x86_64/python2-pip-19.1.1-7.fc32.noarch.rpm",
+        ]
+
+        return (
+               self.run_in_guest("pip2 --version") == 0
+            or self.run_in_guest("dnf install python2-pip") == 0
+            or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)))
+
+
     def install_m2crypto(self):
 
         # installing m2crypto for python2 is increasingly difficult
@@ -1532,16 +1544,15 @@ class TestPlc:
             "http://mirror.onelab.eu/fedora/releases/31/Everything/x86_64/os/Packages/p/python2-m2crypto-0.35.2-2.fc31.x86_64.rpm",
         ]
 
-        attempt = self.run_in_guest("pip2 install python2-m2crypto")
-
-        if not attempt:
-            attempt = self.run_in_guest("dnf localinstall -y " + " ".join(replacements))
+        return (
+               self.run_in_guest('python2 -c "import M2Crypto"', backslash=True)
+            or self.run_in_guest("pip2 install python2-m2crypto") == 0
+            or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)) == 0)
 
         return attempt
 
         # about pip2:
         # we can try and use
-        # https://acc.dl.osdn.jp/storage/g/u/un/unitedrpms/32/x86_64/python2-pip-19.1.1-7.fc32.noarch.rpm
         # that qould then need to be mirrored
         # so the logic goes like this
         # check for pip2 command
@@ -1563,7 +1574,9 @@ class TestPlc:
             'psycopg2-binary',
         ]
 
-        return (self.install_m2crypto()
+        return (
+                    self.install_pip2()
+                and self.install_m2crypto()
                 and all((self.run_in_guest(f"pip2 install {dep}") == 0)
                         for dep in pip_dependencies)
                 and self.dnf_install("sfa sfa-plc sfa-sfatables sfa-client")
