@@ -1528,7 +1528,7 @@ class TestPlc:
         return (
                self.run_in_guest("pip2 --version") == 0
             or self.run_in_guest("dnf install python2-pip") == 0
-            or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)))
+            or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)) == 0)
 
 
     def install_m2crypto(self):
@@ -1545,7 +1545,7 @@ class TestPlc:
         ]
 
         return (
-               self.run_in_guest('python2 -c "import M2Crypto"', backslash=True)
+               self.run_in_guest('python2 -c "import M2Crypto"', backslash=True) == 0
             or self.run_in_guest("pip2 install python2-m2crypto") == 0
             or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)) == 0)
 
