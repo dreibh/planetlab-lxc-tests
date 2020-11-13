@@ -1521,6 +1521,8 @@ class TestPlc:
 
     def install_pip2(self):
 
+        # xxx could make sense to mirror this one
+
         replacements = [
             "https://acc.dl.osdn.jp/storage/g/u/un/unitedrpms/32/x86_64/python2-pip-19.1.1-7.fc32.noarch.rpm",
         ]
@@ -1549,8 +1551,6 @@ class TestPlc:
             or self.run_in_guest("pip2 install python2-m2crypto") == 0
             or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)) == 0)
 
-        return attempt
-
         # about pip2:
         # we can try and use
         # that qould then need to be mirrored
@@ -1572,6 +1572,7 @@ class TestPlc:
             'lxml',
             'python-dateutil',
             'psycopg2-binary',
+            'pyOpenSSL',
         ]
 
         return (
