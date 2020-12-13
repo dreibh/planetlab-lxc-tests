@@ -1521,10 +1521,8 @@ class TestPlc:
 
     def install_pip2(self):
 
-        # xxx could make sense to mirror this one
-
         replacements = [
-            "https://acc.dl.osdn.jp/storage/g/u/un/unitedrpms/32/x86_64/python2-pip-19.1.1-7.fc32.noarch.rpm",
+            "http://mirror.onelab.eu/third-party/python2-pip-19.1.1-7.fc33.noarch.rpm",
         ]
 
         return (
