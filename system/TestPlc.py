@@ -1540,8 +1540,9 @@ class TestPlc:
         # an install from sources and that's quite awkward
 
         replacements = [
-            "http://mirror.onelab.eu/fedora/releases/31/Everything/x86_64/os/Packages/p/python2-typing-3.6.2-5.fc31.noarch.rpm",
-            "http://mirror.onelab.eu/fedora/releases/31/Everything/x86_64/os/Packages/p/python2-m2crypto-0.35.2-2.fc31.x86_64.rpm",
+            # no longer on our mirror
+            "https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/31/Everything/x86_64/os/Packages/p/python2-typing-3.6.2-5.fc31.noarch.rpm",
+            "https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/31/Everything/x86_64/os/Packages/p/python2-m2crypto-0.35.2-2.fc31.x86_64.rpm",
         ]
 
         return (
@@ -1549,10 +1550,7 @@ class TestPlc:
             or self.run_in_guest("pip2 install python2-m2crypto") == 0
             or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)) == 0)
 
-        # about pip2:
-        # we can try and use
-        # that qould then need to be mirrored
-        # so the logic goes like this
+        # about pip2: the logic goes like this
         # check for pip2 command
         # if not, try dnf install python2-pip
         # if still not, dnf localinstall the above
