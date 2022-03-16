@@ -359,7 +359,7 @@ class TestPlc:
         return self.dnf_check_installed(rpms)
 
     def pip3_install(self, package):
-        return self.run_in_guest("pip3 install {}".format(package)) == 0
+        return self.run_in_guest(f"pip3 install {package} || pip install {package}") == 0
 
     def auth_root(self):
         return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
