@@ -245,7 +245,7 @@ class TestPlc:
         # warning, we're now building 'sface' so let's be a bit more picky
         # full builds are expected to return with 0 here
         utils.header("Checking if build provides SFA package...")
-        retcod = utils.system("curl --silent {}/ | grep -q sfa-".format(rpms_url)) == 0
+        retcod = utils.system("curl --silent {}/ | grep -q sfa-4".format(rpms_url)) == 0
         encoded = 'yes' if retcod else 'no'
         with open(has_sfa_cache_filename,'w') as cache:
             cache.write(encoded)
