@@ -157,14 +157,14 @@ class TestPlc:
         'keys_fetch', 'keys_store', 'keys_clear_known_hosts', SEP,
         'plcapi_urls', 'speed_up_slices', SEP,
         'initscripts', 'sites', 'nodes', 'slices', 'nodegroups', 'leases', SEP,
-# slices created under plcsh interactively seem to be fine but these ones don't have the tags
-# keep this out of the way for now
-        'check_vsys_defaults_ignore', SEP,
-# run this first off so it's easier to re-run on another qemu box
-        'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init',
-        'bootcd', 'qemu_local_config', SEP,
-        'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
-        'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
+# ss # slices created under plcsh interactively seem to be fine but these ones don't have the tags
+# ss # keep this out of the way for now
+# ss         'check_vsys_defaults_ignore', SEP,
+# ss # run this first off so it's easier to re-run on another qemu box
+# ss         'qemu_kill_mine', 'nodestate_reinstall', 'qemu_local_init',
+# ss         'bootcd', 'qemu_local_config', SEP,
+# ss         'qemu_clean_mine', 'qemu_export', 'qemu_cleanlog', SEP,
+# ss         'qemu_start', 'qemu_timestamp', 'qemu_nodefamily', SEP,
         'sfa_install_all', 'sfa_configure', 'cross_sfa_configure',
         'sfa_start', 'sfa_import', SEPSFA,
         'sfi_configure@1', 'sfa_register_site@1', 'sfa_register_pi@1', SEPSFA,
@@ -178,21 +178,21 @@ class TestPlc:
         'sfi_list@1', 'sfi_show_site@1', 'sfa_utest@1', SEPSFA,
         # we used to run plcsh_stress_test, and then ssh_node_debug and ssh_node_boot
         # but as the stress test might take a while, we sometimes missed the debug mode..
-        'probe_kvm_iptables',
-        'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
-        'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', SEP,
-        'ssh_slice_sfa@1', SEPSFA,
+# ss        'probe_kvm_iptables',
+# ss        'ping_node', 'ssh_node_debug', 'plcsh_stress_test@1', SEP,
+# ss        'ssh_node_boot', 'node_bmlogs', 'ssh_slice', 'ssh_slice_basics', SEP,
+# ss        'ssh_slice_sfa@1', SEPSFA,
         'sfa_rspec_empty@1', 'sfa_allocate_empty@1', 'sfa_provision_empty@1',
         'sfa_check_slice_plc_empty@1', SEPSFA,
         'sfa_delete_slice@1', 'sfa_delete_user@1', SEPSFA,
-        'check_system_slice', SEP,
+# ss        'check_system_slice', SEP,
         # for inspecting the slice while it runs the first time
         #'fail',
         # check slices are turned off properly
-        'debug_nodemanager',
-        'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
-        # check they are properly re-created with the same name
-        'fill_slices', 'ssh_slice_again', SEP,
+# ss        'debug_nodemanager',
+# ss        'empty_slices', 'ssh_slice_off', 'slice_fs_deleted_ignore', SEP,
+# ss        # check they are properly re-created with the same name
+# ss        'fill_slices', 'ssh_slice_again', SEP,
         'gather_logs_force', SEP,
         ]
     other_steps = [
@@ -245,7 +245,7 @@ class TestPlc:
         # warning, we're now building 'sface' so let's be a bit more picky
         # full builds are expected to return with 0 here
         utils.header("Checking if build provides SFA package...")
-        retcod = utils.system("curl --silent {}/ | grep -q sfa-".format(rpms_url)) == 0
+        retcod = utils.system("curl --silent {}/ | grep -q sfa-4".format(rpms_url)) == 0
         encoded = 'yes' if retcod else 'no'
         with open(has_sfa_cache_filename,'w') as cache:
             cache.write(encoded)
@@ -358,8 +358,8 @@ class TestPlc:
         # self.run_in_guest("yum-complete-transaction -y")
         return self.dnf_check_installed(rpms)
 
-    def pip_install(self, package):
-        return self.run_in_guest("pip3 install {}".format(package)) == 0
+    def pip3_install(self, package):
+        return self.run_in_guest(f"pip3 install {package} || pip install {package}") == 0
 
     def auth_root(self):
         return {'Username'   : self.plc_spec['settings']['PLC_ROOT_USER'],
@@ -757,7 +757,7 @@ class TestPlc:
         """
         pip install Django
         """
-        return self.pip_install('Django')
+        return self.pip3_install('Django')
 
     ### install_rpm
     def plc_install(self):
@@ -780,8 +780,8 @@ class TestPlc:
 
         pkgs_list = []
         pkgs_list.append("myplc")
-        pkgs_list.append("slicerepo-{}".format(nodefamily))
-        pkgs_list.append("noderepo-{}".format(nodefamily))
+        # pkgs_list.append("slicerepo-{}".format(nodefamily))
+        # pkgs_list.append("noderepo-{}".format(nodefamily))
         pkgs_string=" ".join(pkgs_list)
         return self.dnf_install(pkgs_list)
 
@@ -1549,11 +1549,66 @@ class TestPlc:
     # in particular runs with --preserve (dont cleanup) and without --check
     # also it gets run twice, once with the --foreign option for creating fake foreign entries
 
+    def install_pip2(self):
+
+        replacements = [
+            "http://mirror.onelab.eu/third-party/python2-pip-19.1.1-7.fc33.noarch.rpm",
+        ]
+
+        return (
+               self.run_in_guest("pip2 --version") == 0
+            or self.run_in_guest("dnf install python2-pip") == 0
+            or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)) == 0)
+
+
+    def install_m2crypto(self):
+
+        # installing m2crypto for python2 is increasingly difficult
+        # f29 and f31: dnf install python2-m2crypto
+        # f33: no longer available but the f31 repos below do the job just fine
+        # note that using pip2 does not look like a viable option because it does
+        # an install from sources and that's quite awkward
+
+        replacements = [
+            # no longer on our mirror
+            "https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/31/Everything/x86_64/os/Packages/p/python2-typing-3.6.2-5.fc31.noarch.rpm",
+            "https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/31/Everything/x86_64/os/Packages/p/python2-m2crypto-0.35.2-2.fc31.x86_64.rpm",
+        ]
+
+        return (
+               self.run_in_guest('python2 -c "import M2Crypto"', backslash=True) == 0
+            or self.run_in_guest("pip2 install python2-m2crypto") == 0
+            or self.run_in_guest("dnf localinstall -y " + " ".join(replacements)) == 0)
+
+        # about pip2: the logic goes like this
+        # check for pip2 command
+        # if not, try dnf install python2-pip
+        # if still not, dnf localinstall the above
+
+
     def sfa_install_all(self):
         "yum install sfa sfa-plc sfa-sfatables sfa-client"
-        return (self.dnf_install("sfa sfa-plc sfa-sfatables sfa-client") and
-                self.run_in_guest("systemctl enable sfa-registry")==0 and
-                self.run_in_guest("systemctl enable sfa-aggregate")==0)
+
+        # the rpm/dnf packages named in python2-* are getting deprecated
+        # we use pip2 instead
+        # but that's not good for m2crypto
+
+        pip_dependencies = [
+            'sqlalchemy-migrate',
+            'lxml',
+            'python-dateutil',
+            'psycopg2-binary',
+            'pyOpenSSL',
+        ]
+
+        return (
+                    self.install_pip2()
+                and self.install_m2crypto()
+                and all((self.run_in_guest(f"pip2 install {dep}") == 0)
+                        for dep in pip_dependencies)
+                and self.dnf_install("sfa sfa-plc sfa-sfatables sfa-client")
+                and self.run_in_guest("systemctl enable sfa-registry")==0
+                and self.run_in_guest("systemctl enable sfa-aggregate")==0)
 
     def sfa_install_core(self):
         "yum install sfa"
@@ -1741,9 +1796,10 @@ class TestPlc:
         return self.run_in_guest('sfaadmin reg import_registry') == 0
 
     def sfa_start(self):
-        "start SFA through systemctl"
-        return (self.start_stop_systemd('sfa-registry', 'start') and
-                self.start_stop_systemd('sfa-aggregate', 'start'))
+        "start SFA through systemctl - also install dependencies"
+
+        return (self.start_stop_systemd('sfa-registry', 'start')
+            and self.start_stop_systemd('sfa-aggregate', 'start'))
 
 
     def sfi_configure(self):
